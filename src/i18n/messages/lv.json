@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "title": "Trilio — trīs labākie. Bez meklēšanas.",
+    "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos."
+  },
+  "header": {
+    "radar": "Cenu radars",
+    "signIn": "Ienākt",
+    "logoAlt": "Trilio"
+  },
+  "footer": {
+    "tagline": "Salīdzinām cenas partneru veikalos",
+    "back": "Atpakaļ"
+  },
+  "welcome": {
+    "headline": "Pastāsti, kas tev vajadzīgs. Trīs labākos variantus atradīsim mēs.",
+    "help": "Palīdzi izvēlēties",
+    "knowModel": "Es jau zinu modeli"
+  },
+  "flow": {
+    "progress": "Jautājums {n} no {m}",
+    "continue": "Turpināt",
+    "why": "Kāpēc jautājam:",
+    "dontKnow": "Nezinu",
+    "back": "Atpakaļ",
+    "pickUpTo": "Izvēlies līdz {max}",
+    "other": "Kaut kas cits — pastāstīšu saviem vārdiem"
+  },
+  "budget": {
+    "title": "Kāds ir tavs budžets?",
+    "upTo": "Līdz {amount}",
+    "notSet": "Budžets nav noteikts",
+    "custom": "Cita summa",
+    "customLabel": "Summa eiro"
+  },
+  "refurbished": {
+    "title": "Vai rādīt arī atjaunotas preces?",
+    "yes": "Jā, rādīt atsevišķi",
+    "no": "Nē, tikai jaunas",
+    "why": "Atjaunotas preces vienmēr rādām atsevišķā blokā ar stāvokļa pakāpi, garantiju un ietaupījumu pret jaunu."
+  },
+  "urgency": {
+    "title": "Cik ātri prece tev vajadzīga?",
+    "asap": "Pēc iespējas ātrāk",
+    "asapSub": "piegāde līdz {date}",
+    "twoWeeks": "Tuvāko divu nedēļu laikā",
+    "twoWeeksSub": "piegāde līdz {date}",
+    "noRush": "Nesteidzos"
+  },
+  "results": {
+    "title": "Trīs labākie varianti tev",
+    "eanNote": "Cenas salīdzinām pēc EAN svītrkoda, tāpēc viens un tas pats modelis dažādos veikalos ir viena prece.",
+    "howWeRank": "Kā mēs izvēlamies un ranžējam?",
+    "tierBudget": "Budžeta variants",
+    "tierMid": "Vidējā klase",
+    "tierTop": "Augstākā klase",
+    "recommended": "Trilio ieteikums",
+    "rating": "Vērtējums {score}/10",
+    "model": "Modelis {code} · EAN {ean}",
+    "overBudget": "Virs budžeta par {amount}",
+    "lowest30Now": "Šobrīd zemākā cena pēdējās 30 dienās",
+    "lowest30Was": "Zemākā cena 30 dienās bija {amount} — cenu radars paziņos, kad tā atgriezīsies",
+    "buy": "Pirkt — {shop}",
+    "track": "Sekot cenai",
+    "compare": "Salīdzināt parametrus blakus",
+    "differencesOnly": "Rādīt tikai atšķirības",
+    "refurbLabel": "ATJAUNOTA PRECE · RĀDĪTA ATSEVIŠĶI",
+    "refurbSameModel": "tas pats modelis, kas jaunā stāvoklī",
+    "energy10y": "Elektrība 10 gados ~{energy} · kopā ar pirkumu ~{total}",
+    "changeAnswers": "Mainīt atbildes",
+    "startOver": "Sākt no jauna",
+    "radarCta": "Ieslēgt cenu radaru · {price}/mēn."
+  },
+  "waitlist": {
+    "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",
+    "emailLabel": "E-pasts",
+    "notify": "Paziņot, kad pievienosim"
+  }
+}
