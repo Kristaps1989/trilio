@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { allSubcategories, getSubcategory } from "@/domain/questions/catalog";
+import { getSubcategory } from "@/domain/questions/catalog";
 import { appBaseUrl } from "@/services/payments";
 import { LandingPage } from "../LandingPage";
 
 export const revalidate = 3600;
-export const dynamicParams = false;
 
 type Props = { params: Promise<{ sub: string }> };
 
-export function generateStaticParams() {
-  return allSubcategories().map((s) => ({ sub: s.id }));
+/**
+ * Rendered on the first request, then cached for an hour (ISR). Nothing is
+ * prerendered at build time, because the build has no database. Unknown ids
+ * get a 404 below. The full list of pages is in sitemap.ts.
+ */
+export function generateStaticParams(): { sub: string }[] {
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

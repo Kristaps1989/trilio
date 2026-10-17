@@ -52,6 +52,12 @@ npm run db:seed
 
 This writes the store rows (sample stores active, partner shops inactive) and the sample products. Re-running it is safe.
 
+### If the deploy fails
+
+- **Build step:** the build needs no database or secrets (CI builds the same way). Category landing pages, `robots.txt`, `sitemap.xml` and `llms.txt` are rendered at runtime, so they always use the runtime `APP_URL`.
+- **Pre-deploy step (`npm run db:migrate`) or start fails with "DATABASE_URL is not set":** the web service is missing the `DATABASE_URL` reference variable. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}` under the web service's **Variables** (the Postgres service must be in the same project), then redeploy.
+- **`npm install` reports vulnerabilities:** Railway audits the full dependency tree, including build-only tools. `npm audit --omit=dev` (what ships) reports none.
+
 ## 4. Custom domain and TLS
 
 Web service → **Settings → Networking → Custom Domain** → `trilio.lv` (and `www.trilio.lv`). Add the CNAME Railway shows at the DNS provider. Railway issues the certificate. HSTS is already sent by the app (`next.config.ts`), so only put the domain live once HTTPS resolves.

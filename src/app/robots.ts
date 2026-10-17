@@ -24,6 +24,9 @@ const AI_CRAWLERS = [
   "CCBot",
 ];
 
+// Built per request: the site URL comes from APP_URL at runtime, not at build time.
+export const dynamic = "force-dynamic";
+
 export default function robots(): MetadataRoute.Robots {
   const base = appBaseUrl();
   return {

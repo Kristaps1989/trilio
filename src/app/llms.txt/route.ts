@@ -6,7 +6,8 @@ import { appBaseUrl } from "@/services/payments";
 // and crawlers. Describes what Trilio is, how it ranks, and lists the
 // public category pages so answers can cite the right URL.
 
-export const revalidate = 3600;
+// Built per request: the site URL comes from APP_URL at runtime, not at build time.
+export const dynamic = "force-dynamic";
 
 export function GET() {
   const base = appBaseUrl();
