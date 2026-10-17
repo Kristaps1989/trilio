@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { offers, products, stores } from "@/db/schema";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
+import { currentMarket } from "@/i18n/market";
 
 // Maps database rows to the plain ProductView the domain works on. The
 // 30-day low is computed in SQL per offer (one aggregate, not 100k rows):
@@ -50,7 +51,7 @@ async function offerRows(db: Db, where: ReturnType<typeof and> | undefined): Pro
     .from(offers)
     .innerJoin(stores, eq(stores.id, offers.storeId))
     .innerJoin(products, eq(products.id, offers.productId))
-    .where(and(eq(stores.active, true), where));
+    .where(and(eq(stores.active, true), eq(stores.country, currentMarket().country), where));
   return rows as OfferRow[];
 }
 
@@ -152,7 +153,14 @@ export async function subcategoriesWithRefurbished(db: Db): Promise<Set<string>>
     .from(offers)
     .innerJoin(products, eq(products.id, offers.productId))
     .innerJoin(stores, eq(stores.id, offers.storeId))
-    .where(and(eq(offers.condition, "refurbished"), eq(stores.active, true), sql`${offers.stock} <> 'out'`));
+    .where(
+      and(
+        eq(offers.condition, "refurbished"),
+        eq(stores.active, true),
+        eq(stores.country, currentMarket().country),
+        sql`${offers.stock} <> 'out'`,
+      ),
+    );
   return new Set(rows.map((r) => r.subcategoryId));
 }
 
