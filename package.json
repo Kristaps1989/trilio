@@ -16,9 +16,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
-    "ingest": "tsx src/services/ingestion/cli.ts"
+    "ingest": "tsx src/services/ingestion/cli.ts",
+    "extract": "tsx src/services/llm/cli.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "dotenv": "^18.0.8",
     "drizzle-orm": "^0.45.4",
     "fast-xml-parser": "^5.11.2",

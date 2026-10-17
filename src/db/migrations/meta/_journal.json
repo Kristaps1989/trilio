@@ -15,6 +15,13 @@
       "when": 1792255229403,
       "tag": "0001_store_category_map",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792256790003,
+      "tag": "0002_llm_extraction",
+      "breakpoints": true
     }
   ]
 }

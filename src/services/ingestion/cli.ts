@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
 import { stores } from "@/db/schema";
+import { createCaller, extractionEnabled } from "@/services/llm/client";
+import { runExtractionJob } from "@/services/llm/extract-job";
 import { ingestAllActive, ingestStore } from "./run";
 
 // `npm run ingest -- all` or `npm run ingest -- <store-slug> [path/to/local-feed.xml]`
@@ -18,6 +20,8 @@ async function main() {
   try {
     if (target === "all") {
       console.table(await ingestAllActive(db));
+      // The Railway cron service runs this; new products get attributes when extraction is on.
+      if (extractionEnabled()) console.table(await runExtractionJob(db, createCaller(db)));
       return;
     }
     const [store] = await db.select().from(stores).where(eq(stores.slug, target));

@@ -17,7 +17,11 @@ Open the web service → **Variables** → add:
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Reference variable; uses Railway's private network, no SSL needed. |
 | `CRON_SECRET` | `openssl rand -hex 32` output | Protects `/api/cron/ingest`. |
 | `ENERGY_PRICE_CENTS_PER_KWH` | `25` | Optional; default 0,25 €/kWh. |
-| `FEATURE_FREE_TEXT_LLM` | `0` | Set `1` with `ANTHROPIC_API_KEY` when the free-text router ships. |
+| `ANTHROPIC_API_KEY` | from console.anthropic.com | Only needed when either LLM flag is on; see `docs/LLM.md`. |
+| `LLM_MODEL` | `claude-opus-5-5` | Optional override. |
+| `LLM_DAILY_CALL_CAP` | `2000` | Per purpose per day; exceeding it degrades gracefully. |
+| `FEATURE_FREE_TEXT_LLM` | `0` | `1` routes "Kaut kas cits" text through Claude when the regex table finds nothing. |
+| `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each ingestion run (also on the cron service). |
 | `FEATURE_RADAR` | `0` | Phase 2. |
 | `NODE_ENV` | `production` | Railway sets this during build; set it explicitly for runtime too. |
 

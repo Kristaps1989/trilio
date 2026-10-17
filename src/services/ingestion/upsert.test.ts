@@ -22,6 +22,7 @@ function row(overrides: Partial<NormalisedOffer>): NormalisedOffer {
     brand: "TestBrand",
     modelCode: "TB-100",
     name: "TestBrand TB-100",
+    description: null,
     subcategoryId: "kettle",
     attributes: { volume_l: 1.7 },
     tags: ["fast"],

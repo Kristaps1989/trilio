@@ -67,6 +67,13 @@ export const products = pgTable(
       .default(sql`'{}'::text[]`),
     /** Spec line shown on the card. */
     specs: text("specs"),
+    /** Raw description from the feed; input for LLM attribute extraction, never shown as-is. */
+    description: text("description"),
+    /** Set when attributes/tags were filled by the extraction job; null = not yet extracted. */
+    extractedAt: timestamp("extracted_at", { withTimezone: true }),
+    /** 0–100 self-reported confidence of the extraction; low values are shown as "nav apstiprināts". */
+    extractionConfidence: integer("extraction_confidence"),
+    extractionModel: text("extraction_model"),
     kwhYear: integer("kwh_year"),
     eprelId: text("eprel_id"),
     /** Trilio rating 0–100 (8,6/10 is stored as 86). Inputs are decided by the owner; see ROADMAP. */
@@ -177,3 +184,22 @@ export type Product = typeof products.$inferSelect;
 export type Offer = typeof offers.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type NewOffer = typeof offers.$inferInsert;
+
+/** Every Claude API call: purpose, tokens and outcome. No prompt text and no user text are stored. */
+export const llmCalls = pgTable(
+  "llm_calls",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    purpose: text("purpose").notNull(),
+    model: text("model").notNull(),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    cacheReadTokens: integer("cache_read_tokens").notNull().default(0),
+    cacheWriteTokens: integer("cache_write_tokens").notNull().default(0),
+    durationMs: integer("duration_ms").notNull().default(0),
+    ok: boolean("ok").notNull(),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("llm_calls_purpose_time_idx").on(t.purpose, t.createdAt)],
+);

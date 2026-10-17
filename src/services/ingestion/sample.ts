@@ -178,6 +178,7 @@ export const sampleAdapter: FeedAdapter = {
             brand: brandFromName(base.name),
             modelCode: base.m,
             name: base.name,
+            description: null,
             subcategoryId: product.subcategoryId,
             attributes: product.attributes,
             tags: product.tags,

@@ -13,6 +13,7 @@ export const NormalisedOfferSchema = z.object({
   brand: z.string().min(1),
   modelCode: z.string().min(1),
   name: z.string().min(1),
+  description: z.string().nullable().default(null),
   subcategoryId: z.string().min(1),
   attributes: z.record(z.string(), z.unknown()).default({}),
   tags: z.array(z.string()).default([]),

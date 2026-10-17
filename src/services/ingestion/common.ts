@@ -123,6 +123,7 @@ export function recordToOffer(
       brand,
       modelCode: modelCode || ean,
       name: record.title?.trim(),
+      description: record.description?.trim() || null,
       subcategoryId,
       attributes: {},
       tags: [],
