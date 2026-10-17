@@ -46,16 +46,34 @@ out of stock, like a feed. A partial run (capped, rotated or stopped early)
 waits `staleAfterHours` (default 7 days) instead, which must be longer than
 one full rotation.
 
-## Status of the launch shops (measured October 2026)
+## Latvian shops surveyed (October 2026)
 
-| Shop | Status | Notes |
-|---|---|---|
-| euronics.lv | Scraped | 48 product sitemaps, about 2 100 appliance pages. A full pass takes about an hour. |
-| m79.lv | Scraped | About 35 000 appliance pages. 2 000 per run, a rotation takes about three days at six runs a day. |
-| 1a.lv | Blocked | Cloudflare challenge. Needs a feed or allow-listing. |
-| rdveikals.lv | Blocked | Cloudflare challenge. Needs a feed or allow-listing. |
-| neoshop.lv | Blocked | JavaScript cookie challenge. Needs a feed or allow-listing. |
-| discover.lv | Not supported | No sitemap and no structured data or EAN on product pages. Needs a feed. |
+Traffic order follows Semrush's Latvian retail ranking for August 2026 where
+the shop appears in it. 220.lv is left out on purpose. Marketplaces,
+classifieds and price aggregators are not data sources (see the legal note).
+Each shop got a handful of requests as `TrilioBot`: home page, robots.txt,
+one sitemap, one product page.
+
+| Shop | Reachable by our crawler | Sitemap | Product data on the page | EAN | Status |
+|---|---|---|---|---|---|
+| rdveikals.lv | No, Cloudflare challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
+| ksenukai.lv | No, Cloudflare challenge | n/a | schema.org Product: name, brand, price, stock, energy class, rating (from a page saved in a browser) | Yes, in `data-flix-ean` | Needs a feed or allow-listing |
+| tet.lv | Yes | Yes, about 12 300 URLs | schema.org Product: name, sku, price, stock | Yes, in `data-ean` | Scrapeable after a small parser addition |
+| depo.lv (online.depo.lv) | Yes | No | None in HTML, JavaScript app | No | Needs a feed |
+| ikea.com/lv | Yes | Yes | schema.org Product: name, price, stock | No, IKEA article numbers only | Own-brand products only, nothing to compare across shops |
+| 1a.lv | No, Cloudflare block | n/a | n/a | n/a | Needs a feed or allow-listing |
+| euronics.lv | Yes | Yes | schema.org Product | Yes | Scraped |
+| m79.lv | Yes | Yes, gzipped | schema.org Product | Yes | Scraped |
+| bigbox.lv | Yes | No sitemap | schema.org Product: name, price, stock | Yes | Needs link discovery from category pages |
+| neoshop.lv | No, JavaScript challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
+| dateks.lv | No, Cloudflare challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
+| lmt.lv, bite.lv | No, Cloudflare challenge | n/a | n/a | n/a | Telecom shops, mostly phones |
+| elkor.lv | No, redirect loop to elkor.com | n/a | n/a | n/a | Not reachable |
+| discover.lv | Yes | No | None | No | Needs a feed |
+| photopoint.lv | Redirects to photopoint.ee | n/a | n/a | n/a | No Latvian shop |
+
+1a.lv and ksenukai.lv both belong to Kesko Senukai, so one agreement covers
+two of the largest appliance sellers.
 
 ## Configuration reference
 
