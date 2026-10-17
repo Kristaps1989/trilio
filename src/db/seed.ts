@@ -22,6 +22,7 @@ export async function upsertStores(db: Db, seeds: StoreSeed[]) {
         feedUrl: s.feedUrl ?? null,
         affiliateTemplateUrl: s.affiliateTemplateUrl ?? null,
         imageHosts: s.imageHosts ?? [],
+        categoryMap: s.categoryMap ?? {},
         defaultDeliveryDays: s.defaultDeliveryDays ?? 3,
         active: s.active,
       })

@@ -1,0 +1,1 @@
+ALTER TABLE "stores" ADD COLUMN "category_map" jsonb DEFAULT '{}'::jsonb NOT NULL;

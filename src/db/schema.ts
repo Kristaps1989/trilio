@@ -38,6 +38,8 @@ export const stores = pgTable("stores", {
     .array()
     .notNull()
     .default(sql`'{}'::text[]`),
+  /** Feed category label → subcategory id (see services/ingestion/common.ts mapCategory). */
+  categoryMap: jsonb("category_map").$type<Record<string, string>>().notNull().default({}),
   defaultDeliveryDays: integer("default_delivery_days").notNull().default(3),
   active: boolean("active").notNull().default(true),
   lastIngestedAt: timestamp("last_ingested_at", { withTimezone: true }),

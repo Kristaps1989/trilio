@@ -10,6 +10,7 @@ export type StoreSeed = {
   feedUrl?: string;
   affiliateTemplateUrl?: string;
   imageHosts?: string[];
+  categoryMap?: Record<string, string>;
   defaultDeliveryDays?: number;
   active: boolean;
 };
