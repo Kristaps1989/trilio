@@ -22,10 +22,19 @@ Open the web service → **Variables** → add:
 | `LLM_DAILY_CALL_CAP` | `2000` | Per purpose per day; exceeding it degrades gracefully. |
 | `FEATURE_FREE_TEXT_LLM` | `0` | `1` routes "Kaut kas cits" text through Claude when the regex table finds nothing. |
 | `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each ingestion run (also on the cron service). |
-| `FEATURE_RADAR` | `0` | Phase 2. |
+| `APP_URL` | `https://trilio.lv` | Public URL; payment callback/redirects and auth URLs are built from it. |
+| `AUTH_SECRET` | `openssl rand -base64 32` | Session signing (Auth.js). |
+| `AUTH_URL` | same as `APP_URL` | |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". |
+| `AUTH_APPLE_ID` / `AUTH_APPLE_SECRET` | from Apple developer | Enables "Turpināt ar Apple". |
+| `RESEND_API_KEY`, `EMAIL_FROM` | from resend.com | Magic-link sign-in, receipts and radar emails. |
+| `PAYSERA_MAC_ID` / `PAYSERA_MAC_KEY` / `PAYSERA_BUSINESS_ID` | from Paysera after approval | Recurring billing (`docs/PAYMENTS.md`). |
+| `PAYMENT_TOKEN_KEY` | `openssl rand -hex 32` | Encrypts stored billing tokens. |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys` | Web push. |
+| `AUTH_DEV_LOGIN`, `PAYMENTS_PROVIDER=mock`, `ALLOW_INSECURE_TEST_FEATURES` | **never set on Railway** | Dev/CI only. |
 | `NODE_ENV` | `production` | Railway sets this during build; set it explicitly for runtime too. |
 
-Leave the Phase 2 variables from `.env.example` (Stripe, Auth.js, Resend, VAPID) unset until those features exist; the app does not read them yet.
+Every integration is optional: a provider whose variables are missing is simply not offered (no Google button without Google credentials, no payments without Paysera credentials, no email without Resend).
 
 Railway injects `PORT`; `next start` binds to it automatically on `0.0.0.0`.
 
@@ -56,7 +65,9 @@ Railway cron services run a command on a schedule and expect it to exit. Create 
 5. **Settings → Deploy → Healthcheck path**: clear it (a cron job has no HTTP server).
 6. **Variables**: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`.
 
-Each run ingests every active non-sample store and exits; results are in the service logs and in the `ingestion_runs` table. To run on demand: service → **Deployments → ⋯ → Run now**, or `npm run ingest -- euronics` from a shell.
+Each run ingests every active non-sample store, extracts attributes (if enabled), evaluates every price radar and sends notifications, then exits; results are in the service logs and in the `ingestion_runs` / `radar_events` tables.
+
+Add a second cron service for billing: schedule `0 6 * * *`, start command `curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/billing`, variables `CRON_SECRET` and `APP_URL`. It charges due renewals and retries (`docs/PAYMENTS.md`). To run on demand: service → **Deployments → ⋯ → Run now**, or `npm run ingest -- euronics` from a shell.
 
 `/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer.
 

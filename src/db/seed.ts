@@ -2,7 +2,7 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { createDb, type Db } from "./client";
-import { stores } from "./schema";
+import { plans, stores } from "./schema";
 import { PARTNER_STORES, SAMPLE_STORES, type StoreSeed } from "./stores";
 import { sampleAdapter } from "@/services/ingestion/sample";
 import { upsertOffers } from "@/services/ingestion/upsert";
@@ -47,9 +47,27 @@ export async function seedSampleProducts(db: Db, body: string) {
   return summary;
 }
 
+/** Launch plans (owner decision): 1,99 €/month and 12 €/year. */
+export async function upsertPlans(db: Db) {
+  const rows = [
+    { id: "monthly", name: "Cenu radars — mēnesī", priceCents: 199, interval: "month" as const },
+    { id: "annual", name: "Cenu radars — gadā", priceCents: 1200, interval: "year" as const },
+  ];
+  for (const r of rows) {
+    await db
+      .insert(plans)
+      .values({ ...r, currency: "EUR", active: true })
+      .onConflictDoUpdate({
+        target: plans.id,
+        set: { name: r.name, priceCents: r.priceCents, interval: r.interval },
+      });
+  }
+}
+
 async function main() {
   const { db, client } = createDb();
   await upsertStores(db, [...SAMPLE_STORES, ...PARTNER_STORES]);
+  await upsertPlans(db);
   const body = readFileSync("data/sample-products.json", "utf8");
   const summary = await seedSampleProducts(db, body);
   console.table(summary);

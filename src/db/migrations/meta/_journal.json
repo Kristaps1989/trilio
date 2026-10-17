@@ -22,6 +22,13 @@
       "when": 1792256790003,
       "tag": "0002_llm_extraction",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792259916673,
+      "tag": "0003_phase2_accounts_billing_radar",
+      "breakpoints": true
     }
   ]
 }

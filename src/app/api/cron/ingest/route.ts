@@ -4,6 +4,9 @@ import { db } from "@/db";
 import { ingestAllActive } from "@/services/ingestion/run";
 import { createCaller, extractionEnabled } from "@/services/llm/client";
 import { runExtractionJob } from "@/services/llm/extract-job";
+import { appBaseUrl } from "@/services/payments";
+import { runRadarJob } from "@/services/radar/job";
+import { radarTexts } from "@/services/texts";
 
 // Called by the scheduler (Vercel Cron or an external cron) with
 // `Authorization: Bearer $CRON_SECRET`. Runs every active partner feed.
@@ -25,11 +28,14 @@ export async function POST(request: Request) {
   const results = await ingestAllActive(db);
   // New products get attributes/tags from the extraction job (docs/LLM.md) when it is enabled.
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
+  // Price radar: evaluate every active radar against the fresh prices (docs/DATA_MODEL.md).
+  const radar = await runRadarJob(db, { baseUrl: appBaseUrl(), texts: radarTexts() });
   // Rejected samples stay in the log, not in the HTTP response.
   return NextResponse.json({
     ok: results.every((r) => r.ok),
     stores: results.map((r) => ({ ...r, rejectedSample: undefined })),
     extraction,
+    radar,
   });
 }
 
