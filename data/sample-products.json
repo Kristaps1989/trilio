@@ -1,0 +1,8438 @@
+{
+  "note": "PARAUGA DATI — izdomātas cenas, krājumi un vērtējumi. Modeļu kodi ledusskapjiem/putekļsūcējiem ir reāla formāta, pārējiem ģenerēti. EAN ir ģenerēti. Lieto tikai testiem un dizaina demonstrācijai.",
+  "products": [
+    {
+      "id": "n1",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Bosch Serie 4 kombinētais",
+      "w": 60,
+      "h": 203,
+      "v": 363,
+      "en": "E",
+      "db": 38,
+      "s": 8.8,
+      "m": "KGN39VLCT",
+      "ean": "4003174289161",
+      "kwh_year": 249,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 719,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 689,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "n2",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Samsung kombinētais, No Frost",
+      "w": 59.5,
+      "h": 185,
+      "v": 344,
+      "en": "D",
+      "db": 35,
+      "s": 8.6,
+      "m": "RB34C672ESA",
+      "ean": "4003017679616",
+      "kwh_year": 177,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 649,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 629,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": null,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "n13",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Hisense kombinētais, No Frost",
+      "w": 59.5,
+      "h": 200,
+      "v": 372,
+      "en": "D",
+      "db": 36,
+      "s": 8.2,
+      "m": "RB470N4SIC",
+      "ean": "4006952705471",
+      "kwh_year": 191,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 619,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 609,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n3",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "LG kombinētais, DoorCooling",
+      "w": 59.5,
+      "h": 186,
+      "v": 384,
+      "en": "D",
+      "db": 36,
+      "s": 8.4,
+      "m": "GBB72PZVCN",
+      "ean": "4000903739805",
+      "kwh_year": 197,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 779,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 799,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 759,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n4",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": false,
+      "name": "Beko kombinētais",
+      "w": 59.5,
+      "h": 185,
+      "v": 324,
+      "en": "E",
+      "db": 40,
+      "s": 7.6,
+      "m": "RCNA366I40XBN",
+      "ean": "4008945535379",
+      "kwh_year": 222,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 429,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 419,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n5",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Electrolux kombinētais, 70 cm",
+      "w": 70,
+      "h": 201,
+      "v": 461,
+      "en": "E",
+      "db": 39,
+      "s": 8.2,
+      "m": "LNT7ME46X2",
+      "ean": "4008813462882",
+      "kwh_year": 316,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 899,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 929,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 879,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "w1",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Samsung Side-by-Side",
+      "w": 91.2,
+      "h": 178,
+      "v": 634,
+      "en": "E",
+      "db": 35,
+      "s": 8.5,
+      "m": "SA7251DT",
+      "ean": "4000943219336",
+      "kwh_year": 435,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 1199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 1179,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 1219,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "w2",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "LG Side-by-Side, ar ledus devēju",
+      "w": 91.3,
+      "h": 179,
+      "v": 635,
+      "en": "E",
+      "db": 36,
+      "s": 8.4,
+      "m": "LG7258AE",
+      "ean": "4008310531777",
+      "kwh_year": 435,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 1349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 1399,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 1329,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "w3",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Hisense French Door",
+      "w": 79.4,
+      "h": 178,
+      "v": 536,
+      "en": "E",
+      "db": 38,
+      "s": 8,
+      "m": "HI9890QO",
+      "ean": "4006185162614",
+      "kwh_year": 368,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 899,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 879,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 919,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "c1",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": false,
+      "name": "Beko mazais ledusskapis ar saldēšanas nodalījumu",
+      "w": 54,
+      "h": 84,
+      "v": 114,
+      "en": "E",
+      "db": 39,
+      "s": 7.4,
+      "m": "BE2328ST",
+      "ean": "4007875956100",
+      "kwh_year": 78,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 209,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 189,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "c": "new",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Gorenje mazais ledusskapis bez saldētavas",
+      "w": 56,
+      "h": 85,
+      "v": 133,
+      "en": "E",
+      "db": 38,
+      "s": 7.6,
+      "m": "GO6379LX",
+      "ean": "4003403682534",
+      "kwh_year": 91,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 229,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 219,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": false,
+      "name": "Candy mazais ledusskapis",
+      "w": 48,
+      "h": 85,
+      "v": 109,
+      "en": "F",
+      "db": 40,
+      "s": 6.9,
+      "m": "CA7588OM",
+      "ean": "4008953662418",
+      "kwh_year": 93,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 159,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 145,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "c": "new",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Bosch Serie 2 mazais ledusskapis",
+      "w": 56,
+      "h": 85,
+      "v": 135,
+      "en": "E",
+      "db": 38,
+      "s": 8,
+      "m": "BO9400ES",
+      "ean": "4008638922301",
+      "kwh_year": 93,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 289,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 309,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "m1",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": false,
+      "name": "Beko kombinētais, 153 cm",
+      "w": 54,
+      "h": 153,
+      "v": 226,
+      "en": "E",
+      "db": 39,
+      "s": 7.5,
+      "m": "BE5123RO",
+      "ean": "4008716311805",
+      "kwh_year": 155,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 359,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 339,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Hisense kombinētais, 161 cm",
+      "w": 55,
+      "h": 161,
+      "v": 243,
+      "en": "E",
+      "db": 39,
+      "s": 7.8,
+      "m": "HI4428OC",
+      "ean": "4004714754996",
+      "kwh_year": 167,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 389,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 409,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "c": "new",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Bosch Serie 4 kombinētais, 176 cm",
+      "w": 60,
+      "h": 176,
+      "v": 324,
+      "en": "D",
+      "db": 36,
+      "s": 8.5,
+      "m": "BO9646AF",
+      "ean": "4008658640650",
+      "kwh_year": 167,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 659,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 649,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 669,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "m4",
+      "c": "new",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Electrolux vienkameras, 155 cm",
+      "w": 55,
+      "h": 155,
+      "v": 240,
+      "en": "E",
+      "db": 38,
+      "s": 7.9,
+      "m": "EL6646SC",
+      "ean": "4006553078974",
+      "kwh_year": 165,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 459,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 469,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 449,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "r1",
+      "c": "refurb",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Samsung kombinētais, No Frost",
+      "w": 59.5,
+      "h": 185,
+      "v": 344,
+      "en": "D",
+      "db": 35,
+      "s": 8.3,
+      "g": "A — sīki skrāpējumi sānu panelī",
+      "wr": "12 mēn. garantija",
+      "nw": 629,
+      "m": "RB34C672ESA",
+      "ean": "4003017679616",
+      "kwh_year": 177,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 489,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 469,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "c": "refurb",
+      "t": "free",
+      "fz": true,
+      "nf": true,
+      "name": "Bosch Serie 4 kombinētais",
+      "w": 60,
+      "h": 203,
+      "v": 363,
+      "en": "E",
+      "db": 38,
+      "s": 8.5,
+      "g": "A+ — atgriezta, iepakojums atvērts",
+      "wr": "24 mēn. garantija",
+      "nw": 689,
+      "m": "KGN39VLCT",
+      "ean": "4003174289161",
+      "kwh_year": 249,
+      "offers": [
+        {
+          "store": "store_b",
+          "price_eur": 579,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n6",
+      "c": "new",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Bosch Serie 6 vienkameras",
+      "w": 60,
+      "h": 186,
+      "v": 346,
+      "en": "D",
+      "db": 37,
+      "s": 8.5,
+      "m": "KSV36VLEP",
+      "ean": "4005660548325",
+      "kwh_year": 178,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 799,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 829,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 789,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n7",
+      "c": "new",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Gorenje vienkameras, 145 cm",
+      "w": 60,
+      "h": 145,
+      "v": 242,
+      "en": "E",
+      "db": 38,
+      "s": 7.8,
+      "m": "R615FES5",
+      "ean": "4006506893555",
+      "kwh_year": 166,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 499,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 479,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 489,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n14",
+      "c": "new",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Liebherr vienkameras",
+      "w": 60,
+      "h": 185,
+      "v": 380,
+      "en": "D",
+      "db": 35,
+      "s": 8.4,
+      "m": "SRe 5220",
+      "ean": "4004822023335",
+      "kwh_year": 195,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 899,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 879,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 869,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "c": "refurb",
+      "t": "free",
+      "fz": false,
+      "nf": true,
+      "name": "Electrolux vienkameras",
+      "w": 59.5,
+      "h": 185,
+      "v": 390,
+      "en": "E",
+      "db": 38,
+      "s": 7.9,
+      "g": "B — neliels iespiedums durvīs",
+      "wr": "12 mēn. garantija",
+      "nw": 579,
+      "m": "LRT5MF38U0",
+      "ean": "4006713603770",
+      "kwh_year": 267,
+      "offers": [
+        {
+          "store": "store_c",
+          "price_eur": 389,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n8",
+      "c": "new",
+      "t": "builtin",
+      "fz": true,
+      "nf": false,
+      "name": "Electrolux iebūvējams kombinētais",
+      "w": 54,
+      "h": 178,
+      "v": 256,
+      "en": "E",
+      "db": 35,
+      "s": 8.3,
+      "m": "ENT6TE18S",
+      "ean": "4009948493574",
+      "kwh_year": 176,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 799,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 819,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 789,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "n9",
+      "c": "new",
+      "t": "builtin",
+      "fz": true,
+      "nf": true,
+      "name": "Bosch Serie 4 iebūvējams kombinētais",
+      "w": 54,
+      "h": 178,
+      "v": 260,
+      "en": "E",
+      "db": 35,
+      "s": 8.7,
+      "m": "KIN86VSE0",
+      "ean": "4004830386989",
+      "kwh_year": 178,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 949,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 929,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": null,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "n10",
+      "c": "new",
+      "t": "builtin",
+      "fz": true,
+      "nf": false,
+      "name": "Whirlpool iebūvējams kombinētais",
+      "w": 54,
+      "h": 178,
+      "v": 250,
+      "en": "F",
+      "db": 37,
+      "s": 7.7,
+      "m": "ART 6711 SF2",
+      "ean": "4003937152022",
+      "kwh_year": 214,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 689,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 679,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "r4",
+      "c": "refurb",
+      "t": "builtin",
+      "fz": true,
+      "nf": true,
+      "name": "Samsung iebūvējams kombinētais",
+      "w": 54,
+      "h": 178,
+      "v": 267,
+      "en": "E",
+      "db": 36,
+      "s": 8.1,
+      "g": "A — skrāpējumi sānos, nišā tie nav redzami",
+      "wr": "12 mēn. garantija",
+      "nw": 789,
+      "m": "BRB26705EWW",
+      "ean": "4005784334880",
+      "kwh_year": 183,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 559,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n11",
+      "c": "new",
+      "t": "builtin",
+      "fz": false,
+      "nf": true,
+      "name": "AEG iebūvējams vienkameras",
+      "w": 54,
+      "h": 178,
+      "v": 310,
+      "en": "E",
+      "db": 34,
+      "s": 8.6,
+      "m": "SKE818E1DC",
+      "ean": "4009472549747",
+      "kwh_year": 213,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 1049,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 999,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 1019,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "n12",
+      "c": "new",
+      "t": "builtin",
+      "fz": false,
+      "nf": true,
+      "name": "Electrolux iebūvējams vienkameras",
+      "w": 54,
+      "h": 178,
+      "v": 310,
+      "en": "F",
+      "db": 35,
+      "s": 7.9,
+      "m": "LRB3DE18S",
+      "ean": "4002067953868",
+      "kwh_year": 266,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 749,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 769,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 739,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n15",
+      "c": "new",
+      "t": "builtin",
+      "fz": false,
+      "nf": true,
+      "name": "Gorenje iebūvējams vienkameras",
+      "w": 54,
+      "h": 178,
+      "v": 301,
+      "en": "E",
+      "db": 35,
+      "s": 7.6,
+      "m": "RI4182E1",
+      "ean": "4005950167731",
+      "kwh_year": 206,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 649,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 669,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 639,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "n16",
+      "c": "new",
+      "t": "builtin",
+      "fz": false,
+      "nf": true,
+      "name": "Electrolux iebūvējams, 122 cm",
+      "w": 54,
+      "h": 122,
+      "v": 207,
+      "en": "E",
+      "db": 34,
+      "s": 8,
+      "m": "LRB3AE12S",
+      "ean": "4002040246376",
+      "kwh_year": 142,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 619,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 589,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "r5",
+      "c": "refurb",
+      "t": "builtin",
+      "fz": false,
+      "nf": true,
+      "name": "Bosch iebūvējams vienkameras",
+      "w": 54,
+      "h": 178,
+      "v": 319,
+      "en": "E",
+      "db": 35,
+      "s": 8.2,
+      "g": "A+ — atgriezta, nelietota",
+      "wr": "24 mēn. garantija",
+      "nw": 879,
+      "m": "KIR81VFE0",
+      "ean": "4000284232964",
+      "kwh_year": 219,
+      "offers": [
+        {
+          "store": "store_b",
+          "price_eur": 619,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v1",
+      "c": "new",
+      "t": "robot",
+      "name": "Roborock S8, ar mazgāšanu",
+      "run": 180,
+      "db": 67,
+      "mop": true,
+      "pet": true,
+      "s": 8.9,
+      "m": "S802-02",
+      "ean": "4009001982281",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 579,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 539,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "v2",
+      "c": "new",
+      "t": "robot",
+      "name": "Xiaomi Robot Vacuum S20",
+      "run": 130,
+      "db": 66,
+      "mop": true,
+      "pet": false,
+      "s": 7.9,
+      "m": "BHR8629EU",
+      "ean": "4005000588172",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 259,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v3",
+      "c": "new",
+      "t": "robot",
+      "name": "iRobot Roomba Combo",
+      "run": 100,
+      "db": 63,
+      "mop": true,
+      "pet": true,
+      "s": 8.1,
+      "m": "Y011240",
+      "ean": "4009970857283",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 389,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": null,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "v4",
+      "c": "new",
+      "t": "robot",
+      "name": "Dreame L10s Ultra",
+      "run": 150,
+      "db": 65,
+      "mop": true,
+      "pet": true,
+      "s": 8.7,
+      "m": "RLS5L",
+      "ean": "4002784783779",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 719,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 689,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "vr1",
+      "c": "refurb",
+      "t": "robot",
+      "name": "Roborock S8, ar mazgāšanu",
+      "run": 180,
+      "db": 67,
+      "mop": true,
+      "pet": true,
+      "s": 8.6,
+      "g": "A — izmantota demonstrācijām",
+      "wr": "12 mēn. garantija",
+      "nw": 539,
+      "m": "S802-02",
+      "ean": "4009001982281",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v5",
+      "c": "new",
+      "t": "stick",
+      "name": "Dyson V15 Detect",
+      "run": 60,
+      "db": 75,
+      "mop": false,
+      "pet": true,
+      "s": 9,
+      "m": "SV47",
+      "ean": "4000090216134",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 679,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 689,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v6",
+      "c": "new",
+      "t": "stick",
+      "name": "Samsung Bespoke Jet",
+      "run": 60,
+      "db": 72,
+      "mop": false,
+      "pet": true,
+      "s": 8.5,
+      "m": "VS20C8524TB",
+      "ean": "4001142344744",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 499,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 519,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 489,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "v7",
+      "c": "new",
+      "t": "stick",
+      "name": "Philips 7000 bezvadu, ar mazgāšanu",
+      "run": 80,
+      "db": 70,
+      "mop": true,
+      "pet": false,
+      "s": 8,
+      "m": "XC7057/01",
+      "ean": "4003472642927",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 329,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 319,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 339,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v8",
+      "c": "new",
+      "t": "stick",
+      "name": "Bosch Unlimited 7",
+      "run": 40,
+      "db": 70,
+      "mop": false,
+      "pet": true,
+      "s": 7.8,
+      "m": "BBS711W",
+      "ean": "4001314033612",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 279,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 289,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 269,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "vr2",
+      "c": "refurb",
+      "t": "stick",
+      "name": "Dyson V15 Detect",
+      "run": 60,
+      "db": 75,
+      "mop": false,
+      "pet": true,
+      "s": 8.8,
+      "g": "A+ — atgriezta, nelietota",
+      "wr": "24 mēn. garantija",
+      "nw": 679,
+      "m": "SV47",
+      "ean": "4000090216134",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_b",
+          "price_eur": 529,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v9",
+      "c": "new",
+      "t": "classic",
+      "name": "Miele Complete C3, ar maisu",
+      "run": 0,
+      "db": 64,
+      "mop": false,
+      "pet": true,
+      "s": 8.8,
+      "m": "SGDF3",
+      "ean": "4002792390303",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 329,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 319,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v10",
+      "c": "new",
+      "t": "classic",
+      "name": "Bosch Serie 6, ar maisu",
+      "run": 0,
+      "db": 66,
+      "mop": false,
+      "pet": false,
+      "s": 8.1,
+      "m": "BGL6POW1",
+      "ean": "4003106473620",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 169,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 175,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "v11",
+      "c": "new",
+      "t": "classic",
+      "name": "Philips 5000, ciklonisks (bez maisa)",
+      "run": 0,
+      "db": 76,
+      "mop": false,
+      "pet": true,
+      "s": 7.6,
+      "m": "XB2142/09",
+      "ean": "4004246886837",
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 139,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 125,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new0",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Beko saldētava-lāde, 200 L",
+      "specs": "200 L · klase E · SN-T",
+      "s": 7.8,
+      "m": "BE5506SD",
+      "ean": "4008752685854",
+      "tags": [
+        "chest",
+        "home",
+        "garage",
+        "mid"
+      ],
+      "kwh_year": 200,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new1",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Electrolux saldētava-lāde, 300 L",
+      "specs": "300 L · klase E · LowFrost",
+      "s": 8.4,
+      "m": "EL1598YG",
+      "ean": "4005113896881",
+      "tags": [
+        "chest",
+        "home",
+        "garage",
+        "big"
+      ],
+      "kwh_year": 240,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 439,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new2",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Hisense saldētava-lāde, 95 L",
+      "specs": "95 L · klase F",
+      "s": 7.4,
+      "m": "HI8406CO",
+      "ean": "4005859302394",
+      "tags": [
+        "chest",
+        "home",
+        "garage",
+        "small"
+      ],
+      "kwh_year": 150,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 169,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 169,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 159,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new3",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Gorenje vertikālā, No Frost",
+      "specs": "280 L · No Frost · 185 cm",
+      "s": 8.3,
+      "m": "GO7581LE",
+      "ean": "4003708665300",
+      "tags": [
+        "upright",
+        "home",
+        "big"
+      ],
+      "kwh_year": 270,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 569,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 569,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new4",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Bosch Serie 4 vertikālā, No Frost",
+      "specs": "242 L · No Frost · klase E",
+      "s": 8.7,
+      "m": "BO2443TU",
+      "ean": "4006636106877",
+      "tags": [
+        "upright",
+        "home",
+        "mid"
+      ],
+      "kwh_year": 230,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 689,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 709,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new5",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Candy kompaktā saldētava",
+      "specs": "85 L · 85 cm augsta",
+      "s": 7.2,
+      "m": "CA1364OW",
+      "ean": "4007216808778",
+      "tags": [
+        "upright",
+        "home",
+        "small"
+      ],
+      "kwh_year": 160,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 199,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new6",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Electrolux iebūvējama saldētava",
+      "specs": "204 L · niša 178 cm",
+      "s": 8.2,
+      "m": "EL9061FA",
+      "ean": "4007357085960",
+      "tags": [
+        "builtin",
+        "home",
+        "mid"
+      ],
+      "kwh_year": 220,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 799,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 809,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 799,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new7",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Gorenje iebūvējama zem darba virsmas",
+      "specs": "95 L · 82 cm augsta",
+      "s": 7.8,
+      "m": "GO7409FI",
+      "ean": "4003697121870",
+      "tags": [
+        "builtin",
+        "home",
+        "small"
+      ],
+      "kwh_year": 220,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 439,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 439,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new8",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Bosch Serie 6 iebūvējama, No Frost",
+      "specs": "212 L · No Frost · niša 178 cm",
+      "s": 8.6,
+      "m": "BO3020MK",
+      "ean": "4006884830623",
+      "tags": [
+        "builtin",
+        "home",
+        "mid"
+      ],
+      "kwh_year": 220,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 999,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 989,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 979,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-new9",
+      "c": "new",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Beko kompaktā vertikālā, 100 L",
+      "specs": "100 L · 85 cm augsta · klase E",
+      "s": 7.6,
+      "m": "BE6866EP",
+      "ean": "4009068466236",
+      "tags": [
+        "upright",
+        "home",
+        "small"
+      ],
+      "kwh_year": 160,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "freezer-refurb0",
+      "c": "refurb",
+      "sub": "freezer",
+      "gen": true,
+      "name": "Gorenje vertikālā, No Frost",
+      "specs": "280 L · No Frost",
+      "s": 8.1,
+      "g": "A — skrāpējums uz durvīm",
+      "wr": "12 mēn. garantija",
+      "nw": 549,
+      "m": "GO7581LE",
+      "ean": "4003708665300",
+      "tags": [
+        "upright",
+        "home",
+        "big"
+      ],
+      "kwh_year": 270,
+      "offers": [
+        {
+          "store": "store_b",
+          "price_eur": 399,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-new0",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Bosch Serie 4, 8 kg",
+      "specs": "8 kg · 1400 apgr./min · klase A · 55 cm dziļa",
+      "s": 8.6,
+      "m": "BO2238EA",
+      "ean": "4006617381743",
+      "tags": [
+        "9",
+        "front",
+        "std"
+      ],
+      "kwh_year": 60,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 529,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 539,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 519,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "washer-new1",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Samsung EcoBubble, 9 kg",
+      "specs": "9 kg · 1400 apgr./min · klase A · tvaika funkcija",
+      "s": 8.5,
+      "m": "SA4891VG",
+      "ean": "4000140953156",
+      "tags": [
+        "9",
+        "front",
+        "std"
+      ],
+      "kwh_year": 60,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 579,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 579,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-new2",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "LG šaurā, 7 kg",
+      "specs": "7 kg · 1200 apgr./min · 45 cm dziļa",
+      "s": 8.1,
+      "m": "LG4739HS",
+      "ean": "4007497249390",
+      "tags": [
+        "7",
+        "front",
+        "slim"
+      ],
+      "kwh_year": 60,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 439,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "washer-new3",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Beko, 10 kg",
+      "specs": "10 kg · 1400 apgr./min · klase B",
+      "s": 7.7,
+      "m": "BE4521XO",
+      "ean": "4008466943776",
+      "tags": [
+        "10",
+        "front",
+        "std"
+      ],
+      "kwh_year": 60,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 479,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 479,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 459,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-new4",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Samsung šaurā, 8 kg",
+      "specs": "8 kg · 1400 apgr./min · 45 cm dziļa",
+      "s": 8.3,
+      "m": "SA3283LT",
+      "ean": "4009798968796",
+      "tags": [
+        "9",
+        "front",
+        "slim"
+      ],
+      "kwh_year": 60,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 499,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 509,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 509,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "washer-new5",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Electrolux ar augšējo ielādi, 7 kg",
+      "specs": "7 kg · 40 cm plata · 1300 apgr./min",
+      "s": 8.2,
+      "m": "EL9573TE",
+      "ean": "4007403583525",
+      "tags": [
+        "7",
+        "top",
+        "slim",
+        "std"
+      ],
+      "kwh_year": 75,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 539,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 559,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-new6",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Whirlpool ar augšējo ielādi, 6 kg",
+      "specs": "6 kg · 40 cm plata · 1200 apgr./min",
+      "s": 7.5,
+      "m": "WH6023PQ",
+      "ean": "4003267400572",
+      "tags": [
+        "7",
+        "top",
+        "slim",
+        "std"
+      ],
+      "kwh_year": 75,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 399,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-new7",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Candy šaurā ar žāvētāju, 8/5 kg",
+      "specs": "mazgā 8 kg, žāvē 5 kg · 47 cm dziļa",
+      "s": 7.6,
+      "m": "CA9109BB",
+      "ean": "4009486926787",
+      "tags": [
+        "9",
+        "combo",
+        "slim"
+      ],
+      "kwh_year": 190,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 609,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 599,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "washer-new8",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Beko šaurā ar žāvētāju, 7/5 kg",
+      "specs": "mazgā 7 kg, žāvē 5 kg · 45 cm dziļa",
+      "s": 7.5,
+      "m": "BE8669NA",
+      "ean": "4009622610303",
+      "tags": [
+        "7",
+        "combo",
+        "slim"
+      ],
+      "kwh_year": 190,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 529,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 539,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "washer-new9",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "LG ar žāvētāju, 9/6 kg",
+      "specs": "mazgā 9 kg, žāvē 6 kg · tvaika funkcija",
+      "s": 8.4,
+      "m": "LG8929ZN",
+      "ean": "4008660593470",
+      "tags": [
+        "9",
+        "combo",
+        "std"
+      ],
+      "kwh_year": 190,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 849,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 839,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 829,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-new10",
+      "c": "new",
+      "sub": "washer",
+      "gen": true,
+      "name": "Samsung ar žāvētāju, 10/6 kg",
+      "specs": "mazgā 10 kg, žāvē 6 kg · Wi-Fi",
+      "s": 8.3,
+      "m": "SA2423DB",
+      "ean": "4009529357585",
+      "tags": [
+        "10",
+        "combo",
+        "std"
+      ],
+      "kwh_year": 190,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 949,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 959,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 919,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "washer-refurb0",
+      "c": "refurb",
+      "sub": "washer",
+      "gen": true,
+      "name": "Bosch Serie 4, 8 kg",
+      "specs": "8 kg · 1400 apgr./min",
+      "s": 8.4,
+      "g": "A+ — atgriezta, nelietota",
+      "wr": "24 mēn. garantija",
+      "nw": 529,
+      "m": "BO2238EA",
+      "ean": "4006617381743",
+      "tags": [
+        "9",
+        "front",
+        "std"
+      ],
+      "kwh_year": 60,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 389,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new0",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Bosch Serie 6 ar siltumsūkni, 8 kg",
+      "specs": "klase A++ · 8 kg · pašattīrošs kondensators",
+      "s": 8.7,
+      "m": "BO5649JD",
+      "ean": "4007513506216",
+      "tags": [
+        "8",
+        "heatpump",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 175,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 749,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 749,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 739,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new1",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Electrolux PerfectCare ar siltumsūkni, 9 kg",
+      "specs": "klase A+++ · 9 kg · smaržu kārtridžs",
+      "s": 8.6,
+      "m": "EL8386SQ",
+      "ean": "4007099148145",
+      "tags": [
+        "9",
+        "heatpump",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 200,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 849,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 869,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 829,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new2",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Beko ar siltumsūkni, 8 kg",
+      "specs": "klase A++ · 8 kg",
+      "s": 7.9,
+      "m": "BE3582YQ",
+      "ean": "4008182449668",
+      "tags": [
+        "8",
+        "heatpump",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 175,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 499,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 479,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 479,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new3",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Samsung ar siltumsūkni, 9 kg",
+      "specs": "klase A+++ · 9 kg · Wi-Fi",
+      "s": 8.3,
+      "m": "SA9644WM",
+      "ean": "4001552479937",
+      "tags": [
+        "9",
+        "heatpump",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 200,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 689,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 669,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new4",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Whirlpool ar siltumsūkni, 7 kg",
+      "specs": "klase A+ · 7 kg",
+      "s": 7.8,
+      "m": "WH5475BU",
+      "ean": "4003019554379",
+      "tags": [
+        "7",
+        "heatpump",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 175,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new5",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Candy kondensācijas, 8 kg",
+      "specs": "klase B · 8 kg",
+      "s": 7.2,
+      "m": "CA9438GQ",
+      "ean": "4009515518235",
+      "tags": [
+        "8",
+        "condenser",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 520,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 359,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 359,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "dryer-new6",
+      "c": "new",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Beko kondensācijas, 7 kg",
+      "specs": "klase B · 7 kg",
+      "s": 7.1,
+      "m": "BE3770GS",
+      "ean": "4008200597395",
+      "tags": [
+        "7",
+        "condenser",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 520,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 289,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 299,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dryer-refurb0",
+      "c": "refurb",
+      "sub": "dryer",
+      "gen": true,
+      "name": "Electrolux PerfectCare ar siltumsūkni, 9 kg",
+      "specs": "klase A+++ · 9 kg",
+      "s": 8.4,
+      "g": "A — skrāpējums uz augšējā paneļa",
+      "wr": "12 mēn. garantija",
+      "nw": 849,
+      "m": "EL8386SQ",
+      "ean": "4007099148145",
+      "tags": [
+        "9",
+        "heatpump",
+        "stack",
+        "side"
+      ],
+      "kwh_year": 200,
+      "offers": [
+        {
+          "store": "store_c",
+          "price_eur": 599,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "iron-new0",
+      "c": "new",
+      "sub": "iron",
+      "gen": true,
+      "name": "Philips 5000 tvaika gludeklis",
+      "specs": "2600 W · 50 g/min tvaika",
+      "s": 8.1,
+      "m": "PH6212IL",
+      "ean": "4007402586992",
+      "tags": [
+        "iron",
+        "rare",
+        "auto"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 58,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 59,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "iron-new1",
+      "c": "new",
+      "sub": "iron",
+      "gen": true,
+      "name": "Tefal Ultragliss",
+      "specs": "2800 W · 55 g/min tvaika",
+      "s": 8.3,
+      "m": "TE4704KC",
+      "ean": "4000755348316",
+      "tags": [
+        "iron",
+        "often",
+        "auto"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "iron-new2",
+      "c": "new",
+      "sub": "iron",
+      "gen": true,
+      "name": "Braun TexStyle 7",
+      "specs": "2700 W · pretkaļķu sistēma",
+      "s": 8.4,
+      "m": "BR7269PM",
+      "ean": "4004674856389",
+      "tags": [
+        "iron",
+        "often",
+        "auto"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 89,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 89,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 89,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "iron-new3",
+      "c": "new",
+      "sub": "iron",
+      "gen": true,
+      "name": "Rowenta Focus",
+      "specs": "2400 W · 40 g/min tvaika",
+      "s": 7.6,
+      "m": "RO7116WG",
+      "ean": "4000057221577",
+      "tags": [
+        "iron",
+        "rare"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 44,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 44,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "iron-new4",
+      "c": "new",
+      "sub": "iron",
+      "gen": true,
+      "name": "Philips PerfectCare 7000 tvaika sistēma",
+      "specs": "7,5 bāri · bez temperatūras regulēšanas",
+      "s": 8.8,
+      "m": "PH5862AV",
+      "ean": "4007173193917",
+      "tags": [
+        "station",
+        "often",
+        "auto"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "iron-new5",
+      "c": "new",
+      "sub": "iron",
+      "gen": true,
+      "name": "Tefal Express Easy tvaika sistēma",
+      "specs": "5,5 bāri · 1,7 L tvertne",
+      "s": 8,
+      "m": "TE9202SQ",
+      "ean": "4002140613214",
+      "tags": [
+        "station",
+        "often"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 139,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "steamer-new0",
+      "c": "new",
+      "sub": "steamer",
+      "gen": true,
+      "name": "Philips 3000 rokas tvaicētājs",
+      "specs": "1000 W · gatavs 30 sekundēs",
+      "s": 8,
+      "m": "PH2237TE",
+      "ean": "4006258068164",
+      "tags": [
+        "hand",
+        "shirts"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 48,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 48,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "steamer-new1",
+      "c": "new",
+      "sub": "steamer",
+      "gen": true,
+      "name": "Tefal Access Steam+",
+      "specs": "1600 W · 24 g/min tvaika",
+      "s": 8.3,
+      "m": "TE7874QH",
+      "ean": "4001625545330",
+      "tags": [
+        "hand",
+        "shirts",
+        "heavy"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "steamer-new2",
+      "c": "new",
+      "sub": "steamer",
+      "gen": true,
+      "name": "Rowenta Pro Compact",
+      "specs": "1300 W · salokāms",
+      "s": 7.8,
+      "m": "RO8323NT",
+      "ean": "4000362249921",
+      "tags": [
+        "hand",
+        "shirts"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 60,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 56,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "steamer-new3",
+      "c": "new",
+      "sub": "steamer",
+      "gen": true,
+      "name": "Philips 5000 stāvošais tvaicētājs",
+      "specs": "2000 W · 40 g/min tvaika · statīvs",
+      "s": 8.5,
+      "m": "PH3317HC",
+      "ean": "4006552995326",
+      "tags": [
+        "stand",
+        "shirts",
+        "heavy"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 149,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "steamer-new4",
+      "c": "new",
+      "sub": "steamer",
+      "gen": true,
+      "name": "Tefal Pro Style stāvošais",
+      "specs": "1800 W · statīvs ar pakaramo",
+      "s": 7.9,
+      "m": "TE5036UH",
+      "ean": "4000977909456",
+      "tags": [
+        "stand",
+        "shirts"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 119,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new0",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Bosch Serie 4 iebūvējama, 60 cm",
+      "specs": "13 komplekti · 44 dB · klase D",
+      "s": 8.6,
+      "m": "BO6625ZK",
+      "ean": "4007799168498",
+      "tags": [
+        "60",
+        "builtin",
+        "quiet",
+        "dry"
+      ],
+      "kwh_year": 205,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 589,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 599,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new1",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Siemens iQ300 iebūvējama, 60 cm",
+      "specs": "14 komplekti · 42 dB · klase C",
+      "s": 8.8,
+      "m": "SI1822QG",
+      "ean": "4000280295307",
+      "tags": [
+        "60",
+        "builtin",
+        "quiet",
+        "dry",
+        "fast"
+      ],
+      "kwh_year": 205,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 699,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 689,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new2",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Beko iebūvējama, 60 cm",
+      "specs": "14 komplekti · 46 dB · klase E",
+      "s": 7.6,
+      "m": "BE2586OI",
+      "ean": "4007896193416",
+      "tags": [
+        "60",
+        "builtin",
+        "fast"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 429,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 439,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 419,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "dish-new3",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Electrolux iebūvējama, 45 cm",
+      "specs": "10 komplekti · 44 dB · AirDry",
+      "s": 8.3,
+      "m": "EL8263HJ",
+      "ean": "4007089284808",
+      "tags": [
+        "45",
+        "builtin",
+        "dry"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 529,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 529,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new4",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Bosch Serie 2 brīvi stāvoša, 60 cm",
+      "specs": "12 komplekti · 48 dB · klase E",
+      "s": 7.9,
+      "m": "BO1174QG",
+      "ean": "4006323012009",
+      "tags": [
+        "60",
+        "free",
+        "fast"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 439,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "dish-new5",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Candy brīvi stāvoša, 60 cm",
+      "specs": "13 komplekti · 49 dB · klase E",
+      "s": 7.3,
+      "m": "CA1690EC",
+      "ean": "4007245366393",
+      "tags": [
+        "60",
+        "free",
+        "fast"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 329,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new6",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Beko brīvi stāvoša, 45 cm",
+      "specs": "10 komplekti · 47 dB · klase E",
+      "s": 7.6,
+      "m": "BE1325RY",
+      "ean": "4007589635506",
+      "tags": [
+        "45",
+        "free",
+        "fast"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 379,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 389,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 389,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "dish-new7",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Midea galda trauku mašīna",
+      "specs": "6 komplekti · 49 dB · bez ūdensvada pieslēguma",
+      "s": 7.8,
+      "m": "MI9655LV",
+      "ean": "4001796243011",
+      "tags": [
+        "45",
+        "60",
+        "compact",
+        "fast"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 279,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 269,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 279,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new8",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Candy galda trauku mašīna",
+      "specs": "6 komplekti · 51 dB",
+      "s": 7.3,
+      "m": "CA6851VW",
+      "ean": "4008694117802",
+      "tags": [
+        "45",
+        "60",
+        "compact",
+        "fast"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dish-new9",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Bosch Serie 4 iebūvējama, 45 cm",
+      "specs": "10 komplekti · 44 dB · klase D",
+      "s": 8.5,
+      "m": "BO9538YL",
+      "ean": "4008649134250",
+      "tags": [
+        "45",
+        "builtin",
+        "quiet",
+        "dry"
+      ],
+      "kwh_year": 205,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 579,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 589,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 579,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "dish-new10",
+      "c": "new",
+      "sub": "dish",
+      "gen": true,
+      "name": "Candy brīvi stāvoša, 45 cm",
+      "specs": "9 komplekti · 49 dB · klase E",
+      "s": 7.2,
+      "m": "CA4603DD",
+      "ean": "4008101588263",
+      "tags": [
+        "45",
+        "free"
+      ],
+      "kwh_year": 235,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 289,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 299,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "dish-refurb0",
+      "c": "refurb",
+      "sub": "dish",
+      "gen": true,
+      "name": "Bosch Serie 4 iebūvējama, 60 cm",
+      "specs": "13 komplekti · 44 dB",
+      "s": 8.4,
+      "g": "A+ — atgriezta, nelietota",
+      "wr": "24 mēn. garantija",
+      "nw": 599,
+      "m": "BO6625ZK",
+      "ean": "4007799168498",
+      "tags": [
+        "60",
+        "builtin",
+        "quiet",
+        "dry"
+      ],
+      "kwh_year": 205,
+      "offers": [
+        {
+          "store": "store_b",
+          "price_eur": 449,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hob-new0",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Bosch Serie 4 indukcijas virsma, 60 cm",
+      "specs": "4 zonas · Booster · 7,4 kW",
+      "s": 8.6,
+      "m": "BO7384EI",
+      "ean": "4008059525693",
+      "tags": [
+        "4",
+        "induction",
+        "y"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 459,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 449,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "hob-new1",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Electrolux indukcijas virsma ar elastīgo zonu",
+      "specs": "4 zonas + elastīgā zona · Hob2Hood",
+      "s": 8.7,
+      "m": "EL6544WV",
+      "ean": "4006543825977",
+      "tags": [
+        "5",
+        "induction",
+        "y"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 649,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 639,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 649,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hob-new2",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Beko indukcijas virsma, 2 zonas",
+      "specs": "2 zonas · 3,5 kW",
+      "s": 7.7,
+      "m": "BE6671JP",
+      "ean": "4009050247225",
+      "tags": [
+        "2",
+        "induction",
+        "y",
+        "n"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 199,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hob-new3",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Gorenje keramiskā virsma, 60 cm",
+      "specs": "4 zonas · skārienvadība",
+      "s": 7.8,
+      "m": "GO8095JZ",
+      "ean": "4003949116708",
+      "tags": [
+        "4",
+        "ceramic",
+        "y",
+        "n"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "hob-new4",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Bosch gāzes virsma, 60 cm",
+      "specs": "4 degļi · čuguna restes",
+      "s": 8.2,
+      "m": "BO8675ZR",
+      "ean": "4008373241132",
+      "tags": [
+        "4",
+        "gas",
+        "y",
+        "n"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 289,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 289,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hob-new5",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Gorenje brīvi stāvoša elektriskā plīts",
+      "specs": "50 cm · keramiskā virsma · cepeškrāsns 70 L",
+      "s": 7.9,
+      "m": "GO9599NH",
+      "ean": "4004281623763",
+      "tags": [
+        "4",
+        "standalone",
+        "ceramic",
+        "y",
+        "n"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 439,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "hob-new6",
+      "c": "new",
+      "sub": "hob",
+      "gen": true,
+      "name": "Beko brīvi stāvoša gāzes plīts",
+      "specs": "50 cm · 4 degļi · elektriskā cepeškrāsns",
+      "s": 7.6,
+      "m": "BE5893PP",
+      "ean": "4008783043036",
+      "tags": [
+        "4",
+        "standalone",
+        "gas",
+        "y",
+        "n"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 379,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "oven-new0",
+      "c": "new",
+      "sub": "oven",
+      "gen": true,
+      "name": "Bosch Serie 4 cepeškrāsns",
+      "specs": "71 L · 3D karstais gaiss · klase A",
+      "s": 8.4,
+      "m": "BO4871LI",
+      "ean": "4007246502646",
+      "tags": [
+        "cat"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 479,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 469,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 479,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "oven-new1",
+      "c": "new",
+      "sub": "oven",
+      "gen": true,
+      "name": "Bosch Serie 6 ar pirolīzi",
+      "specs": "71 L · pirolīze · Home Connect",
+      "s": 8.8,
+      "m": "BO5326CO",
+      "ean": "4007485173874",
+      "tags": [
+        "pyro",
+        "wifi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 799,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 799,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 789,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "oven-new2",
+      "c": "new",
+      "sub": "oven",
+      "gen": true,
+      "name": "Electrolux SteamBake",
+      "specs": "72 L · tvaika atbalsts · klase A+",
+      "s": 8.3,
+      "m": "EL1177RH",
+      "ean": "4005076348458",
+      "tags": [
+        "steam",
+        "cat"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 559,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 539,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "oven-new3",
+      "c": "new",
+      "sub": "oven",
+      "gen": true,
+      "name": "AEG SteamCrisp",
+      "specs": "70 L · tvaiks · pirolīze · Wi-Fi",
+      "s": 9,
+      "m": "AE3675VD",
+      "ean": "4003065275518",
+      "tags": [
+        "steam",
+        "pyro",
+        "wifi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 999,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 969,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 969,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "oven-new4",
+      "c": "new",
+      "sub": "oven",
+      "gen": true,
+      "name": "Beko cepeškrāsns",
+      "specs": "72 L · karstais gaiss · klase A",
+      "s": 7.6,
+      "m": "BE4463BF",
+      "ean": "4008458912513",
+      "tags": [
+        "cat"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 339,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "oven-new5",
+      "c": "new",
+      "sub": "oven",
+      "gen": true,
+      "name": "Gorenje ar pirolīzi",
+      "specs": "77 L · pirolīze · klase A+",
+      "s": 8.1,
+      "m": "GO1643FC",
+      "ean": "4001998977158",
+      "tags": [
+        "pyro"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 569,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "oven-refurb0",
+      "c": "refurb",
+      "sub": "oven",
+      "gen": true,
+      "name": "AEG SteamCrisp",
+      "specs": "70 L · tvaiks · pirolīze",
+      "s": 8.7,
+      "g": "A — skrāpējums uz sānu paneļa, uzstādot nav redzams",
+      "wr": "12 mēn. garantija",
+      "nw": 999,
+      "m": "AE3675VD",
+      "ean": "4003065275518",
+      "tags": [
+        "steam",
+        "pyro",
+        "wifi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_b",
+          "price_eur": 749,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new0",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Bosch Serie 4 sienas nosūcējs, 60 cm",
+      "specs": "530 m³/h · 3 ātrumi · LED",
+      "s": 8.3,
+      "m": "BO8470KF",
+      "ean": "4008354717892",
+      "tags": [
+        "60",
+        "wall",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 289,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 299,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new1",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Electrolux sienas nosūcējs, 90 cm",
+      "specs": "600 m³/h · Hob2Hood",
+      "s": 8.4,
+      "m": "EL3611LX",
+      "ean": "4005693260706",
+      "tags": [
+        "90",
+        "wall",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 399,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new2",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Faber sienas nosūcējs, 90 cm, kluss",
+      "specs": "700 m³/h · 52 dB",
+      "s": 8.6,
+      "m": "FA5339NJ",
+      "ean": "4003739546210",
+      "tags": [
+        "90",
+        "wall",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 549,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 559,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 539,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "hood-new3",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Gorenje teleskopisks, 60 cm",
+      "specs": "400 m³/h · izvelkams panelis",
+      "s": 7.8,
+      "m": "GO3244CR",
+      "ean": "4002534628169",
+      "tags": [
+        "60",
+        "builtin",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 169,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 169,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new4",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Bosch iebūvējams, 60 cm",
+      "specs": "390 m³/h · LED",
+      "s": 7.7,
+      "m": "BO3794MM",
+      "ean": "4006951600920",
+      "tags": [
+        "60",
+        "builtin",
+        "out"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 189,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "hood-new5",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Elica salas nosūcējs, 90 cm",
+      "specs": "650 m³/h · tālvadība",
+      "s": 8.5,
+      "m": "EL7620OW",
+      "ean": "4006838715969",
+      "tags": [
+        "90",
+        "island",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 899,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 909,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 849,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new6",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Bosch Serie 4 salas nosūcējs, 90 cm",
+      "specs": "700 m³/h · LED",
+      "s": 8.4,
+      "m": "BO9374WN",
+      "ean": "4008631816430",
+      "tags": [
+        "90",
+        "island",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 999,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 1029,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 1029,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "hood-new7",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Cata salas nosūcējs, 60 cm",
+      "specs": "600 m³/h · kluss režīms",
+      "s": 7.9,
+      "m": "CA3966UU",
+      "ean": "4007844824119",
+      "tags": [
+        "60",
+        "island",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 589,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 609,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new8",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Elica salas nosūcējs, 60 cm",
+      "specs": "620 m³/h · tālvadība",
+      "s": 8.2,
+      "m": "EL9057LW",
+      "ean": "4007356847798",
+      "tags": [
+        "60",
+        "island",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 749,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 749,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 759,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "hood-new9",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Electrolux sienas nosūcējs, 60 cm",
+      "specs": "480 m³/h · LED",
+      "s": 7.9,
+      "m": "EL5048IX",
+      "ean": "4006211392534",
+      "tags": [
+        "60",
+        "wall",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "hood-new10",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Gorenje teleskopisks, 90 cm",
+      "specs": "450 m³/h · izvelkams panelis",
+      "s": 7.9,
+      "m": "GO1807FR",
+      "ean": "4002016294523",
+      "tags": [
+        "90",
+        "builtin",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "hood-new11",
+      "c": "new",
+      "sub": "hood",
+      "gen": true,
+      "name": "Electrolux iebūvējams, 90 cm",
+      "specs": "600 m³/h · Hob2Hood",
+      "s": 8.2,
+      "m": "EL1439NO",
+      "ean": "4005102880495",
+      "tags": [
+        "90",
+        "builtin",
+        "out",
+        "recirc"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 329,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 329,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 319,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "micro-new0",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Sharp mikroviļņu krāsns, 20 L",
+      "specs": "20 L · 800 W",
+      "s": 7.4,
+      "m": "SH1165FG",
+      "ean": "4001341829158",
+      "tags": [
+        "20",
+        "free",
+        "heat"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "micro-new1",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Samsung mikroviļņu krāsns, 23 L",
+      "specs": "23 L · 800 W · keramiskā iekšpuse",
+      "s": 8.1,
+      "m": "SA8097RU",
+      "ean": "4001212294078",
+      "tags": [
+        "25",
+        "free",
+        "heat"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "micro-new2",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "LG ar grilu, 25 L",
+      "specs": "25 L · 1000 W · grils",
+      "s": 8.2,
+      "m": "LG7237XZ",
+      "ean": "4008309933681",
+      "tags": [
+        "25",
+        "free",
+        "heat",
+        "grill"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 139,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "micro-new3",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Panasonic kombinētā, 27 L",
+      "specs": "27 L · invertors · karstais gaiss",
+      "s": 8.6,
+      "m": "PA4973HP",
+      "ean": "4004771189991",
+      "tags": [
+        "25",
+        "free",
+        "heat",
+        "grill",
+        "combi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 279,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 279,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 269,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "micro-new4",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Samsung ar grilu, 32 L",
+      "specs": "32 L · 900 W · grils",
+      "s": 8,
+      "m": "SA7170OV",
+      "ean": "4000934573768",
+      "tags": [
+        "30",
+        "free",
+        "heat",
+        "grill"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 169,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "micro-new5",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Bosch iebūvējama ar grilu, 20 L",
+      "specs": "20 L · 800 W · grils",
+      "s": 8.3,
+      "m": "BO9846KV",
+      "ean": "4008677114330",
+      "tags": [
+        "20",
+        "builtin",
+        "heat",
+        "grill"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 309,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 309,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "micro-new6",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Electrolux iebūvējama, 25 L",
+      "specs": "25 L · 900 W · grils",
+      "s": 8.1,
+      "m": "EL2760CS",
+      "ean": "4005417681503",
+      "tags": [
+        "25",
+        "builtin",
+        "heat",
+        "grill"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 339,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 359,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "micro-new7",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Siemens iebūvējama kombinētā, 44 L",
+      "specs": "44 L · karstais gaiss · pirolīze",
+      "s": 8.8,
+      "m": "SI6490QH",
+      "ean": "4001676878173",
+      "tags": [
+        "30",
+        "builtin",
+        "heat",
+        "grill",
+        "combi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 899,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 899,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 909,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "micro-new8",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Bosch Serie 6 iebūvējama kombinētā, 36 L",
+      "specs": "36 L · karstais gaiss",
+      "s": 8.5,
+      "m": "BO6099LX",
+      "ean": "4007745876835",
+      "tags": [
+        "30",
+        "builtin",
+        "heat",
+        "grill",
+        "combi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 749,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 759,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 749,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "micro-new9",
+      "c": "new",
+      "sub": "micro",
+      "gen": true,
+      "name": "Samsung kombinētā ar karsto gaisu, 28 L",
+      "specs": "28 L · karstais gaiss · grils",
+      "s": 8.2,
+      "m": "SA4342KY",
+      "ean": "4000093293934",
+      "tags": [
+        "25",
+        "free",
+        "heat",
+        "grill",
+        "combi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "steamclean-new0",
+      "c": "new",
+      "sub": "steamclean",
+      "gen": true,
+      "name": "Kärcher SC 1 rokas",
+      "specs": "3 bāri · 0,2 L · uzgaļu komplekts",
+      "s": 8.2,
+      "m": "KR9983BS",
+      "ean": "4001447872386",
+      "tags": [
+        "hand",
+        "bath"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "steamclean-new1",
+      "c": "new",
+      "sub": "steamclean",
+      "gen": true,
+      "name": "Polti rokas tvaika tīrītājs",
+      "specs": "3 bāri · 0,35 L",
+      "s": 7.4,
+      "m": "PO9559ZD",
+      "ean": "4000415688431",
+      "tags": [
+        "hand",
+        "bath"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 58,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 59,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "steamclean-new2",
+      "c": "new",
+      "sub": "steamclean",
+      "gen": true,
+      "name": "Polti Vaporetto tvaika slota",
+      "specs": "1500 W · gatava 30 sekundēs",
+      "s": 7.9,
+      "m": "PO7139TK",
+      "ean": "4009805567035",
+      "tags": [
+        "mop",
+        "floor"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 119,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "steamclean-new3",
+      "c": "new",
+      "sub": "steamclean",
+      "gen": true,
+      "name": "Black+Decker 5 vienā tvaika slota",
+      "specs": "slota + rokas tīrītājs",
+      "s": 8.1,
+      "m": "BL9677BL",
+      "ean": "4002034434079",
+      "tags": [
+        "mop",
+        "floor",
+        "bath"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 149,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "steamclean-new4",
+      "c": "new",
+      "sub": "steamclean",
+      "gen": true,
+      "name": "Kärcher SC 3",
+      "specs": "3,5 bāri · nepārtraukta uzpilde",
+      "s": 8.6,
+      "m": "KR3028II",
+      "ean": "4009645269168",
+      "tags": [
+        "cyl",
+        "floor",
+        "bath"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "steamclean-new5",
+      "c": "new",
+      "sub": "steamclean",
+      "gen": true,
+      "name": "Kärcher SC 4",
+      "specs": "3,5 bāri · 2 tvertnes · gludeklis",
+      "s": 8.7,
+      "m": "KR3029JI",
+      "ean": "4009645279082",
+      "tags": [
+        "cyl",
+        "floor",
+        "bath"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 329,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 329,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 319,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new0",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "De’Longhi Magnifica S",
+      "specs": "dzirnaviņas · manuāls piena putotājs · 1,8 L",
+      "s": 8.3,
+      "m": "DE5747ZO",
+      "ean": "4009024638172",
+      "tags": [
+        "2",
+        "4",
+        "auto",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 359,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 339,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new1",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "Philips 3200 LatteGo",
+      "specs": "dzirnaviņas · LatteGo putotājs · 5 dzērieni",
+      "s": 8.6,
+      "m": "PH1888ID",
+      "ean": "4006028683658",
+      "tags": [
+        "4",
+        "6",
+        "auto",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 499,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 479,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 479,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new2",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "De’Longhi Dinamica Plus",
+      "specs": "dzirnaviņas · lietotne · 24 receptes",
+      "s": 8.8,
+      "m": "DE7557VN",
+      "ean": "4009579047436",
+      "tags": [
+        "6",
+        "auto",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 799,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 789,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 769,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new3",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "Krups Evidence",
+      "specs": "dzirnaviņas · 15 receptes · 2,3 L",
+      "s": 8.2,
+      "m": "KR3623RP",
+      "ean": "4009700635235",
+      "tags": [
+        "4",
+        "6",
+        "auto",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 649,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 659,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 619,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new4",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "Nespresso Vertuo Pop",
+      "specs": "kapsulas · 0,6 L",
+      "s": 7.8,
+      "m": "NE6751HT",
+      "ean": "4000572556185",
+      "tags": [
+        "2",
+        "capsule",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new5",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "Nespresso Lattissima One",
+      "specs": "kapsulas · piena putotājs",
+      "s": 8.1,
+      "m": "NE4529XB",
+      "ean": "4009980690740",
+      "tags": [
+        "2",
+        "capsule",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new6",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "Sage Bambino Plus",
+      "specs": "portafiltrs · automātisks putotājs",
+      "s": 8.7,
+      "m": "SA2000SG",
+      "ean": "4009491796795",
+      "tags": [
+        "2",
+        "4",
+        "manual",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 399,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 399,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "coffee-new7",
+      "c": "new",
+      "sub": "coffee",
+      "gen": true,
+      "name": "De’Longhi Dedica",
+      "specs": "portafiltrs · tvaika caurulīte · 15 cm plats",
+      "s": 8,
+      "m": "DE2658YR",
+      "ean": "4008156835671",
+      "tags": [
+        "2",
+        "manual",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 169,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 169,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 169,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "coffee-refurb0",
+      "c": "refurb",
+      "sub": "coffee",
+      "gen": true,
+      "name": "Philips 3200 LatteGo",
+      "specs": "dzirnaviņas · LatteGo",
+      "s": 8.4,
+      "g": "A — atgriezta, lietota īsu laiku",
+      "wr": "12 mēn. garantija",
+      "nw": 499,
+      "m": "PH1888ID",
+      "ean": "4006028683658",
+      "tags": [
+        "4",
+        "6",
+        "auto",
+        "milk",
+        "black"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 369,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grinder-new0",
+      "c": "new",
+      "sub": "grinder",
+      "gen": true,
+      "name": "Sage Dose Control Pro",
+      "specs": "60 maluma pakāpes",
+      "s": 8.6,
+      "m": "SA7659FF",
+      "ean": "4000980237539",
+      "tags": [
+        "burr",
+        "espresso",
+        "filter"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 189,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 189,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grinder-new1",
+      "c": "new",
+      "sub": "grinder",
+      "gen": true,
+      "name": "Baratza Encore ESP",
+      "specs": "konusveida dzirnakmeņi · 40 pakāpes",
+      "s": 8.8,
+      "m": "BA4398MK",
+      "ean": "4002950475514",
+      "tags": [
+        "burr",
+        "espresso",
+        "filter"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 229,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 229,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 219,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "grinder-new2",
+      "c": "new",
+      "sub": "grinder",
+      "gen": true,
+      "name": "De’Longhi KG79",
+      "specs": "16 maluma pakāpes",
+      "s": 7.6,
+      "m": "DE2507TK",
+      "ean": "4008146099687",
+      "tags": [
+        "burr",
+        "filter"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 60,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 56,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grinder-new3",
+      "c": "new",
+      "sub": "grinder",
+      "gen": true,
+      "name": "Krups GVX231",
+      "specs": "17 maluma pakāpes",
+      "s": 7.4,
+      "m": "KR4384SM",
+      "ean": "4009961018464",
+      "tags": [
+        "burr",
+        "filter"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 50,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 50,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "grinder-new4",
+      "c": "new",
+      "sub": "grinder",
+      "gen": true,
+      "name": "Bosch TSM6A013",
+      "specs": "asmeņi · 75 g",
+      "s": 7,
+      "m": "BO5893HC",
+      "ean": "4007533407890",
+      "tags": [
+        "blade",
+        "filter"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 26,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grinder-new5",
+      "c": "new",
+      "sub": "grinder",
+      "gen": true,
+      "name": "Krups F203",
+      "specs": "asmeņi · 75 g · 200 W",
+      "s": 6.9,
+      "m": "KR7021FW",
+      "ean": "4000790367075",
+      "tags": [
+        "blade",
+        "filter"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 19,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 19,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 19,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "kettle-new0",
+      "c": "new",
+      "sub": "kettle",
+      "gen": true,
+      "name": "Bosch TWK3A011",
+      "specs": "1,7 L · 2400 W",
+      "s": 7.9,
+      "m": "BO3722QH",
+      "ean": "4006949497525",
+      "tags": [
+        "fast",
+        "std"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 30,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 28,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "kettle-new1",
+      "c": "new",
+      "sub": "kettle",
+      "gen": true,
+      "name": "Philips 5000 stikla",
+      "specs": "1,7 L · 2200 W · LED apgaismojums",
+      "s": 8.1,
+      "m": "PH6577LG",
+      "ean": "4007432129015",
+      "tags": [
+        "fast",
+        "std",
+        "design"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 48,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 48,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "kettle-new2",
+      "c": "new",
+      "sub": "kettle",
+      "gen": true,
+      "name": "Tefal ar temperatūras regulēšanu",
+      "specs": "1,7 L · 5 temperatūras",
+      "s": 8.4,
+      "m": "TE7516WZ",
+      "ean": "4001596073504",
+      "tags": [
+        "temp",
+        "std"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "kettle-new3",
+      "c": "new",
+      "sub": "kettle",
+      "gen": true,
+      "name": "Xiaomi Smart Kettle 2",
+      "specs": "1,7 L · vadāma ar lietotni",
+      "s": 8,
+      "m": "XI2710MR",
+      "ean": "4006187729303",
+      "tags": [
+        "temp",
+        "std"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 43,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "kettle-new4",
+      "c": "new",
+      "sub": "kettle",
+      "gen": true,
+      "name": "Smeg 50. gadu stila",
+      "specs": "1,7 L · nerūsējošs tērauds",
+      "s": 8.2,
+      "m": "SM8421RF",
+      "ean": "4007747532753",
+      "tags": [
+        "design",
+        "std"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 149,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "kettle-new5",
+      "c": "new",
+      "sub": "kettle",
+      "gen": true,
+      "name": "Russell Hobbs Travel",
+      "specs": "0,85 L · 1000 W",
+      "s": 7.3,
+      "m": "RU1095BV",
+      "ean": "4001582825124",
+      "tags": [
+        "small",
+        "fast"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 26,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "blender-new0",
+      "c": "new",
+      "sub": "blender",
+      "gen": true,
+      "name": "Moulinex Blendforce",
+      "specs": "1,5 L · 600 W",
+      "s": 7.4,
+      "m": "MO1301FG",
+      "ean": "4002726895812",
+      "tags": [
+        "jug",
+        "smoothie"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 48,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 48,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "blender-new1",
+      "c": "new",
+      "sub": "blender",
+      "gen": true,
+      "name": "Philips 5000",
+      "specs": "2 L · 1200 W",
+      "s": 8,
+      "m": "PH6415VO",
+      "ean": "4007421090302",
+      "tags": [
+        "jug",
+        "smoothie",
+        "ice"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "blender-new2",
+      "c": "new",
+      "sub": "blender",
+      "gen": true,
+      "name": "Tefal Perfectmix+",
+      "specs": "2 L · 1200 W · 28 000 apgr./min",
+      "s": 8.3,
+      "m": "TE6705FL",
+      "ean": "4001327939482",
+      "tags": [
+        "jug",
+        "smoothie",
+        "ice"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 109,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "blender-new3",
+      "c": "new",
+      "sub": "blender",
+      "gen": true,
+      "name": "Ninja 2 vienā",
+      "specs": "2,1 L krūka + 2 pudeles · 1200 W",
+      "s": 8.6,
+      "m": "NI2367LY",
+      "ean": "4004890953190",
+      "tags": [
+        "jug",
+        "personal",
+        "smoothie",
+        "ice"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "blender-new4",
+      "c": "new",
+      "sub": "blender",
+      "gen": true,
+      "name": "Philips 7000 ar sildīšanu",
+      "specs": "1,4 L · sildīšana · 10 programmas",
+      "s": 8.5,
+      "m": "PH4443RO",
+      "ean": "4006849380552",
+      "tags": [
+        "jug",
+        "smoothie",
+        "ice",
+        "soup"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 249,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "blender-new5",
+      "c": "new",
+      "sub": "blender",
+      "gen": true,
+      "name": "Nutribullet 600",
+      "specs": "600 W · 2 pudeles",
+      "s": 7.9,
+      "m": "NU3582QG",
+      "ean": "4001696705213",
+      "tags": [
+        "personal",
+        "smoothie"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 60,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "handblender-new0",
+      "c": "new",
+      "sub": "handblender",
+      "gen": true,
+      "name": "Philips 5000",
+      "specs": "800 W · metāla kāja",
+      "s": 7.6,
+      "m": "PH6415VO",
+      "ean": "4007421090302",
+      "tags": [
+        "cord",
+        "soup"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 35,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 34,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 36,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "handblender-new1",
+      "c": "new",
+      "sub": "handblender",
+      "gen": true,
+      "name": "Braun MultiQuick 5",
+      "specs": "1000 W · ActiveBlade",
+      "s": 8.2,
+      "m": "BR4740YC",
+      "ean": "4003861478281",
+      "tags": [
+        "cord",
+        "soup"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 49,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "handblender-new2",
+      "c": "new",
+      "sub": "handblender",
+      "gen": true,
+      "name": "Bosch ErgoMaster komplekts",
+      "specs": "1200 W · smalcinātājs, putotājs",
+      "s": 8.4,
+      "m": "BO3757TU",
+      "ean": "4006950440367",
+      "tags": [
+        "cord",
+        "soup",
+        "more"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "handblender-new3",
+      "c": "new",
+      "sub": "handblender",
+      "gen": true,
+      "name": "Braun MultiQuick 7 komplekts",
+      "specs": "1000 W · ActiveBlade · 3 piederumi",
+      "s": 8.6,
+      "m": "BR2222UH",
+      "ean": "4003242141421",
+      "tags": [
+        "cord",
+        "soup",
+        "more"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "handblender-new4",
+      "c": "new",
+      "sub": "handblender",
+      "gen": true,
+      "name": "KitchenAid bezvadu",
+      "specs": "akumulators · 3 piederumi",
+      "s": 8.1,
+      "m": "KI2457DC",
+      "ean": "4009521470275",
+      "tags": [
+        "cordless",
+        "soup",
+        "more"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 139,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 139,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 139,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "handblender-new5",
+      "c": "new",
+      "sub": "handblender",
+      "gen": true,
+      "name": "Braun MultiQuick 7 bezvadu",
+      "specs": "akumulators · smalcinātājs",
+      "s": 8.3,
+      "m": "BR4809RH",
+      "ean": "4003869606228",
+      "tags": [
+        "cordless",
+        "soup",
+        "more"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "foodproc-new0",
+      "c": "new",
+      "sub": "foodproc",
+      "gen": true,
+      "name": "Bosch MUM5",
+      "specs": "1000 W · 3,9 L bļoda",
+      "s": 8.3,
+      "m": "BO8070AC",
+      "ean": "4008317773927",
+      "tags": [
+        "stand",
+        "dough"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "foodproc-new1",
+      "c": "new",
+      "sub": "foodproc",
+      "gen": true,
+      "name": "Kenwood Chef Titanium",
+      "specs": "1400 W · 4,6 L · rīvēšanas piederums",
+      "s": 8.6,
+      "m": "KE2648MI",
+      "ean": "4004039508212",
+      "tags": [
+        "stand",
+        "dough",
+        "chop"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 449,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 429,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "foodproc-new2",
+      "c": "new",
+      "sub": "foodproc",
+      "gen": true,
+      "name": "KitchenAid Artisan",
+      "specs": "300 W tiešā piedziņa · 4,8 L",
+      "s": 8.7,
+      "m": "KI6939VD",
+      "ean": "4000712241285",
+      "tags": [
+        "stand",
+        "dough"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 599,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 619,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 619,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "foodproc-new3",
+      "c": "new",
+      "sub": "foodproc",
+      "gen": true,
+      "name": "Moulinex Masterchef",
+      "specs": "1100 W · 4,6 L",
+      "s": 7.8,
+      "m": "MO1927VE",
+      "ean": "4002782965498",
+      "tags": [
+        "stand",
+        "dough"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 199,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "foodproc-new4",
+      "c": "new",
+      "sub": "foodproc",
+      "gen": true,
+      "name": "Philips 7000 virtuves kombains",
+      "specs": "1000 W · 7 diski",
+      "s": 8.2,
+      "m": "PH9298QU",
+      "ean": "4008263905038",
+      "tags": [
+        "processor",
+        "chop"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 179,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "foodproc-new5",
+      "c": "new",
+      "sub": "foodproc",
+      "gen": true,
+      "name": "Bosch MultiTalent 3",
+      "specs": "800 W · 2,3 L",
+      "s": 7.7,
+      "m": "BO5042CW",
+      "ean": "4007458025704",
+      "tags": [
+        "processor",
+        "chop"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "mixer-new0",
+      "c": "new",
+      "sub": "mixer",
+      "gen": true,
+      "name": "Tefal Prep’Mix",
+      "specs": "450 W · 5 ātrumi",
+      "s": 7.3,
+      "m": "TE2589HW",
+      "ean": "4000166725478",
+      "tags": [
+        "hand",
+        "light"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 29,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "mixer-new1",
+      "c": "new",
+      "sub": "mixer",
+      "gen": true,
+      "name": "Philips 5000",
+      "specs": "450 W · 5 ātrumi + turbo",
+      "s": 7.7,
+      "m": "PH6415VO",
+      "ean": "4007421090302",
+      "tags": [
+        "hand",
+        "light"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 35,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 36,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 34,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "mixer-new2",
+      "c": "new",
+      "sub": "mixer",
+      "gen": true,
+      "name": "Braun MultiMix 5",
+      "specs": "750 W · mīklas āķi",
+      "s": 8.2,
+      "m": "BR1192IT",
+      "ean": "4002948696471",
+      "tags": [
+        "hand",
+        "light",
+        "dough"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 44,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 44,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "mixer-new3",
+      "c": "new",
+      "sub": "mixer",
+      "gen": true,
+      "name": "Bosch ErgoMixx",
+      "specs": "450 W · 5 ātrumi",
+      "s": 8,
+      "m": "BO3189PW",
+      "ean": "4006895940830",
+      "tags": [
+        "hand",
+        "light",
+        "dough"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 47,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "mixer-new4",
+      "c": "new",
+      "sub": "mixer",
+      "gen": true,
+      "name": "Bosch ar grozāmu bļodu",
+      "specs": "500 W · 3 L bļoda",
+      "s": 7.9,
+      "m": "BO5479JF",
+      "ean": "4007495929546",
+      "tags": [
+        "bowl",
+        "light",
+        "dough"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "mixer-new5",
+      "c": "new",
+      "sub": "mixer",
+      "gen": true,
+      "name": "Tefal Prep’Mix ar bļodu",
+      "specs": "450 W · 2,5 L bļoda",
+      "s": 7.5,
+      "m": "TE9752OR",
+      "ean": "4002188277584",
+      "tags": [
+        "bowl",
+        "light"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 59,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 59,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "chopper-new0",
+      "c": "new",
+      "sub": "chopper",
+      "gen": true,
+      "name": "Philips 5000 smalcinātājs",
+      "specs": "500 W · 0,7 L",
+      "s": 7.8,
+      "m": "PH9038EE",
+      "ean": "4008243643271",
+      "tags": [
+        "veg",
+        "small"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 39,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 38,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 38,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "chopper-new1",
+      "c": "new",
+      "sub": "chopper",
+      "gen": true,
+      "name": "Braun ChopCut",
+      "specs": "500 W · 0,5 L",
+      "s": 8.1,
+      "m": "BR4088EO",
+      "ean": "4003798094257",
+      "tags": [
+        "veg",
+        "nuts",
+        "small"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 43,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "chopper-new2",
+      "c": "new",
+      "sub": "chopper",
+      "gen": true,
+      "name": "Bosch MMR15A1",
+      "specs": "400 W · 0,8 L",
+      "s": 7.9,
+      "m": "BO1948KO",
+      "ean": "4006396036612",
+      "tags": [
+        "veg",
+        "nuts",
+        "big"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 35,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 35,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 33,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "chopper-new3",
+      "c": "new",
+      "sub": "chopper",
+      "gen": true,
+      "name": "Moulinex Moulinette",
+      "specs": "1000 W · 1 L",
+      "s": 8.3,
+      "m": "MO9050SQ",
+      "ean": "4004991006337",
+      "tags": [
+        "veg",
+        "nuts",
+        "big"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 59,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 59,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "mincer-new0",
+      "c": "new",
+      "sub": "mincer",
+      "gen": true,
+      "name": "Tefal NE105",
+      "specs": "1400 W · 1,7 kg/min",
+      "s": 7.3,
+      "m": "TE8930OY",
+      "ean": "4001919841520",
+      "tags": [
+        "rare"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "mincer-new1",
+      "c": "new",
+      "sub": "mincer",
+      "gen": true,
+      "name": "Bosch MFW2510W",
+      "specs": "1500 W · 1,7 kg/min · desu uzgalis",
+      "s": 7.9,
+      "m": "BO7584SQ",
+      "ean": "4008078000539",
+      "tags": [
+        "rare",
+        "sausage"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "mincer-new2",
+      "c": "new",
+      "sub": "mincer",
+      "gen": true,
+      "name": "Zelmer ZMM4045",
+      "specs": "1900 W · 2 kg/min",
+      "s": 8.1,
+      "m": "ZE8841BJ",
+      "ean": "4002667744767",
+      "tags": [
+        "rare",
+        "often",
+        "sausage"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 109,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "mincer-new3",
+      "c": "new",
+      "sub": "mincer",
+      "gen": true,
+      "name": "Moulinex HV8",
+      "specs": "2000 W · 2,3 kg/min · rīves",
+      "s": 8.4,
+      "m": "MO4905NV",
+      "ean": "4003641222677",
+      "tags": [
+        "often",
+        "sausage",
+        "grate"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 169,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "mincer-new4",
+      "c": "new",
+      "sub": "mincer",
+      "gen": true,
+      "name": "Bosch MFW68660",
+      "specs": "2200 W · 4,3 kg/min · rīves",
+      "s": 8.7,
+      "m": "BO6993TZ",
+      "ean": "4007828938566",
+      "tags": [
+        "often",
+        "sausage",
+        "grate"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 229,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 239,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "scale-new0",
+      "c": "new",
+      "sub": "scale",
+      "gen": true,
+      "name": "Tefal Optiss",
+      "specs": "līdz 5 kg · 1 g",
+      "s": 7.4,
+      "m": "TE6999JP",
+      "ean": "4001349130812",
+      "tags": [
+        "std"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 15,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 15,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 15,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "scale-new1",
+      "c": "new",
+      "sub": "scale",
+      "gen": true,
+      "name": "Soehnle Page Compact",
+      "specs": "līdz 5 kg · 1 g · stikla virsma",
+      "s": 7.9,
+      "m": "SO6635TA",
+      "ean": "4004943830553",
+      "tags": [
+        "std"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 19,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 19,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 19,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "scale-new2",
+      "c": "new",
+      "sub": "scale",
+      "gen": true,
+      "name": "Etekcity viedie svari",
+      "specs": "līdz 5 kg · lietotne ar uzturvērtībām",
+      "s": 8.1,
+      "m": "ET2455JZ",
+      "ean": "4006390022246",
+      "tags": [
+        "std",
+        "smart"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 28,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 28,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "scale-new3",
+      "c": "new",
+      "sub": "scale",
+      "gen": true,
+      "name": "Hario V60 kafijas svari",
+      "specs": "līdz 2 kg · 0,1 g · taimeris",
+      "s": 8.3,
+      "m": "HA6548CU",
+      "ean": "4004296871517",
+      "tags": [
+        "fine"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 39,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 39,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 37,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "knife-new0",
+      "c": "new",
+      "sub": "knife",
+      "gen": true,
+      "name": "Moulinex elektriskais nazis",
+      "specs": "100 W · 1 asmens",
+      "s": 7.2,
+      "m": "MO1155ZE",
+      "ean": "4002709959562",
+      "tags": [
+        "cord",
+        "meat"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 29,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "knife-new1",
+      "c": "new",
+      "sub": "knife",
+      "gen": true,
+      "name": "Tefal Prep’Line",
+      "specs": "100 W · 2 asmeņi",
+      "s": 7.8,
+      "m": "TE1126QT",
+      "ean": "4009841679662",
+      "tags": [
+        "cord",
+        "meat",
+        "bread"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 39,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 40,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 38,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "knife-new2",
+      "c": "new",
+      "sub": "knife",
+      "gen": true,
+      "name": "Bosch ErgoMixx elektriskais nazis",
+      "specs": "120 W · 2 asmeņi",
+      "s": 8.1,
+      "m": "BO8943BI",
+      "ean": "4008400026282",
+      "tags": [
+        "cord",
+        "meat",
+        "bread"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 48,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 48,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "knife-new3",
+      "c": "new",
+      "sub": "knife",
+      "gen": true,
+      "name": "Black+Decker bezvadu",
+      "specs": "akumulators · 2 asmeņi",
+      "s": 7.9,
+      "m": "BL5170CG",
+      "ean": "4000843024979",
+      "tags": [
+        "cordless",
+        "meat",
+        "bread"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "knife-new4",
+      "c": "new",
+      "sub": "knife",
+      "gen": true,
+      "name": "Bosch bezvadu elektriskais nazis",
+      "specs": "akumulators · 2 asmeņi · uzlādes statīvs",
+      "s": 8.2,
+      "m": "BO6441BQ",
+      "ean": "4007781248078",
+      "tags": [
+        "cordless",
+        "meat",
+        "bread"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grill-new0",
+      "c": "new",
+      "sub": "grill",
+      "gen": true,
+      "name": "George Foreman kontaktgrils",
+      "specs": "1200 W · 2 porcijām",
+      "s": 7.4,
+      "m": "GE2063XH",
+      "ean": "4003480091380",
+      "tags": [
+        "2",
+        "contact"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 49,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grill-new1",
+      "c": "new",
+      "sub": "grill",
+      "gen": true,
+      "name": "Philips kontaktgrils",
+      "specs": "2000 W · noņemamas plātnes",
+      "s": 7.9,
+      "m": "PH5073VV",
+      "ean": "4007099626261",
+      "tags": [
+        "2",
+        "4",
+        "contact"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "grill-new2",
+      "c": "new",
+      "sub": "grill",
+      "gen": true,
+      "name": "Tefal OptiGrill+",
+      "specs": "6 programmas · gatavības indikators",
+      "s": 8.6,
+      "m": "TE9984ML",
+      "ean": "4002207660274",
+      "tags": [
+        "4",
+        "contact",
+        "smart"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 169,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 169,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grill-new3",
+      "c": "new",
+      "sub": "grill",
+      "gen": true,
+      "name": "Tefal OptiGrill Elite",
+      "specs": "12 programmas · liela virsma",
+      "s": 8.8,
+      "m": "TE7858YY",
+      "ean": "4001624990605",
+      "tags": [
+        "4",
+        "6",
+        "contact",
+        "smart"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 249,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 239,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "grill-new4",
+      "c": "new",
+      "sub": "grill",
+      "gen": true,
+      "name": "Tefal Plancha galda plate",
+      "specs": "2000 W · 46 cm virsma",
+      "s": 7.8,
+      "m": "TE3730SH",
+      "ean": "4000469914623",
+      "tags": [
+        "4",
+        "6",
+        "plate"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 60,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 56,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "grill-new5",
+      "c": "new",
+      "sub": "grill",
+      "gen": true,
+      "name": "Severin raclette grils",
+      "specs": "8 pannas · akmens plāksne",
+      "s": 7.9,
+      "m": "SE8984UF",
+      "ean": "4006795232035",
+      "tags": [
+        "6",
+        "plate"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "toaster-new0",
+      "c": "new",
+      "sub": "toaster",
+      "gen": true,
+      "name": "Philips 5000",
+      "specs": "830 W · 8 apgrauzdēšanas pakāpes",
+      "s": 7.8,
+      "m": "PH6415VO",
+      "ean": "4007421090302",
+      "tags": [
+        "2",
+        "bun"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 28,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 28,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "toaster-new1",
+      "c": "new",
+      "sub": "toaster",
+      "gen": true,
+      "name": "Bosch TAT6A",
+      "specs": "870 W · atkausēšanas režīms",
+      "s": 8.1,
+      "m": "BO6659TA",
+      "ean": "4007800098707",
+      "tags": [
+        "2",
+        "bun"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 39,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 39,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 37,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "toaster-new2",
+      "c": "new",
+      "sub": "toaster",
+      "gen": true,
+      "name": "Smeg 50. gadu stila, 2 šķēlēm",
+      "specs": "950 W · nerūsējošs tērauds",
+      "s": 8.2,
+      "m": "SM1116GC",
+      "ean": "4005715533252",
+      "tags": [
+        "2",
+        "design"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 139,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "toaster-new3",
+      "c": "new",
+      "sub": "toaster",
+      "gen": true,
+      "name": "Tefal Express, 4 šķēlēm",
+      "specs": "1700 W · 7 pakāpes",
+      "s": 7.9,
+      "m": "TE9202GY",
+      "ean": "4002140609576",
+      "tags": [
+        "4",
+        "bun"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 50,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 50,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "toaster-new4",
+      "c": "new",
+      "sub": "toaster",
+      "gen": true,
+      "name": "Russell Hobbs, 4 šķēlēm",
+      "specs": "1600 W · stikla elementi",
+      "s": 7.7,
+      "m": "RU5636AO",
+      "ean": "4002781624198",
+      "tags": [
+        "4",
+        "design"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 58,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 59,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "sandwich-new0",
+      "c": "new",
+      "sub": "sandwich",
+      "gen": true,
+      "name": "Princess sendviču tosteris",
+      "specs": "750 W · 2 karstmaizes",
+      "s": 7.2,
+      "m": "PR9457VZ",
+      "ean": "4007031543274",
+      "tags": [
+        "sand"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 24,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "sandwich-new1",
+      "c": "new",
+      "sub": "sandwich",
+      "gen": true,
+      "name": "Philips sendviču tosteris",
+      "specs": "820 W · 2 karstmaizes",
+      "s": 7.7,
+      "m": "PH9745TJ",
+      "ean": "4008308563520",
+      "tags": [
+        "sand"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 35,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 35,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 33,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "sandwich-new2",
+      "c": "new",
+      "sub": "sandwich",
+      "gen": true,
+      "name": "Russell Hobbs 3 vienā",
+      "specs": "750 W · 3 plātņu komplekts",
+      "s": 8,
+      "m": "RU1151BZ",
+      "ean": "4001590830295",
+      "tags": [
+        "sand",
+        "multi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 45,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 46,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 46,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "sandwich-new3",
+      "c": "new",
+      "sub": "sandwich",
+      "gen": true,
+      "name": "Tefal Snack Collection",
+      "specs": "700 W · maināmas plātnes",
+      "s": 8.5,
+      "m": "TE9375PQ",
+      "ean": "4002151961694",
+      "tags": [
+        "sand",
+        "multi"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new0",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Tefal Easy Fry, 4,2 L",
+      "specs": "1500 W · 8 programmas",
+      "s": 7.8,
+      "m": "TE3398ME",
+      "ean": "4000434836233",
+      "tags": [
+        "2",
+        "air"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new1",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Philips 3000, 4,1 L",
+      "specs": "1400 W · RapidAir",
+      "s": 8.1,
+      "m": "PH5647XK",
+      "ean": "4007154182749",
+      "tags": [
+        "2",
+        "air"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 89,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 89,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new2",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Cosori, 5,5 L",
+      "specs": "1700 W · 9 programmas · lietotne",
+      "s": 8.3,
+      "m": "CO1026WC",
+      "ean": "4001438447432",
+      "tags": [
+        "4",
+        "air"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 109,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 109,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 109,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new3",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Philips 5000 XXL, 7 L",
+      "specs": "2000 W · Wi-Fi",
+      "s": 8.6,
+      "m": "PH9096EB",
+      "ean": "4008245411489",
+      "tags": [
+        "4",
+        "6",
+        "air"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 179,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new4",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Ninja Foodi Dual, 9,5 L",
+      "specs": "2470 W · 2 neatkarīgi grozi",
+      "s": 8.8,
+      "m": "NI3851NW",
+      "ean": "4005223065788",
+      "tags": [
+        "6",
+        "air"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 199,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 199,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new5",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Tefal Filtra One taukvāres katls",
+      "specs": "1900 W · 2,1 L eļļas · filtrs",
+      "s": 7.6,
+      "m": "TE9227NT",
+      "ean": "4002141255567",
+      "tags": [
+        "2",
+        "4",
+        "oil"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-new6",
+      "c": "new",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "De’Longhi taukvāres katls",
+      "specs": "2200 W · 3 L eļļas",
+      "s": 7.8,
+      "m": "DE4791RZ",
+      "ean": "4008739776186",
+      "tags": [
+        "4",
+        "6",
+        "oil"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "airfryer-refurb0",
+      "c": "refurb",
+      "sub": "airfryer",
+      "gen": true,
+      "name": "Ninja Foodi Dual, 9,5 L",
+      "specs": "2 neatkarīgi grozi",
+      "s": 8.6,
+      "g": "A+ — atgriezta, nelietota",
+      "wr": "24 mēn. garantija",
+      "nw": 199,
+      "m": "NI3851NW",
+      "ean": "4005223065788",
+      "tags": [
+        "6",
+        "air"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_c",
+          "price_eur": 149,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "breadmaker-new0",
+      "c": "new",
+      "sub": "breadmaker",
+      "gen": true,
+      "name": "Moulinex Pain Dore",
+      "specs": "1 kg maize · 20 programmas",
+      "s": 7.6,
+      "m": "MO9137XB",
+      "ean": "4004999714395",
+      "tags": [
+        "white"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "breadmaker-new1",
+      "c": "new",
+      "sub": "breadmaker",
+      "gen": true,
+      "name": "Tefal Pain & Delices",
+      "specs": "1 kg · rupjmaize, bezglutēna",
+      "s": 8,
+      "m": "TE8929JK",
+      "ean": "4001919628411",
+      "tags": [
+        "white",
+        "rye"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 119,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "breadmaker-new2",
+      "c": "new",
+      "sub": "breadmaker",
+      "gen": true,
+      "name": "Gorenje BM1600",
+      "specs": "1,6 kg · dozators",
+      "s": 8.1,
+      "m": "GO7724AB",
+      "ean": "4003725373653",
+      "tags": [
+        "white",
+        "rye",
+        "disp"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "breadmaker-new3",
+      "c": "new",
+      "sub": "breadmaker",
+      "gen": true,
+      "name": "Panasonic SD-YR2550",
+      "specs": "1 kg · 31 programma · dozators",
+      "s": 8.8,
+      "m": "PA3324CE",
+      "ean": "4004428005629",
+      "tags": [
+        "white",
+        "rye",
+        "disp"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 219,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 219,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 219,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new0",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Russell Hobbs mini krāsns, 23 L",
+      "specs": "1500 W · taimeris",
+      "s": 7.4,
+      "m": "RU1748CE",
+      "ean": "4001646011012",
+      "tags": [
+        "20"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new1",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Tefal Optimo, 19 L",
+      "specs": "1380 W · 4 režīmi",
+      "s": 7.6,
+      "m": "TE4732QC",
+      "ean": "4000756224688",
+      "tags": [
+        "20"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 79,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 79,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new2",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Princess mini krāsns, 45 L",
+      "specs": "1800 W · iesms",
+      "s": 7.7,
+      "m": "PR5647ZJ",
+      "ean": "4005904550824",
+      "tags": [
+        "35"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new3",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Severin ar karsto gaisu, 30 L",
+      "specs": "1500 W · karstais gaiss",
+      "s": 8.2,
+      "m": "SE7002CD",
+      "ean": "4006423415533",
+      "tags": [
+        "35",
+        "conv"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new4",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Rommelsbacher ar riņķiem, 30 L",
+      "specs": "30 L · 2 plīts riņķi · karstais gaiss",
+      "s": 8.4,
+      "m": "RO4004WG",
+      "ean": "4009188794776",
+      "tags": [
+        "35",
+        "hob",
+        "conv"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 189,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 189,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 189,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new5",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Severin ar riņķiem, 42 L",
+      "specs": "42 L · 2 plīts riņķi · iesms",
+      "s": 8,
+      "m": "SE4668GM",
+      "ean": "4005621798714",
+      "tags": [
+        "35",
+        "hob",
+        "conv"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 159,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 159,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 159,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "minioven-new6",
+      "c": "new",
+      "sub": "minioven",
+      "gen": true,
+      "name": "Princess ar riņķiem, 20 L",
+      "specs": "20 L · 2 plīts riņķi",
+      "s": 7.4,
+      "m": "PR8884QC",
+      "ean": "4006783055721",
+      "tags": [
+        "20",
+        "hob"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 119,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 119,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new0",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Bosch VitaJuice 3",
+      "specs": "700 W · 2 ātrumi",
+      "s": 7.8,
+      "m": "BO3412YP",
+      "ean": "4006921496546",
+      "tags": [
+        "centrif"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 89,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 89,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 89,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new1",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Philips centrbēdzes sulu spiede",
+      "specs": "700 W · 2 L tvertne",
+      "s": 7.6,
+      "m": "PH4809FV",
+      "ean": "4006885183766",
+      "tags": [
+        "centrif"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new2",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Philips 7000 lēngaitas",
+      "specs": "200 W · QuickClean",
+      "s": 8.2,
+      "m": "PH4091TQ",
+      "ean": "4006813910686",
+      "tags": [
+        "slow"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 179,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 169,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new3",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Hurom H-AA",
+      "specs": "43 apgr./min · bez sieta",
+      "s": 8.6,
+      "m": "HU3630IZ",
+      "ean": "4000947594255",
+      "tags": [
+        "slow"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 299,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 279,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new4",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Kuvings lēngaitas",
+      "specs": "plata ievade · 50 apgr./min",
+      "s": 8.7,
+      "m": "KU6775TP",
+      "ean": "4007195364586",
+      "tags": [
+        "slow"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 349,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 359,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 359,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new5",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Braun citrusu spiede",
+      "specs": "60 W · divvirzienu rotācija",
+      "s": 7.9,
+      "m": "BR3609DS",
+      "ean": "4003564840064",
+      "tags": [
+        "citrus"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 29,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 28,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 30,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "juicer-new6",
+      "c": "new",
+      "sub": "juicer",
+      "gen": true,
+      "name": "Philips citrusu spiede",
+      "specs": "25 W · 0,5 L",
+      "s": 7.5,
+      "m": "PH1465TZ",
+      "ean": "4005991121792",
+      "tags": [
+        "citrus"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 25,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 25,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dehydrator-new0",
+      "c": "new",
+      "sub": "dehydrator",
+      "gen": true,
+      "name": "Severin žāvētājs, 5 paplātes",
+      "specs": "250 W · 5 paplātes",
+      "s": 7.4,
+      "m": "SE7459RB",
+      "ean": "4006461917822",
+      "tags": [
+        "small"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 49,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 50,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 50,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "dehydrator-new1",
+      "c": "new",
+      "sub": "dehydrator",
+      "gen": true,
+      "name": "Gorenje FDK 500",
+      "specs": "240 W · 5 paplātes · termostats",
+      "s": 7.8,
+      "m": "GO6736SM",
+      "ean": "4003439404964",
+      "tags": [
+        "small",
+        "timer"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 58,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 59,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dehydrator-new2",
+      "c": "new",
+      "sub": "dehydrator",
+      "gen": true,
+      "name": "Rommelsbacher DA 750",
+      "specs": "560 W · taimeris",
+      "s": 8.2,
+      "m": "RO3110WU",
+      "ean": "4008911998085",
+      "tags": [
+        "small",
+        "timer"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 99,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 99,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "dehydrator-new3",
+      "c": "new",
+      "sub": "dehydrator",
+      "gen": true,
+      "name": "Klarstein, 10 paplātes",
+      "specs": "1000 W · 10 paplātes · taimeris",
+      "s": 8.3,
+      "m": "KL7359FU",
+      "ean": "4007568822859",
+      "tags": [
+        "big",
+        "timer"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 149,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "vacuumsealer-new0",
+      "c": "new",
+      "sub": "vacuumsealer",
+      "gen": true,
+      "name": "Severin FS 3611",
+      "specs": "110 W · 30 cm maisiņi",
+      "s": 7.5,
+      "m": "SE9460KE",
+      "ean": "4007034710123",
+      "tags": [
+        "rare"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 59,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 60,
+          "stock": "in"
+        }
+      ]
+    },
+    {
+      "id": "vacuumsealer-new1",
+      "c": "new",
+      "sub": "vacuumsealer",
+      "gen": true,
+      "name": "Tefal Vacupack",
+      "specs": "120 W · mitrais režīms",
+      "s": 7.8,
+      "m": "TE9897FL",
+      "ean": "4002198749637",
+      "tags": [
+        "rare",
+        "wet"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 69,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 69,
+          "stock": "soon"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 69,
+          "stock": "out"
+        }
+      ]
+    },
+    {
+      "id": "vacuumsealer-new2",
+      "c": "new",
+      "sub": "vacuumsealer",
+      "gen": true,
+      "name": "Rommelsbacher VAC 285",
+      "specs": "250 W · mitrais režīms · maisiņu nodalījums",
+      "s": 8.3,
+      "m": "RO3855NX",
+      "ean": "4008977881482",
+      "tags": [
+        "rare",
+        "often",
+        "wet"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 129,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 129,
+          "stock": "soon"
+        }
+      ]
+    },
+    {
+      "id": "vacuumsealer-new3",
+      "c": "new",
+      "sub": "vacuumsealer",
+      "gen": true,
+      "name": "Caso VC 300",
+      "specs": "nerūsējošs tērauds · 2 sūkņi",
+      "s": 8.6,
+      "m": "CA1457DW",
+      "ean": "4007225771490",
+      "tags": [
+        "often",
+        "wet"
+      ],
+      "kwh_year": null,
+      "offers": [
+        {
+          "store": "store_a",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_b",
+          "price_eur": 149,
+          "stock": "in"
+        },
+        {
+          "store": "store_c",
+          "price_eur": 149,
+          "stock": "in"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1073 @@
+/* Trilio prototipa loģika (izvilkta no design/prototype/Main.dc.html). Tikai atsaucei — NAV ražošanas kods. */
+
+var STORES = {
+  a: { name: 'Veikals A', url: '#' },
+  e: { name: 'Veikals B', url: '#' },
+  d: { name: 'Veikals C', url: '#' }
+};
+/* ===== Ledusskapji (atsevišķa plūsma) — parauga dati ===== */
+var P = [
+  { id: 'n1', c: 'new', t: 'free', fz: true, nf: true, name: 'Bosch Serie 4 kombinētais', w: 60, h: 203, v: 363, en: 'E', db: 38, s: 8.8, of: [['a', 699, 'in'], ['e', 719, 'in'], ['d', 689, 'soon']] },
+  { id: 'n2', c: 'new', t: 'free', fz: true, nf: true, name: 'Samsung kombinētais, No Frost', w: 59.5, h: 185, v: 344, en: 'D', db: 35, s: 8.6, of: [['a', 649, 'in'], ['e', 629, 'in'], ['d', 0, 'out']] },
+  { id: 'n13', c: 'new', t: 'free', fz: true, nf: true, name: 'Hisense kombinētais, No Frost', w: 59.5, h: 200, v: 372, en: 'D', db: 36, s: 8.2, of: [['a', 619, 'in'], ['e', 599, 'in'], ['d', 609, 'in']] },
+  { id: 'n3', c: 'new', t: 'free', fz: true, nf: true, name: 'LG kombinētais, DoorCooling', w: 59.5, h: 186, v: 384, en: 'D', db: 36, s: 8.4, of: [['a', 779, 'in'], ['e', 799, 'soon'], ['d', 759, 'in']] },
+  { id: 'n4', c: 'new', t: 'free', fz: true, nf: false, name: 'Beko kombinētais', w: 59.5, h: 185, v: 324, en: 'E', db: 40, s: 7.6, of: [['a', 429, 'in'], ['e', 449, 'in'], ['d', 419, 'in']] },
+  { id: 'n5', c: 'new', t: 'free', fz: true, nf: true, name: 'Electrolux kombinētais, 70 cm', w: 70, h: 201, v: 461, en: 'E', db: 39, s: 8.2, of: [['a', 899, 'in'], ['e', 929, 'in'], ['d', 879, 'soon']] },
+  { id: 'w1', c: 'new', t: 'free', fz: true, nf: true, name: 'Samsung Side-by-Side', w: 91.2, h: 178, v: 634, en: 'E', db: 35, s: 8.5, of: [['a', 1199, 'in'], ['e', 1179, 'in'], ['d', 1219, 'soon']] },
+  { id: 'w2', c: 'new', t: 'free', fz: true, nf: true, name: 'LG Side-by-Side, ar ledus devēju', w: 91.3, h: 179, v: 635, en: 'E', db: 36, s: 8.4, of: [['a', 1349, 'in'], ['e', 1399, 'soon'], ['d', 1329, 'in']] },
+  { id: 'w3', c: 'new', t: 'free', fz: true, nf: true, name: 'Hisense French Door', w: 79.4, h: 178, v: 536, en: 'E', db: 38, s: 8.0, of: [['a', 899, 'in'], ['e', 879, 'in'], ['d', 919, 'in']] },
+  { id: 'c1', c: 'new', t: 'free', fz: true, nf: false, name: 'Beko mazais ledusskapis ar saldēšanas nodalījumu', w: 54, h: 84, v: 114, en: 'E', db: 39, s: 7.4, of: [['a', 199, 'in'], ['e', 209, 'in'], ['d', 189, 'in']] },
+  { id: 'c2', c: 'new', t: 'free', fz: false, nf: true, name: 'Gorenje mazais ledusskapis bez saldētavas', w: 56, h: 85, v: 133, en: 'E', db: 38, s: 7.6, of: [['a', 229, 'in'], ['e', 239, 'soon'], ['d', 219, 'in']] },
+  { id: 'c3', c: 'new', t: 'free', fz: true, nf: false, name: 'Candy mazais ledusskapis', w: 48, h: 85, v: 109, en: 'F', db: 40, s: 6.9, of: [['a', 149, 'in'], ['e', 159, 'in'], ['d', 145, 'in']] },
+  { id: 'c4', c: 'new', t: 'free', fz: false, nf: true, name: 'Bosch Serie 2 mazais ledusskapis', w: 56, h: 85, v: 135, en: 'E', db: 38, s: 8.0, of: [['a', 299, 'in'], ['e', 289, 'in'], ['d', 309, 'soon']] },
+  { id: 'm1', c: 'new', t: 'free', fz: true, nf: false, name: 'Beko kombinētais, 153 cm', w: 54, h: 153, v: 226, en: 'E', db: 39, s: 7.5, of: [['a', 349, 'in'], ['e', 359, 'in'], ['d', 339, 'in']] },
+  { id: 'm2', c: 'new', t: 'free', fz: true, nf: true, name: 'Hisense kombinētais, 161 cm', w: 55, h: 161, v: 243, en: 'E', db: 39, s: 7.8, of: [['a', 399, 'in'], ['e', 389, 'in'], ['d', 409, 'soon']] },
+  { id: 'm3', c: 'new', t: 'free', fz: true, nf: true, name: 'Bosch Serie 4 kombinētais, 176 cm', w: 60, h: 176, v: 324, en: 'D', db: 36, s: 8.5, of: [['a', 659, 'in'], ['e', 649, 'in'], ['d', 669, 'in']] },
+  { id: 'm4', c: 'new', t: 'free', fz: false, nf: true, name: 'Electrolux vienkameras, 155 cm', w: 55, h: 155, v: 240, en: 'E', db: 38, s: 7.9, of: [['a', 459, 'in'], ['e', 469, 'in'], ['d', 449, 'soon']] },
+  { id: 'r1', c: 'refurb', t: 'free', fz: true, nf: true, name: 'Samsung kombinētais, No Frost', w: 59.5, h: 185, v: 344, en: 'D', db: 35, s: 8.3, g: 'A — sīki skrāpējumi sānu panelī', wr: '12 mēn. garantija', nw: 629, of: [['a', 489, 'in'], ['d', 469, 'in']] },
+  { id: 'r2', c: 'refurb', t: 'free', fz: true, nf: true, name: 'Bosch Serie 4 kombinētais', w: 60, h: 203, v: 363, en: 'E', db: 38, s: 8.5, g: 'A+ — atgriezta, iepakojums atvērts', wr: '24 mēn. garantija', nw: 689, of: [['e', 579, 'in']] },
+  { id: 'n6', c: 'new', t: 'free', fz: false, nf: true, name: 'Bosch Serie 6 vienkameras', w: 60, h: 186, v: 346, en: 'D', db: 37, s: 8.5, of: [['a', 799, 'in'], ['e', 829, 'in'], ['d', 789, 'in']] },
+  { id: 'n7', c: 'new', t: 'free', fz: false, nf: true, name: 'Gorenje vienkameras, 145 cm', w: 60, h: 145, v: 242, en: 'E', db: 38, s: 7.8, of: [['a', 499, 'in'], ['e', 479, 'soon'], ['d', 489, 'in']] },
+  { id: 'n14', c: 'new', t: 'free', fz: false, nf: true, name: 'Liebherr vienkameras', w: 60, h: 185, v: 380, en: 'D', db: 35, s: 8.4, of: [['a', 899, 'in'], ['e', 879, 'in'], ['d', 869, 'soon']] },
+  { id: 'r3', c: 'refurb', t: 'free', fz: false, nf: true, name: 'Electrolux vienkameras', w: 59.5, h: 185, v: 390, en: 'E', db: 38, s: 7.9, g: 'B — neliels iespiedums durvīs', wr: '12 mēn. garantija', nw: 579, of: [['d', 389, 'in']] },
+  { id: 'n8', c: 'new', t: 'builtin', fz: true, nf: false, name: 'Electrolux iebūvējams kombinētais', w: 54, h: 178, v: 256, en: 'E', db: 35, s: 8.3, of: [['a', 799, 'in'], ['e', 819, 'in'], ['d', 789, 'soon']] },
+  { id: 'n9', c: 'new', t: 'builtin', fz: true, nf: true, name: 'Bosch Serie 4 iebūvējams kombinētais', w: 54, h: 178, v: 260, en: 'E', db: 35, s: 8.7, of: [['a', 949, 'in'], ['e', 929, 'in'], ['d', 0, 'out']] },
+  { id: 'n10', c: 'new', t: 'builtin', fz: true, nf: false, name: 'Whirlpool iebūvējams kombinētais', w: 54, h: 178, v: 250, en: 'F', db: 37, s: 7.7, of: [['a', 689, 'in'], ['e', 699, 'in'], ['d', 679, 'in']] },
+  { id: 'r4', c: 'refurb', t: 'builtin', fz: true, nf: true, name: 'Samsung iebūvējams kombinētais', w: 54, h: 178, v: 267, en: 'E', db: 36, s: 8.1, g: 'A — skrāpējumi sānos, nišā tie nav redzami', wr: '12 mēn. garantija', nw: 789, of: [['a', 559, 'in']] },
+  { id: 'n11', c: 'new', t: 'builtin', fz: false, nf: true, name: 'AEG iebūvējams vienkameras', w: 54, h: 178, v: 310, en: 'E', db: 34, s: 8.6, of: [['a', 1049, 'in'], ['e', 999, 'in'], ['d', 1019, 'soon']] },
+  { id: 'n12', c: 'new', t: 'builtin', fz: false, nf: true, name: 'Electrolux iebūvējams vienkameras', w: 54, h: 178, v: 310, en: 'F', db: 35, s: 7.9, of: [['a', 749, 'in'], ['e', 769, 'in'], ['d', 739, 'in']] },
+  { id: 'n15', c: 'new', t: 'builtin', fz: false, nf: true, name: 'Gorenje iebūvējams vienkameras', w: 54, h: 178, v: 301, en: 'E', db: 35, s: 7.6, of: [['a', 649, 'in'], ['e', 669, 'in'], ['d', 639, 'in']] },
+  { id: 'n16', c: 'new', t: 'builtin', fz: false, nf: true, name: 'Electrolux iebūvējams, 122 cm', w: 54, h: 122, v: 207, en: 'E', db: 34, s: 8.0, of: [['a', 599, 'in'], ['e', 619, 'in'], ['d', 589, 'soon']] },
+  { id: 'r5', c: 'refurb', t: 'builtin', fz: false, nf: true, name: 'Bosch iebūvējams vienkameras', w: 54, h: 178, v: 319, en: 'E', db: 35, s: 8.2, g: 'A+ — atgriezta, nelietota', wr: '24 mēn. garantija', nw: 879, of: [['e', 619, 'in']] }
+];
+/* ===== Putekļsūcēji (atsevišķa plūsma) — parauga dati ===== */
+var V = [
+  { id: 'v1', c: 'new', t: 'robot', name: 'Roborock S8, ar mazgāšanu', run: 180, db: 67, mop: true, pet: true, s: 8.9, of: [['a', 549, 'in'], ['e', 579, 'in'], ['d', 539, 'soon']] },
+  { id: 'v2', c: 'new', t: 'robot', name: 'Xiaomi Robot Vacuum S20', run: 130, db: 66, mop: true, pet: false, s: 7.9, of: [['a', 249, 'in'], ['e', 259, 'in'], ['d', 239, 'in']] },
+  { id: 'v3', c: 'new', t: 'robot', name: 'iRobot Roomba Combo', run: 100, db: 63, mop: true, pet: true, s: 8.1, of: [['a', 399, 'in'], ['e', 389, 'in'], ['d', 0, 'out']] },
+  { id: 'v4', c: 'new', t: 'robot', name: 'Dreame L10s Ultra', run: 150, db: 65, mop: true, pet: true, s: 8.7, of: [['a', 699, 'in'], ['e', 719, 'soon'], ['d', 689, 'in']] },
+  { id: 'vr1', c: 'refurb', t: 'robot', name: 'Roborock S8, ar mazgāšanu', run: 180, db: 67, mop: true, pet: true, s: 8.6, g: 'A — izmantota demonstrācijām', wr: '12 mēn. garantija', nw: 539, of: [['d', 429, 'in']] },
+  { id: 'v5', c: 'new', t: 'stick', name: 'Dyson V15 Detect', run: 60, db: 75, mop: false, pet: true, s: 9.0, of: [['a', 699, 'in'], ['e', 679, 'in'], ['d', 689, 'in']] },
+  { id: 'v6', c: 'new', t: 'stick', name: 'Samsung Bespoke Jet', run: 60, db: 72, mop: false, pet: true, s: 8.5, of: [['a', 499, 'in'], ['e', 519, 'in'], ['d', 489, 'soon']] },
+  { id: 'v7', c: 'new', t: 'stick', name: 'Philips 7000 bezvadu, ar mazgāšanu', run: 80, db: 70, mop: true, pet: false, s: 8.0, of: [['a', 329, 'in'], ['e', 319, 'in'], ['d', 339, 'in']] },
+  { id: 'v8', c: 'new', t: 'stick', name: 'Bosch Unlimited 7', run: 40, db: 70, mop: false, pet: true, s: 7.8, of: [['a', 279, 'in'], ['e', 289, 'in'], ['d', 269, 'in']] },
+  { id: 'vr2', c: 'refurb', t: 'stick', name: 'Dyson V15 Detect', run: 60, db: 75, mop: false, pet: true, s: 8.8, g: 'A+ — atgriezta, nelietota', wr: '24 mēn. garantija', nw: 679, of: [['e', 529, 'in']] },
+  { id: 'v9', c: 'new', t: 'classic', name: 'Miele Complete C3, ar maisu', run: 0, db: 64, mop: false, pet: true, s: 8.8, of: [['a', 329, 'in'], ['e', 349, 'in'], ['d', 319, 'in']] },
+  { id: 'v10', c: 'new', t: 'classic', name: 'Bosch Serie 6, ar maisu', run: 0, db: 66, mop: false, pet: false, s: 8.1, of: [['a', 179, 'in'], ['e', 169, 'in'], ['d', 175, 'in']] },
+  { id: 'v11', c: 'new', t: 'classic', name: 'Philips 5000, ciklonisks (bez maisa)', run: 0, db: 76, mop: false, pet: true, s: 7.6, of: [['a', 129, 'in'], ['e', 139, 'soon'], ['d', 125, 'in']] }
+];
+
+/* ===== Visas pārējās sadaļas — jautājumi un parauga preces =====
+   q: { t: jautājums, w: kāpēc jautājam, f: 1 = filtrē, o: [[vērtība, teksts, apakšteksts, pamatojums kartītē]] }
+   i: [nosaukums, cena, birkas, specifikācija, vērtējums]
+   r: atjaunotās — [..., stāvoklis, garantija, jaunas cena] */
+var SUBS = {
+  fridge: { l: 'Ledusskapji', d: 'brīvi stāvoši un iebūvējami', custom: 1 },
+  freezer: { l: 'Saldētavas', d: 'lādes, vertikālās, iebūvējamās', b: [300, 500, 800],
+    q: [
+      { t: 'Kāda saldētava tev vajadzīga?', f: 1, o: [['chest', 'Saldētava-lāde', 'ietilpīga, piemērota pagrabam vai garāžai', 'Lāde — ietilpīga un ekonomiska'], ['upright', 'Vertikālā ar atvilktnēm', 'vieglāk sakārtot un atrast', 'Vertikālā — ērti sakārtot pa atvilktnēm'], ['builtin', 'Iebūvējama', 'aiz virtuves skapja durvīm', 'Iebūvējama — der standarta nišai']] },
+      { t: 'Kur saldētava stāvēs?', w: 'Neapsildītā telpā der tikai saldētavas, kas paredzētas darbam zemā temperatūrā.', o: [['home', 'Dzīvoklī vai mājā', ''], ['garage', 'Neapsildītā telpā', 'garāžā, šķūnī, pagrabā', 'Darbojas arī neapsildītā telpā (klimata klase SN-T)']] },
+      { t: 'Cik daudz plāno uzglabāt?', o: [['small', 'Nedaudz', 'līdz 150 L', 'Kompakta — līdz 150 L'], ['mid', 'Vidēji', '150–250 L', 'Tilpums 150–250 L'], ['big', 'Daudz', 'vairāk nekā 250 L', 'Liels tilpums — virs 250 L']] }
+    ],
+    i: [['Beko saldētava-lāde, 200 L', 249, 'chest home garage mid', '200 L · klase E · SN-T', 7.8], ['Electrolux saldētava-lāde, 300 L', 449, 'chest home garage big', '300 L · klase E · LowFrost', 8.4], ['Hisense saldētava-lāde, 95 L', 169, 'chest home garage small', '95 L · klase F', 7.4], ['Gorenje vertikālā, No Frost', 549, 'upright home big', '280 L · No Frost · 185 cm', 8.3], ['Bosch Serie 4 vertikālā, No Frost', 699, 'upright home mid', '242 L · No Frost · klase E', 8.7], ['Candy kompaktā saldētava', 199, 'upright home small', '85 L · 85 cm augsta', 7.2], ['Electrolux iebūvējama saldētava', 799, 'builtin home mid', '204 L · niša 178 cm', 8.2], ['Gorenje iebūvējama zem darba virsmas', 449, 'builtin home small', '95 L · 82 cm augsta', 7.8], ['Bosch Serie 6 iebūvējama, No Frost', 999, 'builtin home mid', '212 L · No Frost · niša 178 cm', 8.6], ['Beko kompaktā vertikālā, 100 L', 249, 'upright home small', '100 L · 85 cm augsta · klase E', 7.6]],
+    r: [['Gorenje vertikālā, No Frost', 399, 'upright home big', '280 L · No Frost', 8.1, 'A — skrāpējums uz durvīm', '12 mēn. garantija', 549]] },
+
+  washer: { l: 'Veļas mašīnas', d: 'ar priekšējo un augšējo ielādi, ar žāvētāju', b: [400, 700, 1000],
+    q: [
+      { t: 'Kāda veļas mašīna tev vajadzīga?', f: 1, o: [['front', 'Ar priekšējo ielādi', 'standarta, ievietojama zem virsmas', ''], ['top', 'Ar augšējo ielādi', 'šaura, ~40 cm plata', 'Augšējā ielāde — tikai 40 cm plata'], ['combo', 'Ar žāvētāju (2 vienā)', 'ja nav vietas atsevišķam žāvētājam', 'Mazgā un žāvē vienā ierīcē']] },
+      { t: 'Cik cilvēku ir tavā mājsaimniecībā?', w: 'No tā atkarīgs, cik kilogramu veļas mašīnai jāspēj izmazgāt vienā reizē.', o: [['7', '1–2', 'pietiek ar 6–7 kg', 'Ietilpība 6–7 kg — pietiek 1–2 cilvēkiem'], ['9', '3–4', 'ieteicams 8–9 kg', 'Ietilpība 8–9 kg — pietiek ģimenei'], ['10', '5 vai vairāk', 'ieteicams 10 kg un vairāk', 'Ietilpība 10 kg un vairāk']] },
+      { t: 'Cik daudz vietas ir vannasistabā?', f: 1, w: 'Mazā vannasistabā der šaurās mašīnas (līdz 45 cm dziļas) vai mašīnas ar augšējo ielādi (40 cm platas).', o: [['slim', 'Maz', 'vajag šauru mašīnu', 'Kompakta — der mazai vannasistabai'], ['std', 'Pietiekami', 'standarta 60 × 60 cm', ''], ['any', 'Nav svarīgi', '']] }
+    ],
+    i: [['Bosch Serie 4, 8 kg', 529, 'front 9 std', '8 kg · 1400 apgr./min · klase A · 55 cm dziļa', 8.6], ['Samsung EcoBubble, 9 kg', 599, 'front 9 std', '9 kg · 1400 apgr./min · klase A · tvaika funkcija', 8.5], ['LG šaurā, 7 kg', 449, 'front 7 slim', '7 kg · 1200 apgr./min · 45 cm dziļa', 8.1], ['Beko, 10 kg', 479, 'front 10 std', '10 kg · 1400 apgr./min · klase B', 7.7], ['Samsung šaurā, 8 kg', 499, 'front 9 slim', '8 kg · 1400 apgr./min · 45 cm dziļa', 8.3], ['Electrolux ar augšējo ielādi, 7 kg', 549, 'top 7 slim std', '7 kg · 40 cm plata · 1300 apgr./min', 8.2], ['Whirlpool ar augšējo ielādi, 6 kg', 399, 'top 7 slim std', '6 kg · 40 cm plata · 1200 apgr./min', 7.5], ['Candy šaurā ar žāvētāju, 8/5 kg', 599, 'combo 9 slim', 'mazgā 8 kg, žāvē 5 kg · 47 cm dziļa', 7.6], ['Beko šaurā ar žāvētāju, 7/5 kg', 549, 'combo 7 slim', 'mazgā 7 kg, žāvē 5 kg · 45 cm dziļa', 7.5], ['LG ar žāvētāju, 9/6 kg', 849, 'combo 9 std', 'mazgā 9 kg, žāvē 6 kg · tvaika funkcija', 8.4], ['Samsung ar žāvētāju, 10/6 kg', 949, 'combo 10 std', 'mazgā 10 kg, žāvē 6 kg · Wi-Fi', 8.3]],
+    r: [['Bosch Serie 4, 8 kg', 389, 'front 9 std', '8 kg · 1400 apgr./min', 8.4, 'A+ — atgriezta, nelietota', '24 mēn. garantija', 529]] },
+
+  dryer: { l: 'Veļas žāvētāji', d: 'ar siltumsūkni un kondensācijas', b: [500, 800, 1100],
+    q: [
+      { t: 'Kādu žāvētāju meklē?', f: 1, o: [['heatpump', 'Ar siltumsūkni', 'ekonomisks, saudzīgs pret apģērbu', 'Siltumsūknis — patērē aptuveni uz pusi mazāk elektroenerģijas'], ['condenser', 'Kondensācijas', 'lētāks, bet patērē vairāk elektroenerģijas', '']] },
+      { t: 'Cik cilvēku ir tavā mājsaimniecībā?', o: [['7', '1–2', 'pietiek ar 7 kg', 'Ietilpība 7 kg'], ['8', '3–4', 'ieteicams 8 kg', 'Ietilpība 8 kg — pietiek ģimenei'], ['9', '5 vai vairāk', 'ieteicams 9 kg un vairāk', 'Ietilpība 9 kg']] },
+      { t: 'Kur žāvētājs stāvēs?', w: 'Lai novietotu žāvētāju virs veļas mašīnas, vajadzīgs savienošanas komplekts.', o: [['stack', 'Virs veļas mašīnas', 'kolonnā', 'Var novietot virs veļas mašīnas'], ['side', 'Blakus veļas mašīnai', '']] }
+    ],
+    i: [['Bosch Serie 6 ar siltumsūkni, 8 kg', 749, 'heatpump 8 stack side', 'klase A++ · 8 kg · pašattīrošs kondensators', 8.7], ['Electrolux PerfectCare ar siltumsūkni, 9 kg', 849, 'heatpump 9 stack side', 'klase A+++ · 9 kg · smaržu kārtridžs', 8.6], ['Beko ar siltumsūkni, 8 kg', 499, 'heatpump 8 stack side', 'klase A++ · 8 kg', 7.9], ['Samsung ar siltumsūkni, 9 kg', 699, 'heatpump 9 stack side', 'klase A+++ · 9 kg · Wi-Fi', 8.3], ['Whirlpool ar siltumsūkni, 7 kg', 449, 'heatpump 7 stack side', 'klase A+ · 7 kg', 7.8], ['Candy kondensācijas, 8 kg', 349, 'condenser 8 stack side', 'klase B · 8 kg', 7.2], ['Beko kondensācijas, 7 kg', 299, 'condenser 7 stack side', 'klase B · 7 kg', 7.1]],
+    r: [['Electrolux PerfectCare ar siltumsūkni, 9 kg', 599, 'heatpump 9 stack side', 'klase A+++ · 9 kg', 8.4, 'A — skrāpējums uz augšējā paneļa', '12 mēn. garantija', 849]] },
+
+  iron: { l: 'Gludekļi', d: 'tvaika gludekļi un gludināšanas sistēmas', b: [50, 120, 250],
+    q: [
+      { t: 'Ar ko tev ērtāk gludināt?', f: 1, o: [['iron', 'Ar parasto tvaika gludekli', 'kompakts, viegli noglabāt', ''], ['station', 'Ar tvaika gludināšanas sistēmu', 'atsevišķa ūdens tvertne, spēcīgs tvaiks', 'Tvaika sistēma — gludina līdz divreiz ātrāk']] },
+      { t: 'Cik daudz tu gludini?', o: [['rare', 'Reizēm', 'dažus kreklus nedēļā', ''], ['often', 'Daudz un regulāri', 'visas ģimenes veļu', 'Spēcīga tvaika padeve — piemērots lieliem apjomiem']] },
+      { t: 'Vai svarīga automātiska izslēgšanās?', w: 'Gludeklis pats izslēdzas, ja to aizmirsti ieslēgtu.', o: [['auto', 'Jā, drošības dēļ', '', 'Automātiski izslēdzas, ja netiek lietots'], ['any', 'Nav svarīgi', '']] }
+    ],
+    i: [['Philips 5000 tvaika gludeklis', 59, 'iron rare auto', '2600 W · 50 g/min tvaika', 8.1], ['Tefal Ultragliss', 79, 'iron often auto', '2800 W · 55 g/min tvaika', 8.3], ['Braun TexStyle 7', 89, 'iron often auto', '2700 W · pretkaļķu sistēma', 8.4], ['Rowenta Focus', 45, 'iron rare', '2400 W · 40 g/min tvaika', 7.6], ['Philips PerfectCare 7000 tvaika sistēma', 249, 'station often auto', '7,5 bāri · bez temperatūras regulēšanas', 8.8], ['Tefal Express Easy tvaika sistēma', 149, 'station often', '5,5 bāri · 1,7 L tvertne', 8.0]] },
+
+  steamer: { l: 'Apģērbu tvaicētāji', d: 'apģērba kopšanai bez gludināšanas dēļa', b: [50, 100, 200],
+    q: [
+      { t: 'Kādu tvaicētāju meklē?', f: 1, o: [['hand', 'Rokas tvaicētāju', 'ceļojumiem un ātrai atsvaidzināšanai', 'Kompakts — der arī ceļojumiem'], ['stand', 'Stāvošu ar statīvu', 'regulārai lietošanai mājās', 'Stāvošs ar statīvu — ērts regulārai lietošanai']] },
+      { t: 'Ko tvaicēsi visbiežāk?', o: [['shirts', 'Kreklus un kleitas', ''], ['heavy', 'Arī mēteļus un aizkarus', 'biezākus audumus', 'Spēcīgs tvaiks — tiek galā ar biezākiem audumiem']] }
+    ],
+    i: [['Philips 3000 rokas tvaicētājs', 49, 'hand shirts', '1000 W · gatavs 30 sekundēs', 8.0], ['Tefal Access Steam+', 69, 'hand shirts heavy', '1600 W · 24 g/min tvaika', 8.3], ['Rowenta Pro Compact', 59, 'hand shirts', '1300 W · salokāms', 7.8], ['Philips 5000 stāvošais tvaicētājs', 149, 'stand shirts heavy', '2000 W · 40 g/min tvaika · statīvs', 8.5], ['Tefal Pro Style stāvošais', 119, 'stand shirts', '1800 W · statīvs ar pakaramo', 7.9]] },
+
+  dish: { l: 'Trauku mazgājamās mašīnas', d: 'iebūvējamas, brīvi stāvošas, galda', b: [400, 700, 1000],
+    q: [
+      { t: 'Kāda trauku mazgājamā mašīna tev vajadzīga?', f: 1, o: [['builtin', 'Pilnībā iebūvējama', 'aiz virtuves skapja durvīm', 'Pilnībā iebūvējama — nav redzama'], ['free', 'Brīvi stāvoša', '', ''], ['compact', 'Galda (kompakta)', 'mazai virtuvei bez vietas', 'Kompakta — novietojama uz galda']] },
+      { t: 'Kāds platums?', f: 1, w: 'Standarta mašīnā ietilpst 13–14 trauku komplekti, šaurajā — 9–10.', o: [['60', '60 cm — standarta', '', 'Standarta 60 cm — 13–14 trauku komplekti'], ['45', '45 cm — šaurā', 'ietaupa vietu', 'Šaurā 45 cm — ietaupa vietu'], ['any', 'Nezinu', '']] },
+      { t: 'Kas tev ir svarīgākais?', o: [['quiet', 'Klusums', 'ja virtuve savienota ar dzīvojamo', 'Kluss — 44 dB vai mazāk'], ['dry', 'Labi izžāvēti trauki', '', 'Pēc mazgāšanas pati atver durvis — trauki izžūst labāk'], ['fast', 'Ātra mazgāšana', '', 'Ātrā programma — aptuveni stundā']] }
+    ],
+    i: [['Bosch Serie 4 iebūvējama, 60 cm', 599, 'builtin 60 quiet dry', '13 komplekti · 44 dB · klase D', 8.6], ['Siemens iQ300 iebūvējama, 60 cm', 699, 'builtin 60 quiet dry fast', '14 komplekti · 42 dB · klase C', 8.8], ['Beko iebūvējama, 60 cm', 429, 'builtin 60 fast', '14 komplekti · 46 dB · klase E', 7.6], ['Electrolux iebūvējama, 45 cm', 549, 'builtin 45 dry', '10 komplekti · 44 dB · AirDry', 8.3], ['Bosch Serie 2 brīvi stāvoša, 60 cm', 449, 'free 60 fast', '12 komplekti · 48 dB · klase E', 7.9], ['Candy brīvi stāvoša, 60 cm', 349, 'free 60 fast', '13 komplekti · 49 dB · klase E', 7.3], ['Beko brīvi stāvoša, 45 cm', 379, 'free 45 fast', '10 komplekti · 47 dB · klase E', 7.6], ['Midea galda trauku mašīna', 279, 'compact 45 60 fast', '6 komplekti · 49 dB · bez ūdensvada pieslēguma', 7.8], ['Candy galda trauku mašīna', 249, 'compact 45 60 fast', '6 komplekti · 51 dB', 7.3], ['Bosch Serie 4 iebūvējama, 45 cm', 579, 'builtin 45 quiet dry', '10 komplekti · 44 dB · klase D', 8.5], ['Candy brīvi stāvoša, 45 cm', 299, 'free 45', '9 komplekti · 49 dB · klase E', 7.2]],
+    r: [['Bosch Serie 4 iebūvējama, 60 cm', 449, 'builtin 60 quiet dry', '13 komplekti · 44 dB', 8.4, 'A+ — atgriezta, nelietota', '24 mēn. garantija', 599]] },
+
+  hob: { l: 'Plītis un plīts virsmas', d: 'indukcijas, keramiskās, gāzes', b: [300, 600, 900],
+    q: [
+      { t: 'Ko tieši meklē?', f: 1, o: [['induction', 'Indukcijas virsmu', 'ātra, droša, vajadzīgi piemēroti trauki', 'Indukcija — uzsilst ātrāk nekā keramiskā virsma'], ['ceramic', 'Keramisko virsmu', 'der jebkuri trauki', ''], ['gas', 'Gāzes virsmu vai plīti', '', 'Gāzes — darbojas arī elektrības pārrāvuma laikā'], ['standalone', 'Brīvi stāvošu plīti ar cepeškrāsni', 'viss vienā', 'Plīts ar cepeškrāsni — viss vienā ierīcē']] },
+      { t: 'Cik riņķu vajag?', o: [['2', '2', 'mazai virtuvei vai vasarnīcai', 'Divas zonas — kompakta'], ['4', '4', 'standarta', ''], ['5', '5 vai elastīga zona', 'lieliem traukiem', 'Elastīga zona lieliem traukiem']] },
+      { t: 'Vai tev ir trīsfāzu elektrības pieslēgums?', w: 'Pilnas jaudas indukcijas virsmai bieži vajag 7,4 kW. Ja neesi pārliecināts, pajautā elektriķim.', o: [['y', 'Jā', ''], ['n', 'Nē vai nezinu', '', 'Darbojas ar parasto vienfāzes pieslēgumu']] }
+    ],
+    i: [['Bosch Serie 4 indukcijas virsma, 60 cm', 449, 'induction 4 y', '4 zonas · Booster · 7,4 kW', 8.6], ['Electrolux indukcijas virsma ar elastīgo zonu', 649, 'induction 5 y', '4 zonas + elastīgā zona · Hob2Hood', 8.7], ['Beko indukcijas virsma, 2 zonas', 199, 'induction 2 y n', '2 zonas · 3,5 kW', 7.7], ['Gorenje keramiskā virsma, 60 cm', 249, 'ceramic 4 y n', '4 zonas · skārienvadība', 7.8], ['Bosch gāzes virsma, 60 cm', 299, 'gas 4 y n', '4 degļi · čuguna restes', 8.2], ['Gorenje brīvi stāvoša elektriskā plīts', 449, 'standalone ceramic 4 y n', '50 cm · keramiskā virsma · cepeškrāsns 70 L', 7.9], ['Beko brīvi stāvoša gāzes plīts', 399, 'standalone gas 4 y n', '50 cm · 4 degļi · elektriskā cepeškrāsns', 7.6]] },
+
+  oven: { l: 'Cepeškrāsnis', d: 'iebūvējamas', b: [400, 700, 1000],
+    q: [
+      { t: 'Vai vajag tvaika funkciju?', w: 'Tvaiks palīdz gaļai palikt sulīgai un maizei izveidot kraukšķīgu garozu.', o: [['steam', 'Jā, ar tvaika atbalstu', '', 'Tvaika atbalsts — sulīgāka gaļa, labāka maize'], ['any', 'Nē, pietiek ar parasto', '']] },
+      { t: 'Kā gribi tīrīt cepeškrāsni?', o: [['pyro', 'Lai iztīrās pati', 'pirolīze', 'Pirolītiskā tīrīšana — nav jāberzē'], ['cat', 'Pietiek ar vieglāku tīrīšanu', 'katalītiskie paneļi vai tvaiks', 'Katalītiskie paneļi uzsūc taukus'], ['any', 'Nav svarīgi', '']] },
+      { t: 'Vai gribi vadīt ar telefonu?', o: [['wifi', 'Jā', '', 'Vadāma ar lietotni (Wi-Fi)'], ['any', 'Nav vajadzīgs', '']] }
+    ],
+    i: [['Bosch Serie 4 cepeškrāsns', 479, 'cat', '71 L · 3D karstais gaiss · klase A', 8.4], ['Bosch Serie 6 ar pirolīzi', 799, 'pyro wifi', '71 L · pirolīze · Home Connect', 8.8], ['Electrolux SteamBake', 549, 'steam cat', '72 L · tvaika atbalsts · klase A+', 8.3], ['AEG SteamCrisp', 999, 'steam pyro wifi', '70 L · tvaiks · pirolīze · Wi-Fi', 9.0], ['Beko cepeškrāsns', 349, 'cat', '72 L · karstais gaiss · klase A', 7.6], ['Gorenje ar pirolīzi', 599, 'pyro', '77 L · pirolīze · klase A+', 8.1]],
+    r: [['AEG SteamCrisp', 749, 'steam pyro wifi', '70 L · tvaiks · pirolīze', 8.7, 'A — skrāpējums uz sānu paneļa, uzstādot nav redzams', '12 mēn. garantija', 999]] },
+
+  hood: { l: 'Tvaika nosūcēji', d: 'sienas, salas, iebūvējami', b: [200, 400, 700],
+    q: [
+      { t: 'Kur nosūcējs būs?', f: 1, o: [['wall', 'Pie sienas', 'kamīna tipa', ''], ['island', 'Virs salas', 'piekārts pie griestiem', 'Salas nosūcējs — piestiprināms pie griestiem'], ['builtin', 'Iebūvēts skapī', 'teleskopisks vai pilnībā iebūvēts', 'Iebūvējams — nav redzams virtuvē']] },
+      { t: 'Cik plata ir plīts?', f: 1, w: 'Nosūcējam jābūt vismaz tikpat platam kā plītij.', o: [['60', '60 cm', '', 'Platums 60 cm'], ['90', '90 cm', '', 'Platums 90 cm']] },
+      { t: 'Vai ir ventilācijas izvads uz āru?', o: [['out', 'Jā', 'gaisu izvadīs ārā', ''], ['recirc', 'Nē', 'vajag recirkulāciju ar ogles filtru', 'Var darboties recirkulācijas režīmā ar ogles filtru']] }
+    ],
+    i: [['Bosch Serie 4 sienas nosūcējs, 60 cm', 299, 'wall 60 out recirc', '530 m³/h · 3 ātrumi · LED', 8.3], ['Electrolux sienas nosūcējs, 90 cm', 399, 'wall 90 out recirc', '600 m³/h · Hob2Hood', 8.4], ['Faber sienas nosūcējs, 90 cm, kluss', 549, 'wall 90 out recirc', '700 m³/h · 52 dB', 8.6], ['Gorenje teleskopisks, 60 cm', 179, 'builtin 60 out recirc', '400 m³/h · izvelkams panelis', 7.8], ['Bosch iebūvējams, 60 cm', 199, 'builtin 60 out', '390 m³/h · LED', 7.7], ['Elica salas nosūcējs, 90 cm', 899, 'island 90 out recirc', '650 m³/h · tālvadība', 8.5], ['Bosch Serie 4 salas nosūcējs, 90 cm', 999, 'island 90 out recirc', '700 m³/h · LED', 8.4], ['Cata salas nosūcējs, 60 cm', 599, 'island 60 out recirc', '600 m³/h · kluss režīms', 7.9], ['Elica salas nosūcējs, 60 cm', 749, 'island 60 out recirc', '620 m³/h · tālvadība', 8.2], ['Electrolux sienas nosūcējs, 60 cm', 249, 'wall 60 out recirc', '480 m³/h · LED', 7.9], ['Gorenje teleskopisks, 90 cm', 249, 'builtin 90 out recirc', '450 m³/h · izvelkams panelis', 7.9], ['Electrolux iebūvējams, 90 cm', 329, 'builtin 90 out recirc', '600 m³/h · Hob2Hood', 8.2]] },
+
+  micro: { l: 'Mikroviļņu krāsnis', d: 'galda un iebūvējamas', b: [100, 250, 500],
+    q: [
+      { t: 'Kur mikroviļņu krāsns stāvēs?', f: 1, o: [['free', 'Uz galda', ''], ['builtin', 'Iebūvēta skapī', '', 'Iebūvējama — der standarta skapim']] },
+      { t: 'Ko tajā gatavosi?', f: 1, o: [['heat', 'Tikai sildīšu un atkausēšu', ''], ['grill', 'Arī grilēšu', '', 'Ar grila funkciju'], ['combi', 'Arī cepšu kā cepeškrāsnī', '', 'Ar karstā gaisa režīmu — aizstāj otru cepeškrāsni']] },
+      { t: 'Cik lielai jābūt?', o: [['20', 'Līdz 20 L', '1–2 cilvēkiem', 'Kompakta — līdz 20 L'], ['25', '23–28 L', 'ģimenei', 'Tilpums 23–28 L — piemērots ģimenei'], ['30', 'Vairāk nekā 30 L', 'lieliem traukiem', 'Liels tilpums — virs 30 L']] }
+    ],
+    i: [['Sharp mikroviļņu krāsns, 20 L', 69, 'free heat 20', '20 L · 800 W', 7.4], ['Samsung mikroviļņu krāsns, 23 L', 99, 'free heat 25', '23 L · 800 W · keramiskā iekšpuse', 8.1], ['LG ar grilu, 25 L', 139, 'free heat grill 25', '25 L · 1000 W · grils', 8.2], ['Panasonic kombinētā, 27 L', 279, 'free heat grill combi 25', '27 L · invertors · karstais gaiss', 8.6], ['Samsung ar grilu, 32 L', 179, 'free heat grill 30', '32 L · 900 W · grils', 8.0], ['Bosch iebūvējama ar grilu, 20 L', 299, 'builtin heat grill 20', '20 L · 800 W · grils', 8.3], ['Electrolux iebūvējama, 25 L', 349, 'builtin heat grill 25', '25 L · 900 W · grils', 8.1], ['Siemens iebūvējama kombinētā, 44 L', 899, 'builtin heat grill combi 30', '44 L · karstais gaiss · pirolīze', 8.8], ['Bosch Serie 6 iebūvējama kombinētā, 36 L', 749, 'builtin heat grill combi 30', '36 L · karstais gaiss', 8.5], ['Samsung kombinētā ar karsto gaisu, 28 L', 249, 'free heat grill combi 25', '28 L · karstais gaiss · grils', 8.2]] },
+
+  vacuum: { l: 'Putekļsūcēji', d: 'roboti, vertikālie, klasiskie, cikloniskie', custom: 1 },
+  steamclean: { l: 'Tvaika tīrītāji', d: 'grīdām, flīzēm un vannasistabai', b: [80, 150, 300],
+    q: [
+      { t: 'Kādu tvaika tīrītāju meklē?', f: 1, o: [['hand', 'Rokas', 'kompakts — flīzēm, logiem, virtuvei', 'Kompakts rokas tīrītājs'], ['mop', 'Tvaika slotu', 'grīdu mazgāšanai', 'Tvaika slota — ērti mazgāt grīdas'], ['cyl', 'Cilindra ar šļūteni', 'jaudīgs, visai mājai', 'Jaudīgs, ar šļūteni un uzgaļiem visai mājai']] },
+      { t: 'Ko tīrīsi visbiežāk?', o: [['floor', 'Grīdas', '', 'Piemērots grīdām'], ['bath', 'Vannasistabu un flīžu šuves', '', 'Iztīra flīžu šuves bez ķīmijas'], ['any', 'Visu kopā', '']] }
+    ],
+    i: [['Kärcher SC 1 rokas', 129, 'hand bath', '3 bāri · 0,2 L · uzgaļu komplekts', 8.2], ['Polti rokas tvaika tīrītājs', 59, 'hand bath', '3 bāri · 0,35 L', 7.4], ['Polti Vaporetto tvaika slota', 119, 'mop floor', '1500 W · gatava 30 sekundēs', 7.9], ['Black+Decker 5 vienā tvaika slota', 149, 'mop floor bath', 'slota + rokas tīrītājs', 8.1], ['Kärcher SC 3', 249, 'cyl floor bath', '3,5 bāri · nepārtraukta uzpilde', 8.6], ['Kärcher SC 4', 329, 'cyl floor bath', '3,5 bāri · 2 tvertnes · gludeklis', 8.7]] },
+
+  coffee: { l: 'Kafijas automāti', d: 'automātiskie, kapsulu, espresso', b: [200, 500, 900],
+    q: [
+      { t: 'Kādu kafiju dzer visbiežāk?', o: [['milk', 'Ar pienu', 'kapučīno, latte', 'Automātiski saputo pienu'], ['black', 'Melnu', 'espresso, americano', ''], ['any', 'Abas', '']] },
+      { t: 'Kādu kafijas automātu vēlies?', f: 1, o: [['auto', 'Pilnībā automātisku', 'ar dzirnaviņām — svaigi malta kafija ar vienu pieskārienu', 'Iebūvētas dzirnaviņas — svaigi malta kafija'], ['capsule', 'Kapsulu', 'vienkārši, bet kafijas porcija dārgāka', 'Kapsulas — vienkārši un ātri'], ['manual', 'Espresso ar rokas pagatavošanu', 'portafiltrs — kā kafejnīcā', 'Portafiltrs — pilna kontrole pār garšu']] },
+      { t: 'Cik krūzes dienā pagatavo?', o: [['2', '1–2', ''], ['4', '3–5', ''], ['6', 'Vairāk', 'ģimenei vai birojam', 'Liela ūdens tvertne — piemērots daudzām krūzēm']] }
+    ],
+    i: [['De’Longhi Magnifica S', 349, 'auto black 2 4', 'dzirnaviņas · manuāls piena putotājs · 1,8 L', 8.3], ['Philips 3200 LatteGo', 499, 'auto milk black 4 6', 'dzirnaviņas · LatteGo putotājs · 5 dzērieni', 8.6], ['De’Longhi Dinamica Plus', 799, 'auto milk black 6', 'dzirnaviņas · lietotne · 24 receptes', 8.8], ['Krups Evidence', 649, 'auto milk black 4 6', 'dzirnaviņas · 15 receptes · 2,3 L', 8.2], ['Nespresso Vertuo Pop', 99, 'capsule black 2', 'kapsulas · 0,6 L', 7.8], ['Nespresso Lattissima One', 249, 'capsule milk black 2', 'kapsulas · piena putotājs', 8.1], ['Sage Bambino Plus', 399, 'manual milk black 2 4', 'portafiltrs · automātisks putotājs', 8.7], ['De’Longhi Dedica', 169, 'manual milk black 2', 'portafiltrs · tvaika caurulīte · 15 cm plats', 8.0]],
+    r: [['Philips 3200 LatteGo', 369, 'auto milk black 4 6', 'dzirnaviņas · LatteGo', 8.4, 'A — atgriezta, lietota īsu laiku', '12 mēn. garantija', 499]] },
+
+  grinder: { l: 'Kafijas dzirnaviņas', d: 'ar dzirnakmeņiem un asmeņiem', b: [40, 120, 250],
+    q: [
+      { t: 'Kā tu gatavo kafiju?', o: [['espresso', 'Espresso', '', 'Smalks, precīzs malums espresso'], ['filter', 'Filtra kafija vai franču prese', '', 'Piemērots filtra kafijai un franču presei'], ['any', 'Dažādi', '']] },
+      { t: 'Kādas dzirnaviņas vēlies?', f: 1, w: 'Dzirnaviņas ar dzirnakmeņiem maļ vienmērīgāk, tāpēc kafija garšo labāk.', o: [['burr', 'Ar dzirnakmeņiem', 'vienmērīgs malums', 'Dzirnakmeņi — vienmērīgs malums'], ['blade', 'Ar asmeņiem', 'lētākas, vienkāršas', '']] }
+    ],
+    i: [['Sage Dose Control Pro', 199, 'burr espresso filter', '60 maluma pakāpes', 8.6], ['Baratza Encore ESP', 229, 'burr espresso filter', 'konusveida dzirnakmeņi · 40 pakāpes', 8.8], ['De’Longhi KG79', 59, 'burr filter', '16 maluma pakāpes', 7.6], ['Krups GVX231', 49, 'burr filter', '17 maluma pakāpes', 7.4], ['Bosch TSM6A013', 25, 'blade filter', 'asmeņi · 75 g', 7.0], ['Krups F203', 19, 'blade filter', 'asmeņi · 75 g · 200 W', 6.9]] },
+
+  kettle: { l: 'Tējkannas', d: 'elektriskās', b: [30, 60, 120],
+    q: [
+      { t: 'Kas tev tējkannā ir svarīgākais?', o: [['temp', 'Temperatūras regulēšana', 'zaļajai tējai, bērnu pārtikai', 'Var iestatīt ūdens temperatūru'], ['fast', 'Ātra uzvārīšana', '', 'Jaudīga — ūdens uzvārās ātri'], ['design', 'Dizains', '', 'Izceļas ar dizainu']] },
+      { t: 'Cik lielai jābūt?', o: [['small', 'Līdz 1 L', '1–2 cilvēkiem vai ceļojumiem', 'Kompakta — līdz 1 L'], ['std', '1,5–1,7 L', 'standarta', '']] }
+    ],
+    i: [['Bosch TWK3A011', 29, 'fast std', '1,7 L · 2400 W', 7.9], ['Philips 5000 stikla', 49, 'fast std design', '1,7 L · 2200 W · LED apgaismojums', 8.1], ['Tefal ar temperatūras regulēšanu', 69, 'temp std', '1,7 L · 5 temperatūras', 8.4], ['Xiaomi Smart Kettle 2', 45, 'temp std', '1,7 L · vadāma ar lietotni', 8.0], ['Smeg 50. gadu stila', 149, 'design std', '1,7 L · nerūsējošs tērauds', 8.2], ['Russell Hobbs Travel', 25, 'small fast', '0,85 L · 1000 W', 7.3]] },
+
+  blender: { l: 'Kokteiļu blenderi', d: 'smūtijiem un kokteiļiem', b: [50, 150, 300],
+    q: [
+      { t: 'Kādu blenderi meklē?', f: 1, o: [['jug', 'Ar lielu krūku', 'ģimenei', ''], ['personal', 'Personīgo', 'ar pudeli līdzņemšanai', 'Ar pudeli līdzņemšanai']] },
+      { t: 'Ko gatavosi?', o: [['smoothie', 'Smūtijus', ''], ['ice', 'Arī ledu un saldētus augļus', '', 'Jaudīgs motors — sasmalcina ledu'], ['soup', 'Karstas zupas', '', 'Ar sildīšanas funkciju — gatavo zupas']] }
+    ],
+    i: [['Moulinex Blendforce', 49, 'jug smoothie', '1,5 L · 600 W', 7.4], ['Philips 5000', 79, 'jug smoothie ice', '2 L · 1200 W', 8.0], ['Tefal Perfectmix+', 119, 'jug smoothie ice', '2 L · 1200 W · 28 000 apgr./min', 8.3], ['Ninja 2 vienā', 129, 'jug personal smoothie ice', '2,1 L krūka + 2 pudeles · 1200 W', 8.6], ['Philips 7000 ar sildīšanu', 249, 'jug smoothie ice soup', '1,4 L · sildīšana · 10 programmas', 8.5], ['Nutribullet 600', 59, 'personal smoothie', '600 W · 2 pudeles', 7.9]] },
+
+  handblender: { l: 'Rokas blenderi', d: 'zupām, biezeņiem, mērcēm', b: [40, 80, 150],
+    q: [
+      { t: 'Ar vadu vai bez?', f: 1, o: [['cord', 'Ar vadu', 'jaudīgāks, nav jālādē', ''], ['cordless', 'Bezvadu', 'ērtāk pārvietot', 'Bezvadu — darbojas ar akumulatoru']] },
+      { t: 'Kam izmantosi?', o: [['soup', 'Zupām un biezeņiem', ''], ['more', 'Arī smalcināšanai un putošanai', '', 'Komplektā smalcinātājs un putotājs']] }
+    ],
+    i: [['Philips 5000', 35, 'cord soup', '800 W · metāla kāja', 7.6], ['Braun MultiQuick 5', 49, 'cord soup', '1000 W · ActiveBlade', 8.2], ['Bosch ErgoMaster komplekts', 79, 'cord soup more', '1200 W · smalcinātājs, putotājs', 8.4], ['Braun MultiQuick 7 komplekts', 99, 'cord soup more', '1000 W · ActiveBlade · 3 piederumi', 8.6], ['KitchenAid bezvadu', 139, 'cordless soup more', 'akumulators · 3 piederumi', 8.1], ['Braun MultiQuick 7 bezvadu', 129, 'cordless soup more', 'akumulators · smalcinātājs', 8.3]] },
+
+  foodproc: { l: 'Virtuves kombaini', d: 'planetārie mikseri un kombaini ar diskiem', b: [150, 350, 700],
+    q: [
+      { t: 'Kādu kombainu meklē?', f: 1, o: [['stand', 'Planetāro mikseri ar bļodu', 'mīklām un krēmiem', ''], ['processor', 'Virtuves kombainu ar diskiem', 'griešanai un rīvēšanai', '']] },
+      { t: 'Ko darīsi visbiežāk?', o: [['dough', 'Mīcīšu mīklu', '', 'Jaudīgs — tiek galā ar biezu mīklu'], ['chop', 'Griezīšu un rīvēšu dārzeņus', '', 'Disku komplekts griešanai un rīvēšanai'], ['any', 'Visu', '']] }
+    ],
+    i: [['Bosch MUM5', 249, 'stand dough', '1000 W · 3,9 L bļoda', 8.3], ['Kenwood Chef Titanium', 449, 'stand dough chop', '1400 W · 4,6 L · rīvēšanas piederums', 8.6], ['KitchenAid Artisan', 599, 'stand dough', '300 W tiešā piedziņa · 4,8 L', 8.7], ['Moulinex Masterchef', 199, 'stand dough', '1100 W · 4,6 L', 7.8], ['Philips 7000 virtuves kombains', 179, 'processor chop', '1000 W · 7 diski', 8.2], ['Bosch MultiTalent 3', 99, 'processor chop', '800 W · 2,3 L', 7.7]] },
+
+  mixer: { l: 'Mikseri', d: 'rokas un ar bļodu', b: [30, 70, 150],
+    q: [
+      { t: 'Kādu mikseri meklē?', f: 1, o: [['hand', 'Rokas mikseri', ''], ['bowl', 'Ar grozāmu bļodu', 'nav jātur rokās', 'Ar grozāmu bļodu — nav jātur rokās']] },
+      { t: 'Kam izmantosi?', o: [['light', 'Krēmiem un putošanai', ''], ['dough', 'Arī biezai mīklai', '', 'Jaudīgs — tiek galā ar biezu mīklu']] }
+    ],
+    i: [['Tefal Prep’Mix', 29, 'hand light', '450 W · 5 ātrumi', 7.3], ['Philips 5000', 35, 'hand light', '450 W · 5 ātrumi + turbo', 7.7], ['Braun MultiMix 5', 45, 'hand light dough', '750 W · mīklas āķi', 8.2], ['Bosch ErgoMixx', 49, 'hand light dough', '450 W · 5 ātrumi', 8.0], ['Bosch ar grozāmu bļodu', 79, 'bowl light dough', '500 W · 3 L bļoda', 7.9], ['Tefal Prep’Mix ar bļodu', 59, 'bowl light', '450 W · 2,5 L bļoda', 7.5]] },
+
+  chopper: { l: 'Smalcinātāji', d: 'dārzeņiem, zaļumiem, riekstiem', b: [25, 50, 100],
+    q: [
+      { t: 'Ko smalcināsi?', o: [['veg', 'Sīpolus, zaļumus, dārzeņus', ''], ['nuts', 'Arī riekstus un gaļu', '', 'Jaudīgs — sasmalcina riekstus un gaļu']] },
+      { t: 'Cik lielam jābūt?', o: [['small', 'Mazam', 'līdz 0,5 L', 'Kompakts — līdz 0,5 L'], ['big', 'Lielākam', '1 L un vairāk', 'Liela bļoda — 1 L un vairāk']] }
+    ],
+    i: [['Philips 5000 smalcinātājs', 39, 'veg small', '500 W · 0,7 L', 7.8], ['Braun ChopCut', 45, 'veg nuts small', '500 W · 0,5 L', 8.1], ['Bosch MMR15A1', 35, 'veg nuts big', '400 W · 0,8 L', 7.9], ['Moulinex Moulinette', 59, 'veg nuts big', '1000 W · 1 L', 8.3]] },
+
+  mincer: { l: 'Gaļas maļamās mašīnas', d: 'maltajai gaļai un desām', b: [80, 150, 300],
+    q: [
+      { t: 'Cik bieži un daudz mals?', o: [['rare', 'Reizēm, nelielu daudzumu', ''], ['often', 'Regulāri, lielos daudzumos', '', 'Jaudīgs motors un metāla pārnesums']] },
+      { t: 'Vai vajag papildu uzgaļus?', o: [['sausage', 'Desu pildīšanai', '', 'Komplektā desu uzgalis'], ['grate', 'Dārzeņu griešanai un rīvēšanai', '', 'Komplektā rīves dārzeņiem'], ['any', 'Nē, tikai maltajai gaļai', '']] }
+    ],
+    i: [['Tefal NE105', 79, 'rare', '1400 W · 1,7 kg/min', 7.3], ['Bosch MFW2510W', 99, 'rare sausage', '1500 W · 1,7 kg/min · desu uzgalis', 7.9], ['Zelmer ZMM4045', 119, 'rare often sausage', '1900 W · 2 kg/min', 8.1], ['Moulinex HV8', 179, 'often sausage grate', '2000 W · 2,3 kg/min · rīves', 8.4], ['Bosch MFW68660', 229, 'often sausage grate', '2200 W · 4,3 kg/min · rīves', 8.7]] },
+
+  scale: { l: 'Virtuves svari', d: 'ikdienas un precīzie', b: [15, 30, 60],
+    q: [
+      { t: 'Cik precīzi jāsver?', o: [['std', 'Ikdienai', '1 g precizitāte', ''], ['fine', 'Ļoti precīzi', '0,1 g — garšvielām, kafijai', '0,1 g precizitāte']] },
+      { t: 'Vai vajag papildu funkcijas?', o: [['smart', 'Jā — lietotni un uzturvērtības', '', 'Rāda uzturvērtības lietotnē'], ['any', 'Nav vajadzīgas', '']] }
+    ],
+    i: [['Tefal Optiss', 15, 'std', 'līdz 5 kg · 1 g', 7.4], ['Soehnle Page Compact', 19, 'std', 'līdz 5 kg · 1 g · stikla virsma', 7.9], ['Etekcity viedie svari', 29, 'std smart', 'līdz 5 kg · lietotne ar uzturvērtībām', 8.1], ['Hario V60 kafijas svari', 39, 'fine', 'līdz 2 kg · 0,1 g · taimeris', 8.3]] },
+
+  knife: { l: 'Elektriskie virtuves naži', d: 'gaļai un maizei', b: [30, 60, 120],
+    q: [
+      { t: 'Ar vadu vai bez?', f: 1, o: [['cord', 'Ar vadu', ''], ['cordless', 'Bezvadu', '', 'Bezvadu — darbojas ar akumulatoru']] },
+      { t: 'Ko griezīsi visbiežāk?', o: [['meat', 'Ceptu gaļu', '', 'Asmens gaļai — plānas, vienmērīgas šķēles'], ['bread', 'Maizi', '', 'Komplektā maizes asmens'], ['any', 'Abus', '']] }
+    ],
+    i: [['Moulinex elektriskais nazis', 29, 'cord meat', '100 W · 1 asmens', 7.2], ['Tefal Prep’Line', 39, 'cord meat bread', '100 W · 2 asmeņi', 7.8], ['Bosch ErgoMixx elektriskais nazis', 49, 'cord meat bread', '120 W · 2 asmeņi', 8.1], ['Black+Decker bezvadu', 69, 'cordless meat bread', 'akumulators · 2 asmeņi', 7.9], ['Bosch bezvadu elektriskais nazis', 79, 'cordless meat bread', 'akumulators · 2 asmeņi · uzlādes statīvs', 8.2]] },
+
+  grill: { l: 'Galda grili', d: 'kontaktgrili un galda grila plates', b: [60, 150, 250],
+    q: [
+      { t: 'Kādu grilu meklē?', f: 1, o: [['contact', 'Kontaktgrilu ar vāku', 'ātri — gaļa, sviestmaizes, dārzeņi', ''], ['plate', 'Galda grila plati', 'kopīgai gatavošanai pie galda', 'Galda plate — gatavo kopā pie galda']] },
+      { t: 'Vai gribi automātiskas programmas?', w: 'Gudrie grili paši nosaka gaļas biezumu un parāda, kad tā gatava.', o: [['smart', 'Jā', '', 'Pats nosaka gaļas biezumu un gatavību'], ['any', 'Nav vajadzīgas', '']] },
+      { t: 'Cik cilvēkiem gatavosi?', o: [['2', '1–2', ''], ['4', '3–4', '', 'Liela virsma — 3–4 porcijām'], ['6', '5 vai vairāk', '', 'Ļoti liela virsma — 5+ cilvēkiem']] }
+    ],
+    i: [['George Foreman kontaktgrils', 49, 'contact 2', '1200 W · 2 porcijām', 7.4], ['Philips kontaktgrils', 69, 'contact 2 4', '2000 W · noņemamas plātnes', 7.9], ['Tefal OptiGrill+', 179, 'contact smart 4', '6 programmas · gatavības indikators', 8.6], ['Tefal OptiGrill Elite', 249, 'contact smart 4 6', '12 programmas · liela virsma', 8.8], ['Tefal Plancha galda plate', 59, 'plate 4 6', '2000 W · 46 cm virsma', 7.8], ['Severin raclette grils', 79, 'plate 6', '8 pannas · akmens plāksne', 7.9]] },
+
+  toaster: { l: 'Tosteri', d: '2 un 4 šķēlēm', b: [25, 50, 100],
+    q: [
+      { t: 'Cik šķēlēm?', f: 1, o: [['2', '2 šķēlēm', ''], ['4', '4 šķēlēm', 'lielai ģimenei', '4 šķēles vienlaikus']] },
+      { t: 'Kas vēl ir svarīgi?', o: [['bun', 'Bulciņu sildīšanas statīvs', '', 'Iebūvēts bulciņu statīvs'], ['design', 'Dizains', '', 'Izceļas ar dizainu'], ['any', 'Nav svarīgi', '']] }
+    ],
+    i: [['Philips 5000', 29, '2 bun', '830 W · 8 apgrauzdēšanas pakāpes', 7.8], ['Bosch TAT6A', 39, '2 bun', '870 W · atkausēšanas režīms', 8.1], ['Smeg 50. gadu stila, 2 šķēlēm', 149, '2 design', '950 W · nerūsējošs tērauds', 8.2], ['Tefal Express, 4 šķēlēm', 49, '4 bun', '1700 W · 7 pakāpes', 7.9], ['Russell Hobbs, 4 šķēlēm', 59, '4 design', '1600 W · stikla elementi', 7.7]] },
+
+  sandwich: { l: 'Sendviču tosteri', d: 'sviestmaizēm un vafelēm', b: [25, 50, 90],
+    q: [
+      { t: 'Ko gatavosi?', o: [['sand', 'Tikai karstmaizes', ''], ['multi', 'Arī vafeles un grilētus produktus', '', 'Maināmas plātnes — vafeles, grils']] }
+    ],
+    i: [['Princess sendviču tosteris', 25, 'sand', '750 W · 2 karstmaizes', 7.2], ['Philips sendviču tosteris', 35, 'sand', '820 W · 2 karstmaizes', 7.7], ['Russell Hobbs 3 vienā', 45, 'sand multi', '750 W · 3 plātņu komplekts', 8.0], ['Tefal Snack Collection', 79, 'sand multi', '700 W · maināmas plātnes', 8.5]] },
+
+  airfryer: { l: 'Taukvāres katli un karstā gaisa friteri', d: 'ar eļļu un bez tās', b: [80, 150, 250],
+    q: [
+      { t: 'Kādu ierīci meklē?', f: 1, o: [['air', 'Karstā gaisa friteri', 'gatavo bez eļļas vai ar ļoti mazu daudzumu', 'Gatavo ar minimālu eļļas daudzumu'], ['oil', 'Klasisko taukvāres katlu', 'ar eļļu', '']] },
+      { t: 'Cik cilvēkiem gatavosi?', o: [['2', '1–2', 'līdz 4 L', 'Kompakts — 1–2 cilvēkiem'], ['4', '3–4', '5–7 L', 'Tilpums 5–7 L — ģimenei'], ['6', '5 vai vairāk', 'liels vai ar diviem groziem', 'Divi grozi — gatavo divus ēdienus vienlaikus']] }
+    ],
+    i: [['Tefal Easy Fry, 4,2 L', 79, 'air 2', '1500 W · 8 programmas', 7.8], ['Philips 3000, 4,1 L', 89, 'air 2', '1400 W · RapidAir', 8.1], ['Cosori, 5,5 L', 109, 'air 4', '1700 W · 9 programmas · lietotne', 8.3], ['Philips 5000 XXL, 7 L', 179, 'air 4 6', '2000 W · Wi-Fi', 8.6], ['Ninja Foodi Dual, 9,5 L', 199, 'air 6', '2470 W · 2 neatkarīgi grozi', 8.8], ['Tefal Filtra One taukvāres katls', 69, 'oil 2 4', '1900 W · 2,1 L eļļas · filtrs', 7.6], ['De’Longhi taukvāres katls', 99, 'oil 4 6', '2200 W · 3 L eļļas', 7.8]],
+    r: [['Ninja Foodi Dual, 9,5 L', 149, 'air 6', '2 neatkarīgi grozi', 8.6, 'A+ — atgriezta, nelietota', '24 mēn. garantija', 199]] },
+
+  breadmaker: { l: 'Maizes krāsniņas', d: 'baltmaizei, rupjmaizei, bezglutēna', b: [80, 150, 250],
+    q: [
+      { t: 'Kādu maizi cepsi?', o: [['white', 'Pārsvarā balto maizi', ''], ['rye', 'Arī rupjmaizi vai bezglutēna', '', 'Programmas rupjmaizei un bezglutēna maizei']] },
+      { t: 'Vai vajag dozatoru?', w: 'Dozators pats pievieno sēklas un riekstus īstajā brīdī.', o: [['disp', 'Jā', '', 'Automātisks sēklu un riekstu dozators'], ['any', 'Nav vajadzīgs', '']] }
+    ],
+    i: [['Moulinex Pain Dore', 99, 'white', '1 kg maize · 20 programmas', 7.6], ['Tefal Pain & Delices', 119, 'white rye', '1 kg · rupjmaize, bezglutēna', 8.0], ['Gorenje BM1600', 129, 'white rye disp', '1,6 kg · dozators', 8.1], ['Panasonic SD-YR2550', 219, 'white rye disp', '1 kg · 31 programma · dozators', 8.8]] },
+
+  minioven: { l: 'Mini krāsnis', d: 'galda cepeškrāsnis, arī ar plīts riņķiem', b: [70, 130, 250],
+    q: [
+      { t: 'Vai vajag arī plīts riņķus?', f: 1, w: 'Mini krāsns ar riņķiem var aizstāt pilnu plīti vasarnīcā vai īrētā dzīvoklī.', o: [['hob', 'Jā, ar riņķiem virsū', 'vasarnīcai, mazai virtuvei', 'Ar diviem plīts riņķiem'], ['any', 'Nē, tikai krāsni', '']] },
+      { t: 'Cik lielai jābūt?', o: [['20', 'Līdz 25 L', '1–2 cilvēkiem', 'Kompakta — līdz 25 L'], ['35', '30–45 L', 'ģimenei, var cept veselu vistu', 'Tilpums 30–45 L — var cept veselu vistu']] },
+      { t: 'Vai vajag karstā gaisa režīmu?', o: [['conv', 'Jā', 'vienmērīgai cepšanai', 'Ar karstā gaisa ventilatoru'], ['any', 'Nav svarīgi', '']] }
+    ],
+    i: [['Russell Hobbs mini krāsns, 23 L', 69, '20', '1500 W · taimeris', 7.4], ['Tefal Optimo, 19 L', 79, '20', '1380 W · 4 režīmi', 7.6], ['Princess mini krāsns, 45 L', 99, '35', '1800 W · iesms', 7.7], ['Severin ar karsto gaisu, 30 L', 129, '35 conv', '1500 W · karstais gaiss', 8.2], ['Rommelsbacher ar riņķiem, 30 L', 189, 'hob 35 conv', '30 L · 2 plīts riņķi · karstais gaiss', 8.4], ['Severin ar riņķiem, 42 L', 159, 'hob 35 conv', '42 L · 2 plīts riņķi · iesms', 8.0], ['Princess ar riņķiem, 20 L', 119, 'hob 20', '20 L · 2 plīts riņķi', 7.4]] },
+
+  juicer: { l: 'Sulu spiedes', d: 'lēngaitas, centrbēdzes, citrusu', b: [50, 150, 300],
+    q: [
+      { t: 'Kādu sulu spiedi meklē?', f: 1, w: 'Lēngaitas spiedes izspiež vairāk sulas un mazāk to uzsilda, centrbēdzes — strādā ātrāk.', o: [['slow', 'Lēngaitas', 'auksti spiesta sula', 'Lēngaitas — vairāk sulas un vitamīnu'], ['centrif', 'Centrbēdzes', 'ātri, lētāk', 'Centrbēdzes — sula dažās sekundēs'], ['citrus', 'Citrusu', 'apelsīniem, citroniem', '']] }
+    ],
+    i: [['Bosch VitaJuice 3', 89, 'centrif', '700 W · 2 ātrumi', 7.8], ['Philips centrbēdzes sulu spiede', 69, 'centrif', '700 W · 2 L tvertne', 7.6], ['Philips 7000 lēngaitas', 179, 'slow', '200 W · QuickClean', 8.2], ['Hurom H-AA', 299, 'slow', '43 apgr./min · bez sieta', 8.6], ['Kuvings lēngaitas', 349, 'slow', 'plata ievade · 50 apgr./min', 8.7], ['Braun citrusu spiede', 29, 'citrus', '60 W · divvirzienu rotācija', 7.9], ['Philips citrusu spiede', 25, 'citrus', '25 W · 0,5 L', 7.5]] },
+
+  dehydrator: { l: 'Augļu un dārzeņu žāvētāji', d: 'žāvēšanai un dehidratācijai', b: [40, 100, 200],
+    q: [
+      { t: 'Cik daudz žāvēsi?', o: [['small', 'Nedaudz', 'līdz 5 paplātēm', ''], ['big', 'Daudz', 'ražu no dārza, 8 paplātes vai vairāk', 'Daudz paplāšu — piemērots lielai ražai']] },
+      { t: 'Vai vajag termostatu un taimeri?', o: [['timer', 'Jā', '', 'Ar termostatu un taimeri'], ['any', 'Nav svarīgi', '']] }
+    ],
+    i: [['Severin žāvētājs, 5 paplātes', 49, 'small', '250 W · 5 paplātes', 7.4], ['Gorenje FDK 500', 59, 'small timer', '240 W · 5 paplātes · termostats', 7.8], ['Rommelsbacher DA 750', 99, 'small timer', '560 W · taimeris', 8.2], ['Klarstein, 10 paplātes', 149, 'big timer', '1000 W · 10 paplātes · taimeris', 8.3]] },
+
+  vacuumsealer: { l: 'Vakuumpakotāji', d: 'pārtikas uzglabāšanai un sous-vide', b: [40, 100, 200],
+    q: [
+      { t: 'Cik bieži iepakosi?', o: [['rare', 'Reizēm', ''], ['often', 'Regulāri', 'medības, makšķerēšana, sous-vide', 'Jaudīgs sūknis — var strādāt ilgi bez pārtraukuma']] },
+      { t: 'Vai iepakosi mitrus produktus?', o: [['wet', 'Jā', 'gaļu, zivis, marinādes', 'Ir režīms mitriem produktiem'], ['any', 'Nē, pārsvarā sausus', '']] }
+    ],
+    i: [['Severin FS 3611', 59, 'rare', '110 W · 30 cm maisiņi', 7.5], ['Tefal Vacupack', 69, 'rare wet', '120 W · mitrais režīms', 7.8], ['Rommelsbacher VAC 285', 129, 'rare often wet', '250 W · mitrais režīms · maisiņu nodalījums', 8.3], ['Caso VC 300', 149, 'often wet', 'nerūsējošs tērauds · 2 sūkņi', 8.6]] }
+};
+/* Īsie rindu nosaukumi salīdzināšanas tabulai — tādā pašā secībā kā jautājumi */
+var CMP = { freezer: ['Tips', 'Novietojums', 'Tilpums'], washer: ['Ielāde', 'Ģimenes lielums', 'Izmērs'], dryer: ['Tips', 'Ģimenes lielums', 'Novietojums'], iron: ['Veids', 'Piemērots', 'Automātiska izslēgšanās'], steamer: ['Veids', 'Audumi'], dish: ['Uzstādīšana', 'Platums', 'Priekšrocības'], hob: ['Tips', 'Riņķi', 'Pieslēgums'], oven: ['Tvaika funkcija', 'Tīrīšana', 'Vadība ar telefonu'], hood: ['Uzstādīšana', 'Platums', 'Režīms'], micro: ['Uzstādīšana', 'Funkcijas', 'Tilpums'], steamclean: ['Veids', 'Piemērots'], coffee: ['Dzērieni', 'Tips', 'Krūzes dienā'], grinder: ['Piemērots', 'Dzirnaviņas'], kettle: ['Priekšrocības', 'Tilpums'], blender: ['Veids', 'Piemērots'], handblender: ['Barošana', 'Komplekts'], foodproc: ['Veids', 'Piemērots'], mixer: ['Veids', 'Piemērots'], chopper: ['Piemērots', 'Izmērs'], mincer: ['Slodze', 'Uzgaļi'], scale: ['Precizitāte', 'Funkcijas'], knife: ['Barošana', 'Piemērots'], grill: ['Veids', 'Programmas', 'Porcijas'], toaster: ['Šķēles', 'Papildus'], sandwich: ['Funkcijas'], airfryer: ['Veids', 'Porcijas'], breadmaker: ['Maizes veidi', 'Dozators'], minioven: ['Plīts riņķi', 'Tilpums', 'Karstais gaiss'], juicer: ['Tips'], dehydrator: ['Ietilpība', 'Termostats'], vacuumsealer: ['Slodze', 'Mitrie produkti'] };
+Object.keys(CMP).forEach(function (k) { if (SUBS[k]) SUBS[k].c = CMP[k]; });
+CMP.washer[1] = 'Ietilpība'; CMP.dryer[1] = 'Ietilpība';
+/* Tabulas vērtības nominatīvā; '' = nerādīt */
+var TV = {
+  'freezer.home': 'Apsildītā telpā', 'freezer.garage': 'Arī neapsildītā telpā', 'freezer.small': 'Līdz 150 L', 'freezer.mid': '150–250 L', 'freezer.big': 'Virs 250 L',
+  'washer.7': '6–7 kg', 'washer.9': '8–9 kg', 'washer.10': '10 kg un vairāk', 'washer.slim': 'Kompakta', 'washer.std': 'Standarta',
+  'dryer.7': '7 kg', 'dryer.8': '8 kg', 'dryer.9': '9 kg un vairāk', 'dryer.stack': 'Der virs veļas mašīnas', 'dryer.side': '',
+  'iron.iron': 'Tvaika gludeklis', 'iron.station': 'Tvaika gludināšanas sistēma', 'iron.rare': 'Mazai slodzei', 'iron.often': 'Lielai slodzei', 'iron.auto': 'Ir',
+  'steamer.hand': 'Rokas', 'steamer.stand': 'Stāvošs ar statīvu', 'steamer.shirts': 'Krekli, kleitas', 'steamer.heavy': 'Arī mēteļi, aizkari',
+  'hob.induction': 'Indukcijas virsma', 'hob.ceramic': 'Keramiskā virsma', 'hob.gas': 'Gāze', 'hob.standalone': 'Plīts ar cepeškrāsni', 'hob.5': '5 vai elastīga zona', 'hob.y': 'Trīsfāzu', 'hob.n': 'Vienfāzes',
+  'oven.steam': 'Ir', 'oven.pyro': 'Pirolīze', 'oven.cat': 'Katalītiskā vai tvaika', 'oven.wifi': 'Ir',
+  'hood.out': 'Izvads uz āru', 'hood.recirc': 'Recirkulācija',
+  'micro.free': 'Galda', 'micro.builtin': 'Iebūvējama', 'micro.heat': 'Sildīšana', 'micro.grill': 'Grils', 'micro.combi': 'Karstais gaiss',
+  'steamclean.mop': 'Tvaika slota', 'steamclean.cyl': 'Cilindra ar šļūteni', 'steamclean.floor': 'Grīdas', 'steamclean.bath': 'Vannasistaba, flīzes',
+  'coffee.black': 'Melna kafija', 'coffee.milk': 'Ar pienu', 'coffee.auto': 'Pilnībā automātisks', 'coffee.capsule': 'Kapsulu', 'coffee.manual': 'Portafiltra espresso',
+  'grinder.filter': 'Filtra kafija, franču prese',
+  'blender.personal': 'Personīgais (ar pudeli)', 'blender.jug': 'Ar krūku', 'blender.smoothie': 'Smūtiji', 'blender.ice': 'Ledus, saldēti augļi',
+  'handblender.more': 'Smalcinātājs, putotājs',
+  'foodproc.stand': 'Planetārais mikseris', 'foodproc.processor': 'Kombains ar diskiem', 'foodproc.dough': 'Mīkla', 'foodproc.chop': 'Griešana, rīvēšana',
+  'mixer.hand': 'Rokas',
+  'chopper.veg': 'Dārzeņi, zaļumi', 'chopper.nuts': 'Rieksti, gaļa', 'chopper.small': 'Līdz 0,5 L', 'chopper.big': '1 L un vairāk',
+  'mincer.rare': 'Neliela', 'mincer.often': 'Liela', 'mincer.sausage': 'Desu uzgalis', 'mincer.grate': 'Rīves',
+  'scale.std': '1 g', 'scale.fine': '0,1 g', 'scale.smart': 'Lietotne, uzturvērtības',
+  'knife.meat': 'Gaļa', 'knife.bread': 'Maize',
+  'grill.contact': 'Kontaktgrils', 'grill.plate': 'Galda grila plate', 'grill.smart': 'Automātiskas',
+  'sandwich.sand': 'Karstmaizes', 'sandwich.multi': 'Vafeles, grils',
+  'airfryer.air': 'Karstā gaisa friteris', 'airfryer.oil': 'Taukvāres katls',
+  'breadmaker.white': 'Baltmaize', 'breadmaker.rye': 'Rupjmaize, bezglutēna', 'breadmaker.disp': 'Ir',
+  'minioven.hob': 'Ir', 'minioven.conv': 'Ir',
+  'dehydrator.small': 'Līdz 5 paplātēm', 'dehydrator.big': '8 un vairāk paplātes', 'dehydrator.timer': 'Ir',
+  'vacuumsealer.rare': 'Neliela', 'vacuumsealer.often': 'Liela', 'vacuumsealer.wet': 'Ir'
+};
+var GROUPS = [
+  ['cool', 'Ledusskapji un saldētavas', 'M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM6 10h12M9 5v2M9 13v3', ['fridge', 'freezer']],
+  ['laundry', 'Veļas mazgāšana un kopšana', 'M5 2h14v20H5zM5 7h14M12 10a4 4 0 1 0 0 8a4 4 0 1 0 0-8z', ['washer', 'dryer', 'iron', 'steamer']],
+  ['kitchenbig', 'Virtuves lielā tehnika', 'M4 2h16v20H4zM4 8h16M8 5h.01M12 5h.01M16 5h.01M8 12h8v6H8z', ['dish', 'hob', 'oven', 'hood', 'micro']],
+  ['clean', 'Uzkopšana', 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM8 9h8M12 13a2 2 0 1 0 0 4a2 2 0 1 0 0-4z', ['vacuum', 'steamclean']],
+  ['coffee', 'Kafijas automāti un dzirnaviņas', 'M5 8h11v6a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 2v3M12 2v3', ['coffee', 'grinder']],
+  ['kitchensmall', 'Virtuves mazā tehnika', 'M7 21h10M8 21l1-9h6l1 9M9 12V5a3 3 0 0 1 6 0v7M5 8h4', ['kettle', 'blender', 'handblender', 'foodproc', 'mixer', 'chopper', 'mincer', 'scale', 'knife']],
+  ['cooking', 'Grili, tosteri un friteri', 'M3 10a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v9H3zM8 6V3M14 6V3M3 14h18', ['grill', 'toaster', 'sandwich', 'airfryer', 'breadmaker', 'minioven']],
+  ['healthy', 'Veselīgam uzturam', 'M5 19c0-8 6-14 14-14c0 8-6 14-14 14zM5 19l7-7', ['juicer', 'dehydrator', 'vacuumsealer']],
+  ['other', 'Kaut kas cits — pastāstīšu saviem vārdiem', 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM21 21l-5-5', []]
+];
+var DETECT = [['handblender', 'rokas blend'], ['dehydrator', 'augļu žāv|dārzeņu žāv|dehidr'], ['vacuumsealer', 'vakuumpak|vakuuma'], ['steamclean', 'tvaika tīr'], ['steamer', 'tvaicētāj'], ['freezer', 'saldētav'], ['fridge', 'ledussk'], ['vacuum', 'putekļ|putekl'], ['dryer', 'žāvētāj'], ['washer', 'veļas maš|veļasmaš'], ['dish', 'trauk'], ['hood', 'nosūcēj'], ['oven', 'cepeškr'], ['minioven', 'mini krāsn|mini plīt'], ['micro', 'mikroviļ'], ['hob', 'plīt|virsm|indukc'], ['grinder', 'dzirnav'], ['coffee', 'kafij|espres|kapsul'], ['kettle', 'tējkann'], ['blender', 'blender|smūt'], ['foodproc', 'kombain'], ['mixer', 'mikser'], ['chopper', 'smalcin'], ['mincer', 'gaļas maļ|maļam'], ['scale', 'svar'], ['knife', 'nazi|nazis'], ['sandwich', 'sendvič|karstmaiz'], ['toaster', 'toster'], ['grill', 'gril'], ['airfryer', 'frit|taukvār'], ['breadmaker', 'maizes kr'], ['juicer', 'sulu|sulas'], ['iron', 'gludek']];
+function detect(t) {
+  t = t.toLowerCase();
+  for (var i = 0; i < DETECT.length; i++) if (new RegExp(DETECT[i][1]).test(t)) return DETECT[i][0];
+  return null;
+}
+function groupOf(sub) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][3].indexOf(sub) >= 0) return GROUPS[i][0]; return null; }
+function groupById(id) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][0] === id) return GROUPS[i]; return GROUPS[0]; }
+
+function rp(x) { return x >= 60 ? Math.round(x / 10) * 10 - 1 : Math.round(x); }
+function mkOf(b, i) {
+  var e = rp(b * (1 + ((i * 37) % 7 - 3) / 100));
+  var d = rp(b * (1 + ((i * 53) % 9 - 5) / 100));
+  return [['a', b, 'in'], ['e', e, i % 3 === 1 ? 'soon' : 'in'], ['d', d, i % 5 === 3 ? 'out' : (i % 4 === 2 ? 'soon' : 'in')]];
+}
+var GP = [];
+Object.keys(SUBS).forEach(function (k) {
+  var S = SUBS[k];
+  if (!S.i) return;
+  var mk = function (x, i, c) {
+    var tags = {};
+    x[2].split(' ').forEach(function (t) { if (t) tags[t] = 1; });
+    var p = { id: k + '-' + c + i, c: c, sub: k, gen: true, name: x[0], tags: tags, specs: x[3], s: x[4] };
+    if (c === 'new') p.of = mkOf(x[1], i + k.length);
+    else { p.g = x[5]; p.wr = x[6]; p.nw = x[7]; p.of = [[['a', 'e', 'd'][(i + k.length) % 3], x[1], 'in']]; }
+    return p;
+  };
+  S.i.forEach(function (x, i) { GP.push(mk(x, i, 'new')); });
+  (S.r || []).forEach(function (x, i) { GP.push(mk(x, i, 'refurb')); });
+});
+var ALL = P.concat(V, GP);
+/* Ražotāja modeļa kodi (parauga dati) — pēc tiem un EAN salīdzinām vienu un to pašu preci visos veikalos */
+var MODEL = { n1: 'KGN39VLCT', r2: 'KGN39VLCT', n2: 'RB34C672ESA', r1: 'RB34C672ESA', n13: 'RB470N4SIC', n3: 'GBB72PZVCN', n4: 'RCNA366I40XBN', n5: 'LNT7ME46X2', n6: 'KSV36VLEP', n7: 'R615FES5', n14: 'SRe 5220', r3: 'LRT5MF38U0', n8: 'ENT6TE18S', n9: 'KIN86VSE0', n10: 'ART 6711 SF2', r4: 'BRB26705EWW', n11: 'SKE818E1DC', n12: 'LRB3DE18S', n15: 'RI4182E1', n16: 'LRB3AE12S', r5: 'KIR81VFE0', v1: 'S802-02', vr1: 'S802-02', v2: 'BHR8629EU', v3: 'Y011240', v4: 'RLS5L', v5: 'SV47', vr2: 'SV47', v6: 'VS20C8524TB', v7: 'XC7057/01', v8: 'BBS711W', v9: 'SGDF3', v10: 'BGL6POW1', v11: 'XB2142/09' };
+function hsh(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000000007; return h; }
+function genCode(name) { var b = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase(); var h = hsh(name); return b + String(h % 9000 + 1000) + String.fromCharCode(65 + h % 26) + String.fromCharCode(65 + (h >> 5) % 26); }
+function ean(code) { var d = ('40' + String(hsh(code)).padStart(10, '0')).slice(0, 12); var s = 0; for (var i = 0; i < 12; i++) s += parseInt(d[i], 10) * (i % 2 ? 3 : 1); return d + ((10 - s % 10) % 10); }
+ALL.forEach(function (p) { p.m = MODEL[p.id] || genCode(p.name); p.ean = ean(p.m); });
+function idLine(p) { return 'Modelis ' + p.m + ' · EAN ' + p.ean; }
+/* Aptuvenais gada elektroenerģijas patēriņš (kWh), parauga dati; cena 0,25 €/kWh */
+var KWH_PRICE = 0.25;
+function kwhOf(p) {
+  if (p.gen) {
+    var t = p.tags;
+    if (p.sub === 'freezer') return t.chest ? (t.small ? 150 : (t.mid ? 200 : 240)) : (t.builtin ? 220 : (t.small ? 160 : (t.mid ? 230 : 270)));
+    if (p.sub === 'washer') return t.combo ? 190 : (t.top ? 75 : 60);
+    if (p.sub === 'dryer') return t.condenser ? 520 : (t['9'] ? 200 : 175);
+    if (p.sub === 'dish') return t.quiet ? 205 : 235;
+    return null;
+  }
+  if (p.run !== undefined) return null;
+  if (p.en && p.v) return Math.round({ D: 180, E: 240, F: 300 }[p.en] * p.v / 350);
+  return null;
+}
+function cost10(p) { var k = kwhOf(p); return k ? Math.round(k * KWH_PRICE * 10 / 10) * 10 : null; }
+function thou(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+
+var FTAIL = ['type', 'dim', 'freezer', 'people', 'prio', 'budget', 'cond', 'speed'];
+function sizeClass(p) { return p.w > 62 ? 'wide' : (p.h <= 90 ? 'compact' : (p.h < 178 ? 'mid' : 'tall')); }
+var SIZE_TXT = { compact: 'kompakts, zem darba virsmas', mid: 'vidēja augstuma', tall: 'standarta izmērs', wide: 'plats un ļoti ietilpīgs' };
+var VTAIL =['vtype', 'area', 'floor', 'pets', 'vprio', 'vbudget', 'cond', 'speed'];
+function flowFor(a) {
+  var base = ['category', 'sub'];
+  if (!a.sub || a.sub === 'fridge') {
+    var ft = ['type'];
+    if (a.type === 'builtin') ft.push('dim');
+    else { ft.push('fsize'); if (a.fsize === 'tall') ft.push('fheight'); }
+    if (a.type === 'builtin' || a.fsize !== 'wide') ft.push('freezer');
+    return base.concat(ft, ['people', 'prio', 'budget', 'cond', 'speed']);
+  }
+  if (a.sub === 'vacuum') return base.concat(VTAIL);
+  var S = SUBS[a.sub];
+  var t = S.q.map(function (x, i) { return 'g' + i; });
+  t.push('gbudget');
+  if (S.r && S.r.length) t.push('cond');
+  t.push('speed');
+  return base.concat(t);
+}
+var MFLOW = ['model', 'fit'];
+var AFLOW = ['alertWhen', 'alertScope', 'alertChannel', 'alertPlan', 'pay'];
+function brandOf(p) { return p ? p.name.split(/[\s,]/)[0].replace('’', '’') : ''; }
+var KEYS = 'ABCDEFGHIJK';
+var NEED = { '2': 200, '4': 300, '5': 380 };
+var PEOPLE = { '2': '1–2 cilvēkiem', '4': '3–4 cilvēkiem', '5': '5 un vairāk cilvēkiem' };
+var EN = { D: 8, E: 0, F: -6 };
+var RUN = { robot: { '50': 60, '100': 120, '150': 150 }, stick: { '50': 30, '100': 45, '150': 60 } };
+var AREA = { '50': 'platībai līdz 50 m²', '100': '50–100 m² platībai', '150': 'platībai virs 100 m²' };
+var VT = { robot: 'Robots', stick: 'Vertikālais bezvadu', classic: 'Klasiskais ar vadu' };
+
+function eur(n) { return n + ' €'; }
+/* "līdz otrdienai, 20. oktobrim" — skaitot darba dienas no šodienas */
+var WD_DAT = ['svētdienai', 'pirmdienai', 'otrdienai', 'trešdienai', 'ceturtdienai', 'piektdienai', 'sestdienai'];
+var MON_DAT = ['janvārim', 'februārim', 'martam', 'aprīlim', 'maijam', 'jūnijam', 'jūlijam', 'augustam', 'septembrim', 'oktobrim', 'novembrim', 'decembrim'];
+function bizDate(n) {
+  var d = new Date();
+  var left = n;
+  while (left > 0) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) left--; }
+  return 'līdz ' + WD_DAT[d.getDay()] + ', ' + d.getDate() + '. ' + MON_DAT[d.getMonth()];
+}
+function fmt(n) { return String(n).replace('.', ','); }
+function byId(id) { for (var i = 0; i < ALL.length; i++) if (ALL[i].id === id) return ALL[i]; return null; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.fresh();
+  }
+  fresh() {
+    return { step: 'welcome', mode: 'guide', a: {}, hist: [], flash: null, multi: [], input: '', help: false, error: '', alertId: null, alertWhen: 'any', similar: true };
+  }
+  flowOf(step) {
+    var st = this.state;
+    if (AFLOW.indexOf(step) >= 0 || (step === 'login' && st.hist[st.hist.length - 1] === 'alertChannel')) return this.alertFlow();
+    if (this.state.mode === 'model') return MFLOW;
+    return flowFor(this.state.a);
+  }
+  alertFlow() {
+    var st = this.state;
+    var f = ['alertWhen', 'alertScope', 'alertChannel'];
+    if (!st.user) f.push('login');
+    if (!st.subscribed) f.push('alertPlan', 'pay');
+    return f;
+  }
+  nextOf(step) {
+    var f = this.flowOf(step);
+    var i = f.indexOf(step);
+    var inAlert = f.indexOf('alertWhen') >= 0;
+    if (i < f.length - 1) return f[i + 1];
+    return inAlert ? 'alertDone' : 'loading';
+  }
+  fmtCard(v) { var d = String(v).replace(/\D/g, '').slice(0, 19); return d.replace(/(\d{4})(?=\d)/g, '$1 '); }
+  fmtExp(v) { var d = String(v).replace(/\D/g, '').slice(0, 4); return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; }
+  pay(method) {
+    var st = this.state;
+    if (method === 'card') {
+      var n = String(st.cardNum || '').replace(/\D/g, '');
+      var e = String(st.cardExp || '');
+      var c = String(st.cardCvc || '').replace(/\D/g, '');
+      if (n.length < 13) { this.setState({ error: 'Pārbaudi kartes numuru.' }); return; }
+      if (!/^\d{2}\/\d{2}$/.test(e) || parseInt(e.slice(0, 2), 10) < 1 || parseInt(e.slice(0, 2), 10) > 12) { this.setState({ error: 'Ieraksti derīguma termiņu formātā MM/GG.' }); return; }
+      if (c.length < 3) { this.setState({ error: 'Ieraksti CVC kodu (3 cipari kartes aizmugurē).' }); return; }
+    }
+    this.setState({ subscribed: true, payMethod: method === 'card' ? 'karti •••• ' + String(st.cardNum).replace(/\D/g, '').slice(-4) : (method === 'apple' ? 'Apple Pay' : 'Google Pay'), error: '' });
+    this.go('alertDone');
+  }
+  defaultInput(step, a) {
+    if (step === 'dim') return a.dim ? String(a.dim) : (a.type === 'builtin' ? '178' : '60');
+    if (step === 'model') return a.model || 'Samsung kombinētais, No Frost';
+    return '';
+  }
+  go(step, patch) {
+    var self = this;
+    var st = this.state;
+    var merged = Object.assign({}, st, patch || {});
+    var base = { hist: st.hist.concat([st.step]), step: step, flash: null, help: false, error: '', multi: [], input: this.defaultInput(step, merged.a) };
+    this.setState(Object.assign(base, patch || {}));
+    if (step === 'loading') {
+      setTimeout(function () { self.setState({ step: 'results' }); }, 1700);
+    }
+  }
+  choose(step, val) {
+    var self = this;
+    if ((step === 'type' || step === 'fit' || step === 'vtype') && val === 'unsure') { this.setState({ help: true }); return; }
+    if (step === 'category') {
+      this.setState({ flash: val });
+      if (val === 'other') { setTimeout(function () { self.go('other'); }, 260); return; }
+      var na = { category: val };
+      setTimeout(function () { self.go('sub', { a: na }); }, 260);
+      return;
+    }
+    if (step === 'alertWhen') { this.setState({ flash: val, alertWhen: val }); setTimeout(function () { self.go('alertScope'); }, 260); return; }
+    if (step === 'alertScope') { this.setState({ flash: val, scope: val }); setTimeout(function () { self.go('alertChannel'); }, 260); return; }
+    var a = Object.assign({}, this.state.a);
+    if (step === 'sub' && a.sub !== val) a = { category: a.category };
+    a[step] = val;
+    if (step === 'type' && this.state.a.type !== val) { delete a.dim; delete a.fsize; delete a.fheight; }
+    if (step === 'fsize' && this.state.a.fsize !== val) { delete a.fheight; if (val === 'wide') delete a.freezer; }
+    this.setState({ flash: val, a: a });
+    setTimeout(function () { self.go(self.nextOf(step), { a: a }); }, 260);
+  }
+  toggleMulti(val) {
+    var m = this.state.multi.slice();
+    var i = m.indexOf(val);
+    if (i >= 0) m.splice(i, 1);
+    else { m.push(val); if (m.length > 2) m.shift(); }
+    this.setState({ multi: m });
+  }
+  submit(step) {
+    var st = this.state;
+    var a = Object.assign({}, st.a);
+    if (step === 'prio' || step === 'vprio') { a.prio = st.multi.slice(); this.go(this.nextOf(step), { a: a }); return; }
+    if (step === 'dim') {
+      var n = parseFloat(String(st.input).replace(',', '.'));
+      if (!(n > 30 && n < 250)) { this.setState({ error: 'Ieraksti izmēru centimetros, piemēram, 60.' }); return; }
+      a.dim = n; this.go(this.nextOf(step), { a: a }); return;
+    }
+    if (step === 'model') {
+      if (!String(st.input).trim()) { this.setState({ error: 'Ieraksti modeļa nosaukumu vai ielīmē saiti.' }); return; }
+      a.model = st.input; a.category = 'cool'; a.sub = 'fridge'; a.type = 'free'; a.freezer = 'yes'; this.go(this.nextOf(step), { a: a }); return;
+    }
+    if (step === 'other') {
+      var txt = String(st.input).trim();
+      if (!txt) { this.setState({ error: 'Uzraksti, ko tu meklē.' }); return; }
+      var sub = detect(txt);
+      if (sub) { var na = { category: groupOf(sub), sub: sub }; this.go(flowFor(na)[2], { a: na }); return; }
+      this.go('soon', { soonText: txt, notified: false, email: '' }); return;
+    }
+    if (step === 'alertPlan') { this.go('pay'); return; }
+  }
+  login(provider) {
+    var st = this.state;
+    var u = provider === 'apple' ? { name: 'Jānis', provider: 'Apple' } : (provider === 'google' ? { name: 'Jānis Ozoliņš', provider: 'Google' } : { name: String(st.email).split('@')[0], provider: 'e-pasts' });
+    var prev = st.hist[st.hist.length - 1];
+    this.setState({ user: u, emailSent: false, error: '' });
+    if (prev === 'alertChannel') this.go(st.subscribed ? 'alertDone' : 'alertPlan', { user: u });
+    else this.back();
+  }
+  back() {
+    var h = this.state.hist.slice();
+    var prev = h.pop();
+    while (prev === 'loading' && h.length) prev = h.pop();
+    if (!prev) return;
+    this.setState({ step: prev, hist: h, flash: null, help: false, error: '', multi: [], input: this.defaultInput(prev, this.state.a) });
+  }
+  offerInfo(p, a) {
+    var now = a.speed === 'now';
+    var avail = p.of.filter(function (o) { return now ? o[2] === 'in' : o[2] !== 'out'; });
+    if (!avail.length) return null;
+    var best = avail[0];
+    avail.forEach(function (o) { if (o[1] < best[1]) best = o; });
+    var worst = Math.max.apply(null, avail.map(function (o) { return o[1]; }));
+    return { best: best, worst: worst, n: avail.length };
+  }
+  score(p, info, a, lim) {
+    var pr = a.prio || [];
+    var sc = p.s * 10;
+    var price = info.best[1];
+    if (p.gen) {
+      SUBS[p.sub].q.forEach(function (q, qi) { var ans = a['g' + qi]; if (ans && ans !== 'any' && p.tags[ans]) sc += 12; });
+    } else if (a.sub === 'vacuum') {
+      if (p.t !== 'classic' && a.area) sc += p.run >= RUN[p.t][a.area] ? 6 : -12;
+      if (a.floor === 'carpet' && (p.t === 'classic' || p.pet)) sc += 5;
+      if (a.pets === 'yes') sc += p.pet ? 8 : -10;
+      if (pr.indexOf('quiet') >= 0) sc += (72 - p.db) * 1.5;
+      if (pr.indexOf('battery') >= 0) sc += p.t === 'classic' ? 10 : p.run / 10;
+      if (pr.indexOf('mop') >= 0) sc += p.mop ? 10 : -6;
+      if (pr.indexOf('price') >= 0) sc -= (price - 300) / 10;
+    } else {
+      if (pr.indexOf('quiet') >= 0) sc += (40 - p.db) * 3;
+      if (pr.indexOf('energy') >= 0) sc += EN[p.en] || 0;
+      if (pr.indexOf('volume') >= 0) sc += (p.v - 300) / 8;
+      if (pr.indexOf('nofrost') >= 0) sc += p.nf ? 8 : -12;
+      if (pr.indexOf('price') >= 0) sc -= (price - 600) / 15;
+      if (a.people && NEED[a.people]) sc += p.v >= NEED[a.people] ? 6 : -12;
+    }
+    if (price > lim) sc -= 40;
+    return sc;
+  }
+  reasons(p, a, over, info) {
+    var pr = a.prio || [];
+    var why = [];
+    if (over) why.push('Virs tava budžeta par ' + over + ' €');
+    if (p.gen) {
+      SUBS[p.sub].q.forEach(function (q, qi) {
+        var ans = a['g' + qi];
+        if (!ans || ans === 'any' || !p.tags[ans]) return;
+        q.o.forEach(function (o) { if (o[0] === ans && o[3]) why.push(o[3]); });
+      });
+      if (why.length < 3 && info && info.n === 3) why.push('Pieejams visos partneru veikalos');
+      if (why.length < 3 && p.s >= 8.5) why.push('Viens no augstāk vērtētajiem šajā kategorijā');
+    } else if (a.sub === 'vacuum') {
+      if (p.t === 'classic') why.push('Ar vadu — darbības laiks nav ierobežots');
+      else if (a.area && p.run < RUN[p.t][a.area]) why.push('Darbojas tikai ' + p.run + ' min — lielai platībai var nepietikt');
+      else why.push('Darbojas līdz ' + p.run + ' min — piemērots ' + (AREA[a.area] || 'tavai platībai'));
+      if (a.pets === 'yes') why.push(p.pet ? 'Speciāla birste dzīvnieku spalvai' : 'Nav speciālas birstes dzīvnieku spalvai');
+      if (p.mop) why.push('Ar mitro uzkopšanu');
+      if (a.floor === 'carpet' && p.t === 'classic') why.push('Jaudīgs — labi tiek galā ar paklājiem');
+      if (pr.indexOf('quiet') >= 0 || p.db <= 65) why.push(p.db + ' dB — ' + (p.db <= 65 ? 'kluss' : 'vidēji skaļš'));
+    } else {
+      if (this.state.mode === 'model') why.push(fmt(p.w) + ' × ' + p.h + ' cm — pārbaudi, vai ietilps');
+      else if (p.t === 'builtin') why.push('Der tavai ' + fmt(a.dim) + ' cm augstajai nišai');
+      else why.push(fmt(p.w) + ' × ' + p.h + ' cm — ' + (a.fheight && a.fheight !== 'any' ? 'ietilps līdz ' + a.fheight + ' cm augstumam' : SIZE_TXT[sizeClass(p)]));
+      why.push(p.v + ' L' + (a.people ? ' — pietiek ' + PEOPLE[a.people] : ' tilpums'));
+      if (pr.indexOf('quiet') >= 0 || p.db <= 35) why.push(p.db + ' dB — ' + (p.db <= 35 ? 'ļoti kluss' : 'kluss'));
+      if (pr.indexOf('energy') >= 0) why.push('Energoklase ' + p.en + (p.en === 'D' ? ' — labākā šajā cenu grupā' : ''));
+      if (pr.indexOf('nofrost') >= 0) why.push(p.nf ? 'No Frost — nav jāatkausē' : 'Saldētava ir jāatkausē');
+    }
+    return why.slice(0, 3);
+  }
+  specs(p) {
+    if (p.gen) return p.specs;
+    if (p.run !== undefined) {
+      if (p.t === 'classic') return 'Ar vadu · ' + p.db + ' dB';
+      return 'Darbības laiks ' + p.run + ' min · ' + p.db + ' dB' + (p.mop ? ' · mitrā uzkopšana' : '');
+    }
+    return fmt(p.w) + ' × ' + p.h + ' cm · ' + p.v + ' L · klase ' + p.en + ' · ' + p.db + ' dB';
+  }
+  view(p, info, a, lim, label, top) {
+    var self = this;
+    var others = p.of.filter(function (o) { return o !== info.best; }).map(function (o) {
+      var txt = o[2] === 'out' ? 'nav pieejams' : eur(o[1]) + (o[2] === 'soon' ? ' · 3–5 darba dienās' : '');
+      return { store: STORES[o[0]].name, text: txt };
+    });
+    var diff = info.worst - info.best[1];
+    return {
+      _p: p, _info: info, top: top,
+      id: p.id, label: label, name: p.name, score: fmt(p.s.toFixed(1)), scoreLabel: 'Vērtējums ' + fmt(p.s.toFixed(1)) + '/10', idLine: idLine(p), buyLabel: 'Pirkt — ' + STORES[info.best[0]].name,
+      specs: this.specs(p),
+      priceText: eur(info.best[1]), store: STORES[info.best[0]].name, url: STORES[info.best[0]].url,
+      stock: info.best[2] === 'in' ? 'noliktavā · piegāde ' + bizDate(3) : 'piegāde ' + bizDate(5),
+      why: this.reasons(p, a, info.best[1] > lim ? info.best[1] - lim : 0, info), others: others,
+      hasEnergy: !!cost10(p), energyText: cost10(p) ? 'Elektrība 10 gados ~' + thou(cost10(p)) + ' € · kopā ar pirkumu ~' + thou(info.best[1] + cost10(p)) + ' €' : '',
+      hasLow30: true, low30: (function () { var v = hsh(p.id) % 4; var drop = Math.round(info.best[1] * 0.04 * v); return ((v === 1 || v === 2) && drop >= 1) ? 'Zemākā cena 30 dienās bija ' + (info.best[1] - drop) + ' € — cenu radars paziņos, ja tā atkal kritīsies' : 'Šobrīd zemākā cena pēdējās 30 dienās'; })(),
+      hasSave: diff > 0, save: 'Par ' + eur(diff) + ' lētāk nekā dārgākajā veikalā',
+      cardStyle: 'flex: 1 1 300px; min-width: 0; background: #FFFFFF; color: #0F2A2E; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box' + (top ? '; box-shadow: 0 0 0 3px #D8F45A' : ''),
+      pillStyle: 'padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; ' + (top ? 'background: #D8F45A; color: #0F2A2E' : 'background: #EDF1EE; color: #0F2A2E'),
+      follow: function () { self.go('alertWhen', { alertId: p.id }); }
+    };
+  }
+  deltaItems(p, b) {
+    var out = [];
+    if (p.gen) {
+      SUBS[p.sub].q.forEach(function (q) {
+        q.o.forEach(function (o) {
+          if (o[0] === 'any' || !p.tags[o[0]] || b.tags[o[0]]) return;
+          var k = p.sub + '.' + o[0], t = TV[k] !== undefined ? TV[k] : o[1];
+          if (t) out.push(t.charAt(0).toLowerCase() + t.slice(1));
+        });
+      });
+    } else if (p.run !== undefined) {
+      if (p.t === b.t && p.t !== 'classic' && p.run - b.run >= 10) out.push('+' + (p.run - b.run) + ' min darbības laiks');
+      if (b.db - p.db > 0) out.push('par ' + (b.db - p.db) + ' dB klusāks');
+      if (p.mop && !b.mop) out.push('mitrā uzkopšana');
+      if (p.pet && !b.pet) out.push('birste dzīvnieku spalvai');
+    } else {
+      if (p.v - b.v >= 10) out.push('+' + (p.v - b.v) + ' L tilpums');
+      if (b.db - p.db > 0) out.push('par ' + (b.db - p.db) + ' dB klusāks');
+      if ((EN[p.en] || 0) > (EN[b.en] || 0)) out.push('labāka energoklase (' + p.en + ')');
+      if (p.nf && !b.nf) out.push('No Frost — nav jāatkausē');
+    }
+    var cp = cost10(p), cb = cost10(b);
+    if (cp && cb && cb - cp >= 20) out.push('~' + (cb - cp) + ' € mazāk par elektrību 10 gados');
+    if (cp && cb && cp - cb >= 20) out.push('~' + (cp - cb) + ' € vairāk par elektrību 10 gados');
+    if (p.s - b.s >= 0.3) out.push('vērtējums +' + fmt((p.s - b.s).toFixed(1)));
+    if (!out.length) out.push('atšķirība galvenokārt zīmolā un dizainā');
+    return out.slice(0, 4);
+  }
+  decorate(picks, model) {
+    var self = this;
+    if (!picks.length) return picks;
+    var recId = model ? (picks[1] ? picks[1].id : picks[0].id) : picks[0].id;
+    if (!model) picks.sort(function (x, y) { return x._info.best[1] - y._info.best[1]; });
+    var base = picks[0];
+    var tiers = picks.length >= 3 ? ['Budžeta variants', 'Vidējā klase', 'Augstākā klase'] : (picks.length === 2 ? ['Budžeta variants', 'Augstākā klase'] : ['Piemērotākais']);
+    picks.forEach(function (r, i) {
+      var isRec = r.id === recId;
+      if (!model) r.label = tiers[i];
+      r.isRec = isRec;
+      r.pillStyle = 'padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; background: #EDF1EE; color: #0F2A2E';
+      r.cardStyle = 'flex: 1 1 300px; min-width: 0; background: #FFFFFF; color: #0F2A2E; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box' + (isRec ? '; box-shadow: 0 0 0 3px #D8F45A' : '');
+      if (r !== base) {
+        var d = r._info.best[1] - base._info.best[1];
+        r.hasDelta = true;
+        r.deltaHead = model ? 'Salīdzinājumā ar tavu izvēli (' + (d >= 0 ? '+' : '−') + Math.abs(d) + ' €):' : (d >= 0 ? 'Par ' + d + ' € vairāk nekā budžeta variants tu iegūsti:' : 'Par ' + (-d) + ' € lētāk nekā budžeta variants:');
+        r.deltaBody = self.deltaItems(r._p, base._p).join(' · ');
+      } else { r.hasDelta = false; r.deltaHead = ''; r.deltaBody = ''; }
+    });
+    return picks;
+  }
+  compareRows(picks, a) {
+    var n = picks.length;
+    var grid = 'display: grid; grid-template-columns: 150px repeat(' + n + ', minmax(170px, 1fr)); min-width: ' + (150 + 170 * n) + 'px';
+    var rows = [];
+    var pickBest = function (vals, dir) {
+      var nums = vals.map(function (v) { return v.v; });
+      var m = dir > 0 ? Math.max.apply(null, nums) : Math.min.apply(null, nums);
+      var idx = [];
+      nums.forEach(function (x, i) { if (x === m) idx.push(i); });
+      return idx.length === nums.length ? [] : idx;
+    };
+    var add = function (label, vals, dir, keep) {
+      var best = dir ? pickBest(vals, dir) : [];
+      rows.push({
+        label: label, grid: grid, keep: !!keep,
+        same: vals.every(function (x) { return x.t === vals[0].t; }),
+        labelStyle: 'position: sticky; left: 0; z-index: 1; background: #FFFFFF; padding: 12px 14px; border-top: 1px solid #E3E8E5; font-size: 14px; font-weight: 600; color: #4E605C',
+        cells: vals.map(function (x, i) {
+          var b = best.indexOf(i) >= 0;
+          return { text: x.t, style: 'padding: 12px 14px; border-top: 1px solid #E3E8E5; font-size: 15px; line-height: 1.4; white-space: pre-line' + (b ? '; background: #F1F8D6; font-weight: 700' : '') };
+        })
+      });
+    };
+    var P2 = picks.map(function (x) { return x._p; });
+    var I2 = picks.map(function (x) { return x._info; });
+    add('Zemākā cena', I2.map(function (inf) { return { t: eur(inf.best[1]) + '\n' + STORES[inf.best[0]].name, v: inf.best[1] }; }), -1, true);
+    add('Pieejamība', P2.map(function (p) {
+      var nIn = p.of.filter(function (o) { return o[2] === 'in'; }).length, nSoon = p.of.filter(function (o) { return o[2] === 'soon'; }).length;
+      return { t: (nIn ? 'Noliktavā ' + nIn + (nIn === 1 ? ' veikalā' : ' veikalos') : 'Nav noliktavā') + (nSoon ? '\n' + nSoon + ' — piegāde 3–5 d.' : ''), v: nIn };
+    }), 1);
+    add('Modelis', P2.map(function (p) { return { t: p.m + '\nEAN ' + p.ean }; }), 0, true);
+    var yn = function (b) { return { t: b ? 'Jā' : 'Nē', v: b ? 1 : 0 }; };
+    if (P2[0].gen) {
+      var S = SUBS[P2[0].sub];
+      var CL = SUBS[P2[0].sub].c || [];
+      S.q.forEach(function (q, qi) {
+        var hasAny = q.o.some(function (o) { return o[0] === 'any'; });
+        add(CL[qi] || q.t.replace('?', ''), P2.map(function (p) {
+          var labs = q.o.filter(function (o) { return o[0] !== 'any' && p.tags[o[0]]; }).map(function (o) { var k = p.sub + '.' + o[0]; return TV[k] !== undefined ? TV[k] : o[1]; }).filter(function (t) { return t !== ''; });
+          return { t: labs.length ? labs.join('\n') : (hasAny ? 'Nav' : '—') };
+        }), 0);
+      });
+      add('Tehniskie dati', P2.map(function (p) { return { t: p.specs.split(' · ').join('\n') }; }), 0);
+    } else if (P2[0].run !== undefined) {
+      add('Tips', P2.map(function (p) { return { t: VT[p.t] }; }), 0);
+      add('Darbības laiks', P2.map(function (p) { return p.t === 'classic' ? { t: 'Neierobežots (ar vadu)', v: 999 } : { t: p.run + ' min', v: p.run }; }), 1);
+      add('Troksnis', P2.map(function (p) { return { t: p.db + ' dB', v: p.db }; }), -1);
+      add('Mitrā uzkopšana', P2.map(function (p) { return yn(p.mop); }), 1);
+      add('Birste dzīvnieku spalvai', P2.map(function (p) { return yn(p.pet); }), 1);
+    } else {
+      add('Platums × augstums', P2.map(function (p) { return { t: fmt(p.w) + ' × ' + p.h + ' cm' }; }), 0);
+      add('Tilpums', P2.map(function (p) { return { t: p.v + ' L', v: p.v }; }), 1);
+      add('Energoklase', P2.map(function (p) { return { t: p.en, v: { D: 3, E: 2, F: 1 }[p.en] || 0 }; }), 1);
+      add('Troksnis', P2.map(function (p) { return { t: p.db + ' dB', v: p.db }; }), -1);
+      add('No Frost', P2.map(function (p) { return yn(p.nf); }), 1);
+      add('Saldētava', P2.map(function (p) { return { t: p.fz ? 'Ir' : 'Nav' }; }), 0);
+    }
+    if (P2.every(function (p) { return !!cost10(p); })) {
+      add('Elektrība 10 gados', P2.map(function (p) { return { t: '~' + thou(cost10(p)) + ' €\n' + kwhOf(p) + ' kWh gadā', v: cost10(p) }; }), -1);
+      add('Kopā 10 gados', P2.map(function (p, i) { var t = I2[i].best[1] + cost10(p); return { t: '~' + thou(t) + ' €', v: t }; }), -1);
+    }
+    add('Trilio vērtējums', P2.map(function (p) { return { t: fmt(p.s.toFixed(1)) + ' / 10', v: p.s }; }), 1, true);
+    var diff = this.state.diffOnly;
+    return {
+      grid: grid,
+      heads: picks.map(function (x) { return { label: x.label, name: x.name, pillStyle: x.pillStyle + '; align-self: flex-start' }; }),
+      rows: rows.filter(function (r) { return !diff || r.keep || !r.same; })
+    };
+  }
+  results() {
+    var self = this;
+    var a = this.state.a;
+    var model = this.state.mode === 'model';
+    var vac = a.sub === 'vacuum';
+    var gen = !!(a.sub && SUBS[a.sub] && SUBS[a.sub].i);
+    var S = gen ? SUBS[a.sub] : null;
+    var bud = gen ? a.gbudget : (vac ? a.vbudget : a.budget);
+    var lim = bud && bud !== 'any' ? parseInt(bud, 10) : Infinity;
+    var src = gen ? GP.filter(function (p) { return p.sub === a.sub; }) : (vac ? V : P);
+    var match = function (p) {
+      if (gen) {
+        var ok = true;
+        S.q.forEach(function (q, qi) { var ans = a['g' + qi]; if (q.f && ans && ans !== 'any' && !p.tags[ans]) ok = false; });
+        return ok;
+      }
+      if (vac) return p.t === a.vtype;
+      if (p.t !== a.type) return false;
+      if (a.freezer && p.fz !== (a.freezer === 'yes')) return false;
+      if (!model && p.t === 'free') {
+        if (a.fsize && sizeClass(p) !== a.fsize) return false;
+        if (a.fheight && a.fheight !== 'any' && p.h > parseInt(a.fheight, 10)) return false;
+      }
+      if (!model && a.dim && p.t === 'builtin' && (p.h > a.dim + 1 || p.h < a.dim - 25)) return false;
+      return true;
+    };
+    var pool = [];
+    src.forEach(function (p) {
+      if (p.c !== 'new' || !match(p)) return;
+      var info = self.offerInfo(p, a);
+      if (info) pool.push({ p: p, info: info, sc: self.score(p, info, a, lim) });
+    });
+    pool.sort(function (x, y) { return y.sc - x.sc; });
+    var picks = [];
+    var lead = '';
+    if (model) {
+      var mine = null;
+      pool.forEach(function (x) { if (x.p.id === 'n2') mine = x; });
+      var band = pool.filter(function (x) { return x.p.id !== 'n2' && sizeClass(x.p) === sizeClass(mine.p) && Math.abs(x.info.best[1] - mine.info.best[1]) <= mine.info.best[1] * 0.12; });
+      var tco = function (x) { return x.info.best[1] + (cost10(x.p) || 0); };
+      band.sort(function (x, y) { return tco(x) - tco(y); });
+      picks.push(this.view(mine.p, mine.info, a, lim, 'Tava izvēle', false));
+      if (band[0]) picks.push(this.view(band[0].p, band[0].info, a, lim, 'Izdevīgāks par to pašu naudu', true));
+      if (band[1]) picks.push(this.view(band[1].p, band[1].info, a, lim, 'Alternatīva', false));
+      if (band[0]) {
+        var dv = band[0].p.v - mine.p.v, dp = mine.info.best[1] - band[0].info.best[1];
+        lead = 'Tava izvēle ir laba — un klusākā no trim. Tomēr ' + band[0].p.name + ' ir par ' + Math.abs(dp) + ' € ' + (dp > 0 ? 'lētāks' : 'dārgāks') + (dv > 0 ? ', un tajā ir par ' + dv + ' L vairāk vietas.' : '.');
+      }
+      if (a.fit === 'no') lead = 'Tavs modelis neietilps. Salīdzinājumam rādām to un divas alternatīvas līdzīgā cenā — pārbaudi arī to izmērus.';
+    }
+    var inB = pool.filter(function (x) { return x.info.best[1] <= lim; });
+    var stretch = model ? [] : pool.filter(function (x) { return x.info.best[1] > lim && x.info.best[1] <= lim * 1.25; });
+    if (!model && inB.length) {
+      var first = inB[0];
+      var rest = inB.slice(1);
+      var cheap = rest.slice().sort(function (x, y) { return x.info.best[1] - y.info.best[1]; })[0];
+      picks.push(this.view(first.p, first.info, a, lim, 'Labākā izvēle tev', true));
+      if (cheap) {
+        picks.push(this.view(cheap.p, cheap.info, a, lim, cheap.info.best[1] < first.info.best[1] ? 'Izdevīgākā cena' : 'Vēl viena laba izvēle', false));
+        rest = rest.filter(function (x) { return x !== cheap; });
+      }
+      if (rest.length) {
+        var pr = (a.prio || [])[0];
+        var third = rest[0], lab = gen ? 'Augstāk vērtētā alternatīva' : 'Alternatīva';
+        if (gen) { third = rest.slice().sort(function (x, y) { return y.p.s - x.p.s; })[0]; }
+        if (pr === 'quiet') { third = rest.slice().sort(function (x, y) { return x.p.db - y.p.db; })[0]; lab = 'Klusākais'; }
+        if (pr === 'volume') { third = rest.slice().sort(function (x, y) { return y.p.v - x.p.v; })[0]; lab = 'Ietilpīgākais'; }
+        if (pr === 'energy') { third = rest.slice().sort(function (x, y) { return (EN[y.p.en] || 0) - (EN[x.p.en] || 0); })[0]; lab = 'Ekonomiskākais'; }
+        if (pr === 'battery') { third = rest.slice().sort(function (x, y) { return (y.p.run || 999) - (x.p.run || 999); })[0]; lab = 'Ilgāk darbojas'; }
+        if (pr === 'mop') { var mops = rest.filter(function (x) { return x.p.mop; }); if (mops.length) { third = mops[0]; lab = 'Ar mitro uzkopšanu'; } }
+        picks.push(this.view(third.p, third.info, a, lim, lab, false));
+      }
+      lead = (inB.length > 3 ? 'Tavā budžetā atradām ' + inB.length + ' piemērotus modeļus — rādām trīs dažādos cenu līmeņos' : 'Tavā budžetā atradām ' + inB.length + (inB.length === 1 ? ' piemērotu modeli' : ' piemērotus modeļus')) + '. Trilio ieteikums ir tas, kas kopumā vislabāk atbilst tavām atbildēm, — pie katra redzams, ko iegūsti par piemaksu.';
+    }
+    picks = this.decorate(picks, model);
+    if (!model) {
+      var need = Math.min(2, 3 - picks.length);
+      var extra = need > 0 ? stretch.slice().sort(function (x, y) { return y.sc - x.sc; }).slice(0, need).sort(function (x, y) { return x.info.best[1] - y.info.best[1]; }) : [];
+      var base0 = picks[0];
+      extra.forEach(function (x) {
+        var v = self.view(x.p, x.info, a, lim, 'Virs budžeta par ' + (x.info.best[1] - lim) + ' €', false);
+        v.isRec = false;
+        v.pillStyle = 'padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; background: #FBEADF; color: #8A3209';
+        v.cardStyle = 'flex: 1 1 300px; min-width: 0; background: #FFFFFF; color: #0F2A2E; border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box; border: 2px dashed #E4B48F';
+        if (base0) {
+          var d = x.info.best[1] - base0._info.best[1];
+          v.hasDelta = true; v.deltaHead = 'Par ' + d + ' € vairāk nekā budžeta variants tu iegūsti:'; v.deltaBody = self.deltaItems(x.p, base0._p).join(' · ');
+        } else { v.hasDelta = false; v.deltaHead = ''; v.deltaBody = ''; }
+        picks.push(v);
+      });
+      if (extra.length) {
+        lead = (inB.length ? lead + ' ' : 'Tavā budžetā piemērotu modeļu pašlaik nav. ') + (extra.length === 1 ? 'Vēl rādām vienu nedaudz dārgāku variantu (līdz +25 %) — tas ir skaidri atzīmēts.' : 'Vēl rādām ' + extra.length + ' nedaudz dārgākus variantus (līdz +25 %) — tie ir skaidri atzīmēti.');
+      } else if (!inB.length && pool.length) {
+        lead = 'Tavā budžetā piemērotu modeļu pašlaik nav. Pamēģini palielināt budžetu vai ieslēdz cenu radaru — paziņosim, kad kāds piemērots modelis kļūs pieejams tavā budžetā.';
+      }
+    }
+    var ref = null;
+    if (model || a.cond === 'both') {
+      var refs = [];
+      src.forEach(function (p) {
+        if (p.c !== 'refurb' || !match(p)) return;
+        if (model && p.id !== 'r1') return;
+        var info = self.offerInfo(p, a);
+        if (info) refs.push({ p: p, info: info });
+      });
+      refs.sort(function (x, y) { return y.p.s - x.p.s; });
+      if (refs[0]) {
+        var r = refs[0];
+        var rs = STORES[r.info.best[0]].name;
+        ref = { name: r.p.name, idLine: idLine(r.p) + ' — tas pats modelis, kas jaunā stāvoklī', gradeLabel: 'Stāvoklis: ' + r.p.g, warranty: r.p.wr, priceText: eur(r.info.best[1]), url: STORES[r.info.best[0]].url, storeSave: rs + ' · jauna maksā no ' + eur(r.p.nw) + ', ietaupījums ' + eur(r.p.nw - r.info.best[1]), viewLabel: 'Skatīt — ' + rs };
+      }
+    }
+    var chips = [];
+    if (model) chips.push(a.model);
+    else if (gen) {
+      chips.push(S.l);
+      S.q.forEach(function (q, qi) { var ans = a['g' + qi]; q.o.forEach(function (o) { if (o[0] === ans && ans !== 'any') chips.push(o[1]); }); });
+    } else if (vac) {
+      chips.push(VT[a.vtype]);
+      chips.push({ '50': 'Līdz 50 m²', '100': '50–100 m²', '150': 'Virs 100 m²' }[a.area]);
+      chips.push({ hard: 'Cietās grīdas', carpet: 'Daudz paklāju', mixed: 'Jauktas grīdas' }[a.floor]);
+      chips.push(a.pets === 'yes' ? 'Ir mājdzīvnieki' : 'Nav mājdzīvnieku');
+    } else {
+      chips.push(a.type === 'builtin' ? 'Iebūvējams' : 'Brīvi stāvošs');
+      if (a.type === 'builtin' && a.dim) chips.push('Nišas augstums ' + fmt(a.dim) + ' cm');
+      if (a.fsize) chips.push({ compact: 'Mazs (~85 cm)', mid: 'Vidēja augstuma', tall: 'Standarta augsts', wide: 'Plats, divdurvju' }[a.fsize]);
+      if (a.fheight && a.fheight !== 'any') chips.push('Augstums līdz ' + a.fheight + ' cm');
+      if (a.freezer) chips.push(a.freezer === 'yes' ? 'Ar saldētavu' : 'Bez saldētavas');
+      if (a.people) chips.push({ '2': '1–2 cilvēki', '4': '3–4 cilvēki', '5': '5 un vairāk cilvēku' }[a.people]);
+    }
+    if (!model) {
+      if (bud) chips.push(bud === 'any' ? 'Budžets nav noteikts' : 'Līdz ' + bud + ' €');
+      if (a.cond) chips.push(a.cond === 'both' ? 'Atjaunotās — atsevišķi' : 'Tikai jaunas');
+      if (a.speed === 'now') chips.push('Piegāde ' + bizDate(3));
+      if (a.speed === 'week') chips.push('Piegāde 2 nedēļu laikā');
+    }
+    var topPick = picks.filter(function (x) { return x.isRec; })[0] || picks[0] || null;
+    var n = picks.length;
+    return {
+      title: model ? 'Tava izvēle un divas alternatīvas' : (n >= 3 ? 'Trīs labākie varianti tev' : (n === 2 ? 'Divi labākie varianti tev' : 'Labākais variants tev')),
+      lead: lead, chips: chips, picks: picks, empty: n === 0, hasPicks: n > 0,
+      canCompare: n >= 2, cmp: n >= 2 ? this.compareRows(picks, a) : { grid: '', heads: [], rows: [] },
+      ref: ref || { name: '', idLine: '', gradeLabel: '', warranty: '', priceText: '', url: '#', storeSave: '', viewLabel: '' }, hasRef: !!ref,
+      alertTitle: a.speed === 'wait' ? 'Vari pagaidīt? Ieslēdz cenu radaru' : 'Nesteidzies? Sagaidi labāku cenu',
+      followTop: function () { if (topPick) topPick.follow(); }
+    };
+  }
+  question(step, st) {
+    var self = this;
+    var a = st.a;
+    var q = { title: '', desc: '', why: '', help: '', kind: 'single', opts: [], unit: '', placeholder: '', inputType: 'text', okLabel: 'Turpināt', skipLabel: '', check: false };
+    if (step === 'category') { q.kind = 'tiles'; q.title = 'Ko tu meklē?'; q.desc = 'Izvēlies kategoriju vai pastāsti saviem vārdiem.'; q.opts = GROUPS.map(function (g) { return [g[0], g[1], g[2]]; }); }
+    if (step === 'sub') { var g = groupById(a.category); q.title = 'Kas tieši tevi interesē?'; q.desc = g[1]; q.opts = g[3].map(function (k) { return [k, SUBS[k].l, SUBS[k].d]; }); }
+    if (step === 'other') { q.kind = 'input'; q.title = 'Pastāsti, ko tu meklē'; q.desc = 'Raksti saviem vārdiem — mēs sapratīsim.'; q.placeholder = 'piem., kluss putekļsūcējs dzīvoklim ar suni'; q.why = 'Pilnajā versijā MI palīgs no tava apraksta pats sagatavos jautājumus un neprasīs vēlreiz to, ko jau esi pastāstījis.'; }
+    /* Vispārīgie jautājumi visām pārējām sadaļām */
+    var gm = /^g(\d+)$/.exec(step);
+    if (gm && SUBS[a.sub]) { var G = SUBS[a.sub].q[parseInt(gm[1], 10)]; q.title = G.t; q.why = G.w || ''; q.opts = G.o; }
+    if (step === 'gbudget' && SUBS[a.sub]) { var B = SUBS[a.sub].b; q.title = 'Kāds ir tavs budžets?'; q.why = 'Dārgākus variantus neslēpsim, tikai atzīmēsim.'; q.opts = [[String(B[0]), 'Līdz ' + B[0] + ' €'], [String(B[1]), 'Līdz ' + B[1] + ' €'], [String(B[2]), 'Līdz ' + B[2] + ' €'], ['any', 'Budžets nav noteikts']]; }
+    /* Ledusskapji */
+    if (step === 'type') { q.title = 'Kur ledusskapis stāvēs?'; q.why = 'Iebūvējamam ledusskapim svarīgākais ir nišas izmērs, brīvi stāvošam — platums un vieta durvju atvēršanai.'; q.help = 'Ja ledusskapim priekšā ir tādas pašas durvis kā pārējiem virtuves skapjiem, tas ir iebūvējams. Ja redzamas paša ledusskapja durvis, tas ir brīvi stāvošs.'; q.opts = [['builtin', 'Iebūvējams virtuves skapī', 'paslēpts aiz skapja durvīm'], ['free', 'Brīvi stāvošs', 'novietots atsevišķi'], ['unsure', 'Nezinu, kā atšķirt']]; }
+    if (step === 'dim') {
+      q.kind = 'input'; q.inputType = 'number'; q.unit = 'cm';
+      if (a.type === 'builtin') { q.title = 'Cik augsta ir niša?'; q.placeholder = '178'; q.why = 'Nepareizi izmērīts nišas augstums ir biežākais iemesls, kāpēc iebūvējamo ledusskapi nākas atdot atpakaļ. Mēri no grīdas līdz nišas augšai trīs vietās un ņem mazāko skaitli.'; }
+      else { q.title = 'Cik platu vietu vari atvēlēt?'; q.placeholder = '60'; q.why = 'Sānos atstāj 2–3 cm ventilācijai. Ja blakus ir siena, durvju pilnīgai atvēršanai vajadzīgi vēl apmēram 5 cm.'; }
+    }
+    if (step === 'fsize') { q.title = 'Kāda izmēra ledusskapis tev vajadzīgs?'; q.why = 'Gandrīz visi brīvi stāvošie ledusskapji ir 60 cm plati, tāpēc galvenā atšķirība ir augstums — un vai vajag platāku, divdurvju modeli.'; q.opts = [['compact', 'Mazs, zem darba virsmas', '~85 cm augsts — vasarnīcai, birojam, studijas dzīvoklim'], ['mid', 'Vidēja augstuma', '~145–175 cm — ja virs tā ir plaukts vai skapītis'], ['tall', 'Standarta augsts', '~180–205 cm, 60 cm plats'], ['wide', 'Plats, divdurvju', '80–90 cm — Side-by-Side vai French Door; pārbaudi, vai izies pa durvīm']]; }
+    if (step === 'fheight') { q.title = 'Vai augstums ir ierobežots?'; q.why = 'Standarta ledusskapji ir 180–205 cm augsti. Ja virs ledusskapja ir skapītis, izmēri attālumu līdz tam un atstāj dažus centimetrus ventilācijai.'; q.opts = [['186', 'Jā, līdz ~186 cm', 'virs ir skapītis vai slīpi griesti'], ['any', 'Nē, augstums nav ierobežots', '']]; }
+    if (step === 'freezer') { q.title = 'Vai vajag saldētavu?'; q.opts = [['yes', 'Jā, ar saldētavu', 'kombinētais ledusskapis'], ['no', 'Nē, pietiek ar ledusskapi', 'saldētava man jau ir']]; }
+    if (step === 'people') { q.title = 'Cik cilvēku ir tavā mājsaimniecībā?'; q.why = 'No tā atkarīgs, kādu tilpumu ieteikt, lai nebūtu par mazu un nebūtu jāmaksā par lieku.'; q.opts = [['2', '1–2'], ['4', '3–4'], ['5', '5 vai vairāk']]; }
+    if (step === 'prio') { q.kind = 'multi'; q.title = 'Kas tev ir svarīgākais?'; q.desc = 'Izvēlies ne vairāk kā divus.'; q.opts = [['quiet', 'Klusa darbība', 'ja virtuve ir apvienota ar dzīvojamo istabu'], ['energy', 'Mazs elektroenerģijas patēriņš'], ['nofrost', 'Nav jāatkausē (No Frost)'], ['volume', 'Pēc iespējas lielāks tilpums'], ['price', 'Zemākā cena']]; q.okLabel = st.multi.length ? 'Turpināt' : 'Izlaist'; }
+    if (step === 'budget') { q.title = 'Kāds ir tavs budžets?'; q.why = 'Dārgākus variantus neslēpsim, tikai atzīmēsim.'; q.opts = [['500', 'Līdz 500 €'], ['800', 'Līdz 800 €'], ['1200', 'Līdz 1200 €'], ['any', 'Budžets nav noteikts']]; }
+    /* Putekļsūcēji */
+    if (step === 'vtype') { q.title = 'Kādu putekļsūcēju tu meklē?'; q.help = 'Robots uzkopj pats, kamēr tevis nav mājās. Vertikālais bezvadu putekļsūcējs ir ērtākais ātrai uzkopšanai. Klasiskais ar vadu ir jaudīgs un parasti lētāks.'; q.opts = [['robot', 'Robotu', 'uzkopj pats pēc grafika'], ['stick', 'Vertikālo bezvadu', 'viegls, ērts ātrai uzkopšanai'], ['classic', 'Klasisko ar vadu', 'ar maisu vai ciklonisko (bez maisa)'], ['unsure', 'Nezinu, kurš man der']]; }
+    if (step === 'area') { q.title = 'Cik liela ir uzkopjamā platība?'; q.why = 'No tā atkarīgs, cik ilgam jābūt akumulatora darbības laikam.'; q.opts = [['50', 'Līdz 50 m²'], ['100', '50–100 m²'], ['150', 'Vairāk nekā 100 m²']]; }
+    if (step === 'floor') { q.title = 'Kādas grīdas ir tavās mājās?'; q.opts = [['hard', 'Pārsvarā cietās', 'parkets, lamināts, flīzes'], ['carpet', 'Daudz paklāju'], ['mixed', 'Jauktas']]; }
+    if (step === 'pets') { q.title = 'Vai mājās ir dzīvnieki ar spalvu?'; q.why = 'Dzīvnieku spalvai vajadzīga speciāla birste, citādi tā tinas ap rullīti.'; q.opts = [['yes', 'Jā'], ['no', 'Nē']]; }
+    if (step === 'vprio') { q.kind = 'multi'; q.title = 'Kas tev ir svarīgākais?'; q.desc = 'Izvēlies ne vairāk kā divus.'; q.opts = [['quiet', 'Klusa darbība'], ['battery', 'Ilgs darbības laiks'], ['mop', 'Arī mitrā uzkopšana'], ['price', 'Zemākā cena']]; q.okLabel = st.multi.length ? 'Turpināt' : 'Izlaist'; }
+    if (step === 'vbudget') { q.title = 'Kāds ir tavs budžets?'; q.why = 'Dārgākus variantus neslēpsim, tikai atzīmēsim.'; q.opts = [['200', 'Līdz 200 €'], ['400', 'Līdz 400 €'], ['700', 'Līdz 700 €'], ['any', 'Budžets nav noteikts']]; }
+    /* Kopīgie */
+    if (step === 'cond') { q.title = 'Vai apsvērtu arī atjaunotu preci?'; q.desc = 'Atjaunota (refurbished) prece ir pārbaudīta, nepieciešamības gadījumā salabota un tiek pārdota ar garantiju.'; q.why = 'Atjaunotās preces vienmēr rādām atsevišķi, norādot stāvokli un garantiju. Ar jaunajām tās nejaucam.'; q.opts = [['new', 'Nē, tikai jaunu'], ['both', 'Jā, bet parādi atsevišķi', 'ja ietaupījums ir vismaz ~20 %']]; }
+    if (step === 'speed') { q.title = 'Cik ātri prece tev vajadzīga?'; q.why = 'Datumus rēķinām darba dienās — brīvdienās veikali parasti nepiegādā.'; q.opts = [['now', 'Pēc iespējas ātrāk', 'piegāde ' + bizDate(3) + ' — rādīsim tikai preces, kas ir noliktavā'], ['week', 'Tuvāko divu nedēļu laikā', 'der arī piegāde 3–5 darba dienās, ' + bizDate(5)], ['wait', 'Nesteidzos', 'varu pagaidīt labāku cenu — piedāvāsim cenu radaru']]; }
+    /* Konkrēts modelis */
+    if (step === 'model') { q.kind = 'input'; q.title = 'Kuru modeli tu apsver?'; q.desc = 'Ieraksti nosaukumu, modeļa kodu vai ielīmē saiti no partnera veikala.'; q.placeholder = 'piem., Samsung kombinētais No Frost'; q.why = 'Pārbaudīsim, vai tas tev der un vai par to pašu naudu nav pieejams kas labāks.'; }
+    if (step === 'fit') { q.title = 'Šis modelis ir 185 cm augsts un 59,5 cm plats. Vai tas ietilps?'; q.help = 'Izmēri vietas platumu un augstumu trīs punktos un ņem mazāko skaitli. Sānos un aizmugurē atstāj 2–3 cm ventilācijai.'; q.opts = [['yes', 'Jā, ietilps'], ['no', 'Nē, vajag mazāku'], ['unsure', 'Nezinu, kā izmērīt']]; }
+    /* Cenu radars */
+    if (AFLOW.indexOf(step) >= 0) {
+      var p = byId(st.alertId) || P[0];
+      var info = this.offerInfo(p, a) || { best: p.of[0] };
+      if (step === 'alertWhen') { q.title = 'Kad tev paziņot?'; q.desc = p.name + ' (modelis ' + p.m + ') šobrīd lētākais ir ' + eur(info.best[1]) + ' (' + STORES[info.best[0]].name + ')' + '. Sekosim cenai visos partneru veikalos.'; q.opts = [['any', 'Par jebkuru cenas samazinājumu'], ['5', 'Ja cena samazinās vismaz par 5 %'], ['10', 'Ja cena samazinās vismaz par 10 %']]; }
+      if (step === 'alertScope') { var br = brandOf(p); q.title = 'Vai ziņot arī par citiem modeļiem ar labu cenu?'; q.desc = 'Tikai par tādiem, kas atbilst tavām prasībām — izmēri, tips un galvenās funkcijas.'; q.why = 'Bieži līdzvērtīgs modelis no tā paša vai cita ražotāja ir ievērojami lētāks.'; q.opts = [['only', 'Nē, tikai par šo modeli', p.m], ['brand', 'Arī par citiem ' + br + ' modeļiem', 'ja cena ir izdevīgāka'], ['any', 'Par jebkura ražotāja modeļiem', 'plašākā izvēle']]; }
+      if (step === 'alertChannel') { q.title = 'Kā tev paziņot?'; q.opts = [['push', 'Ar paziņojumu telefonā'], ['email', 'Pa e-pastu'], ['both', 'Abos veidos']]; }
+      if (step === 'alertPlan') { q.kind = 'plan'; q.title = 'Cenu radars — 1 € mēnesī'; q.desc = (st.user ? 'Ienācis kā ' + st.user.name + ' (' + st.user.provider + '). ' : '') + 'Sekosim ' + p.name + ' cenai' + ({ brand: ' un citiem ' + brandOf(p) + ' modeļiem, kas atbilst tavām prasībām', any: ' un līdzīgiem jebkura ražotāja modeļiem' }[st.scope] || '') + '. Filtrus vari mainīt sadaļā „Cenu radars”.'; q.okLabel = 'Turpināt uz apmaksu'; q.skipLabel = 'Varbūt vēlāk'; }
+    }
+    var choice = q.kind === 'single' || q.kind === 'multi';
+    var opts = q.opts.map(function (o, i) {
+      var sel = q.kind === 'multi' ? st.multi.indexOf(o[0]) >= 0 : st.flash === o[0];
+      return {
+        key: KEYS[i], label: o[1], sub: q.kind === 'tiles' ? '' : (o[2] || ''), hasSub: q.kind !== 'tiles' && !!o[2], icon: q.kind === 'tiles' ? o[2] : '', pressed: sel ? 'true' : 'false',
+        style: 'width: 100%; min-height: 60px; display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 12px; box-sizing: border-box; font-family: inherit; font-size: 18px; font-weight: 600; text-align: left; cursor: pointer; color: #F2F5F2; ' + (sel ? 'border: 1.5px solid #D8F45A; background: rgba(216, 244, 90, 0.18)' : 'border: 1.5px solid rgba(242, 245, 242, 0.32); background: rgba(255, 255, 255, 0.05)'),
+        tileStyle: (o[0] === 'other' ? 'grid-column: 1 / -1; ' : '') + 'min-height: 112px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 14px; box-sizing: border-box; font-family: inherit; font-size: 16px; font-weight: 600; line-height: 1.25; text-align: left; cursor: pointer; color: #F2F5F2; ' + (sel ? 'border: 1.5px solid #D8F45A; background: rgba(216, 244, 90, 0.18)' : 'border: 1.5px solid rgba(242, 245, 242, 0.32); background: rgba(255, 255, 255, 0.05)'),
+        badgeStyle: 'flex: none; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; ' + (sel ? 'background: #D8F45A; color: #0F2A2E; border: 1.5px solid #D8F45A' : 'border: 1.5px solid rgba(242, 245, 242, 0.5); color: #F2F5F2'),
+        pick: q.kind === 'multi' ? function () { self.toggleMulti(o[0]); } : function () { self.choose(step, o[0]); }
+      };
+    });
+    var f = this.flowOf(step);
+    var idx = f.indexOf(step);
+    var isAlert = AFLOW.indexOf(step) >= 0;
+    return {
+      counter: step === 'other' ? 'Savs pieprasījums' : isAlert ? 'Cenu radars · ' + (idx + 1) + '. solis no ' + f.length : 'Jautājums ' + (idx + 1) + ' no ' + f.length,
+      title: q.title, desc: q.desc, hasDesc: !!q.desc, why: q.why, hasWhy: !!q.why,
+      help: q.help, hasHelp: !!q.help && st.help,
+      isTiles: q.kind === 'tiles', isChoice: choice, isInput: q.kind === 'input', isPlan: q.kind === 'plan', inputType: q.inputType,
+      unit: q.unit, hasUnit: !!q.unit, placeholder: q.placeholder, hasCheck: q.check,
+      opts: opts, hasOk: q.kind === 'multi' || q.kind === 'input' || q.kind === 'plan', okLabel: q.okLabel,
+      ok: function () { self.submit(step); },
+      hasSkip: !!q.skipLabel, skipLabel: q.skipLabel,
+      skip: function () { self.setState({ step: 'results', hist: st.hist.concat([st.step]) }); }
+    };
+  }
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var step = st.step;
+    var isQ = step !== 'welcome' && step !== 'loading' && step !== 'results' && step !== 'alertDone' && step !== 'soon' && step !== 'login' && step !== 'pay';
+    var pf = this.alertFlow();
+    var fromAlert = step === 'login' && st.hist[st.hist.length - 1] === 'alertChannel';
+    var lf = this.flowOf('login');
+    var f = this.flowOf(step);
+    var pct = 0;
+    if (step === 'results' || step === 'loading' || step === 'alertDone') pct = 100;
+    else if (isQ) pct = Math.round((f.indexOf(step) + 1) / (f.length + 1) * 100);
+    var p = byId(st.alertId);
+    var thr = { any: '', '5': ' vismaz par 5 %', '10': ' vismaz par 10 %' }[st.alertWhen] || '';
+    return {
+      progressStyle: 'height: 4px; background: #D8F45A; width: ' + pct + '%',
+      isWelcome: step === 'welcome', isQ: isQ, isLoading: step === 'loading', isResults: step === 'results', isDone: step === 'alertDone',
+      q: isQ ? this.question(step, st) : { opts: [] },
+      res: step === 'results' ? this.results() : { chips: [], picks: [], ref: {} },
+      input: st.input, onInput: function (e) { self.setState({ input: e.target.value, error: '' }); },
+      error: st.error, hasError: !!st.error,
+      similar: st.similar, toggleSimilar: function () { self.setState({ similar: !self.state.similar }); },
+      loadLines: ['Pārbaudām partneru veikalu krājumus', 'Salīdzinām cenas un piegādes termiņus', 'Atdalām atjaunotās preces no jaunajām', 'Atlasām labākos variantus'],
+      doneText: p ? 'Paziņosim, tiklīdz ' + p.name + ' cena kādā no partneru veikaliem samazināsies' + thr + ({ brand: ' vai kāds cits ' + brandOf(p) + ' modelis, kas atbilst tavām prasībām, kļūs izdevīgāks', any: ' vai kāds līdzīgs jebkura ražotāja modelis kļūs izdevīgāks' }[st.scope] || '') + '. Sekošanu vari atslēgt jebkurā brīdī.' : '',
+      canBack: step !== 'welcome' && step !== 'loading', noBack: step === 'welcome' || step === 'loading',
+      back: function () { self.back(); },
+      reset: function () { self.setState(Object.assign(self.fresh(), { user: self.state.user })); },
+      loggedIn: !!st.user, loggedOut: !st.user,
+      user: st.user ? { name: st.user.name, initial: st.user.name.charAt(0).toUpperCase() } : { name: '', initial: '' },
+      openLogin: function () { if (self.state.step !== 'login') self.go('login', { emailSent: false }); },
+      isLogin: step === 'login',
+      login: fromAlert
+        ? { kicker: 'CENU RADARS · ' + (lf.indexOf('login') + 1) + '. SOLIS NO ' + lf.length, title: 'Ienāc, lai saglabātu cenu radaru', text: 'Konts vajadzīgs, lai jebkurā brīdī varētu mainīt filtrus, apturēt vai atslēgt sekošanu — arī no cita telefona vai datora.' }
+        : { kicker: 'TRILIO KONTS', title: 'Ienāc Trilio', text: 'Saglabā cenu radarus un pārvaldi tos no jebkuras ierīces.' },
+      loginApple: function () { self.login('apple'); },
+      loginGoogle: function () { self.login('google'); },
+      loginEmail: function () { if (String(self.state.email || '').indexOf('@') < 1) { self.setState({ error: 'Ieraksti derīgu e-pasta adresi.' }); return; } self.setState({ emailSent: true, error: '' }); },
+      confirmEmail: function () { self.login('email'); },
+      emailSent: !!st.emailSent, notEmailSent: !st.emailSent,
+      isPay: step === 'pay',
+      payKicker: 'CENU RADARS · ' + (pf.indexOf('pay') + 1) + '. SOLIS NO ' + pf.length,
+      payText: 'Pēc apmaksas uzreiz sāksim sekot ' + (p ? p.name + ' (' + p.m + ')' : 'preces') + ' cenai. Atcelt vari jebkurā brīdī.',
+      cardNum: st.cardNum || '', cardExp: st.cardExp || '', cardCvc: st.cardCvc || '', cardName: st.cardName || (st.user ? st.user.name : ''),
+      onCardNum: function (e) { self.setState({ cardNum: self.fmtCard(e.target.value), error: '' }); },
+      onCardExp: function (e) { self.setState({ cardExp: self.fmtExp(e.target.value), error: '' }); },
+      onCardCvc: function (e) { self.setState({ cardCvc: String(e.target.value).replace(/\D/g, '').slice(0, 4), error: '' }); },
+      onCardName: function (e) { self.setState({ cardName: e.target.value }); },
+      payCard: function () { self.pay('card'); },
+      payApple: function () { self.pay('apple'); },
+      payGoogle: function () { self.pay('google'); },
+      subNote: st.subscribed ? 'Abonements ir aktīvs — maksā ar ' + (st.payMethod || 'karti') + '. Karti mainīt vai abonementu atcelt vari sadaļā „Cenu radars”.' : '',
+      thanksText: 'Paldies! Paziņosim uz ' + (st.email || '') + '.',
+      sentText: 'Nosūtījām ienākšanas saiti uz ' + (st.email || '') + '. Atver to šajā ierīcē — parole nav vajadzīga.',
+      hasSubNote: !!st.subscribed,
+      startGuide: function () { self.setState({ mode: 'guide', a: {} }); self.go('category', { mode: 'guide', a: {} }); },
+      startModel: function () { self.setState({ mode: 'model', a: {} }); self.go('model', { mode: 'model', a: {}, input: 'Samsung kombinētais, No Frost' }); },
+      editAnswers: function () { if (self.state.mode === 'model') self.go('model'); else self.go('sub'); },
+      toResults: function () { self.setState({ step: 'results' }); },
+      howOpen: !!st.howOpen, howAttr: st.howOpen ? 'true' : 'false', toggleHow: function () { self.setState({ howOpen: !self.state.howOpen }); },
+      compareOpen: !!st.compareOpen, compareAttr: st.compareOpen ? 'true' : 'false',
+      compareLabel: st.compareOpen ? 'Paslēpt salīdzinājumu' : 'Salīdzināt parametrus blakus',
+      toggleCompare: function () { self.setState({ compareOpen: !self.state.compareOpen }); },
+      diffOnly: !!st.diffOnly, toggleDiff: function () { self.setState({ diffOnly: !self.state.diffOnly }); },
+      isSoon: step === 'soon',
+      soon: { kicker: 'ĀRPUS SADZĪVES TEHNIKAS', title: 'Pagaidām palīdzam izvēlēties tikai sadzīves tehniku', text: 'Tavu pieprasījumu „' + (st.soonText || '') + '” pierakstījām — tas palīdz izlemt, kuras kategorijas pievienot nākamās. Atstāj e-pastu, ja vēlies uzzināt, kad tā parādīsies.' },
+      email: st.email || '', onEmail: function (e) { self.setState({ email: e.target.value, error: '' }); },
+      notify: function () { if (String(self.state.email || '').indexOf('@') < 1) { self.setState({ error: 'Ieraksti derīgu e-pasta adresi.' }); return; } self.setState({ notified: true, error: '' }); },
+      notNotified: !st.notified, notified: !!st.notified,
+      toCats: function () { self.go('category', { a: {} }); }
+    };
+  }
+}

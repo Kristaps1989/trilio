@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="lv">
+<head>
+<meta charset="utf-8">
+<title>Trilio — cenu radars</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0F2A2E; color: #F2F5F2; font-family: 'Figtree', system-ui, sans-serif; box-sizing: border-box">
+
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px clamp(16px, 4vw, 40px)">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; color: #F2F5F2; text-decoration: none">
+<svg width="32" height="32" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#D8F45A"></rect><rect x="8.5" y="19" width="6.5" height="13" rx="2" fill="#0F2A2E"></rect><rect x="16.75" y="14" width="6.5" height="18" rx="2" fill="#0F2A2E"></rect><circle cx="20" cy="9" r="3" fill="#0F2A2E"></circle><rect x="25" y="23" width="6.5" height="9" rx="2" fill="#0F2A2E"></rect></svg>
+<span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.045em">trilio</span>
+</a>
+<div style="display: flex; align-items: center; gap: 8px">
+<a href="Main.dc.html" style="min-height: 40px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; background: #D8F45A; color: #0F2A2E; text-decoration: none; font-size: 14px; font-weight: 700">Meklēt</a>
+<sc-if value="{{loggedIn}}" hint-placeholder-val="{{true}}">
+<span aria-label="Ienācis kā {{user.name}}" style="width: 40px; height: 40px; border-radius: 50%; background: #F2F5F2; color: #0F2A2E; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px">{{user.initial}}</span>
+</sc-if>
+</div>
+</header>
+
+<sc-if value="{{loggedOut}}" hint-placeholder-val="{{false}}">
+<main style="max-width: 480px; margin: 0 auto; padding: 40px clamp(16px, 4vw, 40px) 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="font-size: 14px; font-weight: 700; color: #D8F45A; letter-spacing: 0.04em">CENU RADARS</div>
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(30px, 5vw, 42px); line-height: 1.08; letter-spacing: -0.03em">Ienāc, lai redzētu savus cenu radarus</h1>
+<p style="margin: -4px 0 0; font-size: 17px; line-height: 1.5; color: #A9BDB9">Te vari mainīt filtrus, apturēt sekošanu un pārvaldīt abonementu.</p>
+<button type="button" onClick="{{loginApple}}" style="min-height: 56px; border: none; border-radius: 14px; background: #000000; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Turpināt ar Apple</button>
+<button type="button" onClick="{{loginGoogle}}" style="min-height: 56px; border: 1px solid #DADCE0; border-radius: 14px; background: #FFFFFF; color: #1F1F1F; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Turpināt ar Google</button>
+<a href="Main.dc.html" style="color: #F2F5F2; font-size: 16px; text-align: center; padding: 10px">Ienākt ar e-pastu</a>
+</main>
+</sc-if>
+
+<sc-if value="{{loggedIn}}" hint-placeholder-val="{{true}}">
+<main style="max-width: 760px; margin: 0 auto; padding: 12px clamp(16px, 4vw, 40px) 48px; display: flex; flex-direction: column; gap: 18px">
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; font-weight: 700; color: #D8F45A; letter-spacing: 0.04em">{{kicker}}</div>
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(32px, 5vw, 48px); line-height: 1.05; letter-spacing: -0.03em">{{headline}}</h1>
+<p style="margin: 0; font-size: 17px; color: #A9BDB9">{{sub}}</p>
+</div>
+
+<sc-if value="{{hasUndo}}" hint-placeholder-val="{{false}}">
+<div role="status" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(242, 245, 242, 0.1); font-size: 16px">
+<span>{{undoText}}</span>
+<button type="button" onClick="{{undo}}" style="min-height: 40px; padding: 0 14px; border: none; border-radius: 10px; background: #D8F45A; color: #0F2A2E; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Atsaukt</button>
+</div>
+</sc-if>
+
+<sc-for list="{{items}}" as="it" hint-placeholder-count="3">
+<article style="{{it.cardStyle}}">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0">
+<sc-if value="{{it.hasPill}}" hint-placeholder-val="{{false}}"><span style="{{it.pillStyle}}">{{it.pill}}</span></sc-if>
+<span style="font-size: 14px; color: {{it.muted}}">{{it.meta}}</span>
+</div>
+<button type="button" role="switch" aria-checked="{{it.onAttr}}" aria-label="{{it.switchLabel}}" onClick="{{it.toggle}}" style="{{it.switchStyle}}"><span style="{{it.knobStyle}}"></span></button>
+</div>
+<div>
+<h2 style="margin: 0; font-size: 20px; font-weight: 700">{{it.name}}</h2>
+<div style="margin-top: 4px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.01em">{{it.idLine}}</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px">
+<span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 38px; line-height: 1; letter-spacing: -0.02em">{{it.price}}</span>
+<span style="font-size: 16px; font-weight: 600">{{it.store}}</span>
+<span style="{{it.changeStyle}}">{{it.change}}</span>
+</div>
+<div>
+<svg viewBox="0 0 320 70" width="100%" height="70" preserveAspectRatio="none" role="img" aria-label="{{it.chartLabel}}">
+<polyline points="{{it.points}}" fill="none" stroke="{{it.line}}" stroke-width="2.5" stroke-linejoin="round"></polyline>
+</svg>
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: {{it.muted}}"><span>pirms 30 dienām</span><span>šodien</span></div>
+</div>
+
+<button type="button" onClick="{{it.toggleFilters}}" aria-expanded="{{it.openAttr}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 10px 14px; border-radius: 12px; border: 1.5px solid {{it.border}}; background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer">
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 15px; font-weight: 700">Filtri</span><span style="font-size: 14px; color: {{it.muted}}">{{it.summary}}</span></span>
+<span style="font-size: 14px; font-weight: 700; flex: none">{{it.filterCta}}</span>
+</button>
+
+<sc-if value="{{it.isOpen}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 16px; padding: 16px; border-radius: 14px; background: {{it.panelBg}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Kad paziņot</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{it.thrOpts}}" as="t" hint-placeholder-count="3">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Kuros veikalos sekot</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{it.storeOpts}}" as="s" hint-placeholder-count="3">
+<button type="button" onClick="{{s.pick}}" aria-pressed="{{s.pressed}}" style="{{s.style}}">{{s.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Ziņot arī par citiem modeļiem ar labu cenu</div>
+<div style="font-size: 14px; color: {{it.muted}}">Tikai par tādiem, kas atbilst tavām prasībām — izmēri, tips, galvenās funkcijas.</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{it.scopeOpts}}" as="o" hint-placeholder-count="3">
+<button type="button" onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="{{o.style}}">{{o.label}}</button>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{it.showRefOpt}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+<span style="font-size: 15px"><strong style="font-weight: 700; display: block">Ziņot arī par atjaunotām precēm</strong><span style="color: {{it.muted}}">paziņojumā vienmēr norādīsim, ka prece ir atjaunota</span></span>
+<button type="button" role="switch" aria-checked="{{it.refAttr}}" aria-label="Ziņot par atjaunotām precēm" onClick="{{it.toggleRef}}" style="{{it.refSwitch}}"><span style="{{it.refKnob}}"></span></button>
+</div>
+</sc-if>
+<sc-if value="{{it.hasError}}" hint-placeholder-val="{{false}}"><div style="font-size: 14px; color: #A3321A; font-weight: 600">Izvēlies vismaz vienu veikalu.</div></sc-if>
+<button type="button" onClick="{{it.save}}" style="align-self: flex-start; min-height: 48px; padding: 0 20px; border: none; border-radius: 12px; background: #0F2A2E; color: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Saglabāt filtrus</button>
+</div>
+</sc-if>
+<sc-if value="{{it.justSaved}}" hint-placeholder-val="{{false}}"><div role="status" style="font-size: 14px; font-weight: 700; color: #2E6B1F">Filtri saglabāti.</div></sc-if>
+
+<sc-if value="{{it.hasSimilar}}" hint-placeholder-val="{{false}}">
+<div style="background: #F1F8D6; border-radius: 14px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between">
+<span style="flex: 1 1 240px; font-size: 15px"><strong style="font-weight: 700; margin-right: 6px">Izdevīgs līdzīgs modelis:</strong>{{it.similar}}</span>
+<a href="#" style="min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 10px; background: #0F2A2E; color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 700">Skatīt</a>
+</div>
+</sc-if>
+<sc-if value="{{it.paused}}" hint-placeholder-val="{{false}}">
+<div style="font-size: 15px; font-weight: 600">Sekošana apturēta — paziņojumus par šo preci nesūtīsim.</div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<sc-if value="{{it.hasBuy}}" hint-placeholder-val="{{false}}"><a href="{{it.url}}" style="flex: 1 1 220px; min-height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #0F2A2E; color: #FFFFFF; text-decoration: none; font-size: 16px; font-weight: 700">{{it.buyLabel}}</a></sc-if>
+<button type="button" onClick="{{it.remove}}" style="min-height: 52px; padding: 0 16px; border: 1.5px solid {{it.border}}; border-radius: 12px; background: transparent; color: inherit; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Pārtraukt sekot</button>
+</div>
+</article>
+</sc-for>
+
+<sc-if value="{{noItems}}" hint-placeholder-val="{{false}}">
+<div style="border: 1.5px dashed rgba(242, 245, 242, 0.3); border-radius: 22px; padding: 26px; font-size: 18px">Pašlaik nesekojam nevienai precei. Atrodi preci un nospied „Sekot cenai”.</div>
+</sc-if>
+
+<section aria-label="Paziņojumu kanāli" style="border: 1.5px solid rgba(242, 245, 242, 0.25); border-radius: 22px; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0 0 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 20px">Kā paziņot</h2>
+<label style="display: flex; gap: 12px; align-items: center; min-height: 44px; font-size: 17px; cursor: pointer"><input type="checkbox" checked="checked" style="width: 22px; height: 22px; margin: 0; accent-color: #D8F45A"><span>Ar paziņojumu telefonā</span></label>
+<label style="display: flex; gap: 12px; align-items: center; min-height: 44px; font-size: 17px; cursor: pointer"><input type="checkbox" checked="checked" style="width: 22px; height: 22px; margin: 0; accent-color: #D8F45A"><span>Pa e-pastu</span></label>
+</section>
+
+<section aria-label="Abonements un apmaksa" style="border: 1.5px solid rgba(242, 245, 242, 0.25); border-radius: 22px; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 20px">Abonements un apmaksa</h2>
+
+<sc-if value="{{subActive}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; font-size: 16px"><span>Cenu radars · <strong style="font-weight: 700">1 €/mēn.</strong></span><span style="color: #A9BDB9">nākamais maksājums [DATUMS]</span></div>
+
+<sc-if value="{{notCardEdit}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: rgba(242, 245, 242, 0.08)">
+<div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+<span style="width: 44px; height: 30px; border-radius: 6px; background: #F2F5F2; color: #0F2A2E; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex: none">{{card.badge}}</span>
+<span style="display: flex; flex-direction: column"><strong style="font-weight: 700; font-size: 16px">{{card.label}}</strong><span style="font-size: 14px; color: #A9BDB9">{{card.detail}}</span></span>
+</div>
+<button type="button" onClick="{{startCardEdit}}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid rgba(242, 245, 242, 0.4); border-radius: 12px; background: transparent; color: #F2F5F2; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Mainīt</button>
+</div>
+<sc-if value="{{cardSaved}}" hint-placeholder-val="{{false}}"><div role="status" style="font-size: 15px; font-weight: 700; color: #D8F45A">Maksājuma veids atjaunots.</div></sc-if>
+</sc-if>
+
+<sc-if value="{{cardEdit}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; background: rgba(242, 245, 242, 0.06)">
+<div style="font-size: 15px; font-weight: 700">Jauns maksājuma veids</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<button type="button" onClick="{{useApple}}" style="min-height: 48px; border: none; border-radius: 12px; background: #000000; color: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Apple Pay</button>
+<button type="button" onClick="{{useGoogle}}" style="min-height: 48px; border: 1px solid #DADCE0; border-radius: 12px; background: #FFFFFF; color: #1F1F1F; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Google Pay</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="a-cc-number" style="font-size: 15px; font-weight: 600">Kartes numurs</label>
+<input id="a-cc-number" type="text" inputmode="numeric" autocomplete="cc-number" value="{{cardNum}}" onChange="{{onCardNum}}" placeholder="1234 5678 9012 3456" style="min-height: 52px; padding: 0 16px; border: 1.5px solid rgba(242, 245, 242, 0.35); border-radius: 12px; background: rgba(255, 255, 255, 0.05); color: #F2F5F2; font-family: 'Space Grotesk', sans-serif; font-size: 18px; box-sizing: border-box; width: 100%">
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="a-cc-exp" style="font-size: 15px; font-weight: 600">Derīga līdz</label>
+<input id="a-cc-exp" type="text" inputmode="numeric" autocomplete="cc-exp" value="{{cardExp}}" onChange="{{onCardExp}}" placeholder="MM/GG" style="min-height: 52px; padding: 0 16px; border: 1.5px solid rgba(242, 245, 242, 0.35); border-radius: 12px; background: rgba(255, 255, 255, 0.05); color: #F2F5F2; font-family: 'Space Grotesk', sans-serif; font-size: 18px; box-sizing: border-box; width: 100%">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="a-cc-csc" style="font-size: 15px; font-weight: 600">CVC</label>
+<input id="a-cc-csc" type="text" inputmode="numeric" autocomplete="cc-csc" value="{{cardCvc}}" onChange="{{onCardCvc}}" placeholder="123" style="min-height: 52px; padding: 0 16px; border: 1.5px solid rgba(242, 245, 242, 0.35); border-radius: 12px; background: rgba(255, 255, 255, 0.05); color: #F2F5F2; font-family: 'Space Grotesk', sans-serif; font-size: 18px; box-sizing: border-box; width: 100%">
+</div>
+</div>
+<sc-if value="{{hasError}}" hint-placeholder-val="{{false}}"><div style="font-size: 15px; color: #FFB4A3">{{error}}</div></sc-if>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<button type="button" onClick="{{saveCard}}" style="min-height: 48px; padding: 0 20px; border: none; border-radius: 12px; background: #D8F45A; color: #0F2A2E; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Saglabāt karti</button>
+<button type="button" onClick="{{cancelCardEdit}}" style="min-height: 48px; padding: 0 16px; border: 1.5px solid rgba(242, 245, 242, 0.4); border-radius: 12px; background: transparent; color: #F2F5F2; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer">Atcelt</button>
+</div>
+<div style="font-size: 13px; color: #A9BDB9">Kartes datus apstrādā [MAKSĀJUMU PARTNERIS] — Trilio tos neredz un neglabā.</div>
+</div>
+</sc-if>
+
+<button type="button" onClick="{{askCancel}}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #A9BDB9; font-family: inherit; font-size: 15px; text-decoration: underline; cursor: pointer">Atteikties no abonementa</button>
+</div>
+</sc-if>
+
+<sc-if value="{{subConfirm}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; font-size: 16px">Vai tiešām atteikties? Cenām sekosim līdz apmaksātā perioda beigām ([DATUMS]), pēc tam paziņojumus vairs nesūtīsim, un karte vairs netiks debetēta.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<button type="button" onClick="{{confirmCancel}}" style="min-height: 48px; padding: 0 18px; border: none; border-radius: 12px; background: #FFB4A3; color: #0F2A2E; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Jā, atteikties</button>
+<button type="button" onClick="{{keepSub}}" style="min-height: 48px; padding: 0 18px; border: 1.5px solid rgba(242, 245, 242, 0.4); border-radius: 12px; background: transparent; color: #F2F5F2; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer">Nē, paturēt</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{subOff}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<span style="font-size: 16px; color: #A9BDB9">Abonements atslēgts. Maksa vairs netiks iekasēta.</span>
+<button type="button" onClick="{{keepSub}}" style="min-height: 44px; padding: 0 16px; border: none; border-radius: 12px; background: #D8F45A; color: #0F2A2E; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Atjaunot abonementu</button>
+</div>
+</sc-if>
+</section>
+
+<section aria-label="Konts" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 2px; font-size: 15px; color: #A9BDB9">
+<span>{{accountText}}</span>
+<button type="button" onClick="{{logout}}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid rgba(242, 245, 242, 0.3); border-radius: 12px; background: transparent; color: #F2F5F2; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Iziet</button>
+</section>
+</main>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+var ITEMS = [
+  { id: 'a1', kind: 'drop', name: 'Bosch Serie 4 kombinētais', meta: 'pirms 2 h · jauna prece', pill: 'Cena samazinājās', price: '649 €', store: 'Veikals C', url: '#', change: '−40 € (−6 %)', points: '0,14 40,14 70,18 110,18 140,12 180,12 210,22 250,22 290,24 300,60 320,60', chart: 'Cena 30 dienās: no 699 līdz 649 eiro', buy: true },
+  { id: 'a2', kind: 'new', name: 'Samsung kombinētais, No Frost', meta: 'jauna prece · cena nemainās 6 dienas', pill: '', price: '629 €', store: 'Veikals B', url: '#', change: 'zemākā 30 dienās — 619 €', points: '0,18 50,18 80,30 120,30 150,36 190,36 220,24 260,24 290,30 320,30', chart: 'Cena 30 dienās: starp 619 un 659 eiro' },
+  { id: 'a3', kind: 'ref', name: 'Samsung kombinētais, No Frost', meta: 'sekojam tikai atjaunotiem piedāvājumiem', pill: 'Atjaunota', price: '469 €', store: 'Veikals C · A stāvoklis', url: '#', change: 'pirms nedēļas — 499 €', points: '0,14 60,14 90,26 160,26 190,26 230,40 320,40', chart: 'Atjaunotās preces cena 30 dienās: no 499 līdz 469 eiro' }
+];
+var MODEL = { a1: 'KGN39VLCT', a2: 'RB34C672ESA', a3: 'RB34C672ESA' };
+function hsh(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000000007; return h; }
+function ean(code) { var d = ('40' + String(hsh(code)).padStart(10, '0')).slice(0, 12); var s = 0; for (var i = 0; i < 12; i++) s += parseInt(d[i], 10) * (i % 2 ? 3 : 1); return d + ((10 - s % 10) % 10); }
+ITEMS[1].similar = 'Hisense RB470N4SIC (cits ražotājs) — 569 € veikalā A (−8 %), par 28 L ietilpīgāks.';
+ITEMS[1].similarBrand = 'Samsung RB38C7B6AS9 (cits Samsung modelis) — 599 € veikalā B, tāds pats platums, par 46 L ietilpīgāks.';
+ITEMS[0].similarBrand = 'Bosch KGN36VLDT (cits Bosch modelis) — 619 € veikalā A, tāds pats platums, nedaudz zemāks (186 cm).';
+ITEMS[2].meta ='tas pats modelis kā iepriekšējais · sekojam tikai atjaunotiem piedāvājumiem';
+var STORES = [['a', 'Veikals A'], ['e', 'Veikals B'], ['d', 'Veikals C']];
+var THR = [['any', 'Jebkurš samazinājums'], ['5', 'Vismaz −5 %'], ['10', 'Vismaz −10 %']];
+
+function sw(on, dark) {
+  return {
+    track: 'flex: none; width: 56px; height: 32px; border-radius: 999px; border: none; padding: 3px; display: flex; cursor: pointer; justify-content: ' + (on ? 'flex-end' : 'flex-start') + '; background: ' + (on ? '#0F2A2E' : '#B9C4C0'),
+    knob: 'width: 26px; height: 26px; border-radius: 50%; background: ' + (on ? '#D8F45A' : '#FFFFFF')
+  };
+}
+function pill(on) {
+  return 'min-height: 44px; padding: 0 14px; border-radius: 999px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; ' + (on ? 'border: 1.5px solid #0F2A2E; background: #0F2A2E; color: #FFFFFF' : 'border: 1.5px solid #9AAAA6; background: transparent; color: #0F2A2E');
+}
+function fmtCard(v) { var d = String(v).replace(/\D/g, '').slice(0, 19); return d.replace(/(\d{4})(?=\d)/g, '$1 '); }
+function fmtExp(v) { var d = String(v).replace(/\D/g, '').slice(0, 4); return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      user: { name: 'Jānis Ozoliņš', provider: 'Google' },
+      off: {}, removed: {}, lastRemoved: null, sub: 'active', open: null, saved: null, err: null,
+      f: {
+        a1: { thr: '5', stores: { a: 1, e: 1, d: 1 }, scope: 'only', ref: false },
+        a2: { thr: 'any', stores: { a: 1, e: 1, d: 1 }, scope: 'brand', ref: true },
+        a3: { thr: '5', stores: { a: 1, e: 0, d: 1 }, scope: 'only', ref: true }
+      },
+      card: { type: 'card', last4: '4242', exp: '08/28' }, cardEdit: false, cardSaved: false, cardNum: '', cardExp: '', cardCvc: '', error: ''
+    };
+  }
+  setF(id, patch) {
+    var f = Object.assign({}, this.state.f);
+    f[id] = Object.assign({}, f[id], patch);
+    this.setState({ f: f, saved: null });
+  }
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var subOn = st.sub !== 'off';
+    var visible = ITEMS.filter(function (it) { return !st.removed[it.id]; });
+    var items = visible.map(function (it) {
+      var on = !st.off[it.id] && subOn;
+      var ref = it.kind === 'ref';
+      var F = st.f[it.id];
+      var open = st.open === it.id;
+      var nStores = STORES.filter(function (s) { return F.stores[s[0]]; }).length;
+      var thrTxt = { any: 'jebkurš samazinājums', '5': 'kritums vismaz 5 %', '10': 'kritums vismaz 10 %' }[F.thr];
+      var storeTxt = nStores === 3 ? 'visi veikali' : STORES.filter(function (s) { return F.stores[s[0]]; }).map(function (s) { return s[1]; }).join(', ');
+      var brand = it.name.split(' ')[0];
+      var scopeTxt = { only: ' · tikai šis modelis', brand: ' · + citi ' + brand + ' modeļi', any: ' · + jebkura ražotāja modeļi' }[F.scope];
+      var summary = thrTxt + ' · ' + storeTxt + scopeTxt + (!ref && F.ref ? ' · + atjaunotās' : '');
+      var simText = F.scope === 'brand' ? (it.similarBrand || '') : (F.scope === 'any' ? (it.similar || it.similarBrand || '') : '');
+      var SC = [['only', 'Tikai šis modelis'], ['brand', 'Arī citi ' + brand + ' modeļi'], ['any', 'Jebkurš ražotājs']];
+      var s1 = sw(F.sim), s2 = sw(F.ref), s0 = sw(on);
+      return {
+        idLine: 'Modelis ' + MODEL[it.id] + ' · EAN ' + ean(MODEL[it.id]), buyLabel: 'Pirkt — ' + it.store,
+        name: it.name, meta: it.meta, pill: it.pill, hasPill: !!it.pill, price: it.price, store: it.store, url: it.url,
+        change: it.change, points: it.points, chartLabel: it.chart, similar: simText, hasSimilar: !!simText && on,
+        hasBuy: !!it.buy && on, paused: !on,
+        muted: ref ? '#33456E' : '#4E605C', line: ref ? '#1E4FB8' : '#0F2A2E', border: ref ? '#9DB3E6' : '#C9D3CF', panelBg: ref ? '#EEF4FF' : '#F2F5F2',
+        cardStyle: 'background: ' + (ref ? '#DCEBFF' : '#FFFFFF') + '; color: #0F2A2E; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px; opacity: ' + (on ? '1' : '0.62') + (it.kind === 'drop' && on ? '; box-shadow: 0 0 0 3px #D8F45A' : ''),
+        pillStyle: 'padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; ' + (ref ? 'background: #1E4FB8; color: #FFFFFF' : 'background: #D8F45A; color: #0F2A2E'),
+        changeStyle: 'font-size: 15px; font-weight: 700; color: ' + (it.kind === 'drop' ? '#2E6B1F' : (ref ? '#33456E' : '#4E605C')),
+        onAttr: on ? 'true' : 'false', switchLabel: (on ? 'Apturēt sekošanu: ' : 'Atsākt sekošanu: ') + it.name,
+        switchStyle: s0.track, knobStyle: s0.knob,
+        toggle: function () { var o = Object.assign({}, self.state.off); o[it.id] = !o[it.id]; self.setState({ off: o }); },
+        remove: function () { var r = Object.assign({}, self.state.removed); r[it.id] = true; self.setState({ removed: r, lastRemoved: it.id, open: null }); },
+        summary: summary, isOpen: open, openAttr: open ? 'true' : 'false', filterCta: open ? 'Aizvērt' : 'Mainīt',
+        toggleFilters: function () { self.setState({ open: open ? null : it.id, saved: null, err: null }); },
+        thrOpts: THR.map(function (t) { return { label: t[1], pressed: F.thr === t[0] ? 'true' : 'false', style: pill(F.thr === t[0]), pick: function () { self.setF(it.id, { thr: t[0] }); } }; }),
+        storeOpts: STORES.map(function (s) { var sel = !!F.stores[s[0]]; return { label: s[1], pressed: sel ? 'true' : 'false', style: pill(sel), pick: function () { var ns = Object.assign({}, F.stores); ns[s[0]] = sel ? 0 : 1; self.setF(it.id, { stores: ns }); } }; }),
+        scopeOpts: SC.map(function (o) { return { label: o[1], pressed: F.scope === o[0] ? 'true' : 'false', style: pill(F.scope === o[0]), pick: function () { self.setF(it.id, { scope: o[0] }); } }; }),
+        showRefOpt: !ref, refAttr: F.ref ? 'true' : 'false', refSwitch: s2.track, refKnob: s2.knob, toggleRef: function () { self.setF(it.id, { ref: !F.ref }); },
+        hasError: st.err === it.id,
+        save: function () { if (nStores === 0) { self.setState({ err: it.id }); return; } self.setState({ open: null, saved: it.id, err: null }); },
+        justSaved: st.saved === it.id
+      };
+    });
+    var active = visible.filter(function (it) { return !st.off[it.id]; }).length;
+    var last = null;
+    ITEMS.forEach(function (it) { if (it.id === st.lastRemoved) last = it; });
+    var dropOn = visible.some(function (it) { return it.kind === 'drop' && !st.off[it.id]; });
+    var c = st.card;
+    var card = c.type === 'card' ? { badge: c.brand || 'VISA', label: 'Karte •••• ' + c.last4, detail: 'derīga līdz ' + c.exp } : { badge: c.type === 'apple' ? 'Pay' : 'GPay', label: c.type === 'apple' ? 'Apple Pay' : 'Google Pay', detail: 'maksājums no maka lietotnes' };
+    var u = st.user;
+    return {
+      loggedIn: !!u, loggedOut: !u,
+      user: u ? { name: u.name, provider: u.provider, initial: u.name.charAt(0).toUpperCase() } : { name: '', provider: '', initial: '' },
+      loginApple: function () { self.setState({ user: { name: 'Jānis', provider: 'Apple' } }); },
+      loginGoogle: function () { self.setState({ user: { name: 'Jānis Ozoliņš', provider: 'Google' } }); },
+      logout: function () { self.setState({ user: null, open: null }); },
+      kicker: subOn ? 'CENU RADARS · ABONEMENTS AKTĪVS' : 'CENU RADARS · ABONEMENTS ATSLĒGTS',
+      headline: !subOn ? 'Cenu radars ir atslēgts.' : (dropOn ? 'Vienas preces cena ir samazinājusies.' : 'Sekojam tavām precēm.'),
+      sub: subOn ? 'Sekojam ' + active + ' ' + (active === 1 ? 'precei' : 'precēm') + ' · katrai precei vari mainīt filtrus · parauga dati' : 'Paziņojumus vairs nesūtām. Abonementu vari atjaunot jebkurā brīdī.',
+      items: items, noItems: items.length === 0,
+      hasUndo: !!last, undoText: last ? 'Sekošana pārtraukta: ' + last.name : '',
+      accountText: u ? 'Ienācis kā ' + u.name + ' · ' + u.provider : '',
+      undo: function () { var r = Object.assign({}, self.state.removed); delete r[self.state.lastRemoved]; self.setState({ removed: r, lastRemoved: null }); },
+      subActive: st.sub === 'active', subConfirm: st.sub === 'confirm', subOff: st.sub === 'off',
+      askCancel: function () { self.setState({ sub: 'confirm', cardEdit: false }); },
+      confirmCancel: function () { self.setState({ sub: 'off' }); },
+      keepSub: function () { self.setState({ sub: 'active' }); },
+      card: card, cardEdit: st.cardEdit, notCardEdit: !st.cardEdit, cardSaved: st.cardSaved,
+      startCardEdit: function () { self.setState({ cardEdit: true, cardSaved: false, error: '', cardNum: '', cardExp: '', cardCvc: '' }); },
+      cancelCardEdit: function () { self.setState({ cardEdit: false, error: '' }); },
+      cardNum: st.cardNum, cardExp: st.cardExp, cardCvc: st.cardCvc,
+      onCardNum: function (e) { self.setState({ cardNum: fmtCard(e.target.value), error: '' }); },
+      onCardExp: function (e) { self.setState({ cardExp: fmtExp(e.target.value), error: '' }); },
+      onCardCvc: function (e) { self.setState({ cardCvc: String(e.target.value).replace(/\D/g, '').slice(0, 4), error: '' }); },
+      error: st.error, hasError: !!st.error,
+      useApple: function () { self.setState({ card: { type: 'apple' }, cardEdit: false, cardSaved: true }); },
+      useGoogle: function () { self.setState({ card: { type: 'google' }, cardEdit: false, cardSaved: true }); },
+      saveCard: function () {
+        var n = String(self.state.cardNum).replace(/\D/g, ''), e = String(self.state.cardExp), cv = String(self.state.cardCvc);
+        if (n.length < 13) { self.setState({ error: 'Pārbaudi kartes numuru.' }); return; }
+        if (!/^\d{2}\/\d{2}$/.test(e)) { self.setState({ error: 'Ieraksti derīguma termiņu formātā MM/GG.' }); return; }
+        if (cv.length < 3) { self.setState({ error: 'Ieraksti CVC kodu (3 cipari kartes aizmugurē).' }); return; }
+        self.setState({ card: { type: 'card', last4: n.slice(-4), exp: e, brand: n.charAt(0) === '4' ? 'VISA' : (n.charAt(0) === '5' ? 'MC' : 'KARTE') }, cardEdit: false, cardSaved: true, error: '' });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

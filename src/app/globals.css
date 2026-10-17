@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* Brand tokens from docs/BRAND.md. Colours are the only source of truth for
+   the UI; components reference tokens, never raw hex. */
+:root {
+  --color-night: #0f2a2e;
+  --color-lime: #d8f45a;
+  --color-mist: #f2f5f2;
+  --color-stone: #a9bdb9;
+  --color-muted: #4e605c;
+  --color-refurb: #1e4fb8;
+  --color-refurb-bg: #dcebff;
+  --color-refurb-border: #9cc8ff;
+  --color-over-bg: #fbeadf;
+  --color-over-text: #8a3209;
+  --color-over-border: #e4b48f;
+  --color-best: #f1f8d6;
+  --color-warning: #ffb4a3;
+  --color-lime-18: rgb(216 244 90 / 0.18);
+  --color-mist-32: rgb(242 245 242 / 0.32);
+  --color-white-5: rgb(255 255 255 / 0.05);
+}
+
+@theme inline {
+  --color-night: var(--color-night);
+  --color-lime: var(--color-lime);
+  --color-mist: var(--color-mist);
+  --color-stone: var(--color-stone);
+  --color-muted: var(--color-muted);
+  --color-refurb: var(--color-refurb);
+  --color-refurb-bg: var(--color-refurb-bg);
+  --color-refurb-border: var(--color-refurb-border);
+  --color-over-bg: var(--color-over-bg);
+  --color-over-text: var(--color-over-text);
+  --color-over-border: var(--color-over-border);
+  --color-best: var(--color-best);
+  --color-warning: var(--color-warning);
+  --color-lime-18: var(--color-lime-18);
+  --color-mist-32: var(--color-mist-32);
+  --color-white-5: var(--color-white-5);
+  --font-heading: var(--font-space-grotesk);
+  --font-body: var(--font-figtree);
+  --radius-card: 20px;
+  --radius-button: 14px;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-night);
+  color: var(--color-mist);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  min-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+h1,
+h2,
+h3,
+.font-heading {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Visible focus for keyboard users on dark background. */
+:focus-visible {
+  outline: 3px solid var(--color-lime);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -32,6 +32,6 @@ Trilio is a web app (mobile-first) that guides a shopper through a short one-que
 
 ## Conventions
 - Business logic (filtering, scoring, tiers, deltas, energy cost) lives in pure, unit-tested TypeScript modules with no UI imports.
-- Category questions are **data** (see `data/categories.json`), not hand-coded per page. Fridges and vacuums currently have bespoke flows. Migrate them to the same schema with conditional questions (`showIf`).
+- Category questions are **data** (see `data/categories.json` and `docs/QUESTION_SCHEMA.md`), not hand-coded per page. Conditional questions use `showIf`; fridges and vacuums use the same schema as everything else.
 - Money is integer cents in the database and formatted only at the edge.
 - Never commit secrets. Use `.env.local` and keep `.env.example` up to date.
