@@ -25,7 +25,9 @@ function authorized(request: Request): boolean {
 
 export async function POST(request: Request) {
   if (!authorized(request)) return new NextResponse(null, { status: 401 });
-  const results = await ingestAllActive(db);
+  // Scraped shops take tens of minutes at a polite pace; the cron service
+  // (`npm run ingest -- all`) runs those, not this HTTP request.
+  const results = await ingestAllActive(db, { skipFeedTypes: ["scrape"] });
   // New products get attributes/tags from the extraction job (docs/LLM.md) when it is enabled.
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
   // Price radar: evaluate every active radar against the fresh prices (docs/DATA_MODEL.md).

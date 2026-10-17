@@ -41,6 +41,18 @@ Shops are rows in `stores`. Nothing about a shop is in code except the slug used
 4. Run for real: `npm run ingest -- euronics` (uses `feed_url`), or `npm run ingest -- all`.
 5. Add the image hosts to `images.remotePatterns` in `next.config.ts` (the only code change per store; it is a security allow-list).
 
+### Shops without a feed
+
+euronics.lv and m79.lv are read from their public product pages (`feed_type = 'scrape'`). How it works, its limits, and how to add a shop are in `docs/SCRAPING.md`. On a database seeded before scraping existed, activate them once:
+
+```sql
+update stores set active = true where slug in ('euronics', 'm79');
+-- once real offers exist, hide the placeholder sample stores:
+update stores set active = false where feed_type = 'sample';
+```
+
+A scraped store's `ingestion_runs` row shows how far it got; the CLI also prints `pagesFetched` and `stopReason` (`http_429`, `cloudflare_challenge`, `time_budget`, …). A stop reason other than `time_budget` means the shop pushed back: leave the store alone and contact the shop rather than retrying harder.
+
 ### Scheduled ingestion
 
 On Railway a cron service runs `npm run ingest -- all` every 4 hours (see `docs/DEPLOY_RAILWAY.md` §5). `POST /api/cron/ingest` with `Authorization: Bearer $CRON_SECRET` does the same over HTTP for any external scheduler. Each run writes a `price_snapshots` row per offer, so the 30-day low is available from the first run.
@@ -59,7 +71,7 @@ from ingestion_runs r join stores s on s.id = r.store_id
 order by r.started_at desc limit 20;
 ```
 
-Offers not seen in a feed for 24 hours are marked `out`; they are never deleted, so price history stays intact.
+Offers not seen in a feed for 24 hours are marked `out` (for a partial scrape run, after `staleAfterHours`); they are never deleted, so price history stays intact.
 
 ## Database
 

@@ -1,0 +1,91 @@
+import { describe, expect, it } from "vitest";
+import { GRAPH_PAGE, INLINE_PAGE } from "./fixtures";
+import { decodeEntities, extractProducts, jsonLdNodes } from "./jsonld";
+
+const URL_A = "https://shop-a.example/sadzives-tehnika/ledusskapji/ledusskapji/rf414eps4/gorenje";
+const URL_B = "https://www.shop-b.example/p/products/1/Velasmasinas/Bosch/WAN28281BY";
+
+describe("JSON-LD product extraction", () => {
+  it("resolves @graph and an Offer referenced by @id", () => {
+    expect(extractProducts(GRAPH_PAGE(URL_A), URL_A)).toEqual([
+      {
+        id: "RF414EPS4",
+        title: "Gorenje, 206 L, augstums 144 cm, pelēka - Ledusskapis",
+        description: "Kompakts ledusskapis • LED",
+        link: URL_A,
+        image_link: "https://shop-a.example/img/1.avif",
+        price: "219.99",
+        availability: "in_stock",
+        gtin: "3838782525551",
+        brand: "Gorenje",
+        mpn: "RF414EPS4",
+        condition: "new",
+        google_product_category: "Sadzīves tehnika > Ledusskapji > Ledusskapji",
+      },
+    ]);
+  });
+
+  it("reads an inline Offer, the first image and double-encoded names", () => {
+    const [r] = extractProducts(INLINE_PAGE(URL_B), URL_B);
+    expect(r).toMatchObject({
+      title: 'Bosch WAN28 ve"ļas mašīna',
+      image_link: "https://pictures.shop-b.example/1.webp",
+      price: "483.00",
+      gtin: "4242005217380",
+    });
+  });
+
+  it("maps availability and condition, and rejects used items via condition", () => {
+    const out = (o: Record<string, unknown>) =>
+      extractProducts(INLINE_PAGE(URL_B, { offers: { price: "10", priceCurrency: "EUR", ...o } }), URL_B)[0]!;
+    expect(out({ availability: "https://schema.org/OutOfStock" }).availability).toBe("out_of_stock");
+    expect(out({ availability: "PreOrder" }).availability).toBe("preorder");
+    expect(out({ availability: "Weird" }).availability).toBeUndefined();
+    expect(out({ itemCondition: "https://schema.org/RefurbishedCondition" }).condition).toBe("refurbished");
+    expect(out({ itemCondition: "https://schema.org/UsedCondition" }).condition).toBe("unsupported");
+  });
+
+  it("picks the cheapest in-stock EUR offer and handles AggregateOffer", () => {
+    const offers = [
+      { price: "300", priceCurrency: "EUR", availability: "InStock" },
+      { price: "100", priceCurrency: "USD", availability: "InStock" },
+      { price: "200", priceCurrency: "EUR", availability: "OutOfStock" },
+      { price: "250", priceCurrency: "EUR", availability: "InStock" },
+    ];
+    expect(extractProducts(INLINE_PAGE(URL_B, { offers }), URL_B)[0]!.price).toBe("250");
+    const agg = { "@type": "AggregateOffer", lowPrice: 199, priceCurrency: "EUR" };
+    expect(extractProducts(INLINE_PAGE(URL_B, { offers: agg }), URL_B)[0]!.price).toBe("199");
+  });
+
+  it("keeps links on the page's host and https images only", () => {
+    const r = extractProducts(
+      INLINE_PAGE(URL_B, {
+        url: "https://evil.example/x",
+        offers: { price: "1", url: "https://evil.example/y" },
+        image: "http://pictures.shop-b.example/1.jpg",
+      }),
+      URL_B,
+    )[0]!;
+    expect(r.link).toBe(URL_B);
+    expect(r.image_link).toBeUndefined();
+  });
+
+  it("uses a plain-string brand and falls back to the URL when there is no sku or gtin", () => {
+    const r = extractProducts(
+      INLINE_PAGE(URL_B, { brand: "LG", sku: undefined, gtin13: undefined }),
+      URL_B,
+    )[0]!;
+    expect(r.brand).toBe("LG");
+    expect(r.id).toBe(URL_B);
+  });
+
+  it("ignores broken blocks and pages without Product data", () => {
+    const html = `<script type="application/ld+json">{broken</script><script type='application/ld+json'>{"@type":"Organization"}</script>`;
+    expect(jsonLdNodes(html)).toHaveLength(1);
+    expect(extractProducts(html, URL_B)).toEqual([]);
+  });
+
+  it("decodes numeric and named entities, leaving unknown ones", () => {
+    expect(decodeEntities("&#x113;&#257;&nbsp;&amp;amp;&unknown;&#0;")).toBe("ēā &&unknown;&#0;");
+  });
+});
