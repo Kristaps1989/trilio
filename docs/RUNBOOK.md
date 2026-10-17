@@ -43,7 +43,7 @@ Shops are rows in `stores`. Nothing about a shop is in code except the slug used
 
 ### Scheduled ingestion
 
-`POST /api/cron/ingest` with `Authorization: Bearer $CRON_SECRET` runs every active non-sample store. `vercel.json` schedules it every 4 hours; any external scheduler can call it instead. Each run writes a `price_snapshots` row per offer, so the 30-day low is available from the first run.
+On Railway a cron service runs `npm run ingest -- all` every 4 hours (see `docs/DEPLOY_RAILWAY.md` §5). `POST /api/cron/ingest` with `Authorization: Bearer $CRON_SECRET` does the same over HTTP for any external scheduler. Each run writes a `price_snapshots` row per offer, so the 30-day low is available from the first run.
 
 Rotate the secret: set a new `CRON_SECRET` in the hosting environment, redeploy, update the scheduler. The old value stops working immediately.
 
