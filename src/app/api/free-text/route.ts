@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db, waitlistLeads } from "@/db";
 import { createCaller, freeTextLlmEnabled } from "@/services/llm/client";
+import { getGroupOfSubcategory } from "@/domain/questions/catalog";
 import { MAX_FREE_TEXT_LENGTH, routeFreeText } from "@/services/llm/router";
 import { clientKey, createRateLimiter } from "@/services/rate-limit";
 
@@ -12,7 +13,7 @@ import { clientKey, createRateLimiter } from "@/services/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const limiter = createRateLimiter(10, 60_000);
+const limiter = createRateLimiter(30, 60_000);
 const caller = createCaller(db);
 
 const Body = z.object({ text: z.string().min(1).max(MAX_FREE_TEXT_LENGTH) });
@@ -33,7 +34,12 @@ export async function POST(request: Request) {
       .catch(() => undefined);
   }
   return NextResponse.json(
-    { subcategoryId: route.subcategoryId, prefilled: route.prefilled, outOfScope: route.outOfScope },
+    {
+      subcategoryId: route.subcategoryId,
+      groupId: route.subcategoryId ? (getGroupOfSubcategory(route.subcategoryId)?.id ?? null) : null,
+      prefilled: route.prefilled,
+      outOfScope: route.outOfScope,
+    },
     { headers: { "cache-control": "no-store" } },
   );
 }

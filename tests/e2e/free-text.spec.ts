@@ -4,7 +4,12 @@ test.describe("free-text routing endpoint", () => {
   test("routes a regex-detectable request without the model", async ({ request }) => {
     const res = await request.post("/api/free-text", { data: { text: "Vajag rokas blenderi zupām" } });
     expect(res.status()).toBe(200);
-    expect(await res.json()).toEqual({ subcategoryId: "handblender", prefilled: {}, outOfScope: false });
+    expect(await res.json()).toEqual({
+      subcategoryId: "handblender",
+      groupId: "kitchensmall",
+      prefilled: {},
+      outOfScope: false,
+    });
     expect(res.headers()["cache-control"]).toBe("no-store");
   });
 
@@ -17,6 +22,11 @@ test.describe("free-text routing endpoint", () => {
   test("returns no route (not an error) when nothing matches and the model is off", async ({ request }) => {
     const res = await request.post("/api/free-text", { data: { text: "kaut kas pavisam cits" } });
     expect(res.status()).toBe(200);
-    expect(await res.json()).toEqual({ subcategoryId: null, prefilled: {}, outOfScope: false });
+    expect(await res.json()).toEqual({
+      subcategoryId: null,
+      groupId: null,
+      prefilled: {},
+      outOfScope: false,
+    });
   });
 });
