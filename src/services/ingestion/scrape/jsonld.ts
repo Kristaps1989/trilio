@@ -153,6 +153,17 @@ function sameHostUrl(v: unknown, pageUrl: string): string {
   }
 }
 
+// Some shops keep the EAN out of their JSON-LD but print it in a data
+// attribute for product widgets (tet.lv: data-ean / data-product-ean,
+// ksenukai.lv: data-flix-ean).
+const EAN_ATTR_RE = /\bdata-(?:product-|flix-)?ean\s*=\s*["'](\d{8,14})["']/gi;
+
+/** The page's EAN from data attributes, only when every such attribute agrees. */
+export function eanFromAttributes(html: string): string | undefined {
+  const values = new Set([...html.matchAll(EAN_ATTR_RE)].map((m) => m[1]!));
+  return values.size === 1 ? [...values][0] : undefined;
+}
+
 export function extractProducts(html: string, pageUrl: string): FeedRecord[] {
   const nodes = jsonLdNodes(html);
   const byId = new Map<string, Node>();
@@ -181,5 +192,7 @@ export function extractProducts(html: string, pageUrl: string): FeedRecord[] {
       google_product_category: clean(product.category),
     });
   }
+  // Only a single-product page: on a page with several products we cannot tell whose EAN it is.
+  if (records.length === 1 && !records[0]!.gtin) records[0]!.gtin = eanFromAttributes(html);
   return records;
 }

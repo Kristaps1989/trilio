@@ -4,8 +4,9 @@
 // them; until then the store is inactive and nothing is shown for it.
 //
 // Shops without a feed are read from their public product pages
-// (feedType "scrape", docs/SCRAPING.md). Their sitemap lists and category
-// maps below were measured on the live sites in October 2026.
+// (feedType "scrape", docs/SCRAPING.md): euronics.lv, m79.lv and tet.lv.
+// Their sitemap lists and category maps were measured on the live sites in
+// October 2026.
 
 /** Turns a decoded category label into the form it has in a URL path ("a b" → "a\\+b"). */
 function urlSegment(label: string): string {
@@ -154,6 +155,47 @@ const M79_CATEGORY_MAP: Record<string, string> = {
   "vakuuma aparati": "vacuumsealer",
 };
 
+/** tet.lv shop URLs are /veikals/<category>/<product>.html. */
+const TET_CATEGORY_MAP: Record<string, string> = {
+  ledusskapji: "fridge",
+  "ledusskapji-2": "fridge",
+  saldetavas: "freezer",
+  "velas-masinas": "washer",
+  "velas-zavetaji": "dryer",
+  gludekli: "iron",
+  "tvaika-gludekli": "iron",
+  "tvaika-gludinasanas-sistemas": "iron",
+  "trauku-mazgajamas-masinas": "dish",
+  "trauku-mazgajamas-masinas-2": "dish",
+  "plits-virsmas": "hob",
+  plitis: "hob",
+  cepeskrasnis: "oven",
+  "tvaika-nosuceji": "hood",
+  "tvaika-nosuceji-2": "hood",
+  "mikrovilnu-krasnis": "micro",
+  "mikrovilnu-krasnis-2": "micro",
+  "puteklu-suceji": "vacuum",
+  "roboti-puteklu-suceji": "vacuum",
+  "tvaika-tiritaji": "steamclean",
+  "kafijas-automati": "coffee",
+  "kafijas-dzirnavinas": "grinder",
+  tejkannas: "kettle",
+  blenderi: "blender",
+  "virtuves-kombaini": "foodproc",
+  mikseri: "mixer",
+  "galas-malamas-masinas": "mincer",
+  "virtuves-svari": "scale",
+  grili: "grill",
+  tosteri: "toaster",
+  "sviestmaizu-tosteri": "sandwich",
+  friteri: "airfryer",
+  "maizes-krasnis": "breadmaker",
+  "mazas-cepeskrasnis": "minioven",
+  "sulu-spiedes": "juicer",
+  "auglu-zavetaji": "dehydrator",
+  "vakuuma-iepakotaji": "vacuumsealer",
+};
+
 export type StoreSeed = {
   slug: string;
   displayName: string;
@@ -242,6 +284,32 @@ export const PARTNER_STORES: StoreSeed[] = [
       staleAfterHours: 168,
     },
     active: true,
+  },
+  {
+    slug: "tet",
+    displayName: "Tet",
+    feedType: "scrape",
+    imageHosts: ["cdn.tet.lv"],
+    categoryMap: TET_CATEGORY_MAP,
+    scrapeConfig: {
+      sitemaps: ["https://www.tet.lv/veikals/sitemap.default.xml"],
+      include: [`^/veikals/(${Object.keys(TET_CATEGORY_MAP).map(urlSegment).join("|")})/[^/]+\\.html$`],
+      categoryFromUrl: "^/veikals/([^/]+)/[^/]+\\.html$",
+      // About 2 500 pages: a full pass in a little over an hour. EAN comes from data-ean.
+      maxPages: 3000,
+      delayMs: 1500,
+      maxRunMinutes: 100,
+    },
+    active: true,
+  },
+  {
+    // Full schema.org data with EAN on product pages, but no usable sitemap and
+    // listings load from a private API. Waits for a product feed (docs/SCRAPING.md).
+    slug: "bigbox",
+    displayName: "BIGBOX",
+    feedType: "google_xml",
+    imageHosts: ["media-api.bgbx.eu"],
+    active: false,
   },
   {
     slug: "discover",

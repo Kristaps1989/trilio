@@ -77,7 +77,7 @@ Railway cron services run a command on a schedule and expect it to exit. Create 
 5. **Settings → Deploy → Healthcheck path**: clear it (a cron job has no HTTP server).
 6. **Variables**: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`, `APP_URL` (same as the web service; the crawler's User-Agent and radar emails use it).
 
-A run takes about two hours, because euronics.lv and m79.lv are read page by page at a polite pace (`docs/SCRAPING.md`). Railway skips a cron start while the previous run is still going, so the four-hour schedule is safe.
+A run takes about three hours, because euronics.lv, m79.lv and tet.lv are read page by page at a polite pace (`docs/SCRAPING.md`). Railway skips a cron start while the previous run is still going, so the four-hour schedule is safe; if more shops are scraped, move to a six-hour schedule (`17 */6 * * *`).
 
 Each run ingests every active non-sample store, extracts attributes (if enabled), evaluates every price radar and sends notifications, then exits; results are in the service logs and in the `ingestion_runs` / `radar_events` tables.
 
