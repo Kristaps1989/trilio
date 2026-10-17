@@ -1,0 +1,54 @@
+import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+// Phase 3: SEO landing pages per category and budget, sitemap and robots.
+
+test("category landing page renders three ranked cards with structured data and a canonical URL", async ({
+  page,
+}) => {
+  await page.goto("/kategorija/fridge");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākie ledusskapji");
+  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/kategorija\/fridge$/);
+  const ld = await page.locator('script[type="application/ld+json"]').first().textContent();
+  const data = JSON.parse(ld!);
+  expect(data["@type"]).toBe("ItemList");
+  expect(data.itemListElement).toHaveLength(3);
+  expect(data.itemListElement[0].item.offers.priceCurrency).toBe("EUR");
+  expect(data.itemListElement[0].item.gtin13).toMatch(/^\d{13}$/);
+  await expect(page.getByRole("link", { name: /Atbildi uz dažiem jautājumiem/ })).toHaveAttribute(
+    "href",
+    "/izvelies/cool/fridge",
+  );
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test("budget landing page keeps every card within the budget and links the other steps", async ({ page }) => {
+  await page.goto("/kategorija/fridge/lidz-800");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Labākie ledusskapji līdz 800\s€/);
+  const prices = await page.getByRole("article").locator("p.font-heading").allTextContents();
+  expect(prices.length).toBeGreaterThan(0);
+  for (const p of prices) {
+    const eur = Number(p.replace(/[^\d]/g, "").slice(0, 4));
+    expect(eur).toBeLessThanOrEqual(800);
+  }
+  await expect(page.getByRole("link", { name: /līdz 800\s€/ })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: /līdz 1\s200\s€/ })).toBeVisible();
+  expect((await page.goto("/kategorija/fridge/lidz-999"))!.status()).toBe(404);
+  expect((await page.goto("/kategorija/nope"))!.status()).toBe(404);
+});
+
+test("sitemap and robots are served", async ({ request }) => {
+  const sitemap = await request.get("/sitemap.xml");
+  expect(sitemap.status()).toBe(200);
+  const xml = await sitemap.text();
+  expect(xml).toContain("/kategorija/fridge/lidz-800");
+  expect(xml).toContain("/kategorija/kettle");
+  const robots = await request.get("/robots.txt");
+  expect(robots.status()).toBe(200);
+  const txt = await robots.text();
+  expect(txt).toContain("Disallow: /api/");
+  expect(txt).toContain("Disallow: /go/");
+  expect(txt).toContain("Sitemap:");
+});

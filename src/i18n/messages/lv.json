@@ -316,5 +316,17 @@
     "failedSubject": "Cenu radara maksājums neizdevās",
     "failedBody": "Neizdevās norakstīt {amount}. Mēģināsim vēlreiz {next}. Ja karte mainījusies, atjauno to radara lapā.",
     "unsubscribe": "Pārtraukt paziņojumus"
+  },
+  "landing": {
+    "title": "Labākie {category}",
+    "titleBudget": "Labākie {category} līdz {budget}",
+    "description": "Trīs labākie {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
+    "descriptionBudget": "Trīs labākie {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
+    "lead": "Atlasīts no {count, plural, =1 {# preces} other {# precēm}} partneru veikalos, atjaunots {date}.",
+    "cta": "Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev",
+    "budgets": "Pēc budžeta",
+    "upTo": "līdz {budget}",
+    "allCategories": "Visas kategorijas",
+    "noOffers": "Šobrīd šajā kategorijā nav piedāvājumu."
   }
 }

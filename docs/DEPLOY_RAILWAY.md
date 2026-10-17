@@ -16,6 +16,7 @@ Open the web service → **Variables** → add:
 |---|---|---|
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Reference variable; uses Railway's private network, no SSL needed. |
 | `CRON_SECRET` | `openssl rand -hex 32` output | Protects `/api/cron/ingest`. |
+| `MARKET` | `LV` | `LT`/`EE` for those deployments (`docs/LOCALES.md`). |
 | `ENERGY_PRICE_CENTS_PER_KWH` | `25` | Optional; default 0,25 €/kWh. |
 | `ANTHROPIC_API_KEY` | from console.anthropic.com | Only needed when either LLM flag is on; see `docs/LLM.md`. |
 | `LLM_MODEL` | `claude-opus-5-5` | Optional override. |
