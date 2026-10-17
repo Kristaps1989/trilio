@@ -54,9 +54,13 @@ jobs:
         run: npm run db:migrate && npm run db:seed
       - name: Unit tests
         run: npm run test -- --coverage
-      - name: Build (no database or secrets, like Railway's build step)
-        # Railway builds without reaching the database; a build that needs it must fail here first.
-        run: env -i PATH="$PATH" HOME="$HOME" npm run build
+      - name: Build (no database or app secrets, like Railway's build step)
+        # Railway's build cannot reach the database; a build that needs it must fail here first.
+        # Only the app's own variables are removed: the runner's system environment stays.
+        run: >-
+          env -u DATABASE_URL -u CRON_SECRET -u APP_URL -u AUTH_URL -u AUTH_SECRET
+          -u AUTH_DEV_LOGIN -u PAYMENTS_PROVIDER -u ALLOW_INSECURE_TEST_FEATURES -u PAYMENT_TOKEN_KEY
+          npm run build
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: E2E (360 px and desktop)
