@@ -40,6 +40,12 @@ export type AdapterStore = {
   slug: string;
   /** Maps a feed's category labels to our subcategory ids; configured per store. */
   categoryMap?: Record<string, string>;
+  /**
+   * Only the store's category_map decides the subcategory (no free-text
+   * fallback). Used for scraped pages, where a loose match would pull in
+   * accessories and spare parts.
+   */
+  strictCategories?: boolean;
 };
 
 export interface FeedAdapter {

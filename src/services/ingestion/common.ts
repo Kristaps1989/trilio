@@ -75,6 +75,7 @@ export function mapCategory(record: FeedRecord, store: AdapterStore): string | n
     const hit = map[full] ?? map[last];
     if (hit && getSubcategory(hit)) return hit;
   }
+  if (store.strictCategories) return null;
   for (const c of candidates) {
     const hit = detectSubcategory(c);
     if (hit) return hit;

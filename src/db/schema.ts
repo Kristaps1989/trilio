@@ -17,7 +17,7 @@ import type { AdapterAccountType } from "next-auth/adapters";
 // Phase 1 tables from docs/DATA_MODEL.md. Money is integer cents. Shop names
 // live in `stores` (rule 7: shop names are configuration, not code).
 
-export const feedTypeEnum = pgEnum("feed_type", ["sample", "google_xml", "csv", "api"]);
+export const feedTypeEnum = pgEnum("feed_type", ["sample", "google_xml", "csv", "api", "scrape"]);
 export const conditionEnum = pgEnum("condition", ["new", "refurbished"]);
 export const stockEnum = pgEnum("stock", ["in", "soon", "out"]);
 
@@ -42,6 +42,8 @@ export const stores = pgTable("stores", {
     .default(sql`'{}'::text[]`),
   /** Feed category label → subcategory id (see services/ingestion/common.ts mapCategory). */
   categoryMap: jsonb("category_map").$type<Record<string, string>>().notNull().default({}),
+  /** For feed_type 'scrape': sitemaps, URL patterns and pacing (services/ingestion/scrape/crawler.ts). */
+  scrapeConfig: jsonb("scrape_config").$type<Record<string, unknown>>(),
   defaultDeliveryDays: integer("default_delivery_days").notNull().default(3),
   active: boolean("active").notNull().default(true),
   lastIngestedAt: timestamp("last_ingested_at", { withTimezone: true }),

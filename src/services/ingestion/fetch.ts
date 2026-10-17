@@ -15,6 +15,10 @@ export type FetchFeedOptions = {
   fetchImpl?: typeof fetch;
   /** Injected in tests; defaults to DNS lookup. */
   resolve?: (host: string) => Promise<string[]>;
+  /** Overrides the default Accept header (the scraper asks for HTML). */
+  accept?: string;
+  /** Overrides the default User-Agent. */
+  userAgent?: string;
 };
 
 export class FeedFetchError extends Error {
@@ -28,6 +32,8 @@ export class FeedFetchError extends Error {
       | "too_large"
       | "http_error"
       | "timeout",
+    /** HTTP status for `http_error`. */
+    readonly status?: number,
   ) {
     super(message);
   }
@@ -80,6 +86,11 @@ async function checkUrl(url: URL, opts: FetchFeedOptions, resolve: (h: string) =
 }
 
 export async function fetchFeed(feedUrl: string, opts: FetchFeedOptions): Promise<string> {
+  return new TextDecoder("utf-8").decode(await fetchBytes(feedUrl, opts));
+}
+
+/** Same guards as fetchFeed, but returns the raw body (gzipped sitemaps). */
+export async function fetchBytes(feedUrl: string, opts: FetchFeedOptions): Promise<Buffer> {
   const maxBytes = opts.maxBytes ?? 50 * 1024 * 1024;
   const timeoutMs = opts.timeoutMs ?? 60_000;
   const maxRedirects = opts.maxRedirects ?? 3;
@@ -96,8 +107,8 @@ export async function fetchFeed(feedUrl: string, opts: FetchFeedOptions): Promis
         redirect: "manual",
         signal: controller.signal,
         headers: {
-          accept: "application/xml, text/xml, text/csv, text/plain;q=0.8, */*;q=0.5",
-          "user-agent": "TrilioFeedBot/1.0",
+          accept: opts.accept ?? "application/xml, text/xml, text/csv, text/plain;q=0.8, */*;q=0.5",
+          "user-agent": opts.userAgent ?? "TrilioFeedBot/1.0",
         },
       });
       if (res.status >= 300 && res.status < 400) {
@@ -107,7 +118,7 @@ export async function fetchFeed(feedUrl: string, opts: FetchFeedOptions): Promis
         url = new URL(location, url);
         continue;
       }
-      if (!res.ok) throw new FeedFetchError(`feed returned HTTP ${res.status}`, "http_error");
+      if (!res.ok) throw new FeedFetchError(`feed returned HTTP ${res.status}`, "http_error", res.status);
       const declared = Number(res.headers.get("content-length") ?? 0);
       if (declared > maxBytes) throw new FeedFetchError("feed larger than limit", "too_large");
       return await readCapped(res, maxBytes);
@@ -121,8 +132,8 @@ export async function fetchFeed(feedUrl: string, opts: FetchFeedOptions): Promis
   }
 }
 
-async function readCapped(res: Response, maxBytes: number): Promise<string> {
-  if (!res.body) return "";
+async function readCapped(res: Response, maxBytes: number): Promise<Buffer> {
+  if (!res.body) return Buffer.alloc(0);
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -136,5 +147,5 @@ async function readCapped(res: Response, maxBytes: number): Promise<string> {
     }
     chunks.push(value);
   }
-  return new TextDecoder("utf-8").decode(Buffer.concat(chunks));
+  return Buffer.concat(chunks);
 }

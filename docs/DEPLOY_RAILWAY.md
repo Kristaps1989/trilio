@@ -75,13 +75,15 @@ Railway cron services run a command on a schedule and expect it to exit. Create 
 3. **Settings → Deploy → Custom Start Command**: `npm run ingest -- all`
 4. **Settings → Deploy → Pre-deploy command**: clear it (the web service owns migrations).
 5. **Settings → Deploy → Healthcheck path**: clear it (a cron job has no HTTP server).
-6. **Variables**: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`.
+6. **Variables**: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`, `APP_URL` (same as the web service; the crawler's User-Agent and radar emails use it).
+
+A run takes about two hours, because euronics.lv and m79.lv are read page by page at a polite pace (`docs/SCRAPING.md`). Railway skips a cron start while the previous run is still going, so the four-hour schedule is safe.
 
 Each run ingests every active non-sample store, extracts attributes (if enabled), evaluates every price radar and sends notifications, then exits; results are in the service logs and in the `ingestion_runs` / `radar_events` tables.
 
 Add a second cron service for billing: schedule `0 6 * * *`, start command `curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/billing`, variables `CRON_SECRET` and `APP_URL`. It charges due renewals and retries (`docs/PAYMENTS.md`). To run on demand: service → **Deployments → ⋯ → Run now**, or `npm run ingest -- euronics` from a shell.
 
-`/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer.
+`/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer, except scraped shops: those run only in the cron service, because they take far longer than an HTTP request may.
 
 ## 6. Environments
 

@@ -23,13 +23,21 @@ export async function upsertStores(db: Db, seeds: StoreSeed[]) {
         affiliateTemplateUrl: s.affiliateTemplateUrl ?? null,
         imageHosts: s.imageHosts ?? [],
         categoryMap: s.categoryMap ?? {},
+        scrapeConfig: s.scrapeConfig ?? null,
         defaultDeliveryDays: s.defaultDeliveryDays ?? 3,
         active: s.active,
       })
       .onConflictDoUpdate({
         target: stores.slug,
-        // Only descriptive fields; feed URL, affiliate template and active flag are operated in the DB.
-        set: { displayName: s.displayName, feedType: s.feedType, imageHosts: s.imageHosts ?? [] },
+        // Descriptive fields and reviewed crawl config. Feed URL, affiliate template and
+        // the active flag are operated in the DB (docs/RUNBOOK.md).
+        set: {
+          displayName: s.displayName,
+          feedType: s.feedType,
+          imageHosts: s.imageHosts ?? [],
+          ...(s.categoryMap ? { categoryMap: s.categoryMap } : {}),
+          ...(s.scrapeConfig ? { scrapeConfig: s.scrapeConfig } : {}),
+        },
       });
   }
 }

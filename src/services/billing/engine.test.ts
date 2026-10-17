@@ -17,6 +17,14 @@ import {
 const url = process.env.DATABASE_URL;
 const run = url ? describe : describe.skip;
 
+/**
+ * The scheduler processes every due subscription in the database, and a
+ * local database keeps the ones e2e runs create. Assertions look at ours.
+ */
+function ours<T extends { subscriptionId: string }>(results: T[], id: string): T[] {
+  return results.filter((r) => r.subscriptionId === id);
+}
+
 const urls = { acceptUrl: "https://t/ok", cancelUrl: "https://t/no", callbackUrl: "https://t/cb" };
 
 run("billing engine", () => {
@@ -82,14 +90,16 @@ run("billing engine", () => {
     const sub = (await currentSubscription(db, userId))!;
     const oldEnd = sub.currentPeriodEnd!;
     const results = await chargeDueRenewals(db, provider, urls, new Date(oldEnd.getTime() + 1000));
-    expect(results).toEqual([{ subscriptionId: sub.id, outcome: "renewed" }]);
+    expect(ours(results, sub.id)).toEqual([{ subscriptionId: sub.id, outcome: "renewed" }]);
     const after = (await currentSubscription(db, userId))!;
     expect(after.currentPeriodStart!.getTime()).toBe(oldEnd.getTime());
     expect(after.currentPeriodEnd!.getTime()).toBeGreaterThan(oldEnd.getTime());
     const rows = await db.select().from(payments).where(eq(payments.subscriptionId, sub.id));
     expect(rows.filter((p) => p.kind === "renewal" && p.status === "captured")).toHaveLength(1);
     // Not due yet → nothing happens
-    expect(await chargeDueRenewals(db, provider, urls, new Date(oldEnd.getTime() + 2000))).toEqual([]);
+    expect(
+      ours(await chargeDueRenewals(db, provider, urls, new Date(oldEnd.getTime() + 2000)), sub.id),
+    ).toEqual([]);
   });
 
   it("a declined renewal goes past_due with retries, then expires after the last retry", async () => {
@@ -100,7 +110,7 @@ run("billing engine", () => {
       .set({ tokenEncrypted: encryptSecret("fail-token") })
       .where(eq(subscriptions.id, sub.id));
     let now = new Date(sub.nextBillingAt!.getTime() + 1000);
-    const r1 = await chargeDueRenewals(db, provider, urls, now);
+    const r1 = ours(await chargeDueRenewals(db, provider, urls, now), sub.id);
     expect(r1[0]!.outcome).toBe("retry_scheduled");
     let s = (await currentSubscription(db, userId))!;
     expect(s.status).toBe("past_due");
@@ -108,7 +118,7 @@ run("billing engine", () => {
     expect(hasAccess(s, now)).toBe(true); // grace: period not over yet
     for (const expected of ["retry_scheduled", "retry_scheduled", "expired"]) {
       now = new Date(s.nextBillingAt!.getTime() + 1000);
-      const r = await chargeDueRenewals(db, provider, urls, now);
+      const r = ours(await chargeDueRenewals(db, provider, urls, now), sub.id);
       expect(r[0]!.outcome).toBe(expected);
       s = (await db.select().from(subscriptions).where(eq(subscriptions.id, sub.id)))[0]!;
     }
@@ -147,7 +157,7 @@ run("billing engine", () => {
     expect(s.cancelAtPeriodEnd).toBe(false);
     await cancelAtPeriodEnd(db, u2!.id);
     const results = await chargeDueRenewals(db, provider, urls, new Date(s.nextBillingAt!.getTime() + 1000));
-    expect(results).toEqual([{ subscriptionId: s.id, outcome: "skipped" }]);
+    expect(ours(results, s.id)).toEqual([{ subscriptionId: s.id, outcome: "skipped" }]);
     const closed = (await db.select().from(subscriptions).where(eq(subscriptions.id, s.id)))[0]!;
     expect(closed.status).toBe("canceled");
     expect(closed.nextBillingAt).toBeNull();
