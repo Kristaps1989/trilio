@@ -1,7 +1,8 @@
 {
   "meta": {
     "title": "Trilio — trīs labākie. Bez meklēšanas.",
-    "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos."
+    "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
+    "tagline": "Trīs labākie. Bez meklēšanas."
   },
   "header": {
     "radar": "Cenu radars",
@@ -327,6 +328,22 @@
     "budgets": "Pēc budžeta",
     "upTo": "līdz {budget}",
     "allCategories": "Visas kategorijas",
-    "noOffers": "Šobrīd šajā kategorijā nav piedāvājumu."
+    "noOffers": "Šobrīd šajā kategorijā nav piedāvājumu.",
+    "faqTitle": "Biežākie jautājumi",
+    "faq1q": "Kā Trilio izvēlas labākos {category}?",
+    "faq1a": "Atlasām preces, kas ir noliktavā partneru veikalos un iekļaujas budžetā, un ranžējam pēc Trilio vērtējuma un atbilstības prasībām. Trīs varianti: augstākais vērtējums, lētākais no pārējiem un labākais no atlikušajiem. Veikalu komisija ranžēšanu neietekmē.",
+    "faq2q": "Vai cenas ir aktuālas?",
+    "faq2a": "Cenas un pieejamību atjaunojam vairākas reizes dienā no veikalu datu plūsmām un salīdzinām pēc EAN svītrkoda. Atlaides norādām tikai pret zemāko cenu pēdējās 30 dienās.",
+    "faq3q": "Kas ir atjaunota prece?",
+    "faq3a": "Prece ar to pašu EAN, ko veikals pārdod kā atjaunotu, ar norādītu stāvokļa pakāpi un garantiju. Tās vienmēr rādām atsevišķi, nekad kopā ar jaunām.",
+    "breadcrumbHome": "Sākums"
+  },
+  "home": {
+    "categoriesTitle": "Populārākās kategorijas",
+    "categoriesHint": "Labākie varianti katrā kategorijā — bez jautājumiem, ja gribi tikai paskatīties.",
+    "howTitle": "Kā Trilio strādā",
+    "how1": "Atbildi uz 3–6 jautājumiem par to, kas tev patiešām svarīgs.",
+    "how2": "Salīdzinām partneru veikalu krājumus pēc EAN svītrkoda — viens modelis, viena prece.",
+    "how3": "Rādām trīs labākos trīs cenu klasēs, atjaunotas preces atsevišķi. Veikalu komisija secību neietekmē."
   }
 }

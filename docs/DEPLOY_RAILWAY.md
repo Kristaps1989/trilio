@@ -24,6 +24,7 @@ Open the web service → **Variables** → add:
 | `FEATURE_FREE_TEXT_LLM` | `0` | `1` routes "Kaut kas cits" text through Claude when the regex table finds nothing. |
 | `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each ingestion run (also on the cron service). |
 | `APP_URL` | `https://trilio.lv` | Public URL; payment callback/redirects and auth URLs are built from it. |
+| `GOOGLE_SITE_VERIFICATION` | from Search Console (HTML tag method) | Optional; adds the verification meta tag. |
 | `AUTH_SECRET` | `openssl rand -base64 32` | Session signing (Auth.js). |
 | `AUTH_URL` | same as `APP_URL` | |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". |
@@ -54,6 +55,16 @@ This writes the store rows (sample stores active, partner shops inactive) and th
 ## 4. Custom domain and TLS
 
 Web service → **Settings → Networking → Custom Domain** → `trilio.lv` (and `www.trilio.lv`). Add the CNAME Railway shows at the DNS provider. Railway issues the certificate. HSTS is already sent by the app (`next.config.ts`), so only put the domain live once HTTPS resolves.
+
+## 4a. Search engines and AI assistants
+
+The app already serves `robots.txt` (search engines and the major AI crawlers are allowed on public pages; results, accounts, payments and affiliate redirects are closed), `sitemap.xml` (all category and budget landing pages) and `llms.txt` (a plain-text site map for AI assistants). Pages carry Open Graph tags and JSON-LD (`Organization`, `WebSite`, `BreadcrumbList`, `ItemList`, `FAQPage`).
+
+After the domain is live:
+
+1. Google Search Console → add `trilio.lv` → HTML tag method → copy the token into `GOOGLE_SITE_VERIFICATION` and redeploy → verify → submit `https://trilio.lv/sitemap.xml`.
+2. Bing Webmaster Tools → import from Search Console (covers Bing, DuckDuckGo and ChatGPT search).
+3. Check `https://trilio.lv/robots.txt` and `https://trilio.lv/llms.txt` render as expected.
 
 ## 5. Scheduled ingestion (cron service)
 

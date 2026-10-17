@@ -1,16 +1,35 @@
 import type { MetadataRoute } from "next";
 import { appBaseUrl } from "@/services/payments";
 
+// Discoverability policy: public pages are open to search engines AND to AI
+// crawlers (so answers in ChatGPT, Claude, Perplexity, Google AI Overviews
+// can cite Trilio's category pages). Private, transactional and tracking
+// paths carry no public content and are closed to everyone.
+
+const PRIVATE = ["/api/", "/go/", "/radars", "/konts", "/ienakt", "/maksajums/", "/rezultati", "/cits"];
+
+const AI_CRAWLERS = [
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-SearchBot",
+  "Claude-User",
+  "anthropic-ai",
+  "PerplexityBot",
+  "Perplexity-User",
+  "Google-Extended",
+  "Applebot-Extended",
+  "Bingbot",
+  "CCBot",
+];
+
 export default function robots(): MetadataRoute.Robots {
   const base = appBaseUrl();
   return {
     rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        // Private, transactional and tracking paths carry no public content.
-        disallow: ["/api/", "/go/", "/radars", "/konts", "/ienakt", "/maksajums/", "/rezultati"],
-      },
+      { userAgent: "*", allow: "/", disallow: PRIVATE },
+      ...AI_CRAWLERS.map((userAgent) => ({ userAgent, allow: "/", disallow: PRIVATE })),
     ],
     sitemap: `${base}/sitemap.xml`,
   };

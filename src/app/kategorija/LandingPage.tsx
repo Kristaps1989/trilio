@@ -117,9 +117,36 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
     })),
   };
 
+  const faq = [
+    { q: t("faq1q", { category: label }), a: t("faq1a") },
+    { q: t("faq2q"), a: t("faq2a") },
+    { q: t("faq3q"), a: t("faq3a") },
+  ];
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: t("breadcrumbHome"), item: `${base}/` },
+      { "@type": "ListItem", position: 2, name: group?.label ?? "", item: `${base}/izvelies/${group?.id}` },
+      { "@type": "ListItem", position: 3, name: title, item: `${base}${path}` },
+    ],
+  };
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <Shell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumb, faqLd]) }}
+      />
       <p className="pt-4 text-sm font-semibold text-stone">{group?.label}</p>
       <h1 className="mt-1 text-[28px] font-bold leading-[1.2] text-mist">{title}</h1>
       <p className="mt-2 text-base text-stone">
@@ -139,6 +166,18 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
       ) : (
         <p className="mt-6 text-base text-stone">{t("noOffers")}</p>
       )}
+
+      <section aria-labelledby="faq-title" className="mt-8 flex flex-col gap-3">
+        <h2 id="faq-title" className="text-lg font-bold text-mist">
+          {t("faqTitle")}
+        </h2>
+        {faq.map((f) => (
+          <details key={f.q} className="rounded-[14px] border border-mist-32 bg-white-5 p-4 text-mist">
+            <summary className="min-h-11 cursor-pointer list-none font-semibold">{f.q}</summary>
+            <p className="mt-2 text-sm text-stone">{f.a}</p>
+          </details>
+        ))}
+      </section>
 
       <nav aria-label={t("budgets")} className="mt-8">
         <h2 className="text-lg font-bold text-mist">{t("budgets")}</h2>
