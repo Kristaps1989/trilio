@@ -270,7 +270,7 @@ All in `src/domain/ranking`, pure, with table-driven tests. Inputs are plain pro
 ## 9. Decisions needed from the owner before starting
 
 1. **Stack**: ✅ confirmed (Next.js + Tailwind + Drizzle + Neon/Supabase + Vercel EU, as in §3).
-2. **PSP**: ✅ Stripe. **Pricing (proposed, awaiting confirmation):** 12 €/year as the anchor and 1,99 €/month. The owner's first suggestion of 5 €/month + 12 €/year was rejected because the monthly plan would be an 80 % markup over annual, which acts as a decoy (rule 4). Net after 21 % VAT and Stripe fees: ≈ 9,41 €/year or ≈ 1,34 €/month. Stripe Checkout + Billing with Apple Pay, Google Pay and card; Stripe Tax for VAT.
+2. **PSP**: ✅ **Paysera Recurring Billing** (owner decision after the Stripe proposal; see `docs/PAYMENTS.md`). Stripe can be added as a second provider behind the same interface. **Pricing (proposed, awaiting confirmation):** 12 €/year as the anchor and 1,99 €/month. The owner's first suggestion of 5 €/month + 12 €/year was rejected because the monthly plan would be an 80 % markup over annual, which acts as a decoy (rule 4). Net after 21 % VAT and Stripe fees: ≈ 9,41 €/year or ≈ 1,34 €/month. Stripe Checkout + Billing with Apple Pay, Google Pay and card; Stripe Tax for VAT.
 3. **Partner shops**: ✅ neoshop.lv, m79.lv, rdveikals.lv, euronics.lv, 1a.lv, discover.lv as `Store` rows. Still needed per shop: affiliate link format and feed URL/format. The first adapter is built for whichever shop provides feed access first.
 4. **"Trilio vērtējums" inputs**: the sample uses a single `s` number. Which real inputs produce it (EPREL class, warranty, review score, return rate)? The ranking panel must be able to explain it.
 5. **Electricity price**: fixed 0,25 €/kWh in settings, or fetched periodically.

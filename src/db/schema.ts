@@ -6,11 +6,13 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { AdapterAccountType } from "next-auth/adapters";
 
 // Phase 1 tables from docs/DATA_MODEL.md. Money is integer cents. Shop names
 // live in `stores` (rule 7: shop names are configuration, not code).
@@ -203,3 +205,217 @@ export const llmCalls = pgTable(
   },
   (t) => [index("llm_calls_purpose_time_idx").on(t.purpose, t.createdAt)],
 );
+
+// ---------------------------------------------------------------------------
+// Phase 2: accounts, subscriptions (Paysera recurring billing), price radar.
+// ---------------------------------------------------------------------------
+
+/** Auth.js tables (Drizzle adapter). Only the columns the adapter needs plus locale. */
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name"),
+  email: text("email").notNull().unique(),
+  emailVerified: timestamp("email_verified", { withTimezone: true }),
+  image: text("image"),
+  locale: text("locale").notNull().default("lv"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccountType>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
+);
+
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { withTimezone: true }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { withTimezone: true }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
+);
+
+export const planIntervalEnum = pgEnum("plan_interval", ["month", "year"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "pending",
+  "active",
+  "past_due",
+  "canceled",
+  "expired",
+]);
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "captured", "failed", "canceled"]);
+export const paymentKindEnum = pgEnum("payment_kind", ["initial", "renewal"]);
+export const paymentProviderEnum = pgEnum("payment_provider", ["paysera", "mock"]);
+
+/** Subscription plans are configuration rows: 1,99 €/month and 12 €/year at launch. */
+export const plans = pgTable("plans", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  priceCents: integer("price_cents").notNull(),
+  currency: text("currency").notNull().default("EUR"),
+  interval: planIntervalEnum("interval").notNull(),
+  active: boolean("active").notNull().default(true),
+});
+
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    planId: text("plan_id")
+      .notNull()
+      .references(() => plans.id),
+    status: subscriptionStatusEnum("status").notNull().default("pending"),
+    provider: paymentProviderEnum("provider").notNull(),
+    /** Recurring billing token, AES-256-GCM encrypted at rest (services/crypto.ts). Never sent to the client. */
+    tokenEncrypted: text("token_encrypted"),
+    /** Card label for the radar page ("Karte •••• 4242"), from the provider's payer/card info when given. */
+    paymentMethodLabel: text("payment_method_label"),
+    currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
+    currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    nextBillingAt: timestamp("next_billing_at", { withTimezone: true }),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+    failedAttempts: integer("failed_attempts").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("subscriptions_user_idx").on(t.userId),
+    index("subscriptions_billing_idx").on(t.status, t.nextBillingAt),
+  ],
+);
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    subscriptionId: uuid("subscription_id")
+      .notNull()
+      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    /** Our unique order reference sent to the provider; idempotency key for callbacks. */
+    orderId: text("order_id").notNull().unique(),
+    providerRequestId: text("provider_request_id"),
+    kind: paymentKindEnum("kind").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull().default("EUR"),
+    status: paymentStatusEnum("status").notNull().default("pending"),
+    attemptNumber: integer("attempt_number").notNull().default(1),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("payments_subscription_idx").on(t.subscriptionId)],
+);
+
+/** Every provider notification processed once (callbacks are retried until marked read). */
+export const paymentNotifications = pgTable(
+  "payment_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: paymentProviderEnum("provider").notNull(),
+    notificationId: text("notification_id").notNull(),
+    event: text("event"),
+    processedAt: timestamp("processed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("payment_notifications_provider_id_idx").on(t.provider, t.notificationId)],
+);
+
+export const radarThresholdEnum = pgEnum("radar_threshold", ["any", "5", "10"]);
+export const radarScopeEnum = pgEnum("radar_scope", ["only", "brand", "any"]);
+
+export const radars = pgTable(
+  "radars",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    searchSessionId: uuid("search_session_id").references(() => searchSessions.id, { onDelete: "set null" }),
+    threshold: radarThresholdEnum("threshold").notNull().default("any"),
+    scope: radarScopeEnum("scope").notNull().default("only"),
+    /** Empty = all active stores. */
+    storeIds: uuid("store_ids")
+      .array()
+      .notNull()
+      .default(sql`'{}'::uuid[]`),
+    includeRefurbished: boolean("include_refurbished").notNull().default(false),
+    channels: text("channels")
+      .array()
+      .notNull()
+      .default(sql`'{email}'::text[]`),
+    paused: boolean("paused").notNull().default(false),
+    /** Price the next drop is measured against: at creation, then the last notified price. */
+    baselinePriceCents: integer("baseline_price_cents"),
+    lastNotifiedAt: timestamp("last_notified_at", { withTimezone: true }),
+    /** Soft delete with undo (spec §5.2); purged after a day. */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("radars_user_idx").on(t.userId), index("radars_product_idx").on(t.productId)],
+);
+
+export const radarEvents = pgTable(
+  "radar_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    radarId: uuid("radar_id")
+      .notNull()
+      .references(() => radars.id, { onDelete: "cascade" }),
+    offerId: uuid("offer_id").references(() => offers.id, { onDelete: "set null" }),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+    kind: text("kind").$type<"drop" | "similar">().notNull(),
+    oldPriceCents: integer("old_price_cents"),
+    newPriceCents: integer("new_price_cents").notNull(),
+    channels: text("channels")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("radar_events_radar_time_idx").on(t.radarId, t.sentAt)],
+);
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Radar = typeof radars.$inferSelect;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type Plan = typeof plans.$inferSelect;

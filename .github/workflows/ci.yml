@@ -29,6 +29,13 @@ jobs:
     env:
       DATABASE_URL: postgres://trilio:trilio@localhost:5432/trilio
       CRON_SECRET: ci-only-secret
+      APP_URL: http://localhost:3000
+      AUTH_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-auth-secret-not-for-production
+      AUTH_DEV_LOGIN: "1"
+      PAYMENTS_PROVIDER: mock
+      ALLOW_INSECURE_TEST_FEATURES: "1"
+      PAYMENT_TOKEN_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       CI: "1"
     steps:
       - uses: actions/checkout@v5
