@@ -31,8 +31,8 @@ jobs:
       CRON_SECRET: ci-only-secret
       CI: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -43,10 +43,10 @@ jobs:
         run: npm run lint
       - name: Format check
         run: npm run format:check
-      - name: Unit tests
-        run: npm run test -- --coverage
       - name: Migrate and seed
         run: npm run db:migrate && npm run db:seed
+      - name: Unit tests
+        run: npm run test -- --coverage
       - name: Build
         run: npm run build
       - name: Install Playwright browsers
@@ -55,7 +55,7 @@ jobs:
         run: npm run test:e2e
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: playwright-report
