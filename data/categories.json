@@ -1,5 +1,5 @@
 {
-  "note": "Kategoriju koks, jautājumi un atbilžu varianti no prototipa. hard_filter=true — atbilde izslēdz neatbilstošas preces; citādi tā tikai paaugstina vērtējumu. Ledusskapjiem un putekļsūcējiem ir atsevišķa plūsma (custom_flow) — sk. docs/PRODUCT_SPEC.md.",
+  "note": "Kategoriju koks, jautājumi un atbilžu varianti. hard_filter=true — atbilde izslēdz preces, kas tai ir pretrunā; citādi tā tikai paaugstina vērtējumu. Varianti ar passthrough=true neko neizslēdz un nepaaugstina. showIf nosaka, kad jautājums tiek rādīts. Shēma: docs/QUESTION_SCHEMA.md. Izmaiņu pamatojums: docs/QUESTION_REVIEW.md.",
   "groups": [
     {
       "id": "cool",
@@ -10,10 +10,244 @@
           "id": "fridge",
           "label": "Ledusskapji",
           "description": "brīvi stāvoši un iebūvējami",
-          "custom_flow": true,
-          "budget_steps_eur": null,
-          "compare_row_labels": null,
-          "questions": []
+          "custom_flow": false,
+          "budget_steps_eur": [
+            500,
+            800,
+            1200
+          ],
+          "compare_row_labels": [
+            "Izmēri",
+            "Tilpums",
+            "Energoklase",
+            "Trokšņa līmenis",
+            "No Frost",
+            "Saldētava"
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Kāds ledusskapis tev vajadzīgs?",
+              "why": null,
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "builtin",
+                  "label": "Iebūvējams",
+                  "sublabel": "slēpjas aiz virtuves skapja durvīm",
+                  "card_reason": "Iebūvējams — der standarta nišai",
+                  "table_value": "Iebūvējams"
+                },
+                {
+                  "value": "free",
+                  "label": "Brīvi stāvošs",
+                  "sublabel": "stāv atsevišķi, redzams",
+                  "card_reason": null,
+                  "table_value": "Brīvi stāvošs"
+                }
+              ],
+              "help": "Iebūvējams ledusskapis ir paslēpts aiz virtuves mēbeļu durvīm un tam priekšā ir tāda pati fasāde kā skapjiem. Brīvi stāvošs ledusskapis redzams pilnībā un to var pārvietot.",
+              "type": "single"
+            },
+            {
+              "id": "niche",
+              "title": "Cik augsta ir niša?",
+              "why": "Nepareizs nišas augstums ir biežākais iemesls, kāpēc iebūvējamos ledusskapjus atgriež veikalā. Izmēri centimetros parasti norādīti skapja iekšpusē vai virtuves projektā.",
+              "hard_filter": true,
+              "options": [],
+              "type": "number",
+              "showIf": {
+                "q": "type",
+                "in": [
+                  "builtin"
+                ]
+              },
+              "input": {
+                "min": 80,
+                "max": 220,
+                "default": 178,
+                "unit": "cm",
+                "step": 1
+              }
+            },
+            {
+              "id": "size",
+              "title": "Cik liels ledusskapis der tavā virtuvē?",
+              "why": "Platumu nejautājam — gandrīz visi ledusskapji ir 60 cm plati. Augstums un tips nosaka, vai ledusskapis iederēsies.",
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "compact",
+                  "label": "Kompakts",
+                  "sublabel": "~85 cm augsts, zem virsmas",
+                  "card_reason": "Kompakts — ietilpst zem virsmas",
+                  "table_value": "Kompakts (~85 cm)"
+                },
+                {
+                  "value": "mid",
+                  "label": "Vidējs",
+                  "sublabel": "~145–175 cm augsts",
+                  "card_reason": null,
+                  "table_value": "Vidējs (145–175 cm)"
+                },
+                {
+                  "value": "tall",
+                  "label": "Augsts",
+                  "sublabel": "~180–205 cm augsts",
+                  "card_reason": "Augsts — lielāks tilpums tajā pašā platumā",
+                  "table_value": "Augsts (180–205 cm)"
+                },
+                {
+                  "value": "wide",
+                  "label": "Plats",
+                  "sublabel": "80–90 cm, Side-by-Side vai French Door — pārbaudi, vai izies pa durvīm",
+                  "card_reason": "Plats — Side-by-Side vai French Door",
+                  "table_value": "Plats (80–90 cm)"
+                }
+              ],
+              "showIf": {
+                "q": "type",
+                "in": [
+                  "free"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "height_limit",
+              "title": "Vai augstums ir ierobežots?",
+              "why": null,
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "le186",
+                  "label": "Jā, līdz 186 cm",
+                  "sublabel": "piemēram, zem skapīša vai zema griesta",
+                  "card_reason": "Augstums līdz 186 cm",
+                  "table_value": "≤ 186 cm"
+                },
+                {
+                  "value": "nolimit",
+                  "label": "Nē, augstums nav ierobežots",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "showIf": {
+                "q": "size",
+                "in": [
+                  "tall"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "freezer",
+              "title": "Vai vajag saldētavu?",
+              "why": null,
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "yes",
+                  "label": "Jā, ar saldētavu",
+                  "sublabel": "kombinētais ledusskapis",
+                  "card_reason": "Ar saldētavu",
+                  "table_value": "Ir"
+                },
+                {
+                  "value": "no",
+                  "label": "Nē, tikai ledusskapis",
+                  "sublabel": "saldētava jau ir vai nav vajadzīga",
+                  "card_reason": "Bez saldētavas — vairāk vietas dzesēšanai",
+                  "table_value": "Nav"
+                }
+              ],
+              "showIf": {
+                "q": "size",
+                "notIn": [
+                  "wide"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "household",
+              "title": "Cik cilvēku ir tavā mājsaimniecībā?",
+              "why": "No tā atkarīgs ieteicamais tilpums. Par mazu ledusskapi ir biežākā sūdzība pēc pirkuma.",
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "2",
+                  "label": "1–2",
+                  "sublabel": "pietiek ar ~200 L",
+                  "card_reason": "Tilpums ap 200 L — pietiek 1–2 cilvēkiem",
+                  "table_value": "~200 L"
+                },
+                {
+                  "value": "4",
+                  "label": "3–4",
+                  "sublabel": "ieteicams ~300 L",
+                  "card_reason": "Tilpums ap 300 L — pietiek ģimenei",
+                  "table_value": "~300 L"
+                },
+                {
+                  "value": "5",
+                  "label": "5 vai vairāk",
+                  "sublabel": "ieteicams 380 L un vairāk",
+                  "card_reason": "Liels tilpums — 380 L un vairāk",
+                  "table_value": "380 L+"
+                }
+              ],
+              "type": "single"
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev ir svarīgākais?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "quiet",
+                  "label": "Klusums",
+                  "sublabel": "ja virtuve savienota ar dzīvojamo istabu",
+                  "card_reason": "Kluss — 38 dB vai mazāk",
+                  "table_value": null
+                },
+                {
+                  "value": "energy",
+                  "label": "Zems elektrības patēriņš",
+                  "sublabel": "mazāki rēķini 10 gadu garumā",
+                  "card_reason": "Zems patēriņš — ietaupa uz elektrību",
+                  "table_value": null
+                },
+                {
+                  "value": "nofrost",
+                  "label": "No Frost",
+                  "sublabel": "nav jāatkausē",
+                  "card_reason": "No Frost — nav jāatkausē",
+                  "table_value": null
+                },
+                {
+                  "value": "volume",
+                  "label": "Liels tilpums",
+                  "sublabel": null,
+                  "card_reason": "Lielāks tilpums nekā citiem tāda paša izmēra",
+                  "table_value": null
+                },
+                {
+                  "value": "price",
+                  "label": "Zemākā cena",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null
+                }
+              ],
+              "type": "multi",
+              "max_select": 2
+            }
+          ]
         },
         {
           "id": "freezer",
@@ -58,20 +292,43 @@
                   "card_reason": "Iebūvējama — der standarta nišai",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
+            },
+            {
+              "id": "niche",
+              "title": "Cik augsta ir niša?",
+              "why": "Nepareizs nišas augstums ir biežākais iemesls, kāpēc iebūvējamās saldētavas atgriež veikalā.",
+              "hard_filter": true,
+              "options": [],
+              "type": "number",
+              "showIf": {
+                "q": "g0",
+                "in": [
+                  "builtin"
+                ]
+              },
+              "input": {
+                "min": 80,
+                "max": 220,
+                "default": 178,
+                "unit": "cm",
+                "step": 1
+              }
             },
             {
               "id": "g1",
               "title": "Kur saldētava stāvēs?",
-              "why": "Neapsildītā telpā der tikai saldētavas, kas paredzētas darbam zemā temperatūrā.",
-              "hard_filter": false,
+              "why": "Neapsildītā telpā der tikai saldētavas ar klimata klasi SN vai SN-T — citas zemā temperatūrā pārstāj saldēt.",
+              "hard_filter": true,
               "options": [
                 {
                   "value": "home",
                   "label": "Dzīvoklī vai mājā",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": "Apsildītā telpā"
+                  "table_value": "Apsildītā telpā",
+                  "passthrough": true
                 },
                 {
                   "value": "garage",
@@ -80,7 +337,8 @@
                   "card_reason": "Darbojas arī neapsildītā telpā (klimata klase SN-T)",
                   "table_value": "Arī neapsildītā telpā"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -109,7 +367,8 @@
                   "card_reason": "Liels tilpums — virs 250 L",
                   "table_value": "Virs 250 L"
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
@@ -163,7 +422,8 @@
                   "card_reason": "Mazgā un žāvē vienā ierīcē",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -192,7 +452,8 @@
                   "card_reason": "Ietilpība 10 kg un vairāk",
                   "table_value": "10 kg un vairāk"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -219,9 +480,55 @@
                   "label": "Nav svarīgi",
                   "sublabel": null,
                   "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "showIf": {
+                "q": "g0",
+                "notIn": [
+                  "top"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev ir svarīgākais?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "quiet",
+                  "label": "Klusums",
+                  "sublabel": "ja mašīna stāv blakus guļamistabai vai virtuvē",
+                  "card_reason": "Klusa centrifūga — 72 dB vai mazāk",
+                  "table_value": null
+                },
+                {
+                  "value": "energy",
+                  "label": "Zems elektrības un ūdens patēriņš",
+                  "sublabel": null,
+                  "card_reason": "Energoklase A — zemāki rēķini",
+                  "table_value": null
+                },
+                {
+                  "value": "fast",
+                  "label": "Ātras programmas",
+                  "sublabel": "izmazgā 15–30 minūtēs",
+                  "card_reason": "Ātrā programma — līdz 30 minūtēm",
+                  "table_value": null
+                },
+                {
+                  "value": "steam",
+                  "label": "Tvaiks pret alerģijām un smakām",
+                  "sublabel": null,
+                  "card_reason": "Tvaika programma — pret alergēniem un smakām",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "multi",
+              "max_select": 2
             }
           ]
         },
@@ -261,7 +568,8 @@
                   "card_reason": null,
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -290,7 +598,8 @@
                   "card_reason": "Ietilpība 9 kg",
                   "table_value": "9 kg un vairāk"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -312,7 +621,8 @@
                   "card_reason": null,
                   "table_value": ""
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -329,7 +639,7 @@
           "compare_row_labels": [
             "Veids",
             "Piemērots",
-            "Automātiska izslēgšanās"
+            "Pretkaļķu sistēma"
           ],
           "questions": [
             {
@@ -352,7 +662,8 @@
                   "card_reason": "Tvaika sistēma — gludina līdz divreiz ātrāk",
                   "table_value": "Tvaika gludināšanas sistēma"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -374,29 +685,40 @@
                   "card_reason": "Spēcīga tvaika padeve — piemērots lieliem apjomiem",
                   "table_value": "Lielai slodzei"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
-              "id": "g2",
-              "title": "Vai svarīga automātiska izslēgšanās?",
-              "why": "Gludeklis pats izslēdzas, ja to aizmirsti ieslēgtu.",
+              "id": "water",
+              "title": "Vai ūdens tavās mājās ir ciets?",
+              "why": "Kaļķakmens ir galvenais iemesls, kāpēc gludekļi sabojājas. Cietam ūdenim vajag pretkaļķu sistēmu vai izņemamu kaļķa savācēju.",
               "hard_filter": false,
               "options": [
                 {
-                  "value": "auto",
-                  "label": "Jā, drošības dēļ",
+                  "value": "hard",
+                  "label": "Jā, veidojas kaļķakmens",
+                  "sublabel": "tējkannā paliek balts nosēdums",
+                  "card_reason": "Pretkaļķu sistēma — der cietam ūdenim",
+                  "table_value": "Pretkaļķu sistēma"
+                },
+                {
+                  "value": "soft",
+                  "label": "Nē, mīksts",
                   "sublabel": null,
-                  "card_reason": "Automātiski izslēdzas, ja netiek lietots",
-                  "table_value": "Ir"
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
                 },
                 {
                   "value": "any",
-                  "label": "Nav svarīgi",
+                  "label": "Nezinu",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -435,7 +757,8 @@
                   "card_reason": "Stāvošs ar statīvu — ērts regulārai lietošanai",
                   "table_value": "Stāvošs ar statīvu"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -457,7 +780,8 @@
                   "card_reason": "Spēcīgs tvaiks — tiek galā ar biezākiem audumiem",
                   "table_value": "Arī mēteļi, aizkari"
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
@@ -511,7 +835,8 @@
                   "card_reason": "Kompakta — novietojama uz galda",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -538,9 +863,17 @@
                   "label": "Nezinu",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "showIf": {
+                "q": "g0",
+                "notIn": [
+                  "compact"
+                ]
+              },
+              "type": "single"
             },
             {
               "id": "g2",
@@ -568,8 +901,24 @@
                   "sublabel": null,
                   "card_reason": "Ātrā programma — aptuveni stundā",
                   "table_value": null
+                },
+                {
+                  "value": "energy",
+                  "label": "Zems elektrības un ūdens patēriņš",
+                  "sublabel": null,
+                  "card_reason": "Energoklase A vai B — zemāki rēķini",
+                  "table_value": null
+                },
+                {
+                  "value": "third",
+                  "label": "Trešā atvilktne galda piederumiem",
+                  "sublabel": "atbrīvo vietu apakšējā grozā",
+                  "card_reason": "Trešā atvilktne galda piederumiem",
+                  "table_value": null
                 }
-              ]
+              ],
+              "type": "multi",
+              "max_select": 2
             }
           ]
         },
@@ -591,7 +940,7 @@
           "questions": [
             {
               "id": "g0",
-              "title": "Ko tieši meklē?",
+              "title": "Kādu plīti vai virsmu meklē?",
               "why": null,
               "hard_filter": true,
               "options": [
@@ -623,7 +972,82 @@
                   "card_reason": "Plīts ar cepeškrāsni — viss vienā ierīcē",
                   "table_value": "Plīts ar cepeškrāsni"
                 }
-              ]
+              ],
+              "type": "single"
+            },
+            {
+              "id": "width",
+              "title": "Cik plata ir vieta plītij?",
+              "why": "Brīvi stāvošas plītis ir 50 vai 60 cm platas. Izmēri par centimetru lielāki neiederēsies.",
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "50",
+                  "label": "50 cm",
+                  "sublabel": "šaura, vecākām virtuvēm",
+                  "card_reason": "Platums 50 cm — der šaurai vietai",
+                  "table_value": "50 cm"
+                },
+                {
+                  "value": "60",
+                  "label": "60 cm",
+                  "sublabel": "standarta",
+                  "card_reason": null,
+                  "table_value": "60 cm"
+                },
+                {
+                  "value": "any",
+                  "label": "Nezinu",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "showIf": {
+                "q": "g0",
+                "in": [
+                  "standalone"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "gas",
+              "title": "Kāda gāze tev ir?",
+              "why": "Dabasgāzei un balonu gāzei vajag dažādas sprauslas. Ja komplektā nav īsto, plīts nestrādās pareizi.",
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "natural",
+                  "label": "Dabasgāze",
+                  "sublabel": "no centralizētā tīkla",
+                  "card_reason": null,
+                  "table_value": "Dabasgāze"
+                },
+                {
+                  "value": "bottle",
+                  "label": "Balonu gāze (propāns)",
+                  "sublabel": "ārpus pilsētas, vasarnīcā",
+                  "card_reason": "Komplektā sprauslas balonu gāzei",
+                  "table_value": "Balonu gāze"
+                },
+                {
+                  "value": "any",
+                  "label": "Nezinu",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "showIf": {
+                "q": "g0",
+                "in": [
+                  "gas"
+                ]
+              },
+              "type": "single"
             },
             {
               "id": "g1",
@@ -652,12 +1076,13 @@
                   "card_reason": "Elastīga zona lieliem traukiem",
                   "table_value": "5 vai elastīga zona"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
               "title": "Vai tev ir trīsfāzu elektrības pieslēgums?",
-              "why": "Pilnas jaudas indukcijas virsmai bieži vajag 7,4 kW. Ja neesi pārliecināts, pajautā elektriķim.",
+              "why": "Pilnas jaudas indukcijas vai keramiskajai virsmai bieži vajag 7,4 kW, ko dod tikai trīsfāzu pieslēgums. Daudzas virsmas var ierobežot jaudu vienfāzes pieslēgumam. Ja neesi pārliecināts, pajautā elektriķim.",
               "hard_filter": false,
               "options": [
                 {
@@ -665,16 +1090,25 @@
                   "label": "Jā",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": "Trīsfāzu"
+                  "table_value": "Trīsfāzu",
+                  "passthrough": true
                 },
                 {
                   "value": "n",
                   "label": "Nē vai nezinu",
                   "sublabel": null,
-                  "card_reason": "Darbojas ar parasto vienfāzes pieslēgumu",
+                  "card_reason": "Ir jaudas ierobežošanas režīms vienfāzes pieslēgumam",
                   "table_value": "Vienfāzes"
                 }
-              ]
+              ],
+              "showIf": {
+                "q": "g0",
+                "in": [
+                  "induction",
+                  "ceramic"
+                ]
+              },
+              "type": "single"
             }
           ]
         },
@@ -689,32 +1123,49 @@
             1000
           ],
           "compare_row_labels": [
-            "Tvaika funkcija",
+            "Nišas izmērs",
             "Tīrīšana",
+            "Tvaika funkcija",
             "Vadība ar telefonu"
           ],
           "questions": [
             {
-              "id": "g0",
-              "title": "Vai vajag tvaika funkciju?",
-              "why": "Tvaiks palīdz gaļai palikt sulīgai un maizei izveidot kraukšķīgu garozu.",
-              "hard_filter": false,
+              "id": "niche",
+              "title": "Kāda ir niša cepeškrāsnij?",
+              "why": "Nepareizs nišas izmērs ir galvenais iemesls, kāpēc cepeškrāsnis atgriež veikalā. Izmēri parasti norādīti virtuves projektā vai uz vecās krāsns uzlīmes.",
+              "hard_filter": true,
               "options": [
                 {
-                  "value": "steam",
-                  "label": "Jā, ar tvaika atbalstu",
+                  "value": "std",
+                  "label": "Standarta 60 × 60 cm",
+                  "sublabel": "visizplatītākā",
+                  "card_reason": null,
+                  "table_value": "60 × 60 cm"
+                },
+                {
+                  "value": "compact",
+                  "label": "Kompakta — 45 cm augsta",
+                  "sublabel": "zem virsmas vai kolonnā virs mikroviļņu krāsns",
+                  "card_reason": "Kompakta 45 cm — der zemai nišai",
+                  "table_value": "45 cm augsta"
+                },
+                {
+                  "value": "wide",
+                  "label": "Plata — 90 cm",
                   "sublabel": null,
-                  "card_reason": "Tvaika atbalsts — sulīgāka gaļa, labāka maize",
-                  "table_value": "Ir"
+                  "card_reason": "Plata 90 cm — lieliem cepešiem",
+                  "table_value": "90 cm plata"
                 },
                 {
                   "value": "any",
-                  "label": "Nē, pietiek ar parasto",
+                  "label": "Nezinu",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -741,31 +1192,49 @@
                   "label": "Nav svarīgi",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
-              "id": "g2",
-              "title": "Vai gribi vadīt ar telefonu?",
+              "id": "priorities",
+              "title": "Kas tev ir svarīgākais?",
               "why": null,
               "hard_filter": false,
               "options": [
                 {
-                  "value": "wifi",
-                  "label": "Jā",
-                  "sublabel": null,
-                  "card_reason": "Vadāma ar lietotni (Wi-Fi)",
-                  "table_value": "Ir"
+                  "value": "steam",
+                  "label": "Tvaika atbalsts",
+                  "sublabel": "sulīgāka gaļa, kraukšķīga maizes garoza",
+                  "card_reason": "Tvaika atbalsts — sulīgāka gaļa, labāka maize",
+                  "table_value": null
                 },
                 {
-                  "value": "any",
-                  "label": "Nav vajadzīgs",
+                  "value": "wifi",
+                  "label": "Vadība ar telefonu",
                   "sublabel": null,
-                  "card_reason": null,
+                  "card_reason": "Vadāma ar lietotni (Wi-Fi)",
+                  "table_value": null
+                },
+                {
+                  "value": "volume",
+                  "label": "Liels tilpums (70 L un vairāk)",
+                  "sublabel": "lieliem cepešiem un vairākām paplātēm",
+                  "card_reason": "Liels tilpums — 70 L un vairāk",
+                  "table_value": null
+                },
+                {
+                  "value": "energy",
+                  "label": "Zems elektrības patēriņš",
+                  "sublabel": null,
+                  "card_reason": "Energoklase A — zemāks patēriņš",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "multi",
+              "max_select": 2
             }
           ]
         },
@@ -782,7 +1251,8 @@
           "compare_row_labels": [
             "Uzstādīšana",
             "Platums",
-            "Režīms"
+            "Režīms",
+            "Trokšņa līmenis"
           ],
           "questions": [
             {
@@ -812,7 +1282,8 @@
                   "card_reason": "Iebūvējams — nav redzams virtuvē",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -820,6 +1291,13 @@
               "why": "Nosūcējam jābūt vismaz tikpat platam kā plītij.",
               "hard_filter": true,
               "options": [
+                {
+                  "value": "50",
+                  "label": "50 cm",
+                  "sublabel": "vecākām virtuvēm",
+                  "card_reason": "Platums 50 cm",
+                  "table_value": "50 cm"
+                },
                 {
                   "value": "60",
                   "label": "60 cm",
@@ -833,8 +1311,17 @@
                   "sublabel": null,
                   "card_reason": "Platums 90 cm",
                   "table_value": null
+                },
+                {
+                  "value": "any",
+                  "label": "Nezinu",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -856,7 +1343,32 @@
                   "card_reason": "Var darboties recirkulācijas režīmā ar ogles filtru",
                   "table_value": "Recirkulācija"
                 }
-              ]
+              ],
+              "type": "single"
+            },
+            {
+              "id": "openplan",
+              "title": "Vai virtuve ir savienota ar dzīvojamo istabu?",
+              "why": "Troksnis ir biežākā sūdzība par nosūcējiem. Atvērtā virtuvē ieteicams modelis, kas maksimālajā režīmā nepārsniedz 60 dB.",
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "yes",
+                  "label": "Jā",
+                  "sublabel": "troksnis traucēs arī citiem",
+                  "card_reason": "Kluss darbībā — piemērots atvērtai virtuvei",
+                  "table_value": null
+                },
+                {
+                  "value": "no",
+                  "label": "Nē, virtuve ir atsevišķa",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "type": "single"
             }
           ]
         },
@@ -896,7 +1408,8 @@
                   "card_reason": "Iebūvējama — der standarta skapim",
                   "table_value": "Iebūvējama"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -909,7 +1422,8 @@
                   "label": "Tikai sildīšu un atkausēšu",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": "Sildīšana"
+                  "table_value": "Sildīšana",
+                  "passthrough": true
                 },
                 {
                   "value": "grill",
@@ -925,7 +1439,8 @@
                   "card_reason": "Ar karstā gaisa režīmu — aizstāj otru cepeškrāsni",
                   "table_value": "Karstais gaiss"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -954,7 +1469,8 @@
                   "card_reason": "Liels tilpums — virs 30 L",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
@@ -969,10 +1485,256 @@
           "id": "vacuum",
           "label": "Putekļsūcēji",
           "description": "roboti, vertikālie, klasiskie, cikloniskie",
-          "custom_flow": true,
-          "budget_steps_eur": null,
-          "compare_row_labels": null,
-          "questions": []
+          "custom_flow": false,
+          "budget_steps_eur": [
+            150,
+            300,
+            600
+          ],
+          "compare_row_labels": [
+            "Tips",
+            "Darbības laiks",
+            "Trokšņa līmenis",
+            "Mazgāšana",
+            "Birste dzīvniekiem"
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Kādu putekļsūcēju meklē?",
+              "why": null,
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "robot",
+                  "label": "Robotu",
+                  "sublabel": "tīra pats pēc grafika",
+                  "card_reason": "Robots — tīra pats pēc grafika",
+                  "table_value": "Robots"
+                },
+                {
+                  "value": "stick",
+                  "label": "Vertikālo bezvadu",
+                  "sublabel": "viegls, vienmēr pa rokai",
+                  "card_reason": "Bezvadu — viegls un ātri pa rokai",
+                  "table_value": "Vertikālais"
+                },
+                {
+                  "value": "corded",
+                  "label": "Klasisko ar vadu",
+                  "sublabel": "jaudīgākais, bez akumulatora",
+                  "card_reason": "Ar vadu — nemainīga jauda bez lādēšanas",
+                  "table_value": "Klasiskais"
+                }
+              ],
+              "type": "single"
+            },
+            {
+              "id": "bag",
+              "title": "Ar maisiņu vai bez?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "bag",
+                  "label": "Ar maisiņu",
+                  "sublabel": "putekļi paliek noslēgti, maisiņi maksā ~5 € gadā",
+                  "card_reason": "Ar maisiņu — putekļi paliek noslēgti",
+                  "table_value": "Ar maisiņu"
+                },
+                {
+                  "value": "cyclone",
+                  "label": "Bez maisiņa (ciklonisko)",
+                  "sublabel": "nav jāpērk maisiņi, tvertne jāiztukšo",
+                  "card_reason": "Bez maisiņa — nav jāpērk maisiņi",
+                  "table_value": "Ciklonisks"
+                },
+                {
+                  "value": "any",
+                  "label": "Nav svarīgi",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "showIf": {
+                "q": "type",
+                "in": [
+                  "corded"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "mop",
+              "title": "Vai robotam jāmazgā arī grīda?",
+              "why": null,
+              "hard_filter": true,
+              "options": [
+                {
+                  "value": "yes",
+                  "label": "Jā, arī jāmazgā",
+                  "sublabel": "ar ūdens tvertni un lupatiņu",
+                  "card_reason": "Arī mazgā grīdu",
+                  "table_value": "Mazgā"
+                },
+                {
+                  "value": "no",
+                  "label": "Nē, tikai jāsūc",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "showIf": {
+                "q": "type",
+                "in": [
+                  "robot"
+                ]
+              },
+              "type": "single"
+            },
+            {
+              "id": "area",
+              "title": "Cik lielu platību tīrīsi?",
+              "why": "Pēc tā pārbaudām, vai akumulatora darbības laiks pietiek vienai tīrīšanas reizei.",
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "50",
+                  "label": "Līdz 50 m²",
+                  "sublabel": "dzīvoklis",
+                  "card_reason": null,
+                  "table_value": "≤ 50 m²"
+                },
+                {
+                  "value": "100",
+                  "label": "50–100 m²",
+                  "sublabel": null,
+                  "card_reason": "Darbības laiks pietiek 50–100 m²",
+                  "table_value": "50–100 m²"
+                },
+                {
+                  "value": "150",
+                  "label": "Vairāk nekā 100 m²",
+                  "sublabel": "māja vairākos stāvos",
+                  "card_reason": "Ilgs darbības laiks — pietiek lielai mājai",
+                  "table_value": "> 100 m²"
+                }
+              ],
+              "type": "single"
+            },
+            {
+              "id": "floors",
+              "title": "Kādas grīdas tev ir?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "hard",
+                  "label": "Cietas",
+                  "sublabel": "parkets, flīzes, lamināts",
+                  "card_reason": "Mīksta birste cietām grīdām",
+                  "table_value": "Cietas"
+                },
+                {
+                  "value": "carpet",
+                  "label": "Daudz paklāju",
+                  "sublabel": null,
+                  "card_reason": "Spēcīga sūkšana paklājiem",
+                  "table_value": "Paklāji"
+                },
+                {
+                  "value": "mixed",
+                  "label": "Jauktas",
+                  "sublabel": null,
+                  "card_reason": "Automātiski pielāgojas grīdas veidam",
+                  "table_value": "Jauktas"
+                }
+              ],
+              "type": "single"
+            },
+            {
+              "id": "home",
+              "title": "Vai mājās ir mājdzīvnieki vai alerģijas?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "pets",
+                  "label": "Mājdzīvnieki",
+                  "sublabel": "kas met spalvu",
+                  "card_reason": "Birste dzīvnieku spalvām",
+                  "table_value": "Mājdzīvnieki"
+                },
+                {
+                  "value": "allergy",
+                  "label": "Alerģijas",
+                  "sublabel": null,
+                  "card_reason": "HEPA filtrs — aiztur alergēnus",
+                  "table_value": "Alerģijas"
+                },
+                {
+                  "value": "none",
+                  "label": "Nekas no tā",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true,
+                  "exclusive": true
+                }
+              ],
+              "type": "multi",
+              "max_select": 2
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev ir svarīgākais?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "quiet",
+                  "label": "Klusums",
+                  "sublabel": null,
+                  "card_reason": "Kluss — 70 dB vai mazāk",
+                  "table_value": null
+                },
+                {
+                  "value": "runtime",
+                  "label": "Ilgs darbības laiks",
+                  "sublabel": null,
+                  "card_reason": "Ilgs darbības laiks ar vienu uzlādi",
+                  "table_value": null
+                },
+                {
+                  "value": "suction",
+                  "label": "Sūkšanas jauda",
+                  "sublabel": null,
+                  "card_reason": "Augsta sūkšanas jauda",
+                  "table_value": null
+                },
+                {
+                  "value": "light",
+                  "label": "Mazs svars",
+                  "sublabel": "viegli pacelt un nest",
+                  "card_reason": "Viegls — ērti nest pa kāpnēm",
+                  "table_value": null
+                },
+                {
+                  "value": "price",
+                  "label": "Zemākā cena",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null
+                }
+              ],
+              "type": "multi",
+              "max_select": 2
+            }
+          ]
         },
         {
           "id": "steamclean",
@@ -1016,7 +1778,8 @@
                   "card_reason": "Jaudīgs, ar šļūteni un uzgaļiem visai mājai",
                   "table_value": "Cilindra ar šļūteni"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1043,9 +1806,11 @@
                   "label": "Visu kopā",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
@@ -1073,35 +1838,6 @@
           ],
           "questions": [
             {
-              "id": "g0",
-              "title": "Kādu kafiju dzer visbiežāk?",
-              "why": null,
-              "hard_filter": false,
-              "options": [
-                {
-                  "value": "milk",
-                  "label": "Ar pienu",
-                  "sublabel": "kapučīno, latte",
-                  "card_reason": "Automātiski saputo pienu",
-                  "table_value": "Ar pienu"
-                },
-                {
-                  "value": "black",
-                  "label": "Melnu",
-                  "sublabel": "espresso, americano",
-                  "card_reason": null,
-                  "table_value": "Melna kafija"
-                },
-                {
-                  "value": "any",
-                  "label": "Abas",
-                  "sublabel": null,
-                  "card_reason": null,
-                  "table_value": null
-                }
-              ]
-            },
-            {
               "id": "g1",
               "title": "Kādu kafijas automātu vēlies?",
               "why": null,
@@ -1128,7 +1864,39 @@
                   "card_reason": "Portafiltrs — pilna kontrole pār garšu",
                   "table_value": "Portafiltra espresso"
                 }
-              ]
+              ],
+              "type": "single"
+            },
+            {
+              "id": "g0",
+              "title": "Kādu kafiju dzer visbiežāk?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "milk",
+                  "label": "Ar pienu",
+                  "sublabel": "kapučīno, latte",
+                  "card_reason": "Automātiski saputo pienu",
+                  "table_value": "Ar pienu"
+                },
+                {
+                  "value": "black",
+                  "label": "Melnu",
+                  "sublabel": "espresso, americano",
+                  "card_reason": null,
+                  "table_value": "Melna kafija"
+                },
+                {
+                  "value": "any",
+                  "label": "Abas",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -1157,7 +1925,8 @@
                   "card_reason": "Liela ūdens tvertne — piemērots daudzām krūzēm",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1179,7 +1948,7 @@
             {
               "id": "g0",
               "title": "Kā tu gatavo kafiju?",
-              "why": null,
+              "why": "Espresso vajag ļoti smalku un vienmērīgu malumu, ko dod tikai dzirnaviņas ar dzirnakmeņiem — tāpēc espresso cienītājiem rādām tikai tās.",
               "hard_filter": false,
               "options": [
                 {
@@ -1187,7 +1956,10 @@
                   "label": "Espresso",
                   "sublabel": null,
                   "card_reason": "Smalks, precīzs malums espresso",
-                  "table_value": null
+                  "table_value": null,
+                  "implies": {
+                    "g1": "burr"
+                  }
                 },
                 {
                   "value": "filter",
@@ -1201,9 +1973,11 @@
                   "label": "Dažādi",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1225,7 +1999,14 @@
                   "card_reason": null,
                   "table_value": null
                 }
-              ]
+              ],
+              "showIf": {
+                "q": "g0",
+                "notIn": [
+                  "espresso"
+                ]
+              },
+              "type": "single"
             }
           ]
         }
@@ -1248,6 +2029,7 @@
           ],
           "compare_row_labels": [
             "Priekšrocības",
+            "Materiāls",
             "Tilpums"
           ],
           "questions": [
@@ -1272,13 +2054,22 @@
                   "table_value": null
                 },
                 {
-                  "value": "design",
-                  "label": "Dizains",
-                  "sublabel": null,
-                  "card_reason": "Izceļas ar dizainu",
-                  "table_value": null
+                  "value": "glass",
+                  "label": "Stikla korpuss",
+                  "sublabel": "redzams ūdens līmenis",
+                  "card_reason": "Stikla korpuss",
+                  "table_value": "Stikls"
+                },
+                {
+                  "value": "steel",
+                  "label": "Nerūsējošā tērauda korpuss",
+                  "sublabel": "izturīgs, bez plastmasas garšas",
+                  "card_reason": "Tērauda korpuss — bez plastmasas saskares ar ūdeni",
+                  "table_value": "Tērauds"
                 }
-              ]
+              ],
+              "type": "multi",
+              "max_select": 2
             },
             {
               "id": "g1",
@@ -1300,7 +2091,8 @@
                   "card_reason": null,
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1339,7 +2131,8 @@
                   "card_reason": "Ar pudeli līdzņemšanai",
                   "table_value": "Personīgais (ar pudeli)"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1368,7 +2161,8 @@
                   "card_reason": "Ar sildīšanas funkciju — gatavo zupas",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1407,7 +2201,8 @@
                   "card_reason": "Bezvadu — darbojas ar akumulatoru",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1429,7 +2224,8 @@
                   "card_reason": "Komplektā smalcinātājs un putotājs",
                   "table_value": "Smalcinātājs, putotājs"
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1468,7 +2264,8 @@
                   "card_reason": null,
                   "table_value": "Kombains ar diskiem"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1495,9 +2292,11 @@
                   "label": "Visu",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1536,7 +2335,8 @@
                   "card_reason": "Ar grozāmu bļodu — nav jātur rokās",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1558,7 +2358,8 @@
                   "card_reason": "Jaudīgs — tiek galā ar biezu mīklu",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1597,7 +2398,8 @@
                   "card_reason": "Jaudīgs — sasmalcina riekstus un gaļu",
                   "table_value": "Rieksti, gaļa"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1619,7 +2421,8 @@
                   "card_reason": "Liela bļoda — 1 L un vairāk",
                   "table_value": "1 L un vairāk"
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1658,7 +2461,8 @@
                   "card_reason": "Jaudīgs motors un metāla pārnesums",
                   "table_value": "Liela"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1685,9 +2489,11 @@
                   "label": "Nē, tikai maltajai gaļai",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1726,7 +2532,8 @@
                   "card_reason": "0,1 g precizitāte",
                   "table_value": "0,1 g"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1746,9 +2553,11 @@
                   "label": "Nav vajadzīgas",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1787,7 +2596,8 @@
                   "card_reason": "Bezvadu — darbojas ar akumulatoru",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1814,9 +2624,11 @@
                   "label": "Abus",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
@@ -1863,7 +2675,8 @@
                   "card_reason": "Galda plate — gatavo kopā pie galda",
                   "table_value": "Galda grila plate"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1883,9 +2696,11 @@
                   "label": "Nav vajadzīgas",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -1914,7 +2729,8 @@
                   "card_reason": "Ļoti liela virsma — 5+ cilvēkiem",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1953,7 +2769,8 @@
                   "card_reason": "4 šķēles vienlaikus",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -1969,20 +2786,22 @@
                   "table_value": null
                 },
                 {
-                  "value": "design",
-                  "label": "Dizains",
-                  "sublabel": null,
-                  "card_reason": "Izceļas ar dizainu",
-                  "table_value": null
+                  "value": "long",
+                  "label": "Garas atveres",
+                  "sublabel": "mājās ceptai maizei un lielām šķēlēm",
+                  "card_reason": "Garas atveres — der lielām šķēlēm",
+                  "table_value": "Garas atveres"
                 },
                 {
                   "value": "any",
                   "label": "Nav svarīgi",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -1997,7 +2816,8 @@
             90
           ],
           "compare_row_labels": [
-            "Funkcijas"
+            "Funkcijas",
+            "Vienlaikus"
           ],
           "questions": [
             {
@@ -2020,7 +2840,31 @@
                   "card_reason": "Maināmas plātnes — vafeles, grils",
                   "table_value": "Vafeles, grils"
                 }
-              ]
+              ],
+              "type": "single"
+            },
+            {
+              "id": "count",
+              "title": "Cik sviestmaizes vienlaikus?",
+              "why": null,
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "2",
+                  "label": "2",
+                  "sublabel": "1–2 cilvēkiem",
+                  "card_reason": null,
+                  "table_value": "2"
+                },
+                {
+                  "value": "4",
+                  "label": "4",
+                  "sublabel": "ģimenei",
+                  "card_reason": "4 sviestmaizes vienlaikus",
+                  "table_value": "4"
+                }
+              ],
+              "type": "single"
             }
           ]
         },
@@ -2059,7 +2903,8 @@
                   "card_reason": null,
                   "table_value": "Taukvāres katls"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -2088,7 +2933,8 @@
                   "card_reason": "Divi grozi — gatavo divus ēdienus vienlaikus",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -2127,7 +2973,8 @@
                   "card_reason": "Programmas rupjmaizei un bezglutēna maizei",
                   "table_value": "Rupjmaize, bezglutēna"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -2147,9 +2994,11 @@
                   "label": "Nav vajadzīgs",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -2187,9 +3036,11 @@
                   "label": "Nē, tikai krāsni",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -2211,7 +3062,8 @@
                   "card_reason": "Tilpums 30–45 L — var cept veselu vistu",
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g2",
@@ -2231,9 +3083,11 @@
                   "label": "Nav svarīgi",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
@@ -2255,7 +3109,8 @@
             300
           ],
           "compare_row_labels": [
-            "Tips"
+            "Tips",
+            "Piemērots"
           ],
           "questions": [
             {
@@ -2285,7 +3140,39 @@
                   "card_reason": null,
                   "table_value": null
                 }
-              ]
+              ],
+              "type": "single"
+            },
+            {
+              "id": "produce",
+              "title": "Ko spiedīsi visbiežāk?",
+              "why": "Lēngaitas spiedes labāk tiek galā ar zaļumiem, centrbēdzes — ar cietiem augļiem.",
+              "hard_filter": false,
+              "options": [
+                {
+                  "value": "hard",
+                  "label": "Cietus augļus un dārzeņus",
+                  "sublabel": "āboli, burkāni, bietes",
+                  "card_reason": "Tiek galā ar cietiem augļiem un dārzeņiem",
+                  "table_value": "Cieti augļi"
+                },
+                {
+                  "value": "greens",
+                  "label": "Lapu zaļumus un ogas",
+                  "sublabel": "spināti, kāposti, upenes",
+                  "card_reason": "Izspiež arī lapu zaļumus",
+                  "table_value": "Zaļumi"
+                },
+                {
+                  "value": "any",
+                  "label": "Visu",
+                  "sublabel": null,
+                  "card_reason": null,
+                  "table_value": null,
+                  "passthrough": true
+                }
+              ],
+              "type": "single"
             }
           ]
         },
@@ -2324,7 +3211,8 @@
                   "card_reason": "Daudz paplāšu — piemērots lielai ražai",
                   "table_value": "8 un vairāk paplātes"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -2344,9 +3232,11 @@
                   "label": "Nav svarīgi",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         },
@@ -2385,7 +3275,8 @@
                   "card_reason": "Jaudīgs sūknis — var strādāt ilgi bez pārtraukuma",
                   "table_value": "Liela"
                 }
-              ]
+              ],
+              "type": "single"
             },
             {
               "id": "g1",
@@ -2405,9 +3296,11 @@
                   "label": "Nē, pārsvarā sausus",
                   "sublabel": null,
                   "card_reason": null,
-                  "table_value": null
+                  "table_value": null,
+                  "passthrough": true
                 }
-              ]
+              ],
+              "type": "single"
             }
           ]
         }
