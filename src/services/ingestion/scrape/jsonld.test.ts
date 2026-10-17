@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GRAPH_PAGE, INLINE_PAGE } from "./fixtures";
-import { decodeEntities, extractProducts, jsonLdNodes } from "./jsonld";
+import { decodeEntities, eanFromAttributes, extractProducts, jsonLdNodes } from "./jsonld";
 
 const URL_A = "https://shop-a.example/sadzives-tehnika/ledusskapji/ledusskapji/rf414eps4/gorenje";
 const URL_B = "https://www.shop-b.example/p/products/1/Velasmasinas/Bosch/WAN28281BY";
@@ -87,5 +87,30 @@ describe("JSON-LD product extraction", () => {
 
   it("decodes numeric and named entities, leaving unknown ones", () => {
     expect(decodeEntities("&#x113;&#257;&nbsp;&amp;amp;&unknown;&#0;")).toBe("ēā &&unknown;&#0;");
+  });
+
+  it("takes the EAN from data attributes when JSON-LD has none", () => {
+    const noGtin = INLINE_PAGE(URL_B, { gtin13: undefined });
+    const html = `${noGtin}<div data-ean="4242005217380" data-product-ean="4242005217380"></div>`;
+    expect(extractProducts(html, URL_B)[0]!.gtin).toBe("4242005217380");
+    expect(extractProducts(`${noGtin}<b data-flix-ean='8806084641519'>`, URL_B)[0]!.gtin).toBe(
+      "8806084641519",
+    );
+  });
+
+  it("ignores data attributes that disagree, and never overrides JSON-LD", () => {
+    expect(
+      eanFromAttributes('<a data-ean="4242005217380"></a><a data-ean="8806084641519"></a>'),
+    ).toBeUndefined();
+    expect(eanFromAttributes("<p>no attributes</p>")).toBeUndefined();
+    const withGtin = `${INLINE_PAGE(URL_B)}<div data-ean="8806084641519"></div>`;
+    expect(extractProducts(withGtin, URL_B)[0]!.gtin).toBe("4242005217380");
+  });
+
+  it("does not attach an attribute EAN when the page lists several products", () => {
+    const two = `${INLINE_PAGE(URL_B, { gtin13: undefined })}${INLINE_PAGE(URL_B, { gtin13: undefined, sku: "B" })}`;
+    const records = extractProducts(`${two}<div data-ean="4242005217380"></div>`, URL_B);
+    expect(records).toHaveLength(2);
+    expect(records.every((r) => r.gtin === undefined)).toBe(true);
   });
 });

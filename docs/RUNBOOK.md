@@ -43,10 +43,10 @@ Shops are rows in `stores`. Nothing about a shop is in code except the slug used
 
 ### Shops without a feed
 
-euronics.lv and m79.lv are read from their public product pages (`feed_type = 'scrape'`). How it works, its limits, and how to add a shop are in `docs/SCRAPING.md`. On a database seeded before scraping existed, activate them once:
+euronics.lv, m79.lv and tet.lv are read from their public product pages (`feed_type = 'scrape'`). How it works, its limits, and how to add a shop are in `docs/SCRAPING.md`. On a database seeded before scraping existed, activate them once:
 
 ```sql
-update stores set active = true where slug in ('euronics', 'm79');
+update stores set active = true where slug in ('euronics', 'm79', 'tet');
 -- once real offers exist, hide the placeholder sample stores:
 update stores set active = false where feed_type = 'sample';
 ```

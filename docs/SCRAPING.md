@@ -21,7 +21,9 @@ matching, price history, the 30-day low and the radar all work the same way.
 4. **Product pages** are read one at a time, with `delayMs` (at least one
    second) between requests. The schema.org `Product` data in the page's
    JSON-LD gives name, brand, EAN (gtin13 and variants), model code (mpn or
-   sku), price, stock and condition. Used items are rejected. Refurbished
+   sku), price, stock and condition. When the JSON-LD has no EAN, a single
+   agreeing `data-ean`, `data-product-ean` or `data-flix-ean` attribute on a
+   one-product page is used instead. Used items are rejected. Refurbished
    items go to the refurbished block, as with feeds.
 5. Pages never seen before are read first, then the ones unseen longest, so
    a run capped at `maxPages` rotates through a large catalogue.
@@ -58,13 +60,13 @@ one sitemap, one product page.
 |---|---|---|---|---|---|
 | rdveikals.lv | No, Cloudflare challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
 | ksenukai.lv | No, Cloudflare challenge | n/a | schema.org Product: name, brand, price, stock, energy class, rating (from a page saved in a browser) | Yes, in `data-flix-ean` | Needs a feed or allow-listing |
-| tet.lv | Yes | Yes, about 12 300 URLs | schema.org Product: name, sku, price, stock | Yes, in `data-ean` | Scrapeable after a small parser addition |
+| tet.lv | Yes | Yes, about 12 300 URLs | schema.org Product: name, mpn, price, stock | Yes, in `data-ean` | Scraped, about 2 500 appliance pages |
 | depo.lv (online.depo.lv) | Yes | No | None in HTML, JavaScript app | No | Needs a feed |
 | ikea.com/lv | Yes | Yes | schema.org Product: name, price, stock | No, IKEA article numbers only | Own-brand products only, nothing to compare across shops |
 | 1a.lv | No, Cloudflare block | n/a | n/a | n/a | Needs a feed or allow-listing |
 | euronics.lv | Yes | Yes | schema.org Product | Yes | Scraped |
 | m79.lv | Yes | Yes, gzipped | schema.org Product | Yes | Scraped |
-| bigbox.lv | Yes | No sitemap | schema.org Product: name, price, stock | Yes | Needs link discovery from category pages |
+| bigbox.lv | Yes | Empty sitemap, listings load from a private API | schema.org Product: name, price, stock | Yes | Needs a feed (inactive store row is ready) |
 | neoshop.lv | No, JavaScript challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
 | dateks.lv | No, Cloudflare challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
 | lmt.lv, bite.lv | No, Cloudflare challenge | n/a | n/a | n/a | Telecom shops, mostly phones |
@@ -74,6 +76,12 @@ one sitemap, one product page.
 
 1a.lv and ksenukai.lv both belong to Kesko Senukai, so one agreement covers
 two of the largest appliance sellers.
+
+bigbox.lv shows full product data with EAN on each product page, but its
+sitemap is empty and category listings are loaded from a private GraphQL API
+that needs a session handshake. The site also serves pre-rendered pages to a
+list of search-engine bots. Using the private API or posing as one of those
+bots is outside what this crawler does, so bigbox.lv needs a product feed.
 
 ## Configuration reference
 
