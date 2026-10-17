@@ -6,10 +6,22 @@ import * as schema from "./schema";
 // scripts; never by client components (the `server-only` guard is applied in
 // src/db/index.ts for app code; scripts import this file directly).
 
-function connectionString(): string {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
-  return url;
+/** Set by `next build` while it evaluates route modules to collect their config. */
+const NEXT_BUILD_PHASE = "phase-production-build";
+
+/**
+ * Never connected: postgres-js opens a connection on the first query, and no
+ * page reads the database at build time (landing pages render on first
+ * request). A query during a build fails loudly against this address.
+ */
+export const BUILD_PLACEHOLDER_URL = "postgres://build:build@127.0.0.1:1/no-database-during-build";
+
+export function connectionString(env: Record<string, string | undefined> = process.env): string {
+  const url = env.DATABASE_URL;
+  if (url) return url;
+  // Railway (and any container build) has no database during `next build`.
+  if (env.NEXT_PHASE === NEXT_BUILD_PHASE) return BUILD_PLACEHOLDER_URL;
+  throw new Error("DATABASE_URL is not set");
 }
 
 declare global {

@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { allSubcategories, getSubcategory } from "@/domain/questions/catalog";
+import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur } from "@/i18n/format";
 import { appBaseUrl } from "@/services/payments";
 import { LandingPage } from "../../LandingPage";
 
 export const revalidate = 3600;
-export const dynamicParams = false;
 
 type Props = { params: Promise<{ sub: string; budget: string }> };
 
-/** One page per subcategory and budget step: /kategorija/fridge/lidz-800 (the segment carries the "lidz-" prefix). */
-export function generateStaticParams() {
-  return allSubcategories().flatMap((s) =>
-    s.budget_steps_eur.map((eur) => ({ sub: s.id, budget: `lidz-${eur}` })),
-  );
+/**
+ * One page per subcategory and budget step: /kategorija/fridge/lidz-800 (the
+ * segment carries the "lidz-" prefix). Rendered on first request and cached
+ * for an hour; the build has no database. Anything resolve() rejects is a 404.
+ */
+export function generateStaticParams(): { sub: string; budget: string }[] {
+  return [];
 }
 
 function resolve(subId: string, budget: string) {

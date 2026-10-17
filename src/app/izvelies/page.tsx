@@ -10,6 +10,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Spec §2.1 step 1: group tiles with icons; "Kaut kas cits" spans the full width. */
+// Rendered per request so the site URL in metadata and JSON-LD comes from APP_URL at runtime.
+export const dynamic = "force-dynamic";
+
 export default async function GroupsPage() {
   const t = await getTranslations("flow");
   return (

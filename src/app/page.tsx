@@ -6,6 +6,9 @@ import { Logo } from "@/ui/Logo";
 // Welcome screen (spec §1) plus crawlable entry points: search engines and
 // AI assistants need real links to the category pages, not just two buttons.
 
+// Rendered per request so the site URL in metadata and JSON-LD comes from APP_URL at runtime.
+export const dynamic = "force-dynamic";
+
 export default async function WelcomePage() {
   const t = await getTranslations();
   const groups = catalog.groups.filter((g) => g.id !== "other");

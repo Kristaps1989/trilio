@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { allSubcategories, catalog } from "@/domain/questions/catalog";
 import { appBaseUrl } from "@/services/payments";
 
+// Built per request: the site URL comes from APP_URL at runtime, not at build time.
+export const dynamic = "force-dynamic";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = appBaseUrl();
   const now = new Date();
