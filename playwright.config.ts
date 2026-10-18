@@ -10,6 +10,23 @@ export default defineConfig({
   use: {
     baseURL: process.env.BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
+    // Analytics consent already declined, so the consent banner never covers other tests
+    // (tests/e2e/analytics.spec.ts starts without it).
+    storageState: {
+      cookies: [
+        {
+          name: "trilio_consent",
+          value: "denied",
+          domain: new URL(process.env.BASE_URL ?? "http://localhost:3000").hostname,
+          path: "/",
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ],
+      origins: [],
+    },
     // Lets a sandbox with a pre-installed Chromium run the suite; unset in CI.
     launchOptions: process.env.PW_EXECUTABLE_PATH
       ? { executablePath: process.env.PW_EXECUTABLE_PATH }

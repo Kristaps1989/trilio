@@ -378,7 +378,8 @@
             "Cenu radars: preces un iestatījumi, ko izvēlies, un paziņojumu kanāli. Pārlūka paziņojumiem glabājam pārlūka izsniegto abonēšanas adresi un atslēgas. Pamats: līguma izpilde.",
             "Abonements un maksājumi: plāns, statuss, maksājumu summas un datumi un Paysera izsniegts maksājuma marķieris, ko glabājam šifrētu. Kartes datus apstrādā tikai Paysera, Trilio tos neredz un neglabā. Pamats: līguma izpilde un juridisks pienākums.",
             "Gaidītāju saraksts: ja atstāj e-pastu sadaļā “Kaut kas cits”, glabājam e-pastu un pieprasījuma tekstu, lai paziņotu, kad kategorija būs pieejama. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī.",
-            "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses."
+            "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses.",
+            "Lietošanas statistika: tikai ja to atļauj sīkdatņu logā, Google Analytics reģistrē apmeklētās lapas, sadaļas un nospiestās pogas, kā arī ierīces un pārlūka veidu un aptuveno atrašanās vietu (valsts, pilsēta). Tava ievadītā teksta, atbilžu un e-pasta tur nav. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā."
           ]
         },
         {
@@ -397,6 +398,7 @@
             "Railway: serveru un datubāzes hostings.",
             "Cloudflare: domēna vārdu sistēma (DNS).",
             "Google: ienākšana ar Google kontu, ja to izvēlies.",
+            "Google Ireland Limited: lietošanas statistika (Google Analytics), tikai ar tavu piekrišanu.",
             "Resend: e-pastu nosūtīšana (ES reģions).",
             "Paysera LT, UAB: maksājumu apstrāde.",
             "Anthropic: kategorijas noteikšana no brīvā teksta, kā aprakstīts iepriekš.",
@@ -418,6 +420,7 @@
             "Konta dati un radari: kamēr konts ir aktīvs. Dzēstu radaru izņemam pēc 24 stundām.",
             "Konta dzēšana ir galīga: dzēšam kontu, radarus, abonementu un maksājumu ierakstus Trilio sistēmā. Grāmatvedības dokumentus par veiktajiem maksājumiem Paysera un mūsu grāmatvedība glabā likumā noteikto laiku (5 gadus).",
             "Gaidītāju saraksts: līdz kategorijas palaišanai, bet ne ilgāk par 12 mēnešiem.",
+            "Lietošanas statistika Google Analytics: 14 mēneši.",
             "Meklēšanas atbildes un klikšķu statistika: bez konta tās nav saistītas ar tevi, un tās izmantojam statistikai.",
             "Ienākšanas saites e-pastā: 15 minūtes."
           ]
@@ -433,7 +436,7 @@
         {
           "h": "Sīkdatnes",
           "p": [
-            "Izmantojam tikai pakalpojumam nepieciešamās sīkdatnes. Reklāmas, analītikas un izsekošanas sīkdatņu nav. Sīkāk: sīkdatņu politikā."
+            "Pakalpojumam nepieciešamās sīkdatnes izmantojam vienmēr. Google Analytics statistikas sīkdatnes tiek iestatītas tikai pēc tavas atļaujas. Reklāmas sīkdatņu nav. Sīkāk: sīkdatņu politikā."
           ]
         },
         {
@@ -553,6 +556,21 @@
           "name": "authjs.callback-url",
           "purpose": "Atceras, uz kuru lapu atgriezties pēc ienākšanas.",
           "duration": "Līdz pārlūka aizvēršanai"
+        },
+        {
+          "name": "trilio_consent",
+          "purpose": "Atceras tavu izvēli par statistikas sīkdatnēm.",
+          "duration": "6 mēneši"
+        },
+        {
+          "name": "_ga",
+          "purpose": "Google Analytics: atšķir apmeklētājus statistikā. Tikai ar tavu atļauju.",
+          "duration": "2 gadi"
+        },
+        {
+          "name": "_ga_<ID>",
+          "purpose": "Google Analytics: saglabā apmeklējuma stāvokli. Tikai ar tavu atļauju.",
+          "duration": "2 gadi"
         }
       ],
       "sections": [
@@ -575,7 +593,8 @@
         {
           "h": "Kā pārvaldīt sīkdatnes",
           "p": [
-            "Sīkdatnes vari dzēst vai bloķēt pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
+            "Savu izvēli par statistikas sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics sīkdatnes tiek dzēstas.",
+            "Sīkdatnes vari dzēst vai bloķēt arī pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
           ]
         }
       ]
@@ -602,5 +621,12 @@
         }
       ]
     }
+  },
+  "consent": {
+    "title": "Sīkdatnes statistikai",
+    "text": "Vai atļauj Google Analytics sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas, lai uzlabotu Trilio. Bez atļaujas tās netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
+    "accept": "Atļaut",
+    "reject": "Neatļaut",
+    "settings": "Sīkdatņu iestatījumi"
   }
 }

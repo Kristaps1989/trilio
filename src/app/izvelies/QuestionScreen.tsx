@@ -166,6 +166,10 @@ export function QuestionScreen({
                 question.type === "multi" ? multi.includes(o.value) : flash === o.value || current === o.value
               }
               onSelect={() => (question.type === "multi" ? toggleMulti(o) : pickSingle(o.value))}
+              analytics={{
+                event: "answer_question",
+                params: { question: question.id, option: String(o.value) },
+              }}
             />
           ))}
           {customOpen && question.customNumber ? (

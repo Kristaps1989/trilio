@@ -11,6 +11,7 @@ export function OptionRow({
   selected,
   onSelect,
   role = "radio",
+  analytics,
 }: {
   letter: string;
   label: string;
@@ -18,13 +19,24 @@ export function OptionRow({
   selected: boolean;
   onSelect: () => void;
   role?: "radio" | "checkbox";
+  /** Analytics event for this choice: rendered as data-ga-* attributes (src/ui/analytics). */
+  analytics?: { event: string; params: Record<string, string> };
 }) {
+  const gaAttributes = analytics
+    ? {
+        "data-ga-event": analytics.event,
+        ...Object.fromEntries(
+          Object.entries(analytics.params).map(([k, v]) => [`data-ga-param-${k.replace(/_/g, "-")}`, v]),
+        ),
+      }
+    : {};
   return (
     <button
       type="button"
       role={role}
       aria-checked={selected}
       onClick={onSelect}
+      {...gaAttributes}
       className={`flex min-h-[60px] w-full items-center gap-3 rounded-[14px] border-[1.5px] px-4 py-3 text-left transition-colors ${
         selected ? "border-lime bg-lime-18" : "border-mist-32 bg-white-5"
       }`}

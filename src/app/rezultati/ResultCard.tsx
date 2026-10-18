@@ -179,6 +179,12 @@ export async function ResultCard({ card }: { card: CardModel }) {
         <a
           href={`/go/${card.best.id}${card.sessionId ? `?s=${card.sessionId}` : ""}`}
           rel="sponsored noopener"
+          data-ga-event="select_offer"
+          data-ga-param-store={card.best.storeName}
+          data-ga-param-tier={card.tier ?? "none"}
+          data-ga-param-recommended={card.recommended ? "yes" : "no"}
+          data-ga-param-refurbished={card.refurbished ? "yes" : "no"}
+          data-ga-param-price-eur={String(Math.round(card.best.priceCents / 100))}
           className="flex min-h-14 flex-1 items-center justify-center rounded-button bg-night px-6 text-lg font-bold text-mist"
         >
           {t("buy", { shop: card.best.storeName })}

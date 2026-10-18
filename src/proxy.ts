@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { ANALYTICS_HOSTS, analyticsId } from "@/config/analytics";
 
 // Nonce-based Content Security Policy. Next.js reads the nonce from the
 // `x-nonce` request header and applies it to the scripts it injects, so no
@@ -7,15 +8,17 @@ import { NextResponse, type NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
+  // Google Analytics hosts only when it is configured; it still loads only after consent.
+  const ga = analyticsId() ? ` ${ANALYTICS_HOSTS.join(" ")}` : "";
 
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${ga}${isDev ? " 'unsafe-eval'" : ""}`,
     // Tailwind and next/font emit <style> tags; styles are not an injection vector we accept scripts from.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob:${ga}`,
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${ga}`,
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",
