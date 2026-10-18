@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { PrimaryButton } from "@/ui/PrimaryButton";
+import { Button } from "@/ui/Button";
 
 // Registers the service worker and subscribes this device to Web Push.
 // Shown only when the user chose push and the server has a VAPID key.
@@ -52,8 +52,10 @@ export function PushToggle({ publicKey }: { publicKey: string }) {
   if (state === "unsupported") return <p className="text-sm text-stone">{t("pushUnsupported")}</p>;
   if (state === "on") return <p className="text-sm text-lime">{t("pushEnabled")}</p>;
   return (
-    <PrimaryButton variant="secondary" onClick={enable}>
-      {t("enablePush")}
-    </PrimaryButton>
+    <div>
+      <Button variant="outline" size="sm" onClick={enable}>
+        {t("enablePush")}
+      </Button>
+    </div>
   );
 }

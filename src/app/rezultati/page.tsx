@@ -29,11 +29,12 @@ import {
   formatLitres,
   formatRating,
 } from "@/i18n/format";
-import { PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { ButtonLink } from "@/ui/Button";
+import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
 import { CompareTable, type CompareColumn, type CompareRow } from "./CompareTable";
 import { deltaLines } from "./delta-text";
-import { ResultCard, type CardModel, type CardOffer } from "./ResultCard";
+import { HowWeRank } from "./HowWeRank";
+import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCard";
 
 export const dynamic = "force-dynamic";
 
@@ -285,93 +286,121 @@ export default async function ResultsPage({ searchParams }: Props) {
     alwaysShow: true,
   });
 
+  const howItems = [
+    t("howFilters"),
+    t("howRanking"),
+    t("howRecommendation"),
+    t("howCommission"),
+    t("howEnergy", { price: `${formatInt(energyPrice)} ct` }),
+    t("howRefurbished"),
+    t("howUnconfirmed"),
+  ];
+
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
-      <p className="mt-2 text-base text-stone">
-        {budget === null ? t("leadNoBudget") : t("lead", { count: result.matchingCount })}
-        {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
-        {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
-      </p>
-
-      <section aria-label={t("answers")} className="mt-4">
-        <ul className="flex flex-wrap gap-2">
-          {chips.map((c) => (
-            <li key={c.id}>
-              <Link
-                href={`${basePath}?a=${encoded}&q=${c.id}`}
-                className="flex min-h-11 items-center gap-1 rounded-full border border-mist-32 bg-white-5 px-3 text-sm font-semibold text-mist"
-              >
-                {c.text} <span className="text-stone">· {t("edit")}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <p className="mt-4 text-sm text-stone">{t("eanNote")}</p>
-
-      <details className="mt-3 rounded-[14px] border border-mist-32 bg-white-5 p-4 text-sm text-mist">
-        <summary className="min-h-11 cursor-pointer list-none font-semibold">{t("howWeRank")}</summary>
-        <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-stone">
-          <li>{t("howFilters")}</li>
-          <li>{t("howRanking")}</li>
-          <li>{t("howRecommendation")}</li>
-          <li>{t("howCommission")}</li>
-          <li>{t("howEnergy", { price: `${formatInt(energyPrice)} ct` })}</li>
-          <li>{t("howRefurbished")}</li>
-          <li>{t("howUnconfirmed")}</li>
-        </ul>
-      </details>
-
-      <div className="mt-6 flex flex-col gap-4">
-        {cards.map((c) => (
-          <ResultCard key={c.productId} card={c} />
-        ))}
+    <Page size="wide" gap="gap-[22px]">
+      <div className="flex flex-col gap-[10px]">
+        <Kicker>{t("kicker", { count: result.matchingCount })}</Kicker>
+        <PageTitle scale="results">{t("title")}</PageTitle>
+        <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
+          {budget === null ? t("leadNoBudget") : t("lead", { count: result.matchingCount })}
+          {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
+          {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
+        </p>
+        <nav aria-label={t("answers")}>
+          <ul className="flex flex-wrap gap-2">
+            {chips.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`${basePath}?a=${encoded}&q=${c.id}`}
+                  className="flex min-h-11 items-center gap-1 rounded-full bg-chip px-[14px] text-sm text-mist transition-colors hover:bg-lime-18"
+                >
+                  {c.text} <span className="text-stone">· {t("edit")}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
       </div>
 
-      {extraCards.length ? (
-        <section className="mt-6 flex flex-col gap-4" aria-label={t("extrasTitle")}>
-          <h2 className="text-xl font-bold text-mist">{t("extrasTitle")}</h2>
-          {extraCards.map((c) => (
-            <ResultCard key={c.productId} card={c} />
-          ))}
+      {cards.length === 0 && extraCards.length === 0 ? (
+        <Panel tone="dashed" className="text-lg">
+          {t("empty")}
+        </Panel>
+      ) : null}
+
+      {cards.length ? (
+        <section aria-label={t("picksLabel")}>
+          <CardRow>
+            {cards.map((c) => (
+              <ResultCard key={c.productId} card={c} />
+            ))}
+          </CardRow>
         </section>
       ) : null}
 
-      {compared.length > 1 ? (
-        <div className="mt-6">
-          <CompareTable columns={columns} rows={rows} />
-        </div>
+      {extraCards.length ? (
+        <section className="flex flex-col gap-3" aria-labelledby="extras-title">
+          <SectionTitle id="extras-title">{t("extrasTitle")}</SectionTitle>
+          <CardRow>
+            {extraCards.map((c) => (
+              <ResultCard key={c.productId} card={c} />
+            ))}
+          </CardRow>
+        </section>
       ) : null}
 
+      {compared.length > 1 ? <CompareTable columns={columns} rows={rows} /> : null}
+
       {refurbCards.length ? (
-        <section className="mt-8 flex flex-col gap-4" aria-label={t("refurbTitle")}>
-          <h2 className="text-xl font-bold text-mist">{t("refurbTitle")}</h2>
+        <section className="flex flex-col gap-[10px]" aria-labelledby="refurb-title">
+          <h2
+            id="refurb-title"
+            className="flex items-center gap-[10px] font-body text-[15px] font-bold tracking-normal text-refurb-border"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-3-6.7L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+            {t("refurbLabel")}
+          </h2>
           {refurbCards.map((c) => (
             <ResultCard key={`r-${c.productId}`} card={c} />
           ))}
         </section>
       ) : null}
 
-      <section className="mt-8 flex flex-col gap-3">
-        <PrimaryLink href={`/radars/jauns?sub=${sub.id}&a=${encoded}&s=${sessionId ?? ""}`}>
-          {t("radarCta", { price: t("radarMonthly") })}
-        </PrimaryLink>
-        <p className="text-center text-sm text-stone">{t("radarCtaSub")}</p>
-        <div className="flex gap-3">
-          <PrimaryLink
-            href={`${basePath}?a=${encoded}&q=${sub.questions[0]?.id ?? "budget"}`}
-            variant="secondary"
-          >
-            {t("changeAnswers")}
-          </PrimaryLink>
-          <PrimaryLink href="/izvelies" variant="secondary">
-            {t("startOver")}
-          </PrimaryLink>
-        </div>
-      </section>
-    </Shell>
+      {cards.length || extraCards.length ? (
+        <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">
+          <div className="min-w-0 flex-[1_1_320px]">
+            <h2 className="font-heading text-[22px] font-semibold text-mist">{t("radarTitle")}</h2>
+            <p className="text-base text-stone">{t("radarCtaSub")}</p>
+          </div>
+          <ButtonLink href={`/radars/jauns?sub=${sub.id}&a=${encoded}&s=${sessionId ?? ""}`}>
+            {t("radarCta", { price: t("radarMonthly") })}
+          </ButtonLink>
+        </Panel>
+      ) : null}
+
+      <div className="flex flex-wrap gap-3">
+        <ButtonLink href={`${basePath}?a=${encoded}&q=${sub.questions[0]?.id ?? "budget"}`} variant="outline">
+          {t("changeAnswers")}
+        </ButtonLink>
+        <ButtonLink href="/izvelies" variant="link">
+          {t("startOver")}
+        </ButtonLink>
+      </div>
+    </Page>
   );
 }
 

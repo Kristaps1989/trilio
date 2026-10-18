@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { auth } from "@/auth";
-import { PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { auth, signOut } from "@/auth";
+import { Button, ButtonLink, buttonClass } from "@/ui/Button";
+import { Kicker, Page, PageTitle, Panel } from "@/ui/layout";
 import { DeleteAccount } from "./DeleteAccount";
 
 export const dynamic = "force-dynamic";
@@ -22,33 +22,55 @@ export default async function AccountPage() {
   if (!session?.user?.id) redirect("/ienakt?callbackUrl=/konts");
 
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
-      <p className="mt-2 text-base text-stone">{ta("signedInAs", { email: session.user.email ?? "" })}</p>
-
-      <section className="mt-8 flex flex-col gap-2">
-        <h2 className="text-lg font-bold text-mist">{t("export")}</h2>
-        <p className="text-sm text-stone">{t("exportHint")}</p>
-        <a
-          href="/api/account/export"
-          download="trilio-dati.json"
-          className="flex min-h-14 items-center justify-center rounded-button border-[1.5px] border-mist-32 bg-white-5 px-6 text-lg font-semibold text-mist"
-        >
-          {t("export")}
-        </a>
-      </section>
-
-      <section className="mt-8 flex flex-col gap-2">
-        <h2 className="text-lg font-bold text-warning">{t("delete")}</h2>
-        <p className="text-sm text-stone">{t("deleteHint")}</p>
-        <DeleteAccount />
-      </section>
-
-      <div className="mt-8">
-        <PrimaryLink href="/radars" variant="secondary">
-          {tr("title")}
-        </PrimaryLink>
+    <Page size="text">
+      <div className="flex flex-col gap-2">
+        <Kicker>{t("kicker")}</Kicker>
+        <PageTitle scale="results">{t("title")}</PageTitle>
+        <p className="text-[17px] text-stone">{ta("signedInAs", { email: session.user.email ?? "" })}</p>
       </div>
-    </Shell>
+
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-heading text-xl font-semibold text-mist">{tr("title")}</h2>
+        <p className="text-[15px] text-stone">{t("radarHint")}</p>
+        <div>
+          <ButtonLink href="/radars" size="sm">
+            {t("openRadar")}
+          </ButtonLink>
+        </div>
+      </Panel>
+
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("export")}</h2>
+        <p className="text-[15px] text-stone">{t("exportHint")}</p>
+        <div>
+          <a
+            href="/api/account/export"
+            download="trilio-dati.json"
+            className={buttonClass({ variant: "outline", size: "sm" })}
+          >
+            {t("export")}
+          </a>
+        </div>
+      </Panel>
+
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-heading text-xl font-semibold text-warning">{t("delete")}</h2>
+        <p className="text-[15px] text-stone">{t("deleteHint")}</p>
+        <DeleteAccount />
+      </Panel>
+
+      <section className="flex justify-end">
+        <form
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/" });
+          }}
+        >
+          <Button type="submit" variant="outline" size="sm">
+            {ta("signOut")}
+          </Button>
+        </form>
+      </section>
+    </Page>
   );
 }

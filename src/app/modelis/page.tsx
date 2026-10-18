@@ -13,9 +13,9 @@ import {
 import { priceLine } from "@/domain/pricing/omnibus";
 import { bestOffer, eligibleOffers } from "@/domain/ranking/filters";
 import { formatCm, formatDateDative, formatEur } from "@/i18n/format";
-import { PrimaryButton } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
-import { ResultCard, type CardModel } from "../rezultati/ResultCard";
+import { Button } from "@/ui/Button";
+import { InfoBox, Kicker, Lead, Page, PageTitle, Panel, Screen, SectionTitle } from "@/ui/layout";
+import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 
 export const dynamic = "force-dynamic";
 
@@ -137,56 +137,78 @@ export default async function ModelPage({ searchParams }: Props) {
     )
     .filter((c): c is CardModel => !!c);
 
+  const form = (
+    <form method="get" className="flex max-w-[560px] flex-wrap items-end gap-[14px]">
+      <label htmlFor="model-q" className="sr-only">
+        {t("label")}
+      </label>
+      <input
+        id="model-q"
+        name="q"
+        defaultValue={q ?? ""}
+        required
+        maxLength={200}
+        enterKeyHint="search"
+        placeholder={t("placeholder")}
+        autoFocus={!query}
+        className="min-w-0 flex-[1_1_260px] border-0 border-b-2 border-lime bg-transparent py-2 font-heading text-[clamp(20px,3vw,28px)] font-semibold text-mist outline-none placeholder:text-stone/60"
+      />
+      <Button type="submit">{t("submit")}</Button>
+    </form>
+  );
+
+  if (!query) {
+    return (
+      <Screen>
+        <Kicker>{t("kicker")}</Kicker>
+        <PageTitle>{t("title")}</PageTitle>
+        <Lead>{t("hint")}</Lead>
+        <div className="mt-1.5">{form}</div>
+      </Screen>
+    );
+  }
+
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
-      <p className="mt-2 text-base text-stone">{t("hint")}</p>
-      <form method="get" className="mt-4 flex flex-col gap-3">
-        <label className="flex flex-col gap-2 text-base font-semibold text-mist">
-          <span>{t("label")}</span>
-          <input
-            name="q"
-            defaultValue={q ?? ""}
-            required
-            maxLength={200}
-            enterKeyHint="search"
-            className="min-h-14 w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 text-[17px] text-mist"
-          />
-        </label>
-        <PrimaryButton type="submit">{t("submit")}</PrimaryButton>
-      </form>
+    <Page size="wide" gap="gap-[22px]">
+      <div className="flex flex-col gap-[10px]">
+        <Kicker>{t("kicker")}</Kicker>
+        <PageTitle>{t("title")}</PageTitle>
+        {form}
+      </div>
 
-      {query && !chosenCard ? (
-        <p className="mt-6 text-base text-mist" role="status">
-          {t("notFound")}
-        </p>
-      ) : null}
-
-      {chosenCard ? (
-        <div className="mt-6 flex flex-col gap-6">
-          <section className="flex flex-col gap-3" aria-label={t("yourChoice")}>
-            <h2 className="text-xl font-bold text-mist">{t("yourChoice")}</h2>
-            <ResultCard card={chosenCard} />
-            <div className="rounded-[14px] border border-mist-32 bg-white-5 p-4 text-sm text-stone">
-              <p className="font-semibold text-mist">{t("fitTitle")}</p>
-              <p className="mt-1">{t("fitHint")}</p>
-            </div>
+      {!chosenCard ? (
+        <div role="status">
+          <Panel tone="dashed" className="text-lg">
+            {t("notFound")}
+          </Panel>
+        </div>
+      ) : (
+        <>
+          <section className="flex flex-col gap-3" aria-labelledby="your-choice">
+            <SectionTitle id="your-choice">{t("yourChoice")}</SectionTitle>
+            <CardRow>
+              <ResultCard card={chosenCard} />
+              <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-2 self-start sm:max-w-[560px]">
+                <InfoBox>
+                  <p className="font-semibold">{t("fitTitle")}</p>
+                  <p className="mt-1 text-[15px] text-panel-text">{t("fitHint")}</p>
+                </InfoBox>
+              </aside>
+            </CardRow>
           </section>
           {altCards.length ? (
-            <section className="flex flex-col gap-3" aria-label={t("alternative")}>
-              <p className="text-sm text-stone">{t("lead")}</p>
-              {altCards.map((c) => (
-                <div key={c.productId} className="flex flex-col gap-2">
-                  <h2 className="text-lg font-bold text-mist">
-                    {c.recommended ? t("betterValue") : t("alternative")}
-                  </h2>
-                  <ResultCard card={c} />
-                </div>
-              ))}
+            <section className="flex flex-col gap-3" aria-labelledby="alternatives">
+              <SectionTitle id="alternatives">{t("alternatives")}</SectionTitle>
+              <p className="max-w-[760px] text-base text-stone">{t("lead")}</p>
+              <CardRow>
+                {altCards.map((c) => (
+                  <ResultCard key={c.productId} card={c} />
+                ))}
+              </CardRow>
             </section>
           ) : null}
           {refurb && chosen ? (
-            <section aria-label="refurbished">
+            <section aria-label={t("refurbished")}>
               <ResultCard
                 card={{
                   ...chosenCard,
@@ -211,8 +233,8 @@ export default async function ModelPage({ searchParams }: Props) {
               />
             </section>
           ) : null}
-        </div>
-      ) : null}
-    </Shell>
+        </>
+      )}
+    </Page>
   );
 }

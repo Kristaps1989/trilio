@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { OptionRow } from "@/ui/OptionRow";
+import { PageTitle } from "@/ui/layout";
+import { WhyLine } from "../../izvelies/QuestionScreen";
 
 // Spec §5.1 steps 1–3 as one-question screens; each answer goes into the
 // URL so back works and the state survives the sign-in and payment redirects.
@@ -34,13 +36,17 @@ export function RadarSetup({
   step,
   brand,
   modelCode,
+  description,
 }: {
   state: SetupState;
   step: "when" | "scope" | "channel";
   brand: string;
   modelCode: string;
+  /** Product name and current price under the title. */
+  description?: string | null;
 }) {
   const t = useTranslations("radar");
+  const tf = useTranslations("flow");
   const router = useRouter();
   const [flash, setFlash] = useState<string | null>(null);
 
@@ -88,9 +94,14 @@ export function RadarSetup({
   }[step];
 
   return (
-    <div className="flex flex-col gap-6 pt-4">
-      <h2 className="text-[24px] font-bold leading-[1.2] text-mist">{screens.title}</h2>
-      <div role="radiogroup" aria-label={screens.title} className="flex flex-col gap-2">
+    <>
+      <PageTitle>{screens.title}</PageTitle>
+      {description ? <p className="-mt-1.5 text-lg leading-[1.45] text-stone">{description}</p> : null}
+      <div
+        role="radiogroup"
+        aria-label={screens.title}
+        className="mt-1.5 flex max-w-[540px] flex-col gap-[10px]"
+      >
         {screens.options.map((o, i) => (
           <OptionRow
             key={o.value}
@@ -105,7 +116,7 @@ export function RadarSetup({
           />
         ))}
       </div>
-      {screens.why ? <p className="text-sm text-stone">{screens.why}</p> : null}
-    </div>
+      {screens.why ? <WhyLine label={tf("why")}>{screens.why}</WhyLine> : null}
+    </>
   );
 }

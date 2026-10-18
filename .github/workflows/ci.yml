@@ -75,3 +75,57 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # The state a fresh production database is in: migrated, partner shops and
+  # plans seeded, no products. Every public page must render, never a 500.
+  empty-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: trilio
+          POSTGRES_PASSWORD: trilio
+          POSTGRES_DB: trilio
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U trilio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://trilio:trilio@localhost:5432/trilio
+      APP_URL: http://localhost:3000
+      AUTH_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-auth-secret-not-for-production
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: env -u DATABASE_URL npm run build
+      - name: Start like Railway (migrations, then next start)
+        run: |
+          npm run start:release > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/health && break; sleep 2; done
+          curl -sf http://localhost:3000/api/health
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Smoke suite against the empty database
+        run: npm run test:smoke
+        env:
+          SMOKE_BASE_URL: http://localhost:3000
+      - name: Server log
+        if: failure()
+        run: tail -200 server.log
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: empty-database-report
+          path: test-results/
+          retention-days: 7

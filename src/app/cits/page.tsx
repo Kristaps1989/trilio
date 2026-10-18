@@ -6,7 +6,7 @@ import { encodeState } from "@/domain/flow/state";
 import { getGroupOfSubcategory } from "@/domain/questions/catalog";
 import { createCaller, freeTextLlmEnabled } from "@/services/llm/client";
 import { MAX_FREE_TEXT_LENGTH, routeFreeText } from "@/services/llm/router";
-import { Shell } from "@/ui/Shell";
+import { Kicker, Lead, PageTitle, Screen } from "@/ui/layout";
 import { FreeTextForm, type FreeTextOutcome } from "./FreeTextForm";
 
 export const dynamic = "force-dynamic";
@@ -50,10 +50,11 @@ export default async function FreeTextPage({ searchParams }: Props) {
   }
 
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
-      <p className="mt-2 text-base text-stone">{t("hint")}</p>
+    <Screen size="medium">
+      <Kicker>{t("kicker")}</Kicker>
+      <PageTitle>{t("title")}</PageTitle>
+      <Lead>{t("hint")}</Lead>
       <FreeTextForm initialText={initialText} initialOutcome={outcome} />
-    </Shell>
+    </Screen>
   );
 }

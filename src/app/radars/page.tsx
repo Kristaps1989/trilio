@@ -6,8 +6,8 @@ import { accounts, db, plans, stores } from "@/db";
 import { listRadars } from "@/db/queries/radar";
 import { currentSubscription } from "@/services/billing/engine";
 import { pushPublicKey } from "@/services/notify/push";
-import { PrimaryButton, PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { Button, ButtonLink } from "@/ui/Button";
+import { Kicker, Page, PageTitle, Panel, Screen } from "@/ui/layout";
 import { PushToggle } from "./PushToggle";
 import { RadarCard, type RadarCardModel } from "./RadarCard";
 import { SubscriptionPanel, type SubscriptionModel } from "./SubscriptionPanel";
@@ -28,13 +28,18 @@ export default async function RadarPage() {
 
   if (!userId) {
     return (
-      <Shell>
-        <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
-        <p className="mt-2 text-base text-stone">{t("signedOut")}</p>
-        <div className="mt-6">
-          <PrimaryLink href="/ienakt?callbackUrl=/radars">{ta("title")}</PrimaryLink>
+      <Screen size="narrow">
+        <Kicker>{t("kicker")}</Kicker>
+        <PageTitle>{t("signedOutTitle")}</PageTitle>
+        <p className="-mt-1 text-[17px] leading-normal text-stone">
+          {t("signedOut")} {t("sub")}
+        </p>
+        <div>
+          <ButtonLink href="/ienakt?callbackUrl=/radars" size="lg">
+            {ta("title")}
+          </ButtonLink>
         </div>
-      </Shell>
+      </Screen>
     );
   }
 
@@ -79,13 +84,19 @@ export default async function RadarPage() {
   const pushKey = pushPublicKey();
 
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
+    <Page size="text">
+      <div className="flex flex-col gap-2">
+        <Kicker>{t("headline", { count: cards.length })}</Kicker>
+        <PageTitle scale="results">{t("title")}</PageTitle>
+        <p className="text-[17px] text-stone">{t("sub")}</p>
+      </div>
 
       {cards.length === 0 ? (
-        <p className="mt-4 text-base text-stone">{t("empty")}</p>
+        <Panel tone="dashed" className="text-lg">
+          {t("empty")}
+        </Panel>
       ) : (
-        <ul className="mt-6 flex flex-col gap-4">
+        <ul className="flex flex-col gap-[18px]">
           {cards.map((c) => (
             <li key={c.id}>
               <RadarCard radar={c} stores={storeRows} />
@@ -95,43 +106,38 @@ export default async function RadarPage() {
       )}
 
       {pushKey && cards.some((c) => c.channels.includes("push")) ? (
-        <section className="mt-6" aria-label={t("channels")}>
-          <h2 className="text-lg font-bold text-mist">{t("channels")}</h2>
-          <div className="mt-2">
-            <PushToggle publicKey={pushKey} />
-          </div>
-        </section>
+        <Panel className="flex flex-col gap-2">
+          <h2 className="font-heading text-xl font-semibold text-mist">{t("howNotify")}</h2>
+          <PushToggle publicKey={pushKey} />
+        </Panel>
       ) : null}
 
-      <section className="mt-8" aria-label={t("subscription")}>
-        <h2 className="text-lg font-bold text-mist">{t("subscription")}</h2>
-        <div className="mt-2">
-          <SubscriptionPanel subscription={subscription} />
-        </div>
-      </section>
+      <Panel className="flex flex-col gap-[14px]">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("subscription")}</h2>
+        <SubscriptionPanel subscription={subscription} />
+      </Panel>
 
-      <section className="mt-8 flex flex-col gap-3" aria-label={t("account")}>
-        <h2 className="text-lg font-bold text-mist">{t("account")}</h2>
-        <p className="text-sm text-stone">
-          {t("accountLine", { email: session.user?.email ?? "", provider: providerLabel })}
-        </p>
-        <div className="flex gap-3">
+      <section
+        aria-label={t("account")}
+        className="flex flex-wrap items-center justify-between gap-3 px-0.5 py-1 text-[15px] text-stone"
+      >
+        <span>{t("accountLine", { email: session.user?.email ?? "", provider: providerLabel })}</span>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href="/konts" variant="outline" size="sm">
+            {t("account")}
+          </ButtonLink>
           <form
-            className="flex-1"
             action={async () => {
               "use server";
               await signOut({ redirectTo: "/" });
             }}
           >
-            <PrimaryButton type="submit" variant="secondary">
+            <Button type="submit" variant="outline" size="sm">
               {ta("signOut")}
-            </PrimaryButton>
+            </Button>
           </form>
-          <PrimaryLink href="/konts" variant="secondary" className="flex-1">
-            {t("account")}
-          </PrimaryLink>
         </div>
       </section>
-    </Shell>
+    </Page>
   );
 }

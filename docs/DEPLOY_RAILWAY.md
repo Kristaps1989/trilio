@@ -57,6 +57,13 @@ Railway builds with Railpack (`npm install`, `npm run build`), then starts the s
 
 Web service → **Settings → Networking → Custom Domain** → `trilio.lv` (and `www.trilio.lv`). Add the CNAME Railway shows at the DNS provider. Railway issues the certificate. HSTS is already sent by the app (`next.config.ts`), so only put the domain live once HTTPS resolves.
 
+**`www.trilio.lv`** must redirect to `trilio.lv` (the production smoke test checks it). In Cloudflare:
+
+1. **DNS → Add record**: type `CNAME`, name `www`, target `trilio.lv`, proxy status **Proxied** (orange cloud).
+2. **Rules → Redirect Rules → Create rule** ("Redirect from WWW to root" template): when hostname equals `www.trilio.lv`, dynamic redirect to `concat("https://trilio.lv", http.request.uri.path)`, status **301**, preserve the query string.
+
+The redirect happens at Cloudflare, so Railway needs no extra custom domain for `www`.
+
 ## 4a. Search engines and AI assistants
 
 The app already serves `robots.txt` (search engines and the major AI crawlers are allowed on public pages; results, accounts, payments and affiliate redirects are closed), `sitemap.xml` (all category and budget landing pages) and `llms.txt` (a plain-text site map for AI assistants). Pages carry Open Graph tags and JSON-LD (`Organization`, `WebSite`, `BreadcrumbList`, `ItemList`, `FAQPage`).
@@ -108,6 +115,7 @@ Enable **Settings → Deploy → Wait for CI** on the production service so a de
 - **Backups**: Postgres service → **Backups** → enable daily. Keep a weekly `pg_dump` elsewhere once revenue depends on it.
 - **Rollback**: Deployments → previous deployment → **Redeploy**. Migrations are forward-only; a rollback of code that needs a dropped column will fail its health check, which is the intended safety net.
 - **Secrets rotation**: change the variable in Railway; a redeploy picks it up.
+- **Monitoring**: the **Smoke (production)** GitHub workflow (`.github/workflows/smoke.yml`, suite in `tests/smoke`) opens every sitemap URL, walks the guided flow to a shop click, and checks sign-in, `robots.txt`, `sitemap.xml`, `llms.txt`, `/api/health` and the `http` and `www` redirects. It runs after each successful Railway deployment, every hour, and on demand (Actions → Smoke → Run workflow). It only reads. A failure turns the run red, and GitHub emails the repository owner. Run it locally with `SMOKE_BASE_URL=https://trilio.lv npm run test:smoke`.
 - **Scaling**: `numReplicas` in `railway.json`, or Settings → Replicas. The app is stateless; sessions and radar state live in Postgres.
 
 ## What the repo config does

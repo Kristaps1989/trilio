@@ -56,12 +56,12 @@ test("radar: full journey from results to a working radar page", async ({ page }
   await page.getByRole("link", { name: "Sekot cenai" }).first().click();
 
   // Three setup questions
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("Kad tev paziņot?");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kad tev paziņot?");
   await expectNoAxeViolations(page);
   await page.getByRole("radio", { name: /vismaz par 5 %/ }).click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/citiem modeļiem/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/citiem modeļiem/);
   await page.getByRole("radio", { name: /Tikai par šo modeli/ }).click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("Kā tev paziņot?");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kā tev paziņot?");
   await page.getByRole("radio", { name: /^E-pasts/ }).click();
 
   // Signed in but not subscribed → plan screen → mock checkout

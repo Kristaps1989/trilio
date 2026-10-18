@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { companyFromEnv, fillCompany } from "@/config/company";
 import { appBaseUrl } from "@/services/payments";
-import { Shell } from "./Shell";
+import { Kicker, Page, PageTitle } from "./layout";
 
 type Section = { h: string; p?: string[]; items?: string[]; after?: string[] };
 
@@ -18,15 +18,18 @@ export async function LegalDocument({ doc, children }: { doc: string; children?:
   const fill = (s: string) => fillCompany(s, company, site, t("notSet"));
   const sections = t.raw(`${doc}.sections`) as Section[];
   return (
-    <Shell>
-      <article className="flex max-w-prose flex-col gap-4 pt-4 text-base leading-relaxed text-mist">
-        <h1 className="text-[28px] font-bold leading-[1.2]">{t(`${doc}.title`)}</h1>
-        <p className="text-sm text-stone">{t("updated")}</p>
-        <p>{fill(t.raw(`${doc}.intro`) as string)}</p>
+    <Page size="text">
+      <article className="flex flex-col gap-4 text-[17px] leading-relaxed text-mist">
+        <div className="flex flex-col gap-2">
+          <Kicker>{t("kicker")}</Kicker>
+          <PageTitle>{t(`${doc}.title`)}</PageTitle>
+          <p className="text-sm text-stone">{t("updated")}</p>
+        </div>
+        <p className="text-lead text-stone">{fill(t.raw(`${doc}.intro`) as string)}</p>
         {children}
         {sections.map((s) => (
           <section key={s.h} className="flex flex-col gap-2">
-            <h2 className="pt-2 text-xl font-bold">{s.h}</h2>
+            <h2 className="pt-3 font-heading text-[22px] font-semibold">{s.h}</h2>
             {s.p?.map((para) => (
               <p key={para}>{fill(para)}</p>
             ))}
@@ -43,7 +46,7 @@ export async function LegalDocument({ doc, children }: { doc: string; children?:
           </section>
         ))}
       </article>
-    </Shell>
+    </Page>
   );
 }
 

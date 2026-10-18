@@ -8,7 +8,10 @@
   "header": {
     "radar": "Cenu radars",
     "signIn": "Ienākt",
-    "logoAlt": "Trilio"
+    "logoAlt": "Trilio",
+    "home": "Trilio — uz sākumu",
+    "nav": "Galvenā izvēlne",
+    "account": "Mans konts ({initial})"
   },
   "footer": {
     "tagline": "Salīdzinām cenas partneru veikalos",
@@ -22,7 +25,10 @@
   "welcome": {
     "headline": "Pastāsti, kas tev vajadzīgs. Trīs labākos variantus atradīsim mēs.",
     "help": "Palīdzi izvēlēties",
-    "knowModel": "Es jau zinu modeli"
+    "knowModel": "Es jau zinu modeli",
+    "kicker": "Pirkumu palīgs · sadzīves tehnika",
+    "lead": "Atbildi uz dažiem jautājumiem, un mēs salīdzināsim tikai tās preces, kas tiešām ir pieejamas partneru veikalos.",
+    "meta": "Aizņem apmēram minūti · bez reģistrācijas · jaunas un atjaunotas preces nekad nejaucam kopā"
   },
   "flow": {
     "progress": "Jautājums {n} no {m}",
@@ -37,7 +43,9 @@
     "groupsHint": "Izvēlies preču grupu — tālāk uzdosim dažus jautājumus.",
     "skip": "Izlaist",
     "unitCm": "cm",
-    "numberHint": "Ievadi skaitli no {min} līdz {max}"
+    "numberHint": "Ievadi skaitli no {min} līdz {max}",
+    "guideKicker": "Palīdzi izvēlēties",
+    "stepOf": "{n}. solis no {m}"
   },
   "budget": {
     "title": "Kāds ir tavs budžets?",
@@ -125,7 +133,14 @@
     "rowSpecs": "Parametri",
     "compareBestHint": "Zaļā krāsā — labākā vērtība rindā.",
     "radarCtaSub": "Paziņosim, kad cena kritīs — arī līdzīgiem modeļiem.",
-    "radarMonthly": "1,99 €"
+    "radarMonthly": "1,99 €",
+    "view": "Skatīt — {shop}",
+    "refurbBadge": "Atjaunota",
+    "kicker": "Gatavs · {count, plural, =0 {nav atbilstošu preču} =1 {# atbilstoša prece} other {# atbilstošas preces}}",
+    "howTitle": "Kā Trilio izvēlas un ranžē",
+    "radarTitle": "Sekot šo variantu cenām",
+    "empty": "Ar šādām prasībām pašlaik nekas nav pieejams. Pamēģini mainīt kādu atbildi vai budžetu.",
+    "picksLabel": "Ieteiktie varianti"
   },
   "waitlist": {
     "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",
@@ -144,7 +159,8 @@
     "notUnderstood": "Nesapratām, kas tieši tev vajadzīgs. Izvēlies no saraksta.",
     "chooseFromList": "Izvēlēties no saraksta",
     "error": "Kaut kas nogāja greizi. Pamēģini vēlreiz.",
-    "aiNote": "Lai noteiktu kategoriju, tekstu var apstrādāt mākslīgais intelekts. Neraksti tajā personas datus."
+    "aiNote": "Lai noteiktu kategoriju, tekstu var apstrādāt mākslīgais intelekts. Neraksti tajā personas datus.",
+    "kicker": "Savs pieprasījums"
   },
   "delta": {
     "volume_l": "{delta} L tilpums",
@@ -210,13 +226,16 @@
     "fitTitle": "Vai izmēri der?",
     "fitHint": "Pārbaudi augstumu, platumu un dziļumu pret vietu, kur prece stāvēs. Iebūvējamai tehnikai izšķirošs ir nišas augstums.",
     "dimensions": "Izmēri: {dims}",
-    "tco": "Kopā 10 gados: {amount}"
+    "tco": "Kopā 10 gados: {amount}",
+    "kicker": "Modeļa pārbaude",
+    "placeholder": "piem. KGN39VLCT",
+    "alternatives": "Alternatīvas",
+    "refurbished": "Atjaunota prece"
   },
   "auth": {
     "title": "Ienākt",
     "why": "Konts vajadzīgs, lai cenu radara filtrus varētu pārvaldīt no jebkuras ierīces.",
     "google": "Turpināt ar Google",
-    "emailTitle": "Vai ar e-pastu",
     "emailLabel": "E-pasts",
     "emailSubmit": "Nosūtīt ienākšanas saiti",
     "emailSent": "Saite nosūtīta. Pārbaudi e-pastu — tā derīga 15 minūtes.",
@@ -225,7 +244,9 @@
     "signOut": "Iziet",
     "signedInAs": "Ienācis kā {email}",
     "noProviders": "Ienākšana vēl nav iestatīta.",
-    "consent": "Turpinot tu piekrīti <terms>Lietošanas noteikumiem</terms> un apliecini, ka esi iepazinies ar <privacy>Privātuma politiku</privacy>."
+    "consent": "Turpinot tu piekrīti <terms>Lietošanas noteikumiem</terms> un apliecini, ka esi iepazinies ar <privacy>Privātuma politiku</privacy>.",
+    "kicker": "Konts",
+    "or": "vai"
   },
   "radar": {
     "title": "Cenu radars",
@@ -249,7 +270,6 @@
     "planMonthly": "{price} mēnesī",
     "planAnnual": "{price} gadā",
     "planAnnualSub": "ietaupi 50 %",
-    "planFeatures": "Neierobežots sekojamo preču skaits · cenas pārbaudām vairākas reizes dienā · atteikties var jebkurā brīdī",
     "pay": "Maksāt",
     "payNote": "Kartes datus apstrādā Paysera — Trilio tos neredz un neglabā.",
     "paymentsOff": "Maksājumi vēl nav ieslēgti. Atstāj e-pastu, un paziņosim, kad radars būs pieejams.",
@@ -303,7 +323,28 @@
     "enablePush": "Ieslēgt push paziņojumus šajā ierīcē",
     "pushEnabled": "Push paziņojumi ieslēgti",
     "pushUnsupported": "Šī pārlūkprogramma neatbalsta push paziņojumus.",
-    "legalNote": "Abonements atjaunojas automātiski par to pašu cenu, līdz atsakies. Atteikties vari jebkurā brīdī, un radars darbosies līdz apmaksātā perioda beigām. 14 dienu laikā pēc pirmā maksājuma vari prasīt pilnu atmaksu. Maksājot tu piekrīti <terms>Lietošanas noteikumiem</terms>."
+    "legalNote": "Abonements atjaunojas automātiski par to pašu cenu, līdz atsakies. Atteikties vari jebkurā brīdī, un radars darbosies līdz apmaksātā perioda beigām. 14 dienu laikā pēc pirmā maksājuma vari prasīt pilnu atmaksu. Maksājot tu piekrīti <terms>Lietošanas noteikumiem</terms>.",
+    "kicker": "Cenu radars",
+    "dropped": "Cena kritusies",
+    "days30ago": "pirms 30 dienām",
+    "today": "šodien",
+    "close": "Aizvērt",
+    "refurbishedNote": "paziņojumā vienmēr norādīsim, ka prece ir atjaunota",
+    "storeRequired": "Izvēlies vismaz vienu veikalu.",
+    "saveFilters": "Saglabāt filtrus",
+    "filtersSaved": "Filtri saglabāti.",
+    "pausedNote": "Sekošana apturēta — paziņojumus par šo preci nesūtīsim.",
+    "headline": "{count, plural, =0 {Vēl nesekojam nevienai cenai} =1 {Sekojam vienai cenai} other {Sekojam # cenām}}",
+    "sub": "Te vari mainīt filtrus, apturēt sekošanu un pārvaldīt abonementu.",
+    "signedOutTitle": "Ienāc, lai redzētu savus cenu radarus",
+    "howNotify": "Kā paziņot",
+    "signOut": "Iziet",
+    "watching": "Sekojam cenai",
+    "cardBadge": "KARTE",
+    "planKicker": "Cenu radars · apmaksa",
+    "feature1": "Seko neierobežotam preču skaitam visās kategorijās",
+    "feature2": "Cenas visos partneru veikalos pārbaudām vairākas reizes dienā",
+    "feature3": "Sekošanu vai abonementu vari atslēgt jebkurā brīdī"
   },
   "account": {
     "title": "Konts",
@@ -313,7 +354,10 @@
     "deleteHint": "Dzēš kontu, radarus un abonementu. Darbību nevar atsaukt.",
     "deleteConfirm": "Tiešām dzēst kontu un visus datus?",
     "deleteYes": "Jā, dzēst",
-    "deleted": "Konts dzēsts."
+    "deleted": "Konts dzēsts.",
+    "kicker": "Konts un dati",
+    "radarHint": "Sekojamās preces, paziņojumu filtri un abonements.",
+    "openRadar": "Atvērt cenu radaru"
   },
   "email": {
     "dropSubject": "Cena kritusi: {name} tagad {price}",
@@ -333,7 +377,6 @@
     "description": "Trīs labākie {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "descriptionBudget": "Trīs labākie {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "lead": "Atlasīts no {count, plural, =1 {# preces} other {# precēm}} partneru veikalos, atjaunots {date}.",
-    "cta": "Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev",
     "budgets": "Pēc budžeta",
     "upTo": "līdz {budget}",
     "allCategories": "Visas kategorijas",
@@ -345,7 +388,9 @@
     "faq2a": "Cenas un pieejamību atjaunojam vairākas reizes dienā no veikalu datu plūsmām un salīdzinām pēc EAN svītrkoda. Atlaides norādām tikai pret zemāko cenu pēdējās 30 dienās.",
     "faq3q": "Kas ir atjaunota prece?",
     "faq3a": "Prece ar to pašu EAN, ko veikals pārdod kā atjaunotu, ar norādītu stāvokļa pakāpi un garantiju. Tās vienmēr rādām atsevišķi, nekad kopā ar jaunām.",
-    "breadcrumbHome": "Sākums"
+    "breadcrumbHome": "Sākums",
+    "ctaTitle": "Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev",
+    "ctaButton": "Sākt izvēli"
   },
   "home": {
     "categoriesTitle": "Populārākās kategorijas",
@@ -620,7 +665,8 @@
           ]
         }
       ]
-    }
+    },
+    "kicker": "Juridiskā informācija"
   },
   "consent": {
     "title": "Sīkdatnes statistikai",
@@ -628,5 +674,17 @@
     "accept": "Atļaut",
     "reject": "Neatļaut",
     "settings": "Sīkdatņu iestatījumi"
+  },
+  "errors": {
+    "notFoundKicker": "404 · LAPA NAV ATRASTA",
+    "notFoundTitle": "Šādas lapas nav",
+    "notFoundText": "Iespējams, saite ir novecojusi vai adresē ir drukas kļūda. Sāc no jauna vai izvēlies kategoriju.",
+    "errorKicker": "KĻŪDA",
+    "errorTitle": "Lapu neizdevās ielādēt",
+    "errorText": "Tā ir mūsu kļūda, nevis tava. Pamēģini vēlreiz pēc brīža — ja kļūda atkārtojas, raksti mums.",
+    "retry": "Mēģināt vēlreiz",
+    "home": "Uz sākumu",
+    "categories": "Izvēlēties kategoriju",
+    "code": "Kļūdas kods: {digest}"
   }
 }

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getGroup } from "@/domain/questions/catalog";
-import { Shell } from "@/ui/Shell";
+import { Kicker, PageTitle, Screen } from "@/ui/layout";
+import { Tile, TileGrid, TileIcon } from "@/ui/Tile";
 
 type Params = { params: Promise<{ group: string }> };
 
@@ -19,22 +19,22 @@ export default async function SubcategoriesPage({ params }: Params) {
   if (!g || g.id === "other") notFound();
   const t = await getTranslations("flow");
   return (
-    <Shell>
-      <p className="pt-4 text-sm font-semibold text-stone">{g.label}</p>
-      <h1 className="mt-1 text-[28px] font-bold leading-[1.2] text-mist">{t("chooseSub")}</h1>
-      <ul className="mt-6 flex flex-col gap-2">
-        {g.subcategories.map((s) => (
-          <li key={s.id}>
-            <Link
+    <Screen>
+      <Kicker>{g.label}</Kicker>
+      <PageTitle>{t("chooseSub")}</PageTitle>
+      <div className="mt-1.5">
+        <TileGrid>
+          {g.subcategories.map((s) => (
+            <Tile
+              key={s.id}
               href={`/izvelies/${g.id}/${s.id}`}
-              className="flex min-h-[60px] flex-col justify-center rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 py-3"
-            >
-              <span className="text-[17px] font-semibold text-mist">{s.label}</span>
-              {s.description ? <span className="text-sm text-stone">{s.description}</span> : null}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </Shell>
+              icon={<TileIcon path={g.icon_svg_path} />}
+              label={s.label}
+              sublabel={s.description}
+            />
+          ))}
+        </TileGrid>
+      </div>
+    </Screen>
   );
 }

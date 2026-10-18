@@ -1,5 +1,13 @@
 # Design fix plan: match the Claude Design prototype
 
+**Status (18 Oct 2026): implemented.** Section 0 and PRs 1–4 shipped together in
+one pull request, along with the end-to-end validation in section 5:
+`tests/e2e/layout.spec.ts`, the `empty-database` CI job, and the `Smoke (production)`
+workflow. The optional loading screen (PR 2, step 6) was not built: results
+render in well under a second, so a fake "searching" pause would only slow
+people down. Owner action still open: the `www` DNS record and redirect
+(`docs/DEPLOY_RAILWAY.md` §4).
+
 Source of truth: `design/prototype/Main.dc.html` (guided flow, results,
 login, payment), `design/prototype/Alerts.dc.html` (price radar),
 `design/prototype/Brand.dc.html` and `docs/BRAND.md`. Screenshots of the

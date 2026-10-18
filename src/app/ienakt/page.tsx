@@ -3,8 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth, enabledProviders, signIn, signOut } from "@/auth";
-import { PrimaryButton } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { Button } from "@/ui/Button";
+import { GoogleButton } from "@/ui/GoogleButton";
+import { InfoBox, Kicker, PageTitle, Screen } from "@/ui/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -28,29 +29,33 @@ export default async function SignInPage({ searchParams }: Props) {
   if (session?.user && !sent) redirect(target);
 
   const inputClass =
-    "min-h-14 w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 text-[17px] text-mist";
+    "min-h-[52px] w-full rounded-control border-[1.5px] border-mist/35 bg-white-5 px-4 text-[17px] text-mist placeholder:text-stone";
+  const anyProvider = enabledProviders.google || enabledProviders.email || enabledProviders.dev;
 
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("title")}</h1>
-      <p className="mt-2 text-base text-stone">{t("why")}</p>
+    <Screen size="narrow">
+      <Kicker>{t("kicker")}</Kicker>
+      <PageTitle>{t("title")}</PageTitle>
+      <p className="-mt-1 text-[17px] leading-normal text-stone">{t("why")}</p>
 
       {session?.user ? (
         <form
-          className="mt-6 flex flex-col gap-3"
+          className="flex flex-col gap-3"
           action={async () => {
             "use server";
             await signOut({ redirectTo: "/" });
           }}
         >
-          <p className="text-base text-mist">{t("signedInAs", { email: session.user.email ?? "" })}</p>
-          <PrimaryButton type="submit" variant="secondary">
-            {t("signOut")}
-          </PrimaryButton>
+          <InfoBox>{t("signedInAs", { email: session.user.email ?? "" })}</InfoBox>
+          <div>
+            <Button type="submit" variant="outline">
+              {t("signOut")}
+            </Button>
+          </div>
         </form>
       ) : null}
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-1 flex flex-col gap-[10px]">
         {enabledProviders.google ? (
           <form
             action={async () => {
@@ -58,86 +63,94 @@ export default async function SignInPage({ searchParams }: Props) {
               await signIn("google", { redirectTo: target });
             }}
           >
-            <PrimaryButton type="submit" variant="light" className="border border-mist-32">
-              {t("google")}
-            </PrimaryButton>
+            <GoogleButton label={t("google")} />
           </form>
         ) : null}
 
+        {enabledProviders.google && enabledProviders.email ? (
+          <div className="my-1.5 flex items-center gap-3 text-sm text-stone" aria-hidden="true">
+            <span className="h-px flex-1 bg-line-20" />
+            {t("or")}
+            <span className="h-px flex-1 bg-line-20" />
+          </div>
+        ) : null}
+
         {enabledProviders.email ? (
-          <form
-            className="flex flex-col gap-3"
-            action={async (formData: FormData) => {
-              "use server";
-              await signIn("resend", {
-                email: String(formData.get("email") ?? ""),
-                redirectTo: target,
-                redirect: false,
-              });
-              redirect(`/ienakt?sent=1&callbackUrl=${encodeURIComponent(target)}`);
-            }}
-          >
-            <h2 className="text-lg font-bold text-mist">{t("emailTitle")}</h2>
-            {sent ? (
-              <p className="text-base text-lime" role="status">
-                {t("emailSent")}
-              </p>
-            ) : null}
-            <label className="flex flex-col gap-2 text-base font-semibold text-mist">
-              <span>{t("emailLabel")}</span>
+          sent ? (
+            <div role="status">
+              <InfoBox>{t("emailSent")}</InfoBox>
+            </div>
+          ) : (
+            <form
+              className="flex flex-col gap-[10px]"
+              action={async (formData: FormData) => {
+                "use server";
+                await signIn("resend", {
+                  email: String(formData.get("email") ?? ""),
+                  redirectTo: target,
+                  redirect: false,
+                });
+                redirect(`/ienakt?sent=1&callbackUrl=${encodeURIComponent(target)}`);
+              }}
+            >
+              <label htmlFor="login-email" className="text-[15px] font-semibold text-mist">
+                {t("emailLabel")}
+              </label>
               <input
+                id="login-email"
                 name="email"
                 type="email"
                 required
                 autoComplete="email"
                 inputMode="email"
+                placeholder="tavs@epasts.lv"
                 className={inputClass}
               />
-            </label>
-            <PrimaryButton type="submit">{t("emailSubmit")}</PrimaryButton>
-          </form>
+              <Button type="submit" variant="outline" block>
+                {t("emailSubmit")}
+              </Button>
+            </form>
+          )
         ) : null}
 
         {enabledProviders.dev ? (
           <form
-            className="flex flex-col gap-3 rounded-[14px] border border-dashed border-warning p-4"
+            className="mt-2 flex flex-col gap-3 rounded-[14px] border border-dashed border-warning p-4"
             action={async (formData: FormData) => {
               "use server";
               await signIn("dev", { email: String(formData.get("email") ?? ""), redirectTo: target });
             }}
           >
             <h2 className="text-base font-bold text-warning">{t("devLogin")}</h2>
-            <label className="flex flex-col gap-2 text-base font-semibold text-mist">
+            <label className="flex flex-col gap-2 text-[15px] font-semibold text-mist">
               <span>{t("emailLabel")}</span>
               <input name="email" type="email" required className={inputClass} />
             </label>
-            <PrimaryButton type="submit" variant="secondary">
+            <Button type="submit" variant="outline" block>
               {t("devSubmit")}
-            </PrimaryButton>
+            </Button>
           </form>
         ) : null}
-
-        {enabledProviders.google || enabledProviders.email || enabledProviders.dev ? (
-          <p className="text-sm text-stone">
-            {t.rich("consent", {
-              terms: (chunks) => (
-                <Link href="/noteikumi" className="text-mist underline">
-                  {chunks}
-                </Link>
-              ),
-              privacy: (chunks) => (
-                <Link href="/privatums" className="text-mist underline">
-                  {chunks}
-                </Link>
-              ),
-            })}
-          </p>
-        ) : null}
-
-        {!enabledProviders.google && !enabledProviders.email && !enabledProviders.dev ? (
-          <p className="text-base text-stone">{t("noProviders")}</p>
-        ) : null}
       </div>
-    </Shell>
+
+      {anyProvider ? (
+        <p className="mt-1 text-[13px] leading-normal text-stone">
+          {t.rich("consent", {
+            terms: (chunks) => (
+              <Link href="/noteikumi" className="text-mist underline">
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link href="/privatums" className="text-mist underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
+      ) : (
+        <p className="text-base text-stone">{t("noProviders")}</p>
+      )}
+    </Screen>
   );
 }
