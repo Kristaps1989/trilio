@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { encodeState } from "@/domain/flow/state";
-import { PrimaryButton, PrimaryLink } from "@/ui/PrimaryButton";
+import { Button, ButtonLink } from "@/ui/Button";
+import { InfoBox } from "@/ui/layout";
 
 type RouteResponse = {
   subcategoryId: string | null;
@@ -71,54 +72,72 @@ export function FreeTextForm({
     setState(res.ok ? "thanks" : "error");
   }
 
+  const fieldClass =
+    "w-full rounded-control border-[1.5px] border-line-40 bg-white-5 px-4 py-3 text-[17px] text-mist placeholder:text-stone";
+
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="mt-1 flex flex-col gap-6">
       <form method="get" action="/cits" onSubmit={submit} className="flex flex-col gap-3">
-        <label className="flex flex-col gap-2 text-base font-semibold text-mist">
-          <span>{t("freeText.label")}</span>
-          <textarea
-            name="text"
-            required
-            maxLength={300}
-            rows={3}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 py-3 text-[17px] text-mist"
-          />
+        <label htmlFor="free-text" className="text-[15px] font-semibold text-mist">
+          {t("freeText.label")}
         </label>
+        <textarea
+          id="free-text"
+          name="text"
+          required
+          maxLength={300}
+          rows={3}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className={fieldClass}
+        />
         <p className="text-sm text-stone">{t("freeText.aiNote")}</p>
-        <PrimaryButton type="submit" disabled={busy}>
-          {busy ? t("freeText.searching") : t("freeText.submit")}
-        </PrimaryButton>
+        <div className="flex flex-wrap items-center gap-[14px]">
+          <Button type="submit" disabled={busy}>
+            {busy ? t("freeText.searching") : t("freeText.submit")}
+          </Button>
+          <ButtonLink href="/izvelies" variant="link">
+            {t("freeText.chooseFromList")}
+          </ButtonLink>
+        </div>
       </form>
 
       {state === "not_understood" ? (
         <div className="flex flex-col gap-3" role="status">
-          <p className="text-base text-mist">{t("freeText.notUnderstood")}</p>
-          <PrimaryLink href="/izvelies" variant="secondary">
-            {t("freeText.chooseFromList")}
-          </PrimaryLink>
+          <InfoBox>{t("freeText.notUnderstood")}</InfoBox>
+          <div>
+            <ButtonLink href="/izvelies" variant="outline">
+              {t("freeText.chooseFromList")}
+            </ButtonLink>
+          </div>
         </div>
       ) : null}
 
       {state === "out_of_scope" ? (
-        <form onSubmit={joinWaitlist} className="flex flex-col gap-3" role="status">
-          <p className="text-base font-semibold text-mist">{t("waitlist.outOfScope")}</p>
-          <label className="flex flex-col gap-2 text-base font-semibold text-mist">
-            <span>{t("waitlist.emailLabel")}</span>
+        <form onSubmit={joinWaitlist} className="flex flex-col gap-[14px]" role="status">
+          <p className="font-heading text-[22px] font-semibold leading-tight text-mist">
+            {t("waitlist.outOfScope")}
+          </p>
+          <div className="flex max-w-[560px] flex-wrap items-end gap-[14px]">
+            <label htmlFor="waitlist-email" className="sr-only">
+              {t("waitlist.emailLabel")}
+            </label>
             <input
+              id="waitlist-email"
               type="email"
               name="email"
               required
               inputMode="email"
               autoComplete="email"
+              placeholder="tavs@epasts.lv"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-h-14 w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 text-[17px] text-mist"
+              className="min-w-0 flex-[1_1_240px] border-0 border-b-2 border-lime bg-transparent py-2 font-heading text-[clamp(20px,3vw,26px)] font-semibold text-mist outline-none placeholder:text-stone/60"
               aria-invalid={!!emailError}
             />
-          </label>
-          {emailError ? <p className="text-sm text-warning">{emailError}</p> : null}
+            <Button type="submit">{t("waitlist.notify")}</Button>
+          </div>
+          {emailError ? <p className="text-[15px] text-warning">{emailError}</p> : null}
           <p className="text-sm text-stone">
             {t.rich("waitlist.consent", {
               privacy: (chunks) => (
@@ -128,17 +147,13 @@ export function FreeTextForm({
               ),
             })}
           </p>
-          <PrimaryButton type="submit">{t("waitlist.notify")}</PrimaryButton>
-          <Link href="/izvelies" className="min-h-11 text-center text-base font-semibold text-lime">
-            {t("freeText.chooseFromList")}
-          </Link>
         </form>
       ) : null}
 
       {state === "thanks" ? (
-        <p className="text-base text-mist" role="status">
-          {t("waitlist.thanks")}
-        </p>
+        <div role="status">
+          <InfoBox>{t("waitlist.thanks")}</InfoBox>
+        </div>
       ) : null}
       {state === "error" ? (
         <p className="text-base text-warning" role="alert">

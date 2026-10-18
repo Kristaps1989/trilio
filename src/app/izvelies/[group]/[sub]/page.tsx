@@ -9,8 +9,8 @@ import { progress } from "@/domain/questions/engine";
 import { getGroup, getSubcategory } from "@/domain/questions/catalog";
 import type { Question, Subcategory } from "@/domain/questions/schema";
 import { formatDateDative, formatEur } from "@/i18n/format";
-import { ProgressBar } from "@/ui/ProgressBar";
-import { Shell } from "@/ui/Shell";
+import { Screen } from "@/ui/layout";
+import { TopProgress } from "@/ui/shell/TopProgress";
 import { QuestionScreen, type ScreenQuestion } from "../../QuestionScreen";
 
 export const dynamic = "force-dynamic";
@@ -115,17 +115,19 @@ export default async function QuestionPage({ params, searchParams }: Props) {
   const screen = question ? toScreen(question) : await trailingScreen(currentId, sub);
   const trailingIds = ids.filter((id) => !sub.questions.some((x) => x.id === id));
   const { n, m } = progress(sub, state.answers, currentId, trailingIds);
+  const t = await getTranslations();
   const screenState =
     currentId === TRAILING.budget && typeof state.trailing.budget === "number"
       ? { ...state, trailing: { ...state.trailing, budget: state.trailing.budget } }
       : state;
 
   return (
-    <Shell>
-      <div className="pt-2">
-        <ProgressBar n={n} m={m} />
-      </div>
+    <Screen>
+      <TopProgress percent={(n / (m + 1)) * 100} />
+      <p id="flow-progress" className="text-[15px] font-bold text-lime" aria-live="polite">
+        {t("flow.progress", { n, m })}
+      </p>
       <QuestionScreen key={currentId} question={screen} state={screenState} basePath={basePath} />
-    </Shell>
+    </Screen>
   );
 }

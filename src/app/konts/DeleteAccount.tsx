@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { PrimaryButton } from "@/ui/PrimaryButton";
+import { Button } from "@/ui/Button";
 import { deleteAccountAction } from "./actions";
 
 export function DeleteAccount() {
@@ -13,27 +13,23 @@ export function DeleteAccount() {
 
   if (!confirming) {
     return (
-      <PrimaryButton variant="secondary" onClick={() => setConfirming(true)}>
-        {t("delete")}
-      </PrimaryButton>
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
+          {t("delete")}
+        </Button>
+      </div>
     );
   }
   return (
-    <div
-      role="alertdialog"
-      aria-label={t("delete")}
-      className="flex flex-col gap-3 rounded-[14px] border border-warning p-4"
-    >
+    <div role="alertdialog" aria-label={t("delete")} className="flex flex-col gap-3">
       <p className="text-base text-mist">{t("deleteConfirm")}</p>
-      <div className="flex gap-3">
-        <PrimaryButton
-          variant="secondary"
-          disabled={pending}
-          onClick={() => start(() => deleteAccountAction())}
-        >
+      <div className="flex flex-wrap gap-[10px]">
+        <Button variant="danger" disabled={pending} onClick={() => start(() => deleteAccountAction())}>
           {t("deleteYes")}
-        </PrimaryButton>
-        <PrimaryButton onClick={() => setConfirming(false)}>{tr("cancelNo")}</PrimaryButton>
+        </Button>
+        <Button variant="outline" onClick={() => setConfirming(false)}>
+          {tr("cancelNo")}
+        </Button>
       </div>
     </div>
   );

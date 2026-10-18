@@ -17,9 +17,9 @@ import { whyItFits } from "@/domain/ranking/score";
 import { formatDateDative, formatDateNominative, formatEur } from "@/i18n/format";
 import { currentMarket } from "@/i18n/market";
 import { appBaseUrl } from "@/services/payments";
-import { PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
-import { ResultCard, type CardModel } from "../rezultati/ResultCard";
+import { ButtonLink } from "@/ui/Button";
+import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
+import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 
 // Phase 3 SEO landing pages: "Labākie ledusskapji līdz 800 €". Server-rendered
 // from the same ranking as the guided flow, with no answers (stock + budget
@@ -142,65 +142,80 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
   };
 
   return (
-    <Shell>
+    <Page size="wide" gap="gap-[22px]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumb, faqLd]) }}
       />
-      <p className="pt-4 text-sm font-semibold text-stone">{group?.label}</p>
-      <h1 className="mt-1 text-[28px] font-bold leading-[1.2] text-mist">{title}</h1>
-      <p className="mt-2 text-base text-stone">
-        {t("lead", { count: products.length, date: formatDateNominative(now) })}
-      </p>
-
-      <div className="mt-6">
-        <PrimaryLink href={`/izvelies/${group?.id}/${sub.id}`}>{t("cta")}</PrimaryLink>
+      <div className="flex flex-col gap-[10px]">
+        <Kicker>{group?.label}</Kicker>
+        <PageTitle scale="results">{title}</PageTitle>
+        <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
+          {t("lead", { count: products.length, date: formatDateNominative(now) })}
+        </p>
       </div>
 
+      <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">
+        <p className="min-w-0 flex-[1_1_320px] font-heading text-[22px] leading-tight font-semibold text-mist">
+          {t("ctaTitle")}
+        </p>
+        <ButtonLink href={`/izvelies/${group?.id}/${sub.id}`}>{t("ctaButton")}</ButtonLink>
+      </Panel>
+
       {cards.length ? (
-        <div className="mt-6 flex flex-col gap-4">
+        <CardRow>
           {cards.map((c) => (
             <ResultCard key={c.productId} card={c} />
           ))}
-        </div>
+        </CardRow>
       ) : (
-        <p className="mt-6 text-base text-stone">{t("noOffers")}</p>
+        <Panel tone="dashed" className="text-lg">
+          {t("noOffers")}
+        </Panel>
       )}
 
-      <section aria-labelledby="faq-title" className="mt-8 flex flex-col gap-3">
-        <h2 id="faq-title" className="text-lg font-bold text-mist">
-          {t("faqTitle")}
-        </h2>
-        {faq.map((f) => (
-          <details key={f.q} className="rounded-[14px] border border-mist-32 bg-white-5 p-4 text-mist">
-            <summary className="min-h-11 cursor-pointer list-none font-semibold">{f.q}</summary>
-            <p className="mt-2 text-sm text-stone">{f.a}</p>
-          </details>
-        ))}
-      </section>
-
-      <nav aria-label={t("budgets")} className="mt-8">
-        <h2 className="text-lg font-bold text-mist">{t("budgets")}</h2>
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {sub.budget_steps_eur.map((eur) => (
-            <li key={eur}>
-              <Link
-                href={`/kategorija/${sub.id}/lidz-${eur}`}
-                className="flex min-h-11 items-center rounded-full border border-mist-32 bg-white-5 px-4 text-sm font-semibold text-mist"
-                aria-current={budgetCents === eur * 100 ? "page" : undefined}
-              >
-                {t("upTo", { budget: formatEur(eur * 100) })}
-              </Link>
-            </li>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section aria-labelledby="faq-title" className="flex flex-col gap-3">
+          <SectionTitle id="faq-title">{t("faqTitle")}</SectionTitle>
+          {faq.map((f) => (
+            <details
+              key={f.q}
+              className="group rounded-[14px] border-[1.5px] border-line-25 px-4 py-1 text-mist"
+            >
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 font-semibold">
+                {f.q}
+                <span aria-hidden="true" className="text-lime transition-transform group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p className="pb-3 text-[15px] leading-normal text-stone">{f.a}</p>
+            </details>
           ))}
-        </ul>
-        <Link
-          href="/izvelies"
-          className="mt-4 inline-flex min-h-11 items-center text-base font-semibold text-lime"
-        >
-          {t("allCategories")}
-        </Link>
-      </nav>
-    </Shell>
+        </section>
+
+        <nav aria-labelledby="budgets-title" className="flex flex-col gap-3">
+          <SectionTitle id="budgets-title">{t("budgets")}</SectionTitle>
+          <ul className="flex flex-wrap gap-2">
+            {sub.budget_steps_eur.map((eur) => (
+              <li key={eur}>
+                <Link
+                  href={`/kategorija/${sub.id}/lidz-${eur}`}
+                  className="flex min-h-11 items-center rounded-full bg-chip px-4 text-sm font-semibold text-mist transition-colors hover:bg-lime-18 aria-[current=page]:bg-lime aria-[current=page]:text-night"
+                  aria-current={budgetCents === eur * 100 ? "page" : undefined}
+                >
+                  {t("upTo", { budget: formatEur(eur * 100) })}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/izvelies"
+            className="inline-flex min-h-11 items-center text-base font-semibold text-lime underline underline-offset-2"
+          >
+            {t("allCategories")}
+          </Link>
+        </nav>
+      </div>
+    </Page>
   );
 }

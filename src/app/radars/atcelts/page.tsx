@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { ButtonLink } from "@/ui/Button";
+import { Kicker, PageTitle, Screen } from "@/ui/layout";
 
 type Props = { searchParams: Promise<{ next?: string }> };
 
@@ -13,15 +13,16 @@ export default async function PaymentCanceledPage({ searchParams }: Props) {
       ? next.replace(/&step=create$/, "&step=plan")
       : "/radars";
   return (
-    <Shell>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("canceledTitle")}</h1>
-      <p className="mt-2 text-base text-stone">{t("canceledBody")}</p>
-      <div className="mt-6 flex flex-col gap-3">
-        <PrimaryLink href={target}>{t("pay")}</PrimaryLink>
-        <PrimaryLink href="/radars" variant="secondary">
+    <Screen size="medium">
+      <Kicker>{t("planKicker")}</Kicker>
+      <PageTitle>{t("canceledTitle")}</PageTitle>
+      <p className="text-lg leading-normal text-stone">{t("canceledBody")}</p>
+      <div className="flex flex-wrap gap-3">
+        <ButtonLink href={target}>{t("pay")}</ButtonLink>
+        <ButtonLink href="/radars" variant="outline">
           {t("toRadar")}
-        </PrimaryLink>
+        </ButtonLink>
       </div>
-    </Shell>
+    </Screen>
   );
 }

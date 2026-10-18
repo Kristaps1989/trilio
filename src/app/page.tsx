@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { catalog } from "@/domain/questions/catalog";
-import { LegalLinks } from "@/ui/LegalLinks";
-import { Logo } from "@/ui/Logo";
+import { ButtonLink } from "@/ui/Button";
+import { Container, Kicker, Lead, PageTitle, SectionTitle } from "@/ui/layout";
+import { TileIcon } from "@/ui/Tile";
 
-// Welcome screen (spec §1) plus crawlable entry points: search engines and
-// AI assistants need real links to the category pages, not just two buttons.
+// Welcome screen (spec §1, prototype "welcome") plus crawlable entry points
+// below the fold: search engines and AI assistants need real links to the
+// category pages, not just two buttons.
 
 // Rendered per request so the site URL in metadata and JSON-LD comes from APP_URL at runtime.
 export const dynamic = "force-dynamic";
@@ -13,77 +15,70 @@ export const dynamic = "force-dynamic";
 export default async function WelcomePage() {
   const t = await getTranslations();
   const groups = catalog.groups.filter((g) => g.id !== "other");
+  const steps = [t("home.how1"), t("home.how2"), t("home.how3")];
   return (
     <>
-      <header className="flex items-center justify-between px-4 py-4">
-        <Logo />
-        <nav className="flex items-center gap-2">
-          <Link
-            href="/radars"
-            className="flex min-h-11 items-center rounded-xl px-3 text-base font-semibold text-mist"
-          >
-            {t("header.radar")}
-          </Link>
-          <Link
-            href="/ienakt"
-            className="flex min-h-11 items-center rounded-xl border border-mist-32 px-4 text-base font-semibold text-mist"
-          >
-            {t("header.signIn")}
-          </Link>
-        </nav>
-      </header>
-
-      <main className="flex flex-1 flex-col gap-10 px-4 pb-8">
-        <section className="flex flex-col justify-center gap-8 pt-6">
-          <h1 className="text-[32px] font-bold leading-[1.15] text-mist sm:text-[40px]">
-            {t("welcome.headline")}
-          </h1>
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/izvelies"
-              className="flex min-h-14 items-center justify-center rounded-button bg-lime px-6 text-lg font-bold text-night"
-            >
+      <section className="flex min-h-[calc(100dvh-200px)] items-center justify-center pt-2 pb-10">
+        <Container size="text" className="flex flex-col gap-6">
+          <Kicker>{t("welcome.kicker")}</Kicker>
+          <PageTitle scale="hero">{t("welcome.headline")}</PageTitle>
+          <Lead className="max-w-[600px]">{t("welcome.lead")}</Lead>
+          <div className="mt-2 flex flex-wrap gap-3">
+            <ButtonLink href="/izvelies" size="lg">
               {t("welcome.help")}
-            </Link>
-            <Link
-              href="/modelis"
-              className="flex min-h-14 items-center justify-center rounded-button border-[1.5px] border-mist-32 bg-white-5 px-6 text-lg font-semibold text-mist"
-            >
+            </ButtonLink>
+            <ButtonLink href="/modelis" size="lg" variant="outline">
               {t("welcome.knowModel")}
-            </Link>
+            </ButtonLink>
           </div>
-        </section>
+          <p className="text-sm text-stone">{t("welcome.meta")}</p>
+        </Container>
+      </section>
 
-        <section aria-labelledby="how-title" className="flex flex-col gap-3">
-          <h2 id="how-title" className="text-xl font-bold text-mist">
-            {t("home.howTitle")}
-          </h2>
-          <ol className="flex list-decimal flex-col gap-2 pl-5 text-base text-stone">
-            <li>{t("home.how1")}</li>
-            <li>{t("home.how2")}</li>
-            <li>{t("home.how3")}</li>
+      <Container size="wide" className="flex flex-col gap-14 pb-12">
+        <section aria-labelledby="how-title" className="flex flex-col gap-5">
+          <SectionTitle id="how-title">{t("home.howTitle")}</SectionTitle>
+          <ol className="grid gap-[10px] md:grid-cols-3">
+            {steps.map((text, i) => (
+              <li
+                key={text}
+                className="flex flex-col gap-3 rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 p-5"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-lime font-heading text-base font-bold text-night"
+                >
+                  {i + 1}
+                </span>
+                <span className="text-base leading-normal text-mist">{text}</span>
+              </li>
+            ))}
           </ol>
         </section>
 
-        <section aria-labelledby="categories-title" className="flex flex-col gap-3">
-          <h2 id="categories-title" className="text-xl font-bold text-mist">
-            {t("home.categoriesTitle")}
-          </h2>
-          <p className="text-base text-stone">{t("home.categoriesHint")}</p>
-          <div className="flex flex-col gap-4">
+        <section aria-labelledby="categories-title" className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <SectionTitle id="categories-title">{t("home.categoriesTitle")}</SectionTitle>
+            <p className="text-base text-stone">{t("home.categoriesHint")}</p>
+          </div>
+          <div className="grid items-start gap-[10px] md:grid-cols-2 xl:grid-cols-3">
             {groups.map((g) => (
-              <div key={g.id}>
+              <div
+                key={g.id}
+                className="flex flex-col gap-3 rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 p-4"
+              >
                 <h3 className="text-base font-semibold text-mist">
-                  <Link href={`/izvelies/${g.id}`} className="inline-flex min-h-11 items-center">
+                  <Link href={`/izvelies/${g.id}`} className="inline-flex min-h-11 items-center gap-3">
+                    <TileIcon path={g.icon_svg_path} />
                     {g.label}
                   </Link>
                 </h3>
-                <ul className="mt-1 flex flex-wrap gap-2">
+                <ul className="flex flex-wrap gap-2">
                   {g.subcategories.map((s) => (
                     <li key={s.id}>
                       <Link
                         href={`/kategorija/${s.id}`}
-                        className="flex min-h-11 items-center rounded-full border border-mist-32 bg-white-5 px-3 text-sm font-semibold text-mist"
+                        className="flex min-h-11 items-center rounded-full bg-chip px-[14px] text-sm text-mist transition-colors hover:bg-lime-18"
                       >
                         {s.label}
                       </Link>
@@ -94,12 +89,7 @@ export default async function WelcomePage() {
             ))}
           </div>
         </section>
-      </main>
-
-      <footer className="flex flex-col gap-2 px-4 py-4 text-sm text-stone">
-        <span>{t("footer.tagline")}</span>
-        <LegalLinks />
-      </footer>
+      </Container>
     </>
   );
 }

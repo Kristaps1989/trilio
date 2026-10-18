@@ -6,6 +6,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { analyticsId } from "@/config/analytics";
 import { appBaseUrl } from "@/services/payments";
 import { Analytics } from "@/ui/analytics/Analytics";
+import { Footer } from "@/ui/shell/Footer";
+import { Header } from "@/ui/shell/Header";
 import "./globals.css";
 
 // Latin Extended covers Latvian, Lithuanian and Estonian diacritics.
@@ -85,10 +87,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ];
   return (
     <html lang={locale} className={`${spaceGrotesk.variable} ${figtree.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">
+      <body className="relative flex min-h-full flex-col">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <NextIntlClientProvider>
-          {children}
+          {/* One shell for every page (docs/DESIGN_FIX_PLAN.md PR 1): the progress
+              track, header and footer render once and persist across navigation. */}
+          <div aria-hidden="true" className="h-1 shrink-0 bg-track" />
+          <Header />
+          <main id="saturs" className="flex flex-1 flex-col px-gutter">
+            {children}
+          </main>
+          <Footer />
           {measurementId ? (
             <Suspense fallback={null}>
               <Analytics measurementId={measurementId} />

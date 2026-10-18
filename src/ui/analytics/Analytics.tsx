@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { clickLabel, eventFromDataset, pageInfo } from "@/domain/analytics/page";
-import { PrimaryButton } from "@/ui/PrimaryButton";
+import { Button } from "@/ui/Button";
 import {
   CONSENT_CHANGED,
   CONSENT_OPEN,
@@ -138,27 +138,29 @@ export function Analytics({ measurementId }: { measurementId: string }) {
     <section
       aria-label={t("title")}
       data-ga-ignore=""
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-mist-32 bg-night px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-2xl"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-line-25 bg-night px-gutter pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_rgb(0_0_0/0.35)]"
     >
-      <div className="mx-auto flex max-w-xl flex-col gap-3">
-        <h2 className="text-base font-bold text-mist">{t("title")}</h2>
-        <p className="text-sm text-stone">
-          {t.rich("text", {
-            policy: (chunks) => (
-              <Link href="/sikdatnes" className="text-mist underline">
-                {chunks}
-              </Link>
-            ),
-          })}
-        </p>
+      <div className="mx-auto flex w-full max-w-[1160px] flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex max-w-[720px] flex-col gap-1">
+          <h2 className="font-heading text-lg font-semibold text-mist">{t("title")}</h2>
+          <p className="text-[15px] leading-normal text-stone">
+            {t.rich("text", {
+              policy: (chunks) => (
+                <Link href="/sikdatnes" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
+        </div>
         {/* Equal buttons: refusing is as easy as accepting (CLAUDE.md rule 4). */}
-        <div className="grid grid-cols-2 gap-3">
-          <PrimaryButton variant="secondary" onClick={() => choose("denied")}>
+        <div className="grid shrink-0 grid-cols-2 gap-3 md:flex">
+          <Button variant="outline" onClick={() => choose("denied")}>
             {t("reject")}
-          </PrimaryButton>
-          <PrimaryButton variant="secondary" onClick={() => choose("granted")}>
+          </Button>
+          <Button variant="outline" onClick={() => choose("granted")}>
             {t("accept")}
-          </PrimaryButton>
+          </Button>
         </div>
       </div>
     </section>
@@ -171,7 +173,7 @@ export function ConsentSettingsButton({ label }: { label: string }) {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(CONSENT_OPEN))}
-      className="flex min-h-11 items-center text-sm text-stone underline"
+      className="flex min-h-11 items-center text-[13px] text-stone underline underline-offset-2"
     >
       {label}
     </button>

@@ -15,10 +15,13 @@ export async function LegalLinks() {
   ] as const;
   return (
     <nav aria-label={t("legalNav")}>
-      <ul className="flex flex-wrap gap-x-4">
+      <ul className="flex flex-wrap gap-x-4 md:justify-end">
         {links.map(([href, label]) => (
           <li key={href}>
-            <Link href={href} className="flex min-h-11 items-center text-sm text-stone underline">
+            <Link
+              href={href}
+              className="flex min-h-11 items-center text-[13px] text-stone underline underline-offset-2"
+            >
               {label}
             </Link>
           </li>

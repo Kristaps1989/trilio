@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { PriceLine } from "@/domain/pricing/omnibus";
 import { formatEur, formatEurDelta, formatRating } from "@/i18n/format";
+import { buttonClass } from "@/ui/Button";
 
 // Spec §3.2 result card and §3.3 refurbished card. Server component: all
 // numbers arrive formatted, all copy comes from messages.
@@ -42,9 +43,66 @@ export type CardModel = {
   trackHref: string;
 };
 
+function goHref(card: CardModel): string {
+  return `/go/${card.best.id}${card.sessionId ? `?s=${card.sessionId}` : ""}`;
+}
+
+/** data-ga-* attributes for the offer click (src/ui/analytics). */
+function offerAnalytics(card: CardModel) {
+  return {
+    "data-ga-event": "select_offer",
+    "data-ga-param-store": card.best.storeName,
+    "data-ga-param-tier": card.tier ?? "none",
+    "data-ga-param-recommended": card.recommended ? "yes" : "no",
+    "data-ga-param-refurbished": card.refurbished ? "yes" : "no",
+    "data-ga-param-price-eur": String(Math.round(card.best.priceCents / 100)),
+  };
+}
+
+const pill = "inline-flex items-center rounded-full px-3 py-[5px] text-[13px] font-bold leading-none";
+
+function CheckIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`mt-0.5 shrink-0 ${className}`}
+    >
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+function BoltIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="mt-0.5 shrink-0 text-muted"
+    >
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />
+    </svg>
+  );
+}
+
+/** Spec §3.2 result card, prototype layout: one of up to three cards in a row. */
 export async function ResultCard({ card }: { card: CardModel }) {
+  if (card.refurbished) return <RefurbishedCard card={card} />;
   const t = await getTranslations("results");
-  const refurb = !!card.refurbished;
   const over = card.overBudgetByCents > 0;
   const tierLabel = card.tier
     ? t(`tier${card.tier[0]!.toUpperCase()}${card.tier.slice(1)}` as "tierBudget")
@@ -52,67 +110,55 @@ export async function ResultCard({ card }: { card: CardModel }) {
 
   return (
     <article
-      className={`flex flex-col gap-4 rounded-card p-[22px] ${
-        refurb
-          ? "border-[1.5px] border-refurb-border bg-refurb-bg text-night"
-          : over
-            ? "border-2 border-dashed border-over-border bg-over-bg text-night"
-            : "bg-white text-night"
-      } ${card.recommended ? "ring-[3px] ring-lime" : ""}`}
+      className={`flex min-w-0 max-w-full flex-[1_1_300px] flex-col gap-[14px] rounded-card bg-white sm:max-w-[560px] p-[22px] text-night ${
+        over ? "border-2 border-dashed border-over-border" : ""
+      } ${card.recommended ? "shadow-[0_0_0_3px_var(--color-lime)]" : ""}`}
       aria-label={card.name}
     >
-      <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide">
-        {refurb ? (
-          <span className="rounded-md bg-refurb px-2 py-1 text-white">{t("refurbLabel")}</span>
-        ) : over ? (
-          <span className="rounded-md bg-over-text px-2 py-1 text-white">
-            {t("overBudget", { amount: formatEur(card.overBudgetByCents) })}
-          </span>
-        ) : tierLabel ? (
-          <span className="rounded-md bg-night px-2 py-1 text-mist">{tierLabel}</span>
-        ) : null}
-        {card.recommended ? (
-          <span className="rounded-md bg-lime px-2 py-1 text-night">{t("recommended")}</span>
-        ) : null}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-wrap gap-1.5">
+          {over ? (
+            <span className={`${pill} bg-over-bg text-over-text`}>
+              {t("overBudget", { amount: formatEur(card.overBudgetByCents) })}
+            </span>
+          ) : tierLabel ? (
+            <span className={`${pill} bg-card-pill text-night`}>{tierLabel}</span>
+          ) : null}
+          {card.recommended ? <span className={`${pill} bg-lime text-night`}>{t("recommended")}</span> : null}
+        </div>
         {card.rating !== null ? (
-          <span className="ml-auto text-muted normal-case tracking-normal">
+          <span className="whitespace-nowrap pt-[5px] text-[13px] text-muted">
             {t("rating", { score: formatRating(card.rating / 10) })}
           </span>
         ) : null}
       </div>
 
       <div>
-        <h3 className="text-xl font-bold leading-tight">{card.name}</h3>
-        <p className="mt-1 text-sm text-muted">
+        <h3 className="font-body text-xl leading-tight font-bold tracking-normal">{card.name}</h3>
+        <p className="mt-1 font-heading text-[13px] font-semibold tracking-[0.01em]">
           {t("model", { code: card.modelCode, ean: card.ean ?? "—" })}
-          {refurb ? ` · ${t("refurbSameModel")}` : ""}
         </p>
-        {card.specs ? <p className="mt-1 text-base">{card.specs}</p> : null}
+        {card.specs ? <p className="mt-1 text-sm text-muted">{card.specs}</p> : null}
       </div>
 
-      {card.refurbished ? (
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-refurb">
-          {card.refurbished.grade ? <li>{t("refurbGrade", { grade: card.refurbished.grade })}</li> : null}
-          {card.refurbished.warrantyMonths ? (
-            <li>{t("refurbWarranty", { months: card.refurbished.warrantyMonths })}</li>
-          ) : null}
-          {card.refurbished.savingVsNewCents ? (
-            <li>{t("refurbSaving", { amount: formatEur(card.refurbished.savingVsNewCents) })}</li>
-          ) : null}
-        </ul>
-      ) : null}
-
-      <div>
-        <p className="font-heading text-3xl font-bold">
-          {formatEur(card.best.priceCents)}{" "}
-          <span className="text-base font-semibold text-muted">· {card.best.storeName}</span>
+      <div className="flex flex-col gap-1">
+        <p className="flex flex-wrap items-baseline gap-x-[10px] gap-y-1">
+          <span
+            data-price-cents={card.best.priceCents}
+            className="font-heading text-[38px] leading-none font-bold tracking-[-0.02em]"
+          >
+            {formatEur(card.best.priceCents)}
+          </span>
+          <span className="text-[15px] font-semibold">{card.best.storeName}</span>
+          <span className="text-sm text-muted">
+            {card.best.stock === "in" ? t("stockIn") : t("stockSoon")}
+            {card.best.deliveryDate ? ` · ${t("delivery", { date: card.best.deliveryDate })}` : ""}
+            {card.best.deliveryDays !== null
+              ? ` (${t("deliveryDays", { days: card.best.deliveryDays })})`
+              : ""}
+          </span>
         </p>
-        <p className="text-sm text-muted">
-          {card.best.stock === "in" ? t("stockIn") : t("stockSoon")}
-          {card.best.deliveryDate ? ` · ${t("delivery", { date: card.best.deliveryDate })}` : ""}
-          {card.best.deliveryDays !== null ? ` (${t("deliveryDays", { days: card.best.deliveryDays })})` : ""}
-        </p>
-        <p className="mt-1 text-sm font-semibold">
+        <p className="text-[13px] text-muted">
           {card.priceLine.kind === "lowest_now"
             ? t("lowest30Now")
             : card.priceLine.kind === "was_lower"
@@ -122,32 +168,40 @@ export async function ResultCard({ card }: { card: CardModel }) {
       </div>
 
       {card.upgrade ? (
-        <div className="rounded-xl bg-best p-3 text-sm">
-          <p className="font-semibold">
+        <div className="flex flex-col gap-0.5 rounded-control bg-best px-3 py-[10px]">
+          <strong className="text-sm font-bold">
             {t("upgrade", {
               amount: formatEurDelta(card.upgrade.priceDeltaCents),
               tier: card.upgrade.tierLabel,
             })}
-          </p>
-          <p className="mt-1">{card.upgrade.onlyBrand ? t("onlyBrand") : card.upgrade.lines.join(" · ")}</p>
+          </strong>
+          <span className="text-sm leading-[1.45]">
+            {card.upgrade.onlyBrand ? t("onlyBrand") : card.upgrade.lines.join(" · ")}
+          </span>
         </div>
       ) : null}
 
       {card.energy ? (
-        <p className="text-sm">
-          {t("energy10y", {
-            energy: formatEur(card.energy.cost10yCents),
-            total: formatEur(card.energy.totalCents),
-          })}
+        <p className="flex items-start gap-2 text-sm">
+          <BoltIcon />
+          <span>
+            {t("energy10y", {
+              energy: formatEur(card.energy.cost10yCents),
+              total: formatEur(card.energy.totalCents),
+            })}
+          </span>
         </p>
       ) : null}
 
       {card.whyFits.length ? (
-        <div>
-          <p className="text-sm font-semibold text-muted">{t("whyFits")}</p>
-          <ul className="mt-1 list-disc pl-5 text-sm">
+        <div className="flex flex-col gap-1.5">
+          <p className="sr-only">{t("whyFits")}</p>
+          <ul className="flex flex-col gap-1.5 text-[15px]">
             {card.whyFits.map((w) => (
-              <li key={w}>{w}</li>
+              <li key={w} className="flex gap-2">
+                <CheckIcon className="text-success" />
+                <span>{w}</span>
+              </li>
             ))}
           </ul>
         </div>
@@ -158,44 +212,97 @@ export async function ResultCard({ card }: { card: CardModel }) {
       ) : null}
 
       {card.otherOffers.length ? (
-        <div className="text-sm">
-          <p className="font-semibold text-muted">{t("otherShops")}</p>
-          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+        <div className="flex flex-col gap-1 border-t border-card-line pt-[10px] text-sm text-muted">
+          <p className="font-semibold">{t("otherShops")}</p>
+          <ul className="flex flex-col gap-1">
             {card.otherOffers.map((o) => (
-              <li key={o.storeName}>
-                {o.storeName}: {formatEur(o.priceCents)}
+              <li key={o.storeName} className="flex justify-between gap-2">
+                <span>{o.storeName}</span>
+                <span>{formatEur(o.priceCents)}</span>
               </li>
             ))}
           </ul>
           {card.savingVsMaxCents ? (
-            <p className="mt-1 font-semibold">
+            <p className="font-semibold text-success">
               {t("savingVsMax", { amount: formatEur(card.savingVsMaxCents) })}
             </p>
           ) : null}
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="mt-auto flex flex-col gap-2 pt-1">
         <a
-          href={`/go/${card.best.id}${card.sessionId ? `?s=${card.sessionId}` : ""}`}
+          href={goHref(card)}
           rel="sponsored noopener"
-          data-ga-event="select_offer"
-          data-ga-param-store={card.best.storeName}
-          data-ga-param-tier={card.tier ?? "none"}
-          data-ga-param-recommended={card.recommended ? "yes" : "no"}
-          data-ga-param-refurbished={card.refurbished ? "yes" : "no"}
-          data-ga-param-price-eur={String(Math.round(card.best.priceCents / 100))}
-          className="flex min-h-14 flex-1 items-center justify-center rounded-button bg-night px-6 text-lg font-bold text-mist"
+          {...offerAnalytics(card)}
+          className={buttonClass({ variant: "dark", block: true })}
         >
           {t("buy", { shop: card.best.storeName })}
         </a>
+        <Link href={card.trackHref} className={buttonClass({ variant: "card", size: "sm", block: true })}>
+          {t("track")}
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+/** Spec §3.3: a refurbished offer as the prototype's blue horizontal card. */
+export async function RefurbishedCard({ card }: { card: CardModel }) {
+  const t = await getTranslations("results");
+  const r = card.refurbished!;
+  return (
+    <article
+      className="flex flex-wrap items-center gap-x-6 gap-y-[14px] rounded-card bg-refurb-bg px-[22px] py-5 text-night"
+      aria-label={card.name}
+    >
+      <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
+          <span className="inline-flex rounded-full bg-refurb px-[10px] py-1 text-xs font-bold text-white">
+            {t("refurbBadge")}
+          </span>
+          {r.warrantyMonths ? (
+            <span className="inline-flex rounded-full bg-white px-[10px] py-1 text-xs font-bold text-refurb-ink">
+              {t("refurbWarranty", { months: r.warrantyMonths })}
+            </span>
+          ) : null}
+        </div>
+        <h3 className="font-body text-[19px] leading-tight font-bold tracking-normal">{card.name}</h3>
+        <p className="font-heading text-[13px] font-semibold text-refurb-ink">
+          {t("model", { code: card.modelCode, ean: card.ean ?? "—" })} · {t("refurbSameModel")}
+        </p>
+        {r.grade ? <p className="text-sm text-refurb-ink-2">{t("refurbGrade", { grade: r.grade })}</p> : null}
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <span className="font-heading text-[32px] leading-none font-bold">
+          {formatEur(card.best.priceCents)}
+        </span>
+        <span className="text-sm font-semibold text-refurb-ink">
+          {card.best.storeName}
+          {r.savingVsNewCents ? ` · ${t("refurbSaving", { amount: formatEur(r.savingVsNewCents) })}` : ""}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={goHref(card)}
+          rel="sponsored noopener"
+          {...offerAnalytics(card)}
+          className="inline-flex min-h-12 items-center rounded-control bg-refurb px-5 font-bold text-white"
+        >
+          {t("view", { shop: card.best.storeName })}
+        </a>
         <Link
           href={card.trackHref}
-          className="flex min-h-14 flex-1 items-center justify-center rounded-button border-[1.5px] border-night px-6 text-lg font-semibold text-night"
+          className="inline-flex min-h-12 items-center rounded-control border-[1.5px] border-refurb-line px-4 font-semibold text-refurb-ink"
         >
           {t("track")}
         </Link>
       </div>
     </article>
   );
+}
+
+/** Up to three cards side by side, one column on phones (prototype). */
+export function CardRow({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-wrap items-stretch gap-4">{children}</div>;
 }

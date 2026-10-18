@@ -1,6 +1,6 @@
 "use client";
 
-// Brand option row (docs/BRAND.md): min-height 60 px, letter key badge,
+// Option row (docs/BRAND.md, prototype): min-height 60 px, 28 px letter badge,
 // selected state with lime border and lime at 18 %. A real <button> so it
 // is keyboard- and screen-reader-accessible.
 
@@ -37,20 +37,20 @@ export function OptionRow({
       aria-checked={selected}
       onClick={onSelect}
       {...gaAttributes}
-      className={`flex min-h-[60px] w-full items-center gap-3 rounded-[14px] border-[1.5px] px-4 py-3 text-left transition-colors ${
-        selected ? "border-lime bg-lime-18" : "border-mist-32 bg-white-5"
+      className={`flex min-h-[60px] w-full items-center gap-[14px] rounded-control border-[1.5px] px-4 py-3 text-left transition-colors ${
+        selected ? "border-lime bg-lime-18" : "border-mist-32 bg-white-5 hover:border-line-40"
       }`}
     >
       <span
         aria-hidden="true"
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sm font-bold ${
-          selected ? "bg-lime text-night" : "bg-mist-32 text-mist"
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-[1.5px] text-[13px] font-bold ${
+          selected ? "border-lime bg-lime text-night" : "border-mist/50 text-mist"
         }`}
       >
         {letter}
       </span>
-      <span className="flex flex-col">
-        <span className="text-[17px] font-semibold leading-tight text-mist">{label}</span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-lg font-semibold leading-tight text-mist">{label}</span>
         {sublabel ? <span className="text-sm text-stone">{sublabel}</span> : null}
       </span>
     </button>

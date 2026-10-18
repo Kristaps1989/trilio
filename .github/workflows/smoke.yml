@@ -1,0 +1,44 @@
+name: Smoke (production)
+
+# Read-only checks of https://trilio.lv (tests/smoke): after each successful
+# Railway deployment, every hour, and on demand. A failed run marks the
+# check red and GitHub emails the repository owner about the failed workflow.
+
+on:
+  deployment_status:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-production
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SMOKE_BASE_URL: https://trilio.lv
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Wait for the new deployment to serve traffic
+        if: github.event_name == 'deployment_status'
+        run: sleep 60
+      - name: Smoke suite against https://trilio.lv
+        run: npm run test:smoke
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: smoke-production-report
+          path: test-results/
+          retention-days: 14

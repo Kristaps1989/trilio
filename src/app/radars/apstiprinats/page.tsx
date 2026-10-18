@@ -3,8 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { currentSubscription, hasAccess } from "@/services/billing/engine";
-import { PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { ButtonLink } from "@/ui/Button";
+import { Confirmation } from "@/ui/Confirmation";
 
 export const dynamic = "force-dynamic";
 
@@ -24,14 +24,8 @@ export default async function PaymentAcceptedPage({ searchParams }: Props) {
   if (userId && hasAccess(await currentSubscription(db, userId))) redirect(target);
 
   return (
-    <Shell back={false}>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("confirmTitle")}</h1>
-      <p className="mt-2 text-base text-stone">{t("confirmBody")}</p>
-      <div className="mt-6 flex flex-col gap-3">
-        <PrimaryLink href={`/radars/apstiprinats?next=${encodeURIComponent(target)}`}>
-          {t("toRadar")}
-        </PrimaryLink>
-      </div>
-    </Shell>
+    <Confirmation title={t("confirmTitle")} body={t("confirmBody")}>
+      <ButtonLink href={`/radars/apstiprinats?next=${encodeURIComponent(target)}`}>{t("toRadar")}</ButtonLink>
+    </Confirmation>
   );
 }

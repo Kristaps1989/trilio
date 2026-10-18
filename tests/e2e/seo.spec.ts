@@ -24,7 +24,8 @@ test("category landing page renders three ranked cards with structured data and 
   expect(data.itemListElement).toHaveLength(3);
   expect(data.itemListElement[0].item.offers.priceCurrency).toBe("EUR");
   expect(data.itemListElement[0].item.gtin13).toMatch(/^\d{13}$/);
-  await expect(page.getByRole("link", { name: /Atbildi uz dažiem jautājumiem/ })).toHaveAttribute(
+  await expect(page.getByText("Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sākt izvēli" })).toHaveAttribute(
     "href",
     "/izvelies/cool/fridge",
   );
@@ -35,12 +36,12 @@ test("category landing page renders three ranked cards with structured data and 
 test("budget landing page keeps every card within the budget and links the other steps", async ({ page }) => {
   await page.goto("/kategorija/fridge/lidz-800");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Labākie ledusskapji līdz 800\s€/);
-  const prices = await page.getByRole("article").locator("p.font-heading").allTextContents();
+  const prices = await page
+    .getByRole("article")
+    .locator("[data-price-cents]")
+    .evaluateAll((els) => els.map((e) => Number(e.getAttribute("data-price-cents"))));
   expect(prices.length).toBeGreaterThan(0);
-  for (const p of prices) {
-    const eur = Number(p.replace(/[^\d]/g, "").slice(0, 4));
-    expect(eur).toBeLessThanOrEqual(800);
-  }
+  for (const cents of prices) expect(cents).toBeLessThanOrEqual(80000);
   await expect(page.getByRole("link", { name: /līdz 800\s€/ })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("link", { name: /līdz 1\s200\s€/ })).toBeVisible();
   expect((await page.goto("/kategorija/fridge/lidz-999"))!.status()).toBe(404);

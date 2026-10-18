@@ -10,8 +10,10 @@ import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { formatEur } from "@/i18n/format";
 import { paymentsEnabled } from "@/services/payments";
 import Link from "next/link";
-import { PrimaryLink } from "@/ui/PrimaryButton";
-import { Shell } from "@/ui/Shell";
+import { ButtonLink } from "@/ui/Button";
+import { Confirmation } from "@/ui/Confirmation";
+import { InfoBox, Kicker, PageTitle, Screen } from "@/ui/layout";
+import { TopProgress } from "@/ui/shell/TopProgress";
 import { createRadarAction } from "../actions";
 import { PlanPicker } from "./PlanPicker";
 import { RadarSetup, type SetupState } from "./RadarSetup";
@@ -48,6 +50,7 @@ function selfUrl(state: Record<string, string | undefined>): string {
 export default async function NewRadarPage({ searchParams }: Props) {
   const raw = await searchParams;
   const t = await getTranslations("radar");
+  const tf = await getTranslations("flow");
   const parsed = Params.safeParse(raw);
   const p = parsed.success ? parsed.data : {};
   const channels = (p.channels ?? "")
@@ -80,17 +83,21 @@ export default async function NewRadarPage({ searchParams }: Props) {
               : "gate";
 
   if (step === "when" || step === "scope" || step === "channel") {
+    const index = ["when", "scope", "channel"].indexOf(step);
     return (
-      <Shell>
-        <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("newTitle")}</h1>
-        {product ? <p className="mt-1 text-sm text-stone">{product.name}</p> : null}
+      <Screen>
+        <TopProgress percent={((index + 1) / 5) * 100} />
+        <p className="text-[15px] font-bold text-lime">
+          {t("newTitle")} · {tf("stepOf", { n: index + 1, m: 3 })}
+        </p>
         <RadarSetup
           state={state}
           step={step}
           brand={product?.brand ?? ""}
           modelCode={product?.modelCode ?? ""}
+          description={product ? product.name : null}
         />
-      </Shell>
+      </Screen>
     );
   }
 
@@ -107,9 +114,10 @@ export default async function NewRadarPage({ searchParams }: Props) {
     const monthly = list.find((x) => x.interval === "month");
     const annual = list.find((x) => x.interval === "year");
     return (
-      <Shell>
-        <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("planTitle")}</h1>
-        <p className="mt-2 text-base text-stone">{t("planFeatures")}</p>
+      <Screen size="narrow" gap="gap-4">
+        <TopProgress percent={80} />
+        <Kicker>{t("planKicker")}</Kicker>
+        <PageTitle>{t("planTitle")}</PageTitle>
         {paymentsEnabled() && monthly && annual ? (
           <PlanPicker
             monthly={{ id: monthly.id, label: t("planMonthly", { price: formatEur(monthly.priceCents) }) }}
@@ -121,6 +129,7 @@ export default async function NewRadarPage({ searchParams }: Props) {
             returnTo={`${current}&step=create`}
             payLabel={t("pay")}
             note={t("payNote")}
+            features={[t("feature1"), t("feature2"), t("feature3")]}
             legal={t.rich("legalNote", {
               terms: (chunks) => (
                 <Link href="/noteikumi" className="text-mist underline">
@@ -130,14 +139,16 @@ export default async function NewRadarPage({ searchParams }: Props) {
             })}
           />
         ) : (
-          <div className="mt-6 flex flex-col gap-3">
-            <p className="text-base text-mist">{t("paymentsOff")}</p>
-            <PrimaryLink href="/cits" variant="secondary">
-              {t("backToResults")}
-            </PrimaryLink>
+          <div className="flex flex-col gap-3">
+            <InfoBox>{t("paymentsOff")}</InfoBox>
+            <div>
+              <ButtonLink href="/izvelies" variant="outline">
+                {t("backToResults")}
+              </ButtonLink>
+            </div>
           </div>
         )}
-      </Shell>
+      </Screen>
     );
   }
 
@@ -152,16 +163,12 @@ export default async function NewRadarPage({ searchParams }: Props) {
   });
   if (!created.ok) redirect("/radars");
   return (
-    <Shell back={false}>
-      <h1 className="pt-4 text-[28px] font-bold leading-[1.2] text-mist">{t("confirmTitle")}</h1>
-      <p className="mt-2 text-base text-stone">{t("confirmBody")}</p>
-      <div className="mt-6 flex flex-col gap-3">
-        <PrimaryLink href="/radars">{t("toRadar")}</PrimaryLink>
-        <PrimaryLink href="/izvelies" variant="secondary">
-          {t("backToResults")}
-        </PrimaryLink>
-      </div>
-    </Shell>
+    <Confirmation title={t("confirmTitle")} body={t("confirmBody")}>
+      <ButtonLink href="/radars">{t("toRadar")}</ButtonLink>
+      <ButtonLink href="/izvelies" variant="outline">
+        {t("backToResults")}
+      </ButtonLink>
+    </Confirmation>
   );
 }
 

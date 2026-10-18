@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { encodeState, withAnswer, type FlowState } from "@/domain/flow/state";
 import { OptionRow } from "@/ui/OptionRow";
-import { PrimaryButton } from "@/ui/PrimaryButton";
+import { Button } from "@/ui/Button";
+import { InfoBox, PageTitle } from "@/ui/layout";
 
 // One question per screen (spec §2). Single choice auto-advances after
 // ~260 ms; multi and number inputs use "Turpināt". State goes into the URL,
@@ -107,9 +108,24 @@ export function QuestionScreen({
     go(n * 100);
   }
 
+  const helpToggle = question.help ? (
+    <Button
+      variant="link"
+      size="md"
+      aria-expanded={showHelp}
+      aria-controls={`help-${question.id}`}
+      onClick={() => setShowHelp((v) => !v)}
+    >
+      {t("dontKnow")}
+    </Button>
+  ) : null;
+
+  const bigInput =
+    "min-w-0 flex-1 border-0 border-b-2 border-lime bg-transparent py-2 font-heading text-[clamp(24px,4vw,36px)] font-semibold text-mist outline-none placeholder:text-stone/60";
+
   return (
-    <div className="flex flex-1 flex-col gap-6 pt-4">
-      <h1 className="text-[28px] font-bold leading-[1.2] text-mist">{question.title}</h1>
+    <>
+      <PageTitle>{question.title}</PageTitle>
 
       {question.type === "number" ? (
         <form
@@ -119,41 +135,51 @@ export function QuestionScreen({
             submitNumber();
           }}
         >
-          <label className="flex flex-col gap-2 text-base font-semibold text-mist">
-            <span>{t("numberHint", { min: question.input!.min, max: question.input!.max })}</span>
-            <span className="flex items-center gap-2">
-              <input
-                name="value"
-                inputMode="decimal"
-                enterKeyHint="go"
-                autoFocus
-                value={number}
-                onChange={(e) => {
-                  setNumber(e.target.value);
-                  setError(null);
-                }}
-                className="min-h-14 w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 text-xl text-mist"
-                aria-invalid={!!error}
-                aria-describedby={error ? "number-error" : undefined}
-              />
-              <span className="text-lg text-stone">{question.input!.unit}</span>
+          <div className="mt-1.5 flex max-w-[560px] items-end gap-3">
+            <label htmlFor={`answer-${question.id}`} className="sr-only">
+              {question.title}
+            </label>
+            <input
+              id={`answer-${question.id}`}
+              name="value"
+              inputMode="decimal"
+              enterKeyHint="go"
+              autoFocus
+              value={number}
+              onChange={(e) => {
+                setNumber(e.target.value);
+                setError(null);
+              }}
+              className={bigInput}
+              aria-invalid={!!error}
+              aria-describedby={`number-hint-${question.id}${error ? " number-error" : ""}`}
+            />
+            <span className="pb-2.5 font-heading text-[clamp(22px,3.4vw,30px)] font-semibold text-stone">
+              {question.input!.unit}
             </span>
-          </label>
+          </div>
+          <p id={`number-hint-${question.id}`} className="text-[15px] text-stone">
+            {t("numberHint", { min: question.input!.min, max: question.input!.max })}
+          </p>
           {error ? (
-            <p id="number-error" className="text-sm text-warning">
+            <p id="number-error" className="text-[15px] text-warning" role="alert">
               {error}
             </p>
           ) : null}
-          <PrimaryButton type="submit">{t("continue")}</PrimaryButton>
+          {showHelp && question.help ? <HelpBox id={`help-${question.id}`}>{question.help}</HelpBox> : null}
+          <div className="mt-1 flex flex-wrap items-center gap-[14px]">
+            <Button type="submit">{t("continue")}</Button>
+            {helpToggle}
+          </div>
         </form>
       ) : (
         <div
           role={question.type === "multi" ? "group" : "radiogroup"}
           aria-label={question.title}
-          className="flex flex-col gap-2"
+          className="mt-1.5 flex max-w-[540px] flex-col gap-[10px]"
         >
           {question.type === "multi" ? (
-            <p className="text-sm text-stone">{t("pickUpTo", { max: question.maxSelect ?? 1 })}</p>
+            <p className="text-[15px] text-stone">{t("pickUpTo", { max: question.maxSelect ?? 1 })}</p>
           ) : null}
           {question.options.map((o, i) => (
             <OptionRow
@@ -174,61 +200,100 @@ export function QuestionScreen({
           ))}
           {customOpen && question.customNumber ? (
             <form
-              className="mt-2 flex flex-col gap-3"
+              className="mt-3 flex flex-col gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
                 submitCustom();
               }}
             >
-              <label className="flex flex-col gap-2 text-base font-semibold text-mist">
-                <span>{question.customNumber.label}</span>
-                <span className="flex items-center gap-2">
-                  <input
-                    name="custom"
-                    inputMode="numeric"
-                    enterKeyHint="go"
-                    autoFocus
-                    value={customValue}
-                    onChange={(e) => {
-                      setCustomValue(e.target.value);
-                      setError(null);
-                    }}
-                    className="min-h-14 w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 text-xl text-mist"
-                  />
-                  <span className="text-lg text-stone">€</span>
+              <div className="flex items-end gap-3">
+                <label htmlFor={`custom-${question.id}`} className="sr-only">
+                  {question.customNumber.label}
+                </label>
+                <input
+                  id={`custom-${question.id}`}
+                  name="custom"
+                  inputMode="numeric"
+                  enterKeyHint="go"
+                  autoFocus
+                  placeholder={question.customNumber.label}
+                  value={customValue}
+                  onChange={(e) => {
+                    setCustomValue(e.target.value);
+                    setError(null);
+                  }}
+                  className={bigInput}
+                  aria-invalid={!!error}
+                />
+                <span className="pb-2.5 font-heading text-[clamp(22px,3.4vw,30px)] font-semibold text-stone">
+                  €
                 </span>
-              </label>
-              {error ? <p className="text-sm text-warning">{error}</p> : null}
-              <PrimaryButton type="submit">{t("continue")}</PrimaryButton>
+              </div>
+              {error ? (
+                <p className="text-[15px] text-warning" role="alert">
+                  {error}
+                </p>
+              ) : null}
+              <div>
+                <Button type="submit">{t("continue")}</Button>
+              </div>
             </form>
-          ) : null}
-          {question.type === "multi" ? (
-            <PrimaryButton className="mt-2" disabled={multi.length === 0} onClick={() => go(multi)}>
-              {t("continue")}
-            </PrimaryButton>
           ) : null}
         </div>
       )}
 
-      {question.help ? (
-        <div>
-          <button
-            type="button"
-            className="min-h-11 text-base font-semibold text-lime underline-offset-4 hover:underline"
-            aria-expanded={showHelp}
-            onClick={() => setShowHelp((v) => !v)}
-          >
-            {t("dontKnow")}
-          </button>
-          {showHelp ? <p className="mt-2 text-base text-stone">{question.help}</p> : null}
-        </div>
+      {question.type !== "number" ? (
+        <>
+          {showHelp && question.help ? <HelpBox id={`help-${question.id}`}>{question.help}</HelpBox> : null}
+          {question.type === "multi" || helpToggle ? (
+            <div className="mt-1 flex flex-wrap items-center gap-[14px]">
+              {question.type === "multi" ? (
+                <Button disabled={multi.length === 0} onClick={() => go(multi)}>
+                  {t("continue")}
+                </Button>
+              ) : null}
+              {helpToggle}
+            </div>
+          ) : null}
+        </>
       ) : null}
 
-      {question.why ? (
-        <p className="text-sm text-stone">
-          <span className="font-semibold text-mist">{t("why")}</span> {question.why}
-        </p>
-      ) : null}
+      {question.why ? <WhyLine label={t("why")}>{question.why}</WhyLine> : null}
+    </>
+  );
+}
+
+function HelpBox({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <div id={id} className="max-w-[560px]">
+      <InfoBox>{children}</InfoBox>
     </div>
+  );
+}
+
+/** "Kāpēc jautājam:" line under the options (prototype). */
+export function WhyLine({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <p className="mt-1.5 flex max-w-[560px] gap-[10px] text-[15px] leading-normal text-stone">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="mt-0.5 shrink-0 text-lime"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v5M12 8h.01" />
+      </svg>
+      <span>
+        <strong className="mr-1.5 font-semibold text-mist">{label}</strong>
+        {children}
+      </span>
+    </p>
   );
 }
