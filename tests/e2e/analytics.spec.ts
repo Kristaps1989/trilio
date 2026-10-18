@@ -62,7 +62,10 @@ test("after consent: page views carry the section, clicks and answers are tracke
     .toBe("choose");
 
   await page.getByRole("link", { name: /Ledusskapji un saldētavas/ }).click();
+  // Wait for the group page, or the next click can hit the group link again.
+  await expect(page).toHaveURL(/\/izvelies\/cool$/);
   await page.getByRole("link", { name: /^Ledusskapji/ }).click();
+  await expect(page).toHaveURL(/\/izvelies\/cool\/fridge/);
   await page.getByRole("radio").first().click();
   await expect
     .poll(async () => (await events(page)).find((e) => e.name === "answer_question")?.params)

@@ -59,7 +59,7 @@ export function Header() {
   const onSignIn = pathname === "/ienakt";
 
   return (
-    <header className="flex items-center justify-between gap-3 px-gutter py-4">
+    <header className="sticky top-1 z-40 flex items-center justify-between gap-3 border-b border-line-25 bg-night px-gutter py-4">
       <Link href="/" className="flex min-h-11 items-center" aria-label={t("home")}>
         <Logo />
       </Link>

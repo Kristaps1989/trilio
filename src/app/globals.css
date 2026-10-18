@@ -98,6 +98,8 @@ html {
   color-scheme: dark;
   /* The layout must not shift sideways when a page gets a scrollbar. */
   scrollbar-gutter: stable;
+  /* Anchors and focused fields land below the sticky header. */
+  scroll-padding-top: 96px;
   -webkit-text-size-adjust: 100%;
 }
 

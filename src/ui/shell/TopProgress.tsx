@@ -6,7 +6,7 @@
 export function TopProgress({ percent }: { percent: number }) {
   const pct = Math.max(0, Math.min(100, Math.round(percent)));
   return (
-    <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1">
+    <div aria-hidden="true" className="fixed inset-x-0 top-0 z-50 h-1">
       <div className="h-full bg-lime transition-[width] duration-300" style={{ width: `${pct}%` }} />
     </div>
   );
