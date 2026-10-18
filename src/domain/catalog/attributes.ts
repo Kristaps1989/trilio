@@ -36,9 +36,14 @@ const SubcategoryAttrsSchema = z
   .object({
     key: z.array(z.string()),
     fit: z.array(z.string()),
-    enums: z.record(z.string(), z.object({ values: z.array(z.string()), rules: z.array(EnumRuleSchema) }).strict()),
+    enums: z.record(
+      z.string(),
+      z.object({ values: z.array(z.string()), rules: z.array(EnumRuleSchema) }).strict(),
+    ),
     defaultFalse: z.array(z.string()),
-    sanity: z.object({ stems: z.array(z.string()).min(1), priceEur: z.tuple([z.number(), z.number()]) }).strict(),
+    sanity: z
+      .object({ stems: z.array(z.string()).min(1), priceEur: z.tuple([z.number(), z.number()]) })
+      .strict(),
   })
   .strict();
 

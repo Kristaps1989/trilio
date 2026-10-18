@@ -28,7 +28,12 @@ export function routerOutputSchema() {
     prefilled: z.array(
       z.object({
         question_id: z.string(),
-        value: z.union([z.string(), z.number(), z.array(z.string())]),
+        value: z.union([
+          z.string(),
+          z.number(),
+          z.array(z.string()),
+          z.object({ min: z.number().optional(), max: z.number().optional() }),
+        ]),
       }),
     ),
     confidence: z.number().min(0).max(100),

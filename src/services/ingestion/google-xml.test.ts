@@ -22,7 +22,7 @@ const feed = `<?xml version="1.0" encoding="UTF-8"?>
 </item>
 <item>
   <g:id>SKU-2</g:id>
-  <title>Samsung RB34C672ESA (atjaunots)</title>
+  <title>Samsung RB34C672ESA ledusskapis (atjaunots)</title>
   <link>https://shop.example.com/p/sku-2</link>
   <g:price>489,00 EUR</g:price>
   <g:availability>preorder</g:availability>

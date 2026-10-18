@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db, searchSessions } from "@/db";
 import { loadCandidates } from "@/db/queries/catalog";
+import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
+import { displayName } from "@/domain/catalog/naming";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
-import { deliveryDate, workingDaysUntil } from "@/domain/delivery/delivery";
+import { deliveryDate, urgencyDate, workingDaysUntil } from "@/domain/delivery/delivery";
 import { upgradeDelta } from "@/domain/delta/delta";
 import {
   ENERGY_SUBCATEGORIES,
@@ -13,26 +15,31 @@ import {
   energyPriceFromEnv,
   tcoCents,
 } from "@/domain/energy/energy";
-import { budgetCents, decodeState, encodeState } from "@/domain/flow/state";
-import { priceLine } from "@/domain/pricing/omnibus";
-import { chosenOptions, visibleQuestions } from "@/domain/questions/engine";
-import { getGroupOfSubcategory, getSubcategory } from "@/domain/questions/catalog";
-import type { Subcategory } from "@/domain/questions/schema";
-import { rank, type Pick, type RefurbishedPick } from "@/domain/ranking/rank";
-import { whyItFits } from "@/domain/ranking/score";
+import { optionCounts, priceStats } from "@/domain/flow/insight";
 import {
-  formatCm,
-  formatDateDative,
-  formatDb,
-  formatEur,
-  formatInt,
-  formatLitres,
-  formatRating,
-} from "@/i18n/format";
+  budgetCents,
+  decodeState,
+  encodeState,
+  priceRange,
+  withSetting,
+  type FlowState,
+} from "@/domain/flow/state";
+import { priceLine } from "@/domain/pricing/omnibus";
+import { chosenOptions, isRangeAnswer, visibleQuestions } from "@/domain/questions/engine";
+import { getGroupOfSubcategory, getSubcategory } from "@/domain/questions/catalog";
+import type { Answers, Question, Subcategory } from "@/domain/questions/schema";
+import { worthConsidering } from "@/domain/ranking/consider";
+import { candidatePool, rank, type Pick, type RefurbishedPick } from "@/domain/ranking/rank";
+import { relaxations, type Relaxation } from "@/domain/ranking/relax";
+import { whyItFits } from "@/domain/ranking/score";
+import { formatDateDative, formatEur, formatInt, formatNumber, formatRating } from "@/i18n/format";
+import { currentMarket } from "@/i18n/market";
 import { ButtonLink } from "@/ui/Button";
 import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
+import { betterDirection, enumLabels, formatAttr } from "./attr-format";
 import { CompareTable, type CompareColumn, type CompareRow } from "./CompareTable";
 import { deltaLines } from "./delta-text";
+import { FilterBar, type Chip } from "./FilterBar";
 import { HowWeRank } from "./HowWeRank";
 import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCard";
 
@@ -45,10 +52,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-const COUNTRY = "LV";
-
 function cardOffer(o: OfferView, now: Date): CardOffer {
-  const date = deliveryDate(o, now, COUNTRY);
+  const date = deliveryDate(o, now, currentMarket().country);
   return {
     id: o.id,
     storeName: o.storeName,
@@ -59,9 +64,7 @@ function cardOffer(o: OfferView, now: Date): CardOffer {
   };
 }
 
-function unconfirmedLabels(ids: string[], sub: Subcategory): string[] {
-  return ids.map((id) => sub.questions.find((q) => q.id === id)?.title ?? id);
-}
+const href = (sub: Subcategory, state: FlowState) => `/rezultati?sub=${sub.id}&a=${encodeState(state)}`;
 
 export default async function ResultsPage({ searchParams }: Props) {
   const { sub: subId, a } = await searchParams;
@@ -72,21 +75,32 @@ export default async function ResultsPage({ searchParams }: Props) {
   const t = await getTranslations("results");
   const td = await getTranslations("delta");
   const ta = await getTranslations("attr");
+  const tp = await getTranslations("productType");
+  const tu = await getTranslations("urgency");
   const state = decodeState(sub, a);
-  const budget = budgetCents(state);
+  const budget = priceRange(state);
   const urgency = state.trailing.urgency ?? "two_weeks";
   const now = new Date();
   const energyPrice = energyPriceFromEnv();
+  const costs = { ...DEFAULT_COSTS, energyCentsPerKwh: energyPrice };
+  const enums = enumLabels(sub);
+  const attrLabel = (key: string) => (ta.has(key as "width_cm") ? ta(key as "width_cm") : key);
+  const enumLabel = (key: string, value: string) => enums[key]?.[value] ?? value;
+  const typeLabel = tp.has(sub.id as "fridge") ? tp(sub.id as "fridge") : "";
+  const nameOf = (p: ProductView) => displayName(p.name, p.brand, sub.id, typeLabel);
 
   const products = await loadCandidates(db, sub.id);
-  const result = rank({
+  const input = {
     products,
     sub,
     answers: state.answers,
-    budgetCents: budget,
+    budget,
     urgency,
-    includeRefurbished: state.trailing.refurbished !== "no",
-  });
+    brands: state.trailing.brands,
+    brandsOnly: state.trailing.brandsOnly,
+    showUnknown: state.trailing.showUnknown,
+  };
+  const result = rank({ ...input, includeRefurbished: state.trailing.refurbished !== "no" });
 
   // Saved requirements (spec DATA_MODEL SearchSession); also the click attribution key.
   const [session] = await db
@@ -94,16 +108,15 @@ export default async function ResultsPage({ searchParams }: Props) {
     .values({
       subcategoryId: sub.id,
       answers: { ...state.answers, $trailing: state.trailing },
-      budgetCents: budget,
+      budgetCents: budgetCents(state),
     })
     .returning({ id: searchSessions.id })
     .catch(() => [] as { id: string }[]);
   const sessionId = session?.id ?? null;
 
-  const tierLabel = (tier: Pick["tier"]) =>
+  const tierLabel = (tier: NonNullable<Pick["tier"]>) =>
     t(`tier${tier[0]!.toUpperCase()}${tier.slice(1)}` as "tierBudget");
   const cheapest = result.picks[0] ?? null;
-  const encoded = encodeState(state);
   const basePath = `/izvelies/${group.id}/${sub.id}`;
 
   function energyFor(p: ProductView, price: number) {
@@ -124,30 +137,47 @@ export default async function ResultsPage({ searchParams }: Props) {
     };
   }
 
+  // Feeds without a spec line still get one: the first known compare attributes.
+  const specsOf = (p: ProductView): string | null => {
+    if (p.specs) return p.specs;
+    const parts: string[] = [];
+    for (const key of sub!.compare) {
+      const v = p.attributes[key];
+      if (v === undefined || v === null || v === "" || v === false) continue;
+      parts.push(v === true ? attrLabel(key) : formatAttr(key, v, ta, enums));
+      if (parts.length === 4) break;
+    }
+    return parts.length ? parts.join(" · ") : null;
+  };
+
+  const unknownText = (keys: string[]) => keys.map((k) => attrLabel(k).toLowerCase()).join(", ");
+
   function toCard(pick: Pick): CardModel {
     const others = otherOffers(pick.product, pick.offer);
-    const upgrade =
-      cheapest && pick.product.id !== cheapest.product.id
-        ? (() => {
-            const d = upgradeDelta(
-              { product: cheapest.product, priceCents: cheapest.offer.priceCents },
-              { product: pick.product, priceCents: pick.offer.priceCents },
-              energyPrice,
-            );
-            return {
-              priceDeltaCents: d.priceDeltaCents,
-              tierLabel: tierLabel(cheapest.tier),
-              lines: deltaLines(d.items, td),
-              onlyBrand: d.onlyBrandAndDesign,
-            };
-          })()
-        : null;
+    let upgrade: CardModel["upgrade"] = null;
+    if (cheapest && pick.product.id !== cheapest.product.id) {
+      const d = upgradeDelta(
+        { product: cheapest.product, priceCents: cheapest.offer.priceCents },
+        { product: pick.product, priceCents: pick.offer.priceCents },
+        energyPrice,
+        sub!.compare,
+      );
+      // §2.8: say nothing rather than guess when the specs are not known on both sides.
+      if (d.status !== "unknown") {
+        upgrade = {
+          priceDeltaCents: d.priceDeltaCents,
+          tierLabel: cheapest.tier ? tierLabel(cheapest.tier) : t("cheapestOption"),
+          lines: d.status === "differs" ? deltaLines(d.items, td, attrLabel, enumLabel) : [],
+          note: d.status === "same" ? (d.brandsDiffer ? t("onlyBrand") : t("sameSpecs")) : null,
+        };
+      }
+    }
     return {
       productId: pick.product.id,
-      name: pick.product.name,
+      name: nameOf(pick.product),
       modelCode: pick.product.modelCode,
       ean: pick.product.ean,
-      specs: pick.product.specs,
+      specs: specsOf(pick.product),
       tier: pick.overBudgetByCents > 0 ? null : pick.tier,
       recommended: pick.recommended,
       rating: pick.product.rating,
@@ -155,7 +185,8 @@ export default async function ResultsPage({ searchParams }: Props) {
       overBudgetByCents: pick.overBudgetByCents,
       priceLine: priceLine(pick.offer.priceCents, pick.offer.lowest30dCents),
       whyFits: whyItFits(pick.reasons),
-      unconfirmed: unconfirmedLabels(pick.unconfirmed, sub!),
+      unconfirmed: pick.fitUnknown ? [] : pick.unconfirmed.map((k) => attrLabel(k).toLowerCase()),
+      unknownData: pick.fitUnknown ? unknownText(pick.unconfirmed) : null,
       energy: energyFor(pick.product, pick.offer.priceCents),
       otherOffers: others.list,
       savingVsMaxCents: others.savingVsMaxCents,
@@ -169,7 +200,7 @@ export default async function ResultsPage({ searchParams }: Props) {
   function toRefurbCard(pick: RefurbishedPick): CardModel {
     const others = otherOffers(pick.product, pick.offer);
     return {
-      ...toCard({ ...pick, tier: "mid", recommended: false, overBudgetByCents: 0 }),
+      ...toCard({ ...pick, tier: null, recommended: false, overBudgetByCents: 0, fitUnknown: false }),
       tier: null,
       upgrade: null,
       otherOffers: others.list,
@@ -186,28 +217,292 @@ export default async function ResultsPage({ searchParams }: Props) {
   const extraCards = result.extras.map(toCard);
   const refurbCards = result.refurbished.map(toRefurbCard);
 
-  // Answer chips: chosen option labels, each linking back to its question.
-  const chips = visibleQuestions(sub, state.answers)
-    .filter((q) => state.answers[q.id] !== undefined)
-    .map((q) => ({
-      id: q.id,
-      text:
-        q.type === "number"
-          ? `${formatInt(state.answers[q.id] as number)} ${q.input?.unit ?? ""}`
-          : chosenOptions(q, state.answers)
-              .map((o) => o.label)
-              .join(", "),
-    }));
-  if (budget !== null) chips.push({ id: "budget", text: t("rowPrice") + ` ≤ ${formatEur(budget)}` });
+  // "Vērts zināt" (§2.7): about the recommended pick, or the first one.
+  const pool = candidatePool(input);
+  const focus = result.picks.find((p) => p.recommended) ?? result.picks[0];
+  const typeQuestion = sub.questions.find(
+    (q) => q.stage === "flow" && q.up_front_reason === "kind" && q.type === "single",
+  );
+  const anyTypeAnswers: Answers = { ...state.answers };
+  if (typeQuestion) delete anyTypeAnswers[typeQuestion.id];
+  const notes: AdviceNote[] = focus
+    ? adviceNotes({
+        subcategoryId: sub.id,
+        answers: state.answers,
+        pick: { product: focus.product, priceCents: focus.offer.priceCents },
+        pool: pool.map((c) => ({ product: c.product, priceCents: c.price })),
+        anyType: candidatePool({ ...input, answers: anyTypeAnswers }).map((c) => ({
+          product: c.product,
+          priceCents: c.price,
+        })),
+        budgetMaxCents: budget?.max ?? null,
+        costs,
+      })
+    : [];
+  const years = (y: number) => formatNumber(Math.max(0.1, Math.ceil(y * 10) / 10));
+  function noteText(n: AdviceNote): string {
+    switch (n.kind) {
+      case "energy_upgrade":
+        return t("adviceEnergy", {
+          extra: formatEur(n.extraCents),
+          to: n.toClass,
+          from: n.fromClass,
+          saving: formatEur(n.yearlySavingCents),
+          years: years(n.paybackYears),
+        });
+      case "cheaper_similar":
+        return t("adviceCheaper", {
+          saving: formatEur(n.savingCents),
+          energy:
+            n.yearlyExtraCents > 0 && n.toClass
+              ? t("adviceCheaperEnergy", { to: n.toClass, extra: formatEur(n.yearlyExtraCents) })
+              : t("adviceCheaperSame"),
+        });
+      case "quieter":
+        return t("adviceQuieter", {
+          extra: formatEur(n.extraCents),
+          to: formatInt(n.toDb),
+          from: formatInt(n.fromDb),
+        });
+      case "bigger":
+        return t("adviceBigger", { extra: formatEur(n.extraCents), litres: formatInt(n.extraLitres) });
+      case "nofrost":
+        return t("adviceNoFrost", { extra: formatEur(n.extraCents) });
+      case "heatpump":
+        return t("adviceHeatpump", {
+          extra: formatEur(n.extraCents),
+          saving: formatEur(n.yearlySavingCents),
+          years: years(n.paybackYears),
+        });
+      case "coffee_cost":
+        return t("adviceCoffee", {
+          capsule: formatEur(n.capsuleCupCents),
+          bean: formatEur(n.beanCupCents),
+          months: formatInt(n.paybackMonths),
+        });
+      case "bags":
+        return (
+          t("adviceBags", { amount: formatEur(n.bagsPerYearCents) }) +
+          (n.to ? t("adviceBagsAlt", { name: nameOf(n.to.product), price: formatEur(n.to.priceCents) }) : "")
+        );
+    }
+  }
+  const offerOf = (p: ProductView) =>
+    p.offers
+      .filter((o) => o.condition === "new" && o.stock !== "out")
+      .sort((x, y) => x.priceCents - y.priceCents)[0];
 
-  // Compare table (spec §3.4).
+  // "Vērts apsvērt" (§2.5): only with a reviewed brand table and chosen brands.
+  const top = result.picks.find((p) => p.recommended) ?? result.picks[0];
+  const consider = worthConsidering(
+    pool,
+    top && { ...top, price: top.offer.priceCents },
+    state.trailing.brands ?? [],
+  );
+
+  // Relax suggestions (§4.2) when fewer than three fit.
+  const relax: Relaxation[] = result.picks.length < 3 ? relaxations(input) : [];
+  const relaxLink = (r: Relaxation): { href: string; text: string } => {
+    switch (r.kind) {
+      case "price_max":
+        return {
+          href: href(sub!, withSetting(state, "budget", { ...(budget ?? {}), max: r.maxCents })),
+          text: t("relaxPrice", { gain: r.gain, amount: formatEur(r.maxCents) }),
+        };
+      case "price_min":
+        return {
+          href: href(sub!, withSetting(state, "budget", { max: budget?.max })),
+          text: t("relaxPriceMin", { gain: r.gain }),
+        };
+      case "range_max": {
+        const q = sub.questions.find((x) => x.id === r.questionId)!;
+        const answers = { ...state.answers, [q.id]: r.max === null ? {} : { max: r.max } };
+        const label = attrLabel(q.range!.attr).toLowerCase();
+        return {
+          href: href(sub!, { ...state, answers }),
+          text:
+            r.max === null
+              ? t("relaxRangeAny", { gain: r.gain, label })
+              : t("relaxRange", {
+                  gain: r.gain,
+                  label,
+                  value: String(r.max).replace(".", ","),
+                  unit: r.unit,
+                }),
+        };
+      }
+      case "brands":
+        return {
+          href: href(sub!, withSetting(state, "brandsOnly", undefined)),
+          text: t("relaxBrands", { gain: r.gain }),
+        };
+      case "show_unknown":
+        return {
+          href: href(sub!, withSetting(state, "showUnknown", true)),
+          text: t("relaxUnknown", { gain: r.gain }),
+        };
+    }
+  };
+
+  // Filter bar chips (§4.1).
+  const chips: Chip[] = [];
+  const qs = visibleQuestions(sub, state.answers);
+  const answersWithout = (id: string): Answers => {
+    const x = { ...state.answers };
+    delete x[id];
+    return x;
+  };
+  function choiceChip(q: Question): Chip {
+    const counts =
+      q.stage === "flow"
+        ? optionCounts({ products, sub: sub!, answers: answersWithout(q.id), urgency }, q)
+        : {};
+    const chosen = chosenOptions(q, state.answers);
+    return {
+      id: q.id,
+      title: q.title,
+      label: chosen.length
+        ? chosen.map((o) => o.label).join(", ")
+        : q.stage === "results"
+          ? t("moreChip")
+          : q.title,
+      active: chosen.length > 0,
+      editor: {
+        kind: "choice",
+        questionId: q.id,
+        multi: q.type === "multi",
+        maxSelect: q.max_select,
+        clearable: !q.hard_filter || q.stage === "results",
+        options: q.options.map((o) => ({
+          value: o.value,
+          label: o.label,
+          sublabel: o.sublabel ?? null,
+          count: counts[o.value],
+        })),
+      },
+    };
+  }
+  for (const q of qs) {
+    if (q.stage !== "flow") continue;
+    const ans = state.answers[q.id];
+    if (q.type === "range") {
+      const r = q.range!;
+      const label = attrLabel(r.attr);
+      const max = isRangeAnswer(ans) ? ans.max : undefined;
+      chips.push({
+        id: q.id,
+        title: q.title,
+        label:
+          max === undefined
+            ? t("rangeAny", { label })
+            : t("rangeUpTo", { label, value: String(max).replace(".", ","), unit: r.unit }),
+        active: max !== undefined,
+        editor: {
+          kind: "range",
+          questionId: q.id,
+          unit: r.unit,
+          min: r.min,
+          max: r.max,
+          step: r.step,
+          presets: r.presets ?? [],
+        },
+      });
+    } else if (q.type === "number") {
+      if (typeof ans !== "number") continue;
+      chips.push({
+        id: q.id,
+        title: q.title,
+        label: t("numberChip", {
+          label: attrLabel(q.input!.attr ?? q.id),
+          value: formatInt(ans),
+          unit: q.input!.unit,
+        }),
+        active: true,
+        editor: {
+          kind: "number",
+          questionId: q.id,
+          min: q.input!.min,
+          max: q.input!.max,
+          unit: q.input!.unit,
+        },
+      });
+    } else if (ans !== undefined) {
+      chips.push(choiceChip(q));
+    }
+  }
+  const stats = priceStats({ products, sub, answers: state.answers, urgency });
+  chips.push({
+    id: "budget",
+    title: t("filterPriceTitle"),
+    label: !budget
+      ? t("priceAny")
+      : budget.min !== undefined && budget.max !== undefined
+        ? t("priceRange", { min: formatEur(budget.min), max: formatEur(budget.max) })
+        : budget.max !== undefined
+          ? t("priceUpTo", { max: formatEur(budget.max) })
+          : t("priceFrom", { min: formatEur(budget.min!) }),
+    active: !!budget,
+    editor: { kind: "price", stats, presetsCents: sub.budget_steps_eur.map((e) => e * 100) },
+  });
+  for (const q of qs) if (q.stage === "results") chips.push(choiceChip(q));
+  const brandCounts = new Map<string, number>();
+  for (const c of candidatePool({ ...input, brandsOnly: false })) {
+    brandCounts.set(c.product.brand, (brandCounts.get(c.product.brand) ?? 0) + 1);
+  }
+  if (brandCounts.size > 1) {
+    const brands = [...brandCounts.entries()]
+      .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+      .map(([name, count]) => ({ name, count }));
+    chips.push({
+      id: "brands",
+      title: t("brandsChip"),
+      label: state.trailing.brands?.length ? state.trailing.brands.join(", ") : t("brandsAny"),
+      active: !!state.trailing.brands?.length,
+      editor: { kind: "brands", brands },
+    });
+  }
+  chips.push({
+    id: "urgency",
+    title: tu("title"),
+    label: `${t("urgencyChip")}: ${tu(urgency === "asap" ? "asap" : urgency === "no_rush" ? "noRush" : "twoWeeks")}`,
+    active: urgency !== "two_weeks",
+    editor: {
+      kind: "urgency",
+      options: [
+        {
+          value: "asap",
+          label: tu("asap"),
+          sublabel: tu("asapSub", { date: formatDateDative(urgencyDate("asap", now, "LV")) }),
+        },
+        {
+          value: "two_weeks",
+          label: tu("twoWeeks"),
+          sublabel: tu("twoWeeksSub", { date: formatDateDative(urgencyDate("two_weeks", now, "LV")) }),
+        },
+        { value: "no_rush", label: tu("noRush"), sublabel: tu("noRushSub") },
+      ],
+    },
+  });
+  if (products.some((p) => p.offers.some((o) => o.condition === "refurbished" && o.stock !== "out"))) {
+    chips.push({
+      id: "refurbished",
+      title: t("refurbChip"),
+      label: `${t("refurbChip")}: ${state.trailing.refurbished === "no" ? t("refurbOff") : t("refurbOn")}`,
+      active: state.trailing.refurbished === "no",
+      editor: { kind: "refurbished" },
+    });
+  }
+
+  // Compare table (spec §3.4) over the category's own attributes.
   const compared = [...result.picks, ...result.extras];
   const columns: CompareColumn[] = compared.map((p) => ({
-    name: p.product.name,
+    name: nameOf(p.product),
     badge:
       p.overBudgetByCents > 0
         ? t("overBudget", { amount: formatEur(p.overBudgetByCents) })
-        : tierLabel(p.tier),
+        : p.tier
+          ? tierLabel(p.tier)
+          : null,
   }));
   const rows: CompareRow[] = [];
   const minIndex = (vals: (number | null)[]) => bestIdx(vals, (x, y) => x < y);
@@ -229,46 +524,25 @@ export default async function ResultsPage({ searchParams }: Props) {
     bestIndex: null,
     alwaysShow: true,
   });
-  for (const q of visibleQuestions(sub, state.answers)) {
-    if (q.type === "number") continue;
-    const values = compared.map((p) => {
-      const hits = q.options.filter((o) => p.product.tags.includes(o.value));
-      return hits.map((o) => o.table_value ?? o.label).join(", ") || ta("unknown");
-    });
-    if (values.every((v) => v === ta("unknown"))) continue;
-    rows.push({ label: q.title, values, bestIndex: null });
-  }
-  const attrRows: { key: string; fmt: (v: unknown) => string; better: "min" | "max" | null }[] = [
-    { key: "height_cm", fmt: (v) => formatCm(v as number), better: null },
-    { key: "width_cm", fmt: (v) => formatCm(v as number), better: null },
-    { key: "volume_l", fmt: (v) => formatLitres(v as number), better: "max" },
-    { key: "capacity_kg", fmt: (v) => `${formatInt(v as number)} kg`, better: "max" },
-    { key: "energy_class", fmt: (v) => String(v), better: null },
-    { key: "noise_db", fmt: (v) => formatDb(v as number), better: "min" },
-    { key: "run_min", fmt: (v) => `${formatInt(v as number)} min`, better: "max" },
-    { key: "no_frost", fmt: (v) => (v ? ta("yes") : ta("no")), better: null },
-    { key: "freezer", fmt: (v) => (v ? ta("yes") : ta("no")), better: null },
-    { key: "mop", fmt: (v) => (v ? ta("yes") : ta("no")), better: null },
-    { key: "pet_brush", fmt: (v) => (v ? ta("yes") : ta("no")), better: null },
-  ];
-  for (const r of attrRows) {
-    const raw = compared.map((p) => p.product.attributes[r.key]);
+  for (const key of sub.compare) {
+    const raw = compared.map((p) => p.product.attributes[key]);
     if (raw.every((v) => v === undefined || v === null)) continue;
     const nums = raw.map((v) => (typeof v === "number" ? v : null));
+    const dir = betterDirection(key);
     rows.push({
-      label: ta(r.key as "width_cm"),
-      values: raw.map((v) => (v === undefined || v === null ? ta("unknown") : r.fmt(v))),
-      bestIndex: r.better === "min" ? minIndex(nums) : r.better === "max" ? maxIndex(nums) : null,
+      label: attrLabel(key),
+      values: raw.map((v) => formatAttr(key, v, (k) => ta(k as "yes"), enums)),
+      bestIndex: dir === "min" ? minIndex(nums) : dir === "max" ? maxIndex(nums) : null,
     });
   }
   if (ENERGY_SUBCATEGORIES.has(sub.id)) {
-    const costs = compared.map((p) => energyCost10yCents(p.product.kwhYear, energyPrice));
+    const costsRow = compared.map((p) => energyCost10yCents(p.product.kwhYear, energyPrice));
     const totals = compared.map((p) => tcoCents(p.offer.priceCents, p.product.kwhYear, energyPrice));
-    if (costs.some((c) => c !== null)) {
+    if (costsRow.some((c) => c !== null)) {
       rows.push({
         label: t("rowEnergy10y"),
-        values: costs.map((c) => (c === null ? ta("unknown") : formatEur(c))),
-        bestIndex: minIndex(costs),
+        values: costsRow.map((c) => (c === null ? ta("unknown") : formatEur(c))),
+        bestIndex: minIndex(costsRow),
       });
       rows.push({
         label: t("rowTco"),
@@ -286,15 +560,33 @@ export default async function ResultsPage({ searchParams }: Props) {
     alwaysShow: true,
   });
 
+  const excluded = Object.entries(result.excludedBy)
+    .filter(([, n]) => n > 0)
+    .map(([id, count]) =>
+      t("excludedItem", {
+        label: id === "$brands" ? t("brandsChip") : (sub.questions.find((q) => q.id === id)?.title ?? id),
+        count,
+      }),
+    );
   const howItems = [
     t("howFilters"),
     t("howRanking"),
     t("howRecommendation"),
     t("howCommission"),
     t("howEnergy", { price: `${formatInt(energyPrice)} ct` }),
+    t("howAdvice", { energy: `${formatInt(energyPrice)} ct`, water: formatEur(costs.waterCentsPerM3) }),
     t("howRefurbished"),
     t("howUnconfirmed"),
+    ...(excluded.length ? [t("howExcluded", { items: excluded.join("; ") })] : []),
   ];
+
+  const mid = result.picks.length ? result.picks[Math.floor(result.picks.length / 2)]!.offer.priceCents : 0;
+  const lead =
+    result.picks.length >= 2 && !result.tiersMeaningful
+      ? t("leadSimilar", { amount: formatEur(Math.round(mid / 1000) * 1000) })
+      : budget === null
+        ? t("leadNoBudget")
+        : t("lead", { count: result.matchingCount });
 
   return (
     <Page size="wide" gap="gap-[22px]">
@@ -302,26 +594,36 @@ export default async function ResultsPage({ searchParams }: Props) {
         <Kicker>{t("kicker", { count: result.matchingCount })}</Kicker>
         <PageTitle scale="results">{t("title")}</PageTitle>
         <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
-          {budget === null ? t("leadNoBudget") : t("lead", { count: result.matchingCount })}
+          {lead}
           {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
           {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
         </p>
-        <nav aria-label={t("answers")}>
-          <ul className="flex flex-wrap gap-2">
-            {chips.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`${basePath}?a=${encoded}&q=${c.id}`}
-                  className="flex min-h-11 items-center gap-1 rounded-full bg-chip px-[14px] text-sm text-mist transition-colors hover:bg-lime-18"
-                >
-                  {c.text} <span className="text-stone">· {t("edit")}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <FilterBar chips={chips} state={state} subId={sub.id} />
         <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
       </div>
+
+      {relax.length ? (
+        <section aria-labelledby="relax-title" className="flex flex-col gap-2">
+          <h2 id="relax-title" className="text-[15px] font-bold text-lime">
+            {t("relaxTitle")}
+          </h2>
+          <ul className="flex flex-wrap gap-2">
+            {relax.map((r) => {
+              const l = relaxLink(r);
+              return (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="flex min-h-11 items-center rounded-full border border-lime px-[14px] text-sm font-semibold text-mist hover:bg-lime-18"
+                  >
+                    {l.text}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       {cards.length === 0 && extraCards.length === 0 ? (
         <Panel tone="dashed" className="text-lg">
@@ -335,6 +637,67 @@ export default async function ResultsPage({ searchParams }: Props) {
             {cards.map((c) => (
               <ResultCard key={c.productId} card={c} />
             ))}
+          </CardRow>
+        </section>
+      ) : null}
+
+      {result.hiddenUnknownCount > 0 ? (
+        <p className="text-[15px] text-stone">
+          {t("hiddenUnknown", { count: result.hiddenUnknownCount })}{" "}
+          <Link
+            href={href(sub!, withSetting(state, "showUnknown", true))}
+            className="inline-flex min-h-11 items-center font-bold text-lime underline underline-offset-2"
+          >
+            {t("hiddenUnknownShow")}
+          </Link>
+        </p>
+      ) : null}
+
+      {notes.length ? (
+        <section aria-labelledby="advice-title" className="flex flex-col gap-3">
+          <SectionTitle id="advice-title">{t("worthKnowing")}</SectionTitle>
+          <ul className="flex flex-col gap-3">
+            {notes.map((n) => {
+              const offer = n.to ? offerOf(n.to.product) : undefined;
+              return (
+                <li
+                  key={`${n.kind}-${n.to?.product.id ?? ""}`}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-control bg-lime-12 px-4 py-3"
+                >
+                  <span className="min-w-0 flex-[1_1_320px] text-base leading-normal text-mist">
+                    {noteText(n)}
+                    {n.to ? (
+                      <span className="block text-sm text-stone">
+                        {nameOf(n.to.product)} · {formatEur(n.to.priceCents)}
+                      </span>
+                    ) : null}
+                  </span>
+                  {offer ? (
+                    <a
+                      href={`/go/${offer.id}${sessionId ? `?s=${sessionId}` : ""}`}
+                      rel="sponsored noopener"
+                      className="inline-flex min-h-11 items-center rounded-full bg-lime px-4 text-sm font-bold text-night"
+                    >
+                      {t("seeProduct")} — {offer.storeName}
+                    </a>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {consider ? (
+        <section aria-labelledby="consider-title" className="flex flex-col gap-3">
+          <SectionTitle id="consider-title">
+            {t("worthConsidering", { brand: consider.product.brand })}
+          </SectionTitle>
+          <p className="text-[15px] text-stone">{t("worthConsideringWhy")}</p>
+          <CardRow>
+            <ResultCard
+              card={toCard({ ...consider, tier: null, recommended: false, overBudgetByCents: 0 })}
+            />
           </CardRow>
         </section>
       ) : null}
@@ -386,14 +749,17 @@ export default async function ResultsPage({ searchParams }: Props) {
             <h2 className="font-heading text-[22px] font-semibold text-mist">{t("radarTitle")}</h2>
             <p className="text-base text-stone">{t("radarCtaSub")}</p>
           </div>
-          <ButtonLink href={`/radars/jauns?sub=${sub.id}&a=${encoded}&s=${sessionId ?? ""}`}>
+          <ButtonLink href={`/radars/jauns?sub=${sub.id}&a=${encodeState(state)}&s=${sessionId ?? ""}`}>
             {t("radarCta", { price: t("radarMonthly") })}
           </ButtonLink>
         </Panel>
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <ButtonLink href={`${basePath}?a=${encoded}&q=${sub.questions[0]?.id ?? "budget"}`} variant="outline">
+        <ButtonLink
+          href={`${basePath}?a=${encodeState(state)}&q=${sub.questions.find((q) => q.stage === "flow")?.id ?? "budget"}`}
+          variant="outline"
+        >
           {t("changeAnswers")}
         </ButtonLink>
         <ButtonLink href="/izvelies" variant="link">

@@ -112,6 +112,7 @@ export default async function ModelPage({ searchParams }: Props) {
       priceLine: priceLine(best.priceCents, best.lowest30dCents),
       whyFits: total !== null ? [t("tco", { amount: formatEur(total) })] : [],
       unconfirmed: [],
+      unknownData: null,
       energy: cost !== null && total !== null ? { cost10yCents: cost, totalCents: total } : null,
       otherOffers: p.offers
         .filter((o) => o.condition === "new" && o.stock !== "out" && o.id !== best.id)

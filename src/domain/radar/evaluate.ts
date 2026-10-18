@@ -75,13 +75,19 @@ export function evaluateRadar(
   if (radar.scope !== "only" && best && comparables.sub) {
     const trackedTco =
       tcoCents(best.priceCents, tracked.kwhYear, comparables.energyPriceCentsPerKwh) ?? best.priceCents;
-    const sizeClass = tracked.attributes.size_class ?? tracked.attributes.type ?? null;
+    // The product form (data/attributes.json) is the size class; older rows carry size_class/type.
+    const formOf = (p: ProductView) =>
+      p.attributes.form ?? p.attributes.size_class ?? p.attributes.type ?? null;
+    const sizeClass = formOf(tracked);
     for (const p of comparables.products) {
       if (p.id === tracked.id || p.subcategoryId !== tracked.subcategoryId) continue;
       if (radar.scope === "brand" && p.brand.toLowerCase() !== tracked.brand.toLowerCase()) continue;
-      if (sizeClass !== null && (p.attributes.size_class ?? p.attributes.type ?? null) !== sizeClass)
-        continue;
-      if (radar.answers && !passesHardFilters(p, comparables.sub, radar.answers).pass) continue;
+      if (sizeClass !== null && formOf(p) !== sizeClass) continue;
+      if (radar.answers) {
+        // A suggestion must provably meet the saved requirements: missing fit data is not a match.
+        const v = passesHardFilters(p, comparables.sub, radar.answers);
+        if (!v.pass || v.fitUnknown) continue;
+      }
       const offer = trackedOffer(p, radar);
       if (!offer) continue;
       const tco =

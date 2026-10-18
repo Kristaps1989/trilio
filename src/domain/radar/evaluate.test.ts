@@ -26,8 +26,8 @@ const product = (p: Partial<ProductView> & { id: string }): ProductView => ({
   modelCode: p.id,
   name: `Bosch ${p.id}`,
   subcategoryId: "fridge",
-  attributes: { size_class: "tall" },
-  tags: ["free", "tall", "yes"],
+  attributes: { form: "combi", height_cm: 185 },
+  tags: [],
   specs: null,
   kwhYear: 200,
   rating: 80,
@@ -46,7 +46,7 @@ const radar = (r: Partial<RadarSettings> = {}): RadarSettings => ({
   baselinePriceCents: 60000,
   lastNotifiedAt: null,
   paused: false,
-  answers: { type: "free", size: "tall", freezer: "yes" },
+  answers: { form: "combi" },
   ...r,
 });
 const cmp = { products: [] as ProductView[], sub: fridge, energyPriceCentsPerKwh: 25 };
@@ -105,10 +105,14 @@ describe("evaluateRadar", () => {
     const otherBrand = product({ id: "p3", brand: "Samsung", offers: [offer({ priceCents: 45000 })] });
     const wrongSize = product({
       id: "p4",
-      attributes: { size_class: "compact" },
+      attributes: { form: "compact", height_cm: 85 },
       offers: [offer({ priceCents: 30000 })],
     });
-    const failsFilter = product({ id: "p5", tags: ["builtin"], offers: [offer({ priceCents: 30000 })] });
+    const failsFilter = product({
+      id: "p5",
+      attributes: { form: "builtin", height_cm: 177 },
+      offers: [offer({ priceCents: 30000 })],
+    });
     const barelyCheaper = product({ id: "p6", offers: [offer({ priceCents: 59000 })] });
     const all = {
       ...cmp,

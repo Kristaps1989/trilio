@@ -98,7 +98,9 @@ export async function upsertOffers(
             description: row.description,
             kwhYear:
               row.kwhYear ??
-              (typeof merged.attributes.kwh_year === "number" ? Math.round(merged.attributes.kwh_year) : null) ??
+              (typeof merged.attributes.kwh_year === "number"
+                ? Math.round(merged.attributes.kwh_year)
+                : null) ??
               sql`${products.kwhYear}`,
             rating: row.rating ?? sql`${products.rating}`,
             imageUrl: row.imageUrl ?? sql`${products.imageUrl}`,

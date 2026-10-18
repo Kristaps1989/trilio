@@ -47,11 +47,8 @@ test("radar: full journey from results to a working radar page", async ({ page }
 
   // From results: "Sekot cenai" on the first card
   await page.goto("/izvelies/kitchensmall/kettle");
-  await page.getByRole("checkbox", { name: /Ātra uzvārīšana/ }).click();
-  await page.getByRole("button", { name: "Turpināt" }).click();
-  await page.getByRole("radio", { name: /^1,5–1,7 L/ }).click();
-  await page.getByRole("radio", { name: /Budžets nav noteikts/ }).click();
-  await page.getByRole("radio", { name: /Nesteidzos/ }).click();
+  await page.getByRole("button", { name: "Tālāk", exact: true }).click();
+  await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
   await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
   await page.getByRole("link", { name: "Sekot cenai" }).first().click();
 

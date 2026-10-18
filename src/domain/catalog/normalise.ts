@@ -90,7 +90,10 @@ export function parseQuantity(value: string, unit: string | undefined, pick?: "m
 
 /** EU label class on the 2021 scale (A–G). Old "A+++" style classes are ignored: they are not comparable. */
 export function parseEnergyClass(value: string): string | null {
-  const m = value.trim().toUpperCase().match(/^([A-G])(?![+])\b/);
+  const m = value
+    .trim()
+    .toUpperCase()
+    .match(/^([A-G])(?![+])\b/);
   return m ? m[1]! : null;
 }
 
@@ -105,7 +108,14 @@ function dimensionsFromLabel(label: string, value: string): Record<string, numbe
   if (!order || !nums || nums.length < 3) return {};
   const mm = /mm/i.test(value);
   const out: Record<string, number> = {};
-  const keyFor: Record<string, string> = { a: "height_cm", p: "width_cm", g: "depth_cm", d: "depth_cm", h: "height_cm", w: "width_cm" };
+  const keyFor: Record<string, string> = {
+    a: "height_cm",
+    p: "width_cm",
+    g: "depth_cm",
+    d: "depth_cm",
+    h: "height_cm",
+    w: "width_cm",
+  };
   [order[1], order[2], order[3]].forEach((letter, i) => {
     const key = keyFor[letter!.toLowerCase()];
     if (!key) return;
@@ -131,13 +141,23 @@ function labelledSegments(name: string): Record<string, string> {
 }
 
 function haystack(t: ProductText, includeCategory: boolean): string {
-  return [t.name, includeCategory ? t.category : null, t.description, ...Object.entries(t.specTable ?? {}).flat()]
+  return [
+    t.name,
+    includeCategory ? t.category : null,
+    t.description,
+    ...Object.entries(t.specTable ?? {}).flat(),
+  ]
     .filter(Boolean)
     .join(" | ")
     .toLowerCase();
 }
 
-function ruleHolds(rule: EnumRule, text: string, spec: Record<string, string>, attrs: Normalised["attributes"]): boolean {
+function ruleHolds(
+  rule: EnumRule,
+  text: string,
+  spec: Record<string, string>,
+  attrs: Normalised["attributes"],
+): boolean {
   if (rule.always) return true;
   if (rule.text && !anyMatch(rule.text, text)) return false;
   if (rule.spec) {
@@ -165,7 +185,15 @@ export function normaliseProduct(subcategoryId: string, t: ProductText): Normali
   const sub = subcategoryAttrs(subcategoryId);
   const wanted = new Set(sub?.key ?? []);
   // Physical facts used by type rules even when the category does not list them as key attributes.
-  for (const k of ["height_cm", "width_cm", "depth_cm", "fridge_volume_l", "freezer_volume_l", "kwh_year", "energy_kwh_100"])
+  for (const k of [
+    "height_cm",
+    "width_cm",
+    "depth_cm",
+    "fridge_volume_l",
+    "freezer_volume_l",
+    "kwh_year",
+    "energy_kwh_100",
+  ])
     wanted.add(k);
   const set = (key: string, value: number | string | boolean, source: AttributeSource) => {
     if (out.attributes[key] !== undefined) return;
@@ -217,7 +245,8 @@ export function normaliseProduct(subcategoryId: string, t: ProductText): Normali
     if (total !== null && total > 0) set("volume_l", total, "spec_table");
   }
   const climate = out.attributes.climate_class;
-  if (wanted.has("garage_ok") && typeof climate === "string" && /sn/i.test(climate)) set("garage_ok", true, "rule");
+  if (wanted.has("garage_ok") && typeof climate === "string" && /sn/i.test(climate))
+    set("garage_ok", true, "rule");
   if (subcategoryId === "washer" || subcategoryId === "dish") {
     // EU label: kWh per 100 cycles; a year is 220 washing or 280 dishwashing cycles (label basis).
     // Shops often print the label's per-100-cycles figure under a generic "energy use" label;
@@ -266,7 +295,8 @@ export function sanityCheck(
   const sub = subcategoryAttrs(subcategoryId);
   if (!sub) return { ok: true };
   const text = haystack(t, false);
-  if (attributeCatalog.accessory.some((p) => new RegExp(p, "i").test(t.name))) return { ok: false, reason: "accessory" };
+  if (attributeCatalog.accessory.some((p) => new RegExp(p, "i").test(t.name)))
+    return { ok: false, reason: "accessory" };
   const named = sub.sanity.stems.some((s) => new RegExp(s, "i").test(text));
   const specific = Object.entries(normalised?.sources ?? {}).some(
     ([key, source]) => source === "spec_table" && sub.key.includes(key) && !GENERIC_ATTRS.has(key),
@@ -289,7 +319,8 @@ export function mergeAttributes(
 ): { attributes: Record<string, unknown>; sources: Record<string, string> } {
   const attributes = { ...current.attributes };
   const sources = { ...current.sources };
-  const rank = (s: string | undefined) => (s && s in SOURCE_PRIORITY ? SOURCE_PRIORITY[s as AttributeSource] : 0);
+  const rank = (s: string | undefined) =>
+    s && s in SOURCE_PRIORITY ? SOURCE_PRIORITY[s as AttributeSource] : 0;
   for (const [key, value] of Object.entries(incoming.attributes)) {
     if (value === undefined || value === null) continue;
     const had = attributes[key] !== undefined && attributes[key] !== null;

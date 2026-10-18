@@ -133,7 +133,8 @@ export function recordToOffer(
   };
   const normalised = normaliseProduct(subcategoryId, text);
   const sane = sanityCheck(subcategoryId, text, priceCents, normalised);
-  if (!sane.ok) return void result.rejected.push({ reason: sane.reason, raw: record.link ?? record.title ?? null });
+  if (!sane.ok)
+    return void result.rejected.push({ reason: sane.reason, raw: record.link ?? record.title ?? null });
   const kwhYear = intOrNull(record.energy_kwh_year) ?? numberOrNull(normalised.attributes.kwh_year);
 
   acceptRow(

@@ -48,7 +48,9 @@ export function extractSpecTable(html: string): SpecTable {
     }
   }
   // Fallback: "Label: value, Label: value" in the meta description (tet.lv, m79.lv put key specs there).
-  const meta = html.match(/<meta[^>]+(?:name|property)="(?:og:)?description"[^>]+content="([^"]{0,2000})"/i)?.[1];
+  const meta = html.match(
+    /<meta[^>]+(?:name|property)="(?:og:)?description"[^>]+content="([^"]{0,2000})"/i,
+  )?.[1];
   if (meta) {
     for (const part of decodeEntities(meta).split(/\s*[;,]\s*(?=[A-ZĀČĒĢĪĶĻŅŠŪŽ][^:;,]{1,60}:)/)) {
       const m = part.match(/^([A-ZĀČĒĢĪĶĻŅŠŪŽ][^:;]{1,60}):\s*(.{1,120})$/);

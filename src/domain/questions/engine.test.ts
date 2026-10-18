@@ -3,138 +3,90 @@ import { getSubcategory } from "./catalog";
 import {
   activeOptions,
   effectiveAnswers,
+  flowQuestions,
   nextQuestion,
   progress,
+  resultsQuestions,
   sanitizeAnswers,
   validateAnswer,
   visibleQuestions,
 } from "./engine";
 
 const fridge = getSubcategory("fridge")!;
-const grinder = getSubcategory("grinder")!;
-const vacuum = getSubcategory("vacuum")!;
-const hob = getSubcategory("hob")!;
+const washer = getSubcategory("washer")!;
+const q = (sub: typeof fridge, id: string) => sub.questions.find((x) => x.id === id)!;
 
-describe("visibleQuestions / showIf", () => {
-  it("shows niche height only for built-in fridges and size only for freestanding", () => {
-    const builtin = visibleQuestions(fridge, { type: "builtin" }).map((q) => q.id);
-    expect(builtin).toContain("niche");
-    expect(builtin).not.toContain("size");
-    const free = visibleQuestions(fridge, { type: "free" }).map((q) => q.id);
-    expect(free).toContain("size");
-    expect(free).not.toContain("niche");
+describe("question engine", () => {
+  it("built-in fridge: niche height and hinge instead of the height limit", () => {
+    const ids = flowQuestions(fridge, { form: "builtin" }).map((x) => x.id);
+    expect(ids).toEqual(["form", "niche", "hinge", "household"]);
   });
 
-  it("asks the height limit only for tall fridges and skips the freezer question for wide ones", () => {
-    expect(visibleQuestions(fridge, { type: "free", size: "tall" }).map((q) => q.id)).toContain(
-      "height_limit",
-    );
-    expect(visibleQuestions(fridge, { type: "free", size: "mid" }).map((q) => q.id)).not.toContain(
-      "height_limit",
-    );
-    expect(visibleQuestions(fridge, { type: "free", size: "wide" }).map((q) => q.id)).not.toContain(
-      "freezer",
-    );
+  it("freestanding fridge: height limit, no niche or hinge", () => {
+    expect(flowQuestions(fridge, { form: "combi" }).map((x) => x.id)).toEqual([
+      "form",
+      "height",
+      "household",
+    ]);
   });
 
-  it("notIn shows the question while its dependency is unanswered", () => {
-    expect(visibleQuestions(fridge, {}).map((q) => q.id)).toContain("freezer");
+  it("small fridge skips the height question", () => {
+    expect(flowQuestions(fridge, { form: "compact" }).map((x) => x.id)).toEqual(["form", "household"]);
   });
 
-  it("hob: three-phase only for electric hobs, gas type only for gas", () => {
-    const gas = visibleQuestions(hob, { g0: "gas" }).map((q) => q.id);
-    expect(gas).toContain("gas");
-    expect(gas).not.toContain("g2");
-    const induction = visibleQuestions(hob, { g0: "induction" }).map((q) => q.id);
-    expect(induction).toContain("g2");
-    expect(induction).not.toContain("gas");
-    expect(induction).not.toContain("width");
-  });
-});
-
-describe("effectiveAnswers", () => {
-  it("drops answers to questions that became hidden after going back", () => {
-    const result = effectiveAnswers(fridge, { type: "builtin", niche: 178, size: "tall" });
-    expect(result).toEqual({ type: "builtin", niche: 178 });
+  it("priorities are a results-page question, not a flow screen", () => {
+    expect(resultsQuestions(fridge, {}).map((x) => x.id)).toEqual(["priorities"]);
+    expect(flowQuestions(fridge, {}).map((x) => x.id)).not.toContain("priorities");
   });
 
-  it("grinder: espresso implies burr for the hidden question", () => {
-    expect(effectiveAnswers(grinder, { g0: "espresso" })).toEqual({ g0: "espresso", g1: "burr" });
-    expect(visibleQuestions(grinder, { g0: "espresso" }).map((q) => q.id)).toEqual(["g0"]);
-    expect(visibleQuestions(grinder, { g0: "filter" }).map((q) => q.id)).toEqual(["g0", "g1"]);
-  });
-});
-
-describe("nextQuestion and progress", () => {
-  it("walks the fridge flow in order", () => {
-    expect(nextQuestion(fridge, {})?.id).toBe("type");
-    expect(nextQuestion(fridge, { type: "free" })?.id).toBe("size");
-    expect(nextQuestion(fridge, { type: "free", size: "wide" })?.id).toBe("household");
-    expect(
-      nextQuestion(fridge, { type: "free", size: "wide", household: "4", priorities: ["quiet"] }),
-    ).toBeNull();
+  it("next question walks the flow only", () => {
+    expect(nextQuestion(fridge, {})?.id).toBe("form");
+    expect(nextQuestion(fridge, { form: "combi" })?.id).toBe("height");
+    expect(nextQuestion(fridge, { form: "combi", height: { max: 186 }, household: "4" })).toBeNull();
   });
 
-  it("M grows when a conditional question appears", () => {
-    // built-in: type, niche, freezer, household, priorities (5) + 3 trailing
-    expect(progress(fridge, { type: "builtin" }, "niche")).toEqual({ n: 2, m: 8 });
-    // freestanding tall: type, size, height_limit, freezer, household, priorities (6) + 3 trailing
-    expect(progress(fridge, { type: "free", size: "tall" }, "height_limit")).toEqual({ n: 3, m: 9 });
-    // wide skips freezer: type, size, household, priorities (4); without refurbished stock only two trailing
-    expect(progress(fridge, { type: "free", size: "wide" }, "urgency", ["budget", "urgency"])).toEqual({
-      n: 6,
-      m: 6,
+  it("progress counts visible flow questions plus the price screen", () => {
+    expect(progress(fridge, { form: "combi" }, "height")).toEqual({ n: 2, m: 4 });
+    expect(progress(fridge, { form: "builtin" }, "budget")).toEqual({ n: 5, m: 5 });
+  });
+
+  it("validates range answers: clamps to the slider, keeps max only for one-handle limits", () => {
+    expect(validateAnswer(q(fridge, "height"), { max: 186 })).toEqual({ ok: true, value: { max: 186 } });
+    expect(validateAnswer(q(fridge, "height"), { min: 100, max: 999 })).toEqual({
+      ok: true,
+      value: { max: 210 },
     });
-  });
-});
-
-describe("validateAnswer", () => {
-  const niche = fridge.questions.find((q) => q.id === "niche")!;
-  const priorities = fridge.questions.find((q) => q.id === "priorities")!;
-  const home = vacuum.questions.find((q) => q.id === "home")!;
-  const type = fridge.questions.find((q) => q.id === "type")!;
-
-  it("numbers accept a decimal comma and enforce the range", () => {
-    expect(validateAnswer(niche, "178")).toEqual({ ok: true, value: 178 });
-    expect(validateAnswer(niche, "177,5")).toEqual({ ok: true, value: 177.5 });
-    expect(validateAnswer(niche, 500)).toEqual({ ok: false, reason: "out_of_range" });
-    expect(validateAnswer(niche, "abc")).toEqual({ ok: false, reason: "not_a_number" });
+    expect(validateAnswer(q(fridge, "height"), "any")).toEqual({ ok: true, value: {} });
+    expect(validateAnswer(q(fridge, "height"), "tall").ok).toBe(false);
   });
 
-  it("single rejects unknown values", () => {
-    expect(validateAnswer(type, "free")).toEqual({ ok: true, value: "free" });
-    expect(validateAnswer(type, "sideways")).toEqual({ ok: false, reason: "unknown_option" });
-    expect(validateAnswer(type, ["free"])).toEqual({ ok: false, reason: "unknown_option" });
+  it("validates choices and numbers", () => {
+    expect(validateAnswer(q(fridge, "form"), "combi")).toEqual({ ok: true, value: "combi" });
+    expect(validateAnswer(q(fridge, "form"), "nope").ok).toBe(false);
+    expect(validateAnswer(q(fridge, "niche"), "177,5")).toEqual({ ok: true, value: 177.5 });
+    expect(validateAnswer(q(fridge, "niche"), 500).ok).toBe(false);
   });
 
-  it("multi enforces max_select, dedupes and lets an exclusive option win", () => {
-    expect(validateAnswer(priorities, ["quiet", "energy"])).toEqual({ ok: true, value: ["quiet", "energy"] });
-    expect(validateAnswer(priorities, ["quiet", "quiet"])).toEqual({ ok: true, value: ["quiet"] });
-    expect(validateAnswer(priorities, ["quiet", "energy", "nofrost"])).toEqual({
-      ok: false,
-      reason: "too_many",
-    });
-    expect(validateAnswer(priorities, [])).toEqual({ ok: false, reason: "empty" });
-    expect(validateAnswer(home, ["pets", "none"])).toEqual({ ok: true, value: ["none"] });
-  });
-});
-
-describe("activeOptions and sanitizeAnswers", () => {
-  it("passthrough options are not active", () => {
-    const mop = vacuum.questions.find((q) => q.id === "mop")!;
-    expect(activeOptions(mop, { mop: "no" })).toEqual([]);
-    expect(activeOptions(mop, { mop: "yes" }).map((o) => o.value)).toEqual(["yes"]);
+  it("sanitize drops answers to hidden questions and unknown keys", () => {
+    const a = sanitizeAnswers(fridge, { form: "compact", height: { max: 150 }, nope: 1, household: "2" });
+    expect(a).toEqual({ form: "compact", household: "2" });
   });
 
-  it("sanitizeAnswers drops unknown keys, invalid values and hidden questions", () => {
-    const result = sanitizeAnswers(fridge, {
-      type: "builtin",
-      niche: "178",
-      size: "tall", // hidden for built-in
-      household: "9", // not an option
-      evil: "<script>",
-      priorities: ["quiet"],
-    });
-    expect(result).toEqual({ type: "builtin", niche: 178, priorities: ["quiet"] });
+  it("effective answers drop a branch the user left", () => {
+    expect(effectiveAnswers(fridge, { form: "combi", niche: 178 })).toEqual({ form: "combi" });
+  });
+
+  it("passthrough answers do not constrain", () => {
+    expect(activeOptions(q(fridge, "hinge"), { hinge: "unknown" })).toEqual([]);
+  });
+
+  it("washer: placement and depth only for front loaders and washer-dryers", () => {
+    expect(visibleQuestions(washer, { loading: "top" }).map((x) => x.id)).not.toContain("depth");
+    expect(flowQuestions(washer, { loading: "front" }).map((x) => x.id)).toEqual([
+      "loading",
+      "place",
+      "depth",
+      "household",
+    ]);
   });
 });

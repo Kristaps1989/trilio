@@ -31,7 +31,7 @@ export async function landingCards(sub: Subcategory, budgetCents: number | null)
     products,
     sub,
     answers: {},
-    budgetCents,
+    budget: budgetCents,
     urgency: "two_weeks",
     includeRefurbished: false,
   });
@@ -65,6 +65,7 @@ function toCard(pick: Pick, sub: Subcategory, now: Date, energyPrice: number): C
     priceLine: priceLine(pick.offer.priceCents, pick.offer.lowest30dCents),
     whyFits: whyItFits(pick.reasons),
     unconfirmed: [],
+    unknownData: null,
     energy: cost !== null && total !== null ? { cost10yCents: cost, totalCents: total } : null,
     otherOffers: [],
     savingVsMaxCents: null,

@@ -28,7 +28,7 @@ describe("JSON-LD product extraction", () => {
   it("reads an inline Offer, the first image and double-encoded names", () => {
     const [r] = extractProducts(INLINE_PAGE(URL_B), URL_B);
     expect(r).toMatchObject({
-      title: 'Bosch WAN28 ve"ļas mašīna',
+      title: 'Bosch WAN28 "Serie 4" veļas mašīna',
       image_link: "https://pictures.shop-b.example/1.webp",
       price: "483.00",
       gtin: "4242005217380",

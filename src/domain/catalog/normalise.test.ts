@@ -11,7 +11,7 @@ type Page = {
   priceCents: number;
   specTable: Record<string, string>;
 };
-const pages = fixtures.products as Page[];
+const pages = fixtures.products as unknown as Page[];
 const page = (id: string) => pages.find((p) => p.id === id)!;
 const norm = (p: Page) =>
   normaliseProduct(p.subcategory, {
@@ -52,11 +52,21 @@ describe("parseEnergyClass", () => {
 describe("normaliseProduct on real shop pages", () => {
   it("euronics fridge: size, volume, energy and form from the spec table", () => {
     const n = norm(page("euronics-fridge"));
-    expect(n.attributes).toMatchObject({ height_cm: 143.6, width_cm: 55, volume_l: 206, energy_class: "E", form: "combi" });
+    expect(n.attributes).toMatchObject({
+      height_cm: 143.6,
+      width_cm: 55,
+      volume_l: 206,
+      energy_class: "E",
+      form: "combi",
+    });
     expect(n.sources.height_cm).toBe("spec_table");
   });
   it("tet fridge: model-only name still gets its form and size", () => {
-    expect(norm(page("tet-fridge")).attributes).toMatchObject({ height_cm: 177, form: "combi", energy_class: "E" });
+    expect(norm(page("tet-fridge")).attributes).toMatchObject({
+      height_cm: 177,
+      form: "combi",
+      energy_class: "E",
+    });
   });
   it("m79 fridge: total volume label, top freezer → combi", () => {
     const n = norm(page("m79-fridge"));
@@ -70,7 +80,11 @@ describe("normaliseProduct on real shop pages", () => {
     expect(n.attributes.volume_l).toBe(344);
   });
   it("m79 washer without a spec block: reads 'Label value' segments of the name", () => {
-    expect(norm(page("m79-washer")).attributes).toMatchObject({ loading: "front", capacity_kg: 7, depth_cm: 54 });
+    expect(norm(page("m79-washer")).attributes).toMatchObject({
+      loading: "front",
+      capacity_kg: 7,
+      depth_cm: 54,
+    });
   });
   it("tet washer: front loading, capacity, depth and per-100-cycles energy converted to a year", () => {
     expect(norm(page("tet-washer")).attributes).toMatchObject({
@@ -101,10 +115,18 @@ describe("normaliseProduct on real shop pages", () => {
     expect(norm(page("m79-coffee")).attributes).toMatchObject({ coffee_type: "auto", tank_l: 1.5 });
   });
   it("freezer: an 85 cm cabinet freezer is upright and garage-capable from its climate class", () => {
-    expect(norm(page("euronics-freezer")).attributes).toMatchObject({ form: "upright", garage_ok: true, volume_l: 107 });
+    expect(norm(page("euronics-freezer")).attributes).toMatchObject({
+      form: "upright",
+      garage_ok: true,
+      volume_l: 107,
+    });
   });
   it("hood: airflow takes the top of the range", () => {
-    expect(norm(page("m79-hood")).attributes).toMatchObject({ airflow_m3h: 352, recirculation: true, hood_type: "builtin" });
+    expect(norm(page("m79-hood")).attributes).toMatchObject({
+      airflow_m3h: 352,
+      recirculation: true,
+      hood_type: "builtin",
+    });
   });
   it("every fixture of a main category gets its type", () => {
     const typed: Record<string, string> = {
@@ -129,7 +151,10 @@ describe("normaliseProduct on real shop pages", () => {
 describe("sanityCheck", () => {
   it("rejects a product filed under a category it does not belong to (m79 baby food maker under food processors)", () => {
     const p = page("m79-foodproc");
-    expect(sanityCheck(p.subcategory, p, p.priceCents, norm(p))).toEqual({ ok: false, reason: "category_mismatch" });
+    expect(sanityCheck(p.subcategory, p, p.priceCents, norm(p))).toEqual({
+      ok: false,
+      reason: "category_mismatch",
+    });
   });
   it("rejects an implausible price for the category (a €40 mini oven filed under ovens)", () => {
     const p = page("m79-oven");
@@ -150,7 +175,10 @@ describe("sanityCheck", () => {
 describe("mergeAttributes", () => {
   it("fills gaps from another shop, keeps equal-strength values, lets stronger sources win", () => {
     const merged = mergeAttributes(
-      { attributes: { height_cm: 185, volume_l: 300 }, sources: { height_cm: "spec_table", volume_l: "claude" } },
+      {
+        attributes: { height_cm: 185, volume_l: 300 },
+        sources: { height_cm: "spec_table", volume_l: "claude" },
+      },
       {
         attributes: { height_cm: 186, volume_l: 310, noise_db: 35 },
         sources: { height_cm: "spec_table", volume_l: "eprel", noise_db: "spec_table" },

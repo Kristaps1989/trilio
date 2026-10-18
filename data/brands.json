@@ -1,0 +1,5 @@
+{
+  "note": "Zīmolu kvalitātes tabula “Vērts apsvērt” kartītei (docs/FILTERS_PLAN.md §2.5). Vērtības sagatavo Claude no publiskiem avotiem, īpašnieks pārbauda; kamēr reviewed=false, kartīte netiek rādīta. Katram ierakstam jānorāda avots.",
+  "reviewed": false,
+  "brands": {}
+}

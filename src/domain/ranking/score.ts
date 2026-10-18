@@ -1,3 +1,4 @@
+import { matchAll } from "@/domain/catalog/match";
 import type { ProductView } from "@/domain/catalog/types";
 import { activeOptions, visibleQuestions } from "@/domain/questions/engine";
 import type { Answers, Option, Subcategory } from "@/domain/questions/schema";
@@ -10,6 +11,8 @@ import type { Answers, Option, Subcategory } from "@/domain/questions/schema";
 export const SOFT_MATCH_POINTS = 12;
 export const PRIORITY_POINTS = [15, 12] as const;
 export const OVER_BUDGET_PENALTY = 40;
+/** A preferred brand (results page) is a soft preference worth one soft answer. */
+export const BRAND_POINTS = 12;
 export const DEFAULT_RATING = 70;
 
 export type ScoreReason = { questionId: string; option: Option; points: number };
@@ -20,15 +23,21 @@ export type Scored = {
   reasons: ScoreReason[];
 };
 
-/** Answer matches: the option is chosen, not passthrough, and the product carries its tag. Hard-filter matches carry 0 points. */
+/** Does the product meet a chosen option? Attribute conditions when the option has them, else its tag. */
+function optionHolds(p: ProductView, o: Option, tags: Set<string>): boolean {
+  if (o.match) return matchAll(p, o.match) === true;
+  return tags.has(o.value);
+}
+
+/** Answer matches: the option is chosen, not passthrough, and the product meets it. Hard-filter matches carry 0 points. */
 export function matchedOptions(p: ProductView, sub: Subcategory, answers: Answers): ScoreReason[] {
   const reasons: ScoreReason[] = [];
   const tags = new Set(p.tags);
   for (const q of visibleQuestions(sub, answers)) {
-    if (q.type === "number") continue;
+    if (q.type === "number" || q.type === "range") continue;
     const chosen = activeOptions(q, answers);
     chosen.forEach((o, i) => {
-      if (!tags.has(o.value)) return;
+      if (!optionHolds(p, o, tags)) return;
       // Hard-filter matches explain the fit (card reasons) but earn no points: filtering is not ranking.
       const points = q.hard_filter
         ? 0
@@ -41,12 +50,23 @@ export function matchedOptions(p: ProductView, sub: Subcategory, answers: Answer
   return reasons;
 }
 
-export function scoreProduct(p: ProductView, sub: Subcategory, answers: Answers, overBudget = false): Scored {
+export function scoreProduct(
+  p: ProductView,
+  sub: Subcategory,
+  answers: Answers,
+  overBudget = false,
+  preferredBrands: string[] = [],
+): Scored {
   const reasons = matchedOptions(p, sub, answers);
   let score = p.rating ?? DEFAULT_RATING;
   for (const r of reasons) score += r.points;
+  if (preferredBrands.some((b) => sameBrand(b, p.brand))) score += BRAND_POINTS;
   if (overBudget) score -= OVER_BUDGET_PENALTY;
   return { product: p, score, reasons };
+}
+
+export function sameBrand(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
 
 /** Up to three "why it fits" lines, from matched options that have a card reason. */

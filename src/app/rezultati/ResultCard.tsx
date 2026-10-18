@@ -30,10 +30,13 @@ export type CardModel = {
   priceLine: PriceLine;
   whyFits: string[];
   unconfirmed: string[];
+  /** Fit-critical data the shop does not state (shown only when the user asked to see such products). */
+  unknownData: string | null;
   energy: { cost10yCents: number; totalCents: number } | null;
   otherOffers: { storeName: string; priceCents: number }[];
   savingVsMaxCents: number | null;
-  upgrade: { priceDeltaCents: number; tierLabel: string; lines: string[]; onlyBrand: boolean } | null;
+  /** Truthful upgrade box (§2.8): what differs, or a note when the specs are known and equal. */
+  upgrade: { priceDeltaCents: number; tierLabel: string; lines: string[]; note: string | null } | null;
   refurbished: {
     grade: string | null;
     warrantyMonths: number | null;
@@ -114,6 +117,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
         over ? "border-2 border-dashed border-over-border" : ""
       } ${card.recommended ? "shadow-[0_0_0_3px_var(--color-lime)]" : ""}`}
       aria-label={card.name}
+      id={`p-${card.productId}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap gap-1.5">
@@ -176,7 +180,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
             })}
           </strong>
           <span className="text-sm leading-[1.45]">
-            {card.upgrade.onlyBrand ? t("onlyBrand") : card.upgrade.lines.join(" · ")}
+            {card.upgrade.note ?? card.upgrade.lines.join(" · ")}
           </span>
         </div>
       ) : null}
@@ -209,6 +213,11 @@ export async function ResultCard({ card }: { card: CardModel }) {
 
       {card.unconfirmed.length ? (
         <p className="text-sm text-muted">{t("unconfirmed", { items: card.unconfirmed.join(", ") })}</p>
+      ) : null}
+      {card.unknownData !== null ? (
+        <p className="text-sm font-semibold text-over-text">
+          {t("unknownData", { items: card.unknownData })}
+        </p>
       ) : null}
 
       {card.otherOffers.length ? (

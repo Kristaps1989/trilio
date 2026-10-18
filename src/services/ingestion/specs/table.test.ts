@@ -30,7 +30,10 @@ const META = `<meta name="description" content="Samsung RB34C7B5EB1/EF Saldētav
 
 describe("extractSpecTable", () => {
   it("reads euronics.lv specification rows and decodes entities", () => {
-    expect(extractSpecTable(EURONICS)).toEqual({ "instalācijas veids": "brīvi stāvošie", augstums: "203 cm" });
+    expect(extractSpecTable(EURONICS)).toEqual({
+      "instalācijas veids": "brīvi stāvošie",
+      augstums: "203 cm",
+    });
   });
   it("reads tet.lv rows across the tooltip markup", () => {
     expect(extractSpecTable(TET)).toEqual({ "trokšņa līmenis": "35 dB" });
@@ -46,9 +49,11 @@ describe("extractSpecTable", () => {
     });
   });
   it("keeps the first value of a repeated label", () => {
-    expect(extractSpecTable(`<dl><dt>Platums</dt><dd>60 cm</dd><dt>Platums</dt><dd>59 cm</dd></dl>`)).toEqual({
-      platums: "60 cm",
-    });
+    expect(extractSpecTable(`<dl><dt>Platums</dt><dd>60 cm</dd><dt>Platums</dt><dd>59 cm</dd></dl>`)).toEqual(
+      {
+        platums: "60 cm",
+      },
+    );
   });
   it("normalises labels", () => {
     expect(normaliseLabel("  Kopējais tilpums (bruto): ")).toBe("kopējais tilpums (bruto)");

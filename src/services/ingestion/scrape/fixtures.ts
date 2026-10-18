@@ -35,7 +35,7 @@ export const INLINE_PAGE = (url: string, over: Record<string, unknown> = {}) => 
 <script type="application/ld+json">${JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Bosch WAN28 ve&amp;quot;ļas mašīna",
+  name: "Bosch WAN28 &amp;quot;Serie 4&amp;quot; veļas mašīna",
   sku: "WAN28281BY",
   gtin13: "4242005217380",
   brand: { "@type": "Brand", name: "Bosch" },

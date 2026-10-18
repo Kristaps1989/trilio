@@ -79,7 +79,10 @@ export const csvAdapter: FeedAdapter = {
     const map: Record<string, Exclude<keyof FeedRecord, "spec_table">> = {
       ...DEFAULT_COLUMNS,
       ...Object.fromEntries(
-        Object.entries(store.columnMap ?? {}).map(([k, v]) => [k.toLowerCase(), v as Exclude<keyof FeedRecord, "spec_table">]),
+        Object.entries(store.columnMap ?? {}).map(([k, v]) => [
+          k.toLowerCase(),
+          v as Exclude<keyof FeedRecord, "spec_table">,
+        ]),
       ),
     };
     const columns = header.map((h) => map[h.trim().toLowerCase().replace(/^g:/, "")]);

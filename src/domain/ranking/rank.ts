@@ -1,20 +1,32 @@
+import { fitAttributes } from "@/domain/catalog/attributes";
 import type { OfferView, ProductView, Urgency } from "@/domain/catalog/types";
 import type { Answers, Subcategory } from "@/domain/questions/schema";
-import { bestOffer, eligibleOffers, passesHardFilters, withinBudget, withinStretch } from "./filters";
-import { scoreProduct, type Scored } from "./score";
+import {
+  bestOffer,
+  eligibleOffers,
+  passesHardFilters,
+  withinBudget,
+  withinStretch,
+  type PriceBounds,
+} from "./filters";
+import { sameBrand, scoreProduct, type Scored } from "./score";
 
-// Spec §3.1 steps 1–6 in one pure function. Input: products with all their
-// offers (both conditions), the answers, budget and urgency. Output: the
-// three picks with tiers, over-budget extras, the refurbished block, and
-// counts for the lead text. Shop commission is not an input anywhere here.
+// Spec §3.1 and docs/FILTERS_PLAN.md §2.3 / §2.8 in one pure function.
+// Input: products with all their offers, the answers, the price range,
+// urgency and results-page settings. Output: up to three picks spread over
+// the price range, over-budget extras, the refurbished block and the counts
+// the page explains itself with. Shop commission is not an input anywhere.
 
 export type Tier = "budget" | "mid" | "top";
 
 export type Pick = Scored & {
   offer: OfferView;
-  tier: Tier;
+  /** Null when the picks are too close in price for tiers to mean anything (§2.8). */
+  tier: Tier | null;
   recommended: boolean;
   unconfirmed: string[];
+  /** Fit-critical data missing; only shown when the user asked to see such products. */
+  fitUnknown: boolean;
   /** Positive only for extras: how far over budget the best price is. */
   overBudgetByCents: number;
 };
@@ -31,100 +43,174 @@ export type RankInput = {
   products: ProductView[];
   sub: Subcategory;
   answers: Answers;
-  budgetCents: number | null;
+  /** Price range in cents; null = no budget. A number is an upper limit. */
+  budget: PriceBounds | number;
   urgency: Urgency;
   includeRefurbished: boolean;
+  /** Results-page brand preference; `brandsOnly` makes it a filter. */
+  brands?: string[];
+  brandsOnly?: boolean;
+  /** Include products whose fit-critical data is missing (marked on the card). */
+  showUnknown?: boolean;
 };
 
 export type RankResult = {
   picks: Pick[];
   extras: Pick[];
   refurbished: RefurbishedPick[];
-  /** Products that passed stock + hard filters + budget (the "N matching" number in the lead). */
+  /** Products that passed stock + hard filters + price (the "N matching" number in the lead). */
   matchingCount: number;
-  /** Products that passed stock + hard filters regardless of budget. */
+  /** Products that passed stock + hard filters regardless of price. */
   eligibleCount: number;
+  /** In-range products left out because the shop does not state a fit-critical value. */
+  hiddenUnknownCount: number;
+  /** Per question: how many in-stock products its answer excluded (the "how we filter" panel). */
+  excludedBy: Record<string, number>;
+  /** False when the picks are within a few percent of each other: no tier pills, "three similar options". */
+  tiersMeaningful: boolean;
 };
 
-type Candidate = Scored & { offer: OfferView; unconfirmed: string[]; price: number };
+export type Candidate = Scored & {
+  offer: OfferView;
+  unconfirmed: string[];
+  fitUnknown: boolean;
+  price: number;
+};
 
-function candidatesFor(input: RankInput, condition: OfferView["condition"]): Candidate[] {
+function bounds(budget: RankInput["budget"]): PriceBounds {
+  return typeof budget === "number" ? { max: budget } : budget;
+}
+
+type Pool = { candidates: Candidate[]; excludedBy: Record<string, number> };
+
+function candidatesFor(input: RankInput, condition: OfferView["condition"]): Pool {
   const out: Candidate[] = [];
+  const excludedBy: Record<string, number> = {};
+  const range = bounds(input.budget);
   for (const p of input.products) {
     const offer = bestOffer(eligibleOffers(p, condition, input.urgency));
     if (!offer) continue;
+    if (input.brandsOnly && input.brands?.length && !input.brands.some((b) => sameBrand(b, p.brand))) {
+      excludedBy.$brands = (excludedBy.$brands ?? 0) + 1;
+      continue;
+    }
     const verdict = passesHardFilters(p, input.sub, input.answers);
-    if (!verdict.pass) continue;
+    if (!verdict.pass) {
+      excludedBy[verdict.failedQuestion!] = (excludedBy[verdict.failedQuestion!] ?? 0) + 1;
+      continue;
+    }
     const scored = scoreProduct(
       p,
       input.sub,
       input.answers,
-      !withinBudget(offer.priceCents, input.budgetCents),
+      !withinBudget(offer.priceCents, range),
+      input.brands ?? [],
     );
-    out.push({ ...scored, offer, unconfirmed: verdict.unconfirmed, price: offer.priceCents });
+    out.push({
+      ...scored,
+      offer,
+      unconfirmed: verdict.unconfirmed,
+      fitUnknown: verdict.fitUnknown,
+      price: offer.priceCents,
+    });
   }
-  return out;
+  return { candidates: out, excludedBy };
 }
 
 const byScoreThenPrice = (a: Candidate, b: Candidate) => b.score - a.score || a.price - b.price;
 
-/** Spec §3.1 step 3: best score, cheapest of the rest, best remaining by score. */
+/**
+ * Three picks that span the range (§2.3): the best overall, the best in the
+ * lower third of the prices on offer and the best in the upper third. The
+ * cheapest product is never picked just for being cheap, so a €89 mini fridge
+ * cannot appear in a €350–500 search.
+ */
 export function pickThree(candidates: Candidate[]): Candidate[] {
-  const pool = [...candidates].sort(byScoreThenPrice);
-  const picks: Candidate[] = [];
-  const first = pool.shift();
-  if (!first) return picks;
-  picks.push(first);
-  if (pool.length) {
-    const cheapest = pool.reduce((m, c) => (c.price < m.price ? c : m));
-    picks.push(cheapest);
-    pool.splice(pool.indexOf(cheapest), 1);
-  }
-  if (pool.length) picks.push(pool[0]!);
+  if (candidates.length <= 3) return [...candidates].sort(byScoreThenPrice);
+  const sorted = [...candidates].sort(byScoreThenPrice);
+  const prices = candidates.map((c) => c.price).sort((a, b) => a - b);
+  const lo = prices[0]!;
+  const hi = prices[prices.length - 1]!;
+  const third = (hi - lo) / 3;
+  const picks: Candidate[] = [sorted[0]!];
+  const take = (pred: (c: Candidate) => boolean) => {
+    const c = sorted.find((x) => !picks.includes(x) && pred(x));
+    if (c) picks.push(c);
+    return !!c;
+  };
+  take((c) => c.price <= lo + third);
+  take((c) => c.price >= hi - third);
+  while (picks.length < 3 && take(() => true));
   return picks;
 }
 
-/** Spec §3.1 step 4: sort by price, label tiers; the lime badge goes on the highest score. */
-export function assignTiers(picks: Candidate[]): Pick[] {
+/** Neighbouring picks must differ by at least 10 % (and €5) for budget/mid/top labels to mean anything. */
+export const TIER_MIN_GAP = 0.1;
+
+export function tiersAreMeaningful(pricesAscending: number[]): boolean {
+  if (pricesAscending.length < 2) return false;
+  for (let i = 1; i < pricesAscending.length; i++) {
+    const a = pricesAscending[i - 1]!;
+    const b = pricesAscending[i]!;
+    if (b - a < Math.max(500, a * TIER_MIN_GAP)) return false;
+  }
+  return true;
+}
+
+/** The top score must lead the next one by this much for "Trilio ieteikums" to be earned. */
+export const RECOMMEND_MARGIN = 5;
+
+/**
+ * Spec §3.1 step 4 + §2.8: sort by price; tier labels only when meaningful;
+ * the lime badge only on a pick that is clearly better and whose fit-critical
+ * attributes are known.
+ */
+export function assignTiers(picks: Candidate[], sub: Subcategory): { picks: Pick[]; meaningful: boolean } {
   const sorted = [...picks].sort((a, b) => a.price - b.price);
+  const meaningful = tiersAreMeaningful(sorted.map((c) => c.price));
   const tiers: Tier[] =
     sorted.length === 3 ? ["budget", "mid", "top"] : sorted.length === 2 ? ["budget", "top"] : ["mid"];
-  const topScore = Math.max(...sorted.map((p) => p.score));
+  const scores = [...sorted.map((c) => c.score)].sort((a, b) => b - a);
+  const top = scores[0] ?? 0;
+  const runnerUp = scores[1] ?? -Infinity;
+  const fit = fitAttributes(sub.id);
   let badged = false;
-  return sorted.map((c, i) => {
-    const recommended = !badged && c.score === topScore;
+  const result = sorted.map((c) => {
+    const known = fit.every((k) => c.product.attributes[k] !== undefined && c.product.attributes[k] !== null);
+    const recommended =
+      !badged && sorted.length > 1 && c.score === top && top - runnerUp >= RECOMMEND_MARGIN && known;
     if (recommended) badged = true;
-    return { ...c, tier: tiers[i]!, recommended, overBudgetByCents: 0 };
+    return { ...c, tier: meaningful ? tiers[sorted.indexOf(c)]! : null, recommended, overBudgetByCents: 0 };
   });
+  return { picks: result, meaningful };
 }
 
 export function rank(input: RankInput): RankResult {
-  const all = candidatesFor(input, "new");
-  const inBudget = all.filter((c) => withinBudget(c.price, input.budgetCents));
-  const picked = pickThree(inBudget);
-  const picks = assignTiers(picked);
+  const range = bounds(input.budget);
+  const pool = candidatesFor(input, "new");
+  const shown = input.showUnknown ? pool.candidates : pool.candidates.filter((c) => !c.fitUnknown);
+  const inBudget = shown.filter((c) => withinBudget(c.price, range));
+  const hiddenUnknownCount = input.showUnknown
+    ? 0
+    : pool.candidates.filter((c) => c.fitUnknown && withinBudget(c.price, range)).length;
+  const { picks, meaningful } = assignTiers(pickThree(inBudget), input.sub);
 
-  // Spec §3.1 step 5: fewer than 3 in budget → at most 2 extras up to +25 %.
+  // Spec §3.1 step 5: fewer than 3 in budget → at most 2 extras up to +25 % over the upper limit.
   let extras: Pick[] = [];
-  if (picks.length < 3 && input.budgetCents !== null) {
+  if (picks.length < 3 && range?.max !== undefined) {
     const chosen = new Set(picks.map((p) => p.product.id));
-    extras = all
-      .filter((c) => !chosen.has(c.product.id) && withinStretch(c.price, input.budgetCents!))
+    extras = shown
+      .filter((c) => !chosen.has(c.product.id) && withinStretch(c.price, range.max!))
       .sort(byScoreThenPrice)
       .slice(0, 2)
-      .map((c) => ({
-        ...c,
-        tier: "top" as const,
-        recommended: false,
-        overBudgetByCents: c.price - input.budgetCents!,
-      }));
+      .map((c) => ({ ...c, tier: null, recommended: false, overBudgetByCents: c.price - range.max! }));
   }
 
   // Rule 1: refurbished never mixes with the picks; its own block, same filters, same budget.
   let refurbished: RefurbishedPick[] = [];
   if (input.includeRefurbished) {
     refurbished = candidatesFor(input, "refurbished")
-      .filter((c) => withinBudget(c.price, input.budgetCents))
+      .candidates.filter((c) => (input.showUnknown || !c.fitUnknown) && withinBudget(c.price, range))
       .sort(byScoreThenPrice)
       .slice(0, 3)
       .map((c) => {
@@ -138,5 +224,39 @@ export function rank(input: RankInput): RankResult {
       });
   }
 
-  return { picks, extras, refurbished, matchingCount: inBudget.length, eligibleCount: all.length };
+  return {
+    picks,
+    extras,
+    refurbished,
+    matchingCount: inBudget.length,
+    eligibleCount: shown.length,
+    hiddenUnknownCount,
+    excludedBy: pool.excludedBy,
+    tiersMeaningful: meaningful,
+  };
+}
+
+/**
+ * How many products the answers and price range leave (live counts on every
+ * screen and the relax suggestions): in stock, every hard answer met, fit data
+ * known, price inside the range. The same rules as `rank`, so numbers agree.
+ */
+export function countMatches(
+  input: Omit<RankInput, "includeRefurbished"> & { includeRefurbished?: boolean },
+): number {
+  const range = bounds(input.budget);
+  return candidatesFor({ ...input, includeRefurbished: false }, "new").candidates.filter(
+    (c) => (input.showUnknown || !c.fitUnknown) && withinBudget(c.price, range),
+  ).length;
+}
+
+/**
+ * Every in-stock product that meets the hard answers and has its fit data,
+ * at any price, scored (advice notes and "Vērts apsvērt" look beyond the
+ * price range on purpose).
+ */
+export function candidatePool(input: Omit<RankInput, "includeRefurbished">): Candidate[] {
+  return candidatesFor({ ...input, includeRefurbished: false }, "new").candidates.filter(
+    (c) => input.showUnknown || !c.fitUnknown,
+  );
 }
