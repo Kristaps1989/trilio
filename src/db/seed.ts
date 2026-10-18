@@ -72,10 +72,24 @@ export async function upsertPlans(db: Db) {
   }
 }
 
+/**
+ * Production (Railway pre-deploy) sets SEED_SAMPLE_DATA=0: partner stores and
+ * plans only, no placeholder shops. Local development and CI keep the samples.
+ */
+export function seedSampleData(env: Record<string, string | undefined> = process.env): boolean {
+  return env.SEED_SAMPLE_DATA !== "0";
+}
+
 async function main() {
   const { db, client } = createDb();
-  await upsertStores(db, [...SAMPLE_STORES, ...PARTNER_STORES]);
+  const withSamples = seedSampleData();
+  await upsertStores(db, withSamples ? [...SAMPLE_STORES, ...PARTNER_STORES] : PARTNER_STORES);
   await upsertPlans(db);
+  if (!withSamples) {
+    console.log("seeded partner stores and plans (no sample data)");
+    await client.end();
+    return;
+  }
   const body = readFileSync("data/sample-products.json", "utf8");
   const summary = await seedSampleProducts(db, body);
   console.table(summary);

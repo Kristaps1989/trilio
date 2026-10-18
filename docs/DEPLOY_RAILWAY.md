@@ -42,20 +42,14 @@ Railway injects `PORT`; `next start` binds to it automatically on `0.0.0.0`.
 
 ## 3. First deploy
 
-Railway builds with Railpack (`npm ci`, `npm run build`), then runs the **pre-deploy command** `npm run db:migrate` against `DATABASE_URL`, then starts `npm run start` and waits for `/api/health` to return 200 (it checks the database connection). A failed migration or health check leaves the previous deployment running.
+Railway builds with Railpack (`npm install`, `npm run build`), then runs the **pre-deploy command** `npm run db:release` against `DATABASE_URL`, then starts `npm run start` and waits for `/api/health` to return 200 (it checks the database connection). A failed pre-deploy step or health check leaves the previous deployment running.
 
-Seed the database once, after the first successful deploy, from the service shell (service → **⋯ → Shell**) or locally with the **public** `DATABASE_URL` from the Postgres service:
-
-```bash
-npm run db:seed
-```
-
-This writes the store rows (sample stores active, partner shops inactive) and the sample products. Re-running it is safe.
+`npm run db:release` applies migrations and seeds the partner stores (with their crawl config and category maps) and the subscription plans. It runs on every deploy and is safe to repeat: store settings in `src/db/stores.ts` reach production with the next deploy, while the `active` flag, feed URLs and affiliate templates you change in the database are kept. Production never gets the placeholder sample shops (`SEED_SAMPLE_DATA=0`).
 
 ### If the deploy fails
 
 - **Build step:** the build needs no database or secrets (CI builds the same way). Category landing pages, `robots.txt`, `sitemap.xml` and `llms.txt` are rendered at runtime, so they always use the runtime `APP_URL`.
-- **Pre-deploy step (`npm run db:migrate`) or start fails with "DATABASE_URL is not set":** the web service is missing the `DATABASE_URL` reference variable. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}` under the web service's **Variables** (the Postgres service must be in the same project), then redeploy.
+- **Pre-deploy step (`npm run db:release`) or start fails with "DATABASE_URL is not set":** the web service is missing the `DATABASE_URL` reference variable. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}` under the web service's **Variables** (the Postgres service must be in the same project), then redeploy.
 - **`npm install` reports vulnerabilities:** Railway audits the full dependency tree, including build-only tools. `npm audit --omit=dev` (what ships) reports none.
 
 ## 4. Custom domain and TLS
@@ -74,20 +68,27 @@ After the domain is live:
 
 ## 5. Scheduled ingestion (cron service)
 
-Railway cron services run a command on a schedule and expect it to exit. Create one that reuses the same repo:
+The **ingest** service is a second Railway service from the same repository. It does not serve web pages: every four hours it starts, reads the partner shops (euronics.lv, m79.lv, tet.lv), stores new prices and price history, sends price radar alerts, and exits. Without it the site has no product data.
 
-1. **+ New → GitHub Repo** → same repo and branch. Name it `ingest`.
-2. **Settings → Cron Schedule**: `17 */4 * * *` (every 4 hours, off the hour).
-3. **Settings → Deploy → Custom Start Command**: `npm run ingest -- all`
-4. **Settings → Deploy → Pre-deploy command**: clear it (the web service owns migrations).
-5. **Settings → Deploy → Healthcheck path**: clear it (a cron job has no HTTP server).
-6. **Variables**: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`, `APP_URL` (same as the web service; the crawler's User-Agent and radar emails use it).
+1. In the project, **+ New → GitHub Repo** → the same repository and branch. Rename the new service to `ingest`.
+2. Service → **Settings → Config-as-code → Railway config file**: `/railway.cron.json`. That file sets the start command `npm run ingest -- all`, the schedule `17 */4 * * *` (every four hours, 17 minutes past), and turns off the web build, health check and restarts.
+3. Service → **Variables**:
 
-A run takes about three hours, because euronics.lv, m79.lv and tet.lv are read page by page at a polite pace (`docs/SCRAPING.md`). Railway skips a cron start while the previous run is still going, so the four-hour schedule is safe; if more shops are scraped, move to a six-hour schedule (`17 */6 * * *`).
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+   | `APP_URL` | same as the web service, e.g. `https://trilio.lv` |
+   | `RESEND_API_KEY`, `EMAIL_FROM` | same as the web service (radar alert emails) |
+   | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | same as the web service, once web push is set up |
+   | `ANTHROPIC_API_KEY`, `FEATURE_LLM_EXTRACT` | only if attribute extraction is on (`docs/LLM.md`) |
 
-Each run ingests every active non-sample store, extracts attributes (if enabled), evaluates every price radar and sends notifications, then exits; results are in the service logs and in the `ingestion_runs` / `radar_events` tables.
+4. Deploy. The service then waits for its schedule. To run it at once: service → **Deployments → ⋯ → Run now**.
 
-Add a second cron service for billing: schedule `0 6 * * *`, start command `curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/billing`, variables `CRON_SECRET` and `APP_URL`. It charges due renewals and retries (`docs/PAYMENTS.md`). To run on demand: service → **Deployments → ⋯ → Run now**, or `npm run ingest -- euronics` from a shell.
+A run takes about three hours, because the shops are read page by page at a polite pace (`docs/SCRAPING.md`). Railway skips a cron start while the previous run is still going, so the four-hour schedule is safe; if more shops are scraped, change `cronSchedule` in `railway.cron.json` to `17 */6 * * *`.
+
+Results are in the service logs and in the `ingestion_runs` and `radar_events` tables.
+
+**Billing cron (only once payments are on):** add a third service from the same repository, set its Railway config file to `/railway.billing.json` (daily at 06:00 UTC, runs `npm run cron:billing`), and give it `APP_URL` and `CRON_SECRET`, the same values as the web service. It charges due renewals and retries (`docs/PAYMENTS.md`).
 
 `/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer, except scraped shops: those run only in the cron service, because they take far longer than an HTTP request may.
 
@@ -112,7 +113,9 @@ Enable **Settings → Deploy → Wait for CI** on the production service so a de
 
 | File | Purpose |
 |---|---|
-| `railway.json` | Railpack build, `npm run db:migrate` before each deploy, `npm run start`, healthcheck on `/api/health`, restart on failure. |
+| `railway.json` | Web service: Railpack build, `npm run db:release` (migrations and store/plan seed) before each deploy, `npm run start`, healthcheck on `/api/health`, restart on failure. |
+| `railway.cron.json` | Ingest cron service: no web build, `npm run ingest -- all` every four hours. |
+| `railway.billing.json` | Billing cron service: no web build, `npm run cron:billing` daily. |
 | `src/app/api/health/route.ts` | 200 when the database answers within 5 s, else 503. |
 | `src/services/ingestion/cli.ts` | Entry point for the cron service. |
 | `package.json` `engines` | Pins Node 22 so Railpack picks the same runtime as CI. |
