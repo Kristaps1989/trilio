@@ -50,7 +50,18 @@ export type ScrapeDeps = {
   /** When each known product URL was last seen; unseen and oldest pages are read first. */
   lastSeen?: Map<string, Date>;
   now?: () => number;
+  /**
+   * Called with the offers parsed since the previous call, every
+   * `BATCH_PAGES` pages. The caller saves them, so a run that is cut short
+   * (redeploy, crash) keeps what it read. Saved offers are not returned again.
+   */
+  onBatch?: (batch: ParseResult, progress: { pagesFetched: number; pagesPlanned: number }) => Promise<void>;
+  /** Polled between requests; true stops the crawl cleanly (e.g. SIGTERM on redeploy). */
+  shouldStop?: () => boolean;
 };
+
+/** Pages between saves; at the default 1,5 s delay a cut-short run loses under three minutes. */
+export const BATCH_PAGES = 100;
 
 export type ScrapeResult = ParseResult & {
   urlsDiscovered: number;
@@ -127,6 +138,17 @@ export async function scrapeStore(
   const queue = [...config.sitemaps];
   const seenSitemaps = new Set<string>();
   while (queue.length && seenSitemaps.size < config.maxSitemaps) {
+    // The time budget covers sitemap reading too: a slow shop must not overrun it here.
+    if (now() > deadline) {
+      result.complete = false;
+      result.stopReason = "time_budget";
+      return result;
+    }
+    if (deps.shouldStop?.()) {
+      result.complete = false;
+      result.stopReason = "shutdown";
+      return result;
+    }
     const next = queue.shift()!;
     if (seenSitemaps.has(next)) continue;
     seenSitemaps.add(next);
@@ -178,12 +200,29 @@ export async function scrapeStore(
   const seenIds = new Set<string>();
   let consecutiveErrors = 0;
 
+  let sinceBatch = 0;
+  const flush = async () => {
+    if (!deps.onBatch || (result.offers.length === 0 && result.rejected.length === 0)) return;
+    const batch: ParseResult = { offers: result.offers.splice(0), rejected: result.rejected.splice(0) };
+    await deps.onBatch(batch, { pagesFetched: result.pagesFetched, pagesPlanned: pages.length });
+  };
+
   for (const page of pages) {
     if (now() > deadline) {
       result.complete = false;
       result.stopReason = "time_budget";
       break;
     }
+    if (deps.shouldStop?.()) {
+      result.complete = false;
+      result.stopReason = "shutdown";
+      break;
+    }
+    if (sinceBatch >= BATCH_PAGES) {
+      sinceBatch = 0;
+      await flush();
+    }
+    sinceBatch++;
     const pageUrl = page.toString();
     let html: string;
     try {
