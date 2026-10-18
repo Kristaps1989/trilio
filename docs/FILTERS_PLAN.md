@@ -12,7 +12,16 @@ Owner feedback on 18 Oct 2026, after the first real-data test with fridges:
 
 Decided by the owner on 18 Oct 2026: this is the core of the plan and of every category. Every phase below follows it, and a phase that conflicts with it gives way. Steve Jobs's test for a product was what it leaves out. For Trilio that means the user answers as little as possible and sees a right answer as soon as possible.
 
-1. **At most four screens before results, in every category.** Only questions that decide fit or set the price range are asked up front. Everything else is refined on the results page: priorities, brands, urgency, refurbished. A test over `categories.json` fails if any category's longest path has more than four screens.
+1. **Ask up front only what the right answer depends on; the category decides how many.** There is no fixed number of screens. A toaster needs two; a built-in fridge or a gas hob may need five or six, because a wrong niche, hinge or gas type means a return.
+
+   A question earns a screen only if it does one of these:
+   - **decides fit or whether it works at all**: size, niche, connection, placement;
+   - **sets the price range**;
+   - **changes which kind of product is right**: for example cups a day for coffee, or home size for a vacuum.
+
+   Everything else is refined on the results page: comfort features, priorities, brands, urgency, refurbished.
+
+   Every flow question in `categories.json` carries `up_front_reason: "fit" | "price" | "kind"`, and a test fails if one is missing. When adding a screen, ask "what goes wrong if we don't ask?". If the answer is "nothing that can't be fixed on the results page", it is a chip.
 2. **Ask only what changes the answer.** Before a question is shown, the code checks whether any answer would change the remaining products. If not, the question is skipped. Example: when every matching fridge is No Frost, the No Frost question never appears. A question is never asked when its answer can be worked out from earlier answers or from stock.
 3. **Show, don't describe.** Every choice between kinds of product is a picture card in one consistent line style, drawn to scale where size matters. Help text exists, but the picture should make it unnecessary.
 4. **The right answer is already selected.** Each screen opens with the most common answer pre-selected, so "Tālāk" (next) is always one tap. Defaults come from real data, for example the most common fridge form in stock and the middle of the real price distribution.
@@ -198,14 +207,15 @@ What changes:
   - different brands with equal values → the brand-and-design sentence;
   - picks within 10 % → no tier pills.
 
-## Phase 3 — The fridge flow: four screens, then results
+## Phase 3 — The fridge flow: only what fit and price depend on, then results
 
-Today a freestanding fridge takes up to nine screens: type, size, height limit, freezer, household, priorities, budget, refurbished, urgency. Under the core rules it takes four:
+Today a freestanding fridge takes up to nine screens: type, size, height limit, freezer, household, priorities, budget, refurbished, urgency. Under the core rules a freestanding fridge takes four, and a built-in one five (the hinge decides fit):
 
 | Screen | Question | Replaces |
 |---|---|---|
 | 1 | "Kāds ledusskapis tev vajadzīgs?" (picture cards) | type, size, freezer |
 | 2 | "Cik augstu var būt?" (slider, or niche height for built-in) | height limit, niche |
+| built-in only | "Kā durvis piestiprinātas pie skapja?" (how is the door attached to the cabinet?) — picture: *durvis uz durvīm* (door-on-door) / slīdošās (sliding) / nezinu (help) | new: a fit-critical choice the old flow never asked |
 | 3 | "Cik cilvēku ēd mājās?" (how many people eat at home?) | household (sets the volume) |
 | 4 | "Cik vēlies tērēt?" (range over real prices) | budget |
 
@@ -358,24 +368,24 @@ This replaces `NUMBER_FILTERS` hard-coded in `filters.ts`. It also turns `compar
 
   Buckets stay only where they describe intent, not size: "how often", "what for", "household size".
 - **Cross-question rules in data**, for example `{"hood.width": ">= hob.width"}`. If the user recently searched for a hob, the hood flow pre-fills its width and says so: "Plīts virsma 60 cm → nosūcējs vismaz 60 cm" (60 cm hob → hood at least 60 cm).
-- **Where fit is decided** (these become cards or conditional answers within the four screens, never extra screens):
+- **Where fit is decided** (each is a card on an existing screen when it fits there, or its own conditional screen when it does not; a fit question is never moved to the results page):
   - freezer: "Kur stāvēs?" (where will it stand?) with a garage option → filters by climate class;
   - dryer: "Uz veļas mašīnas?" (on top of a washer?) → stackable and width match;
   - hob: "Kāds pieslēgums?" (which power connection?) with 1-phase, 3-phase, and "nezinu" (don't know) with help;
   - dish built-in: niche height.
 - **Brands** are a results-page chip in every category, never a flow screen (core rule 1).
-- **Every category fits in four screens.** Each category's questions are split into:
-  - **up front**: fit-critical questions and the price range, at most four screens;
+- **Each category asks what it needs, no more.** Each category's questions are split into:
+  - **up front**: questions with an `up_front_reason` (fit, price, kind of product), as many as the category needs;
   - **on the results page**: priorities, comfort features, brands, urgency and refurbished, as chips.
 
-  New fit questions do not add screens: they become picture cards on an existing screen. For example:
+  New fit questions become picture cards on an existing screen where that is natural. For example:
   - the freezer card set includes "Garāžai / neapsildītai telpai" (for a garage or unheated room);
   - the dryer card set includes "Uz veļas mašīnas" (on top of a washer).
 
   The hob power connection is asked only when the chosen hob type needs it. It is pre-selected to the most common answer, with "nezinu" (don't know) help.
 - **Rule 2 is applied per category**: auto-skip of questions whose answer would not change the result. It matters most in small categories, where stock is thin.
 
-### 6.3b The flow for every category: at most four screens, then results
+### 6.3b The flow for every category: what each one needs, then results
 
 The core rules applied to all 33 subcategories. In each flow:
 - Price is always the last screen. Its button says "Rādīt N …" (show N …) and it uses the histogram and presets (3.4).
@@ -384,44 +394,43 @@ The core rules applied to all 33 subcategories. In each flow:
 - Everything in the last column is a results-page chip, not a question.
 - Urgency and refurbished leave every flow, as in 3.6: urgency defaults to within two weeks, and refurbished stock appears in its own block.
 
-The current flows have 3–9 screens: specific questions, then budget, refurbished and urgency. The new flows have 2–4.
+The current flows have 3–9 screens: specific questions, then budget, refurbished and urgency. The new flows have 2–6, depending on what each category's fit and price really depend on. Conditional screens appear only on the branch that needs them.
 
-| Subcategory | Screen 1 | Screen 2 | Screen 3 | Screen 4 | On the results page |
-|---|---|---|---|---|---|
-| **fridge** | Picture: *Standarta*, Mazs, Bez saldētavas, Divdurvju, Iebūvējams | Height: *nav ierobežojuma* / slider; built-in: niche height | People: 1–2, *3–4*, 5+ | Price | Nav jāatkausē, klusums, patēriņš, tilpums, zīmoli |
-| **freezer** | Picture: *Vertikālā*, Lādes, Iebūvējama, Garāžai (neapsildīta telpa → climate class) | Height: *nav ierobežojuma* / slider; built-in: niche; skipped for chest | How much you freeze: maz, *vidēji*, daudz (→ litres) | Price | Nav jāatkausē, ātrā sasaldēšana, patēriņš, zīmoli |
-| **washer** | Picture: *Priekšējā ielāde*, Augšējā ielāde (šaura vieta), Ar žāvētāju | Depth: *nav ierobežojuma* / slider with "līdz 45 cm" preset; top-loader: width | People: 1–2, *3–4*, 5+ (→ kg) | Price | Klusums, elektrība + ūdens, tvaiks, ātrā programma, zīmoli |
-| **dryer** | Picture: *Siltumsūknis* (with its payback line), Kondensācijas | Picture: *Blakus*, Uz veļas mašīnas (→ stackable, width match, kit) | People: 1–2, *3–4*, 5+ (→ kg) | Price | Klusums, patēriņš, zīmoli |
-| **dish** | Picture: *Iebūvējama 60 cm*, Iebūvējama 45 cm (šaura), Brīvi stāvoša, Galda | Built-in only: "Niša standarta augstumā (82–87 cm)?" *jā* / slider | People: 1–2, *3–4*, 5+ (→ place settings) | Price | Klusums, trešais grozs, automātiskā durvju atvēršana, elektrība + ūdens, zīmoli |
-| **hob** | Picture: *Indukcijas*, Keramiskā, Gāzes, Plīts ar cepeškrāsni | Picture of the cut-out: 30 cm, *60 cm*, 80 cm+ | Only when the type needs it: power connection *1 fāze* / 3 fāzes / nezinu (help); gas: dabasgāze / balons | Price | Riņķu skaits, elastīgā zona, booster, zīmoli |
-| **oven** | Picture: *Standarta niša 60 cm*, Kompakta 45 cm | Price | | | Pirolīze / katalītiskā tīrīšana, tvaiks, Wi-Fi, tilpums, zīmoli |
-| **hood** | Picture: *Pie sienas*, Salas, Iebūvējams skapī | Width: *same as the hob* (pre-filled when known) / 50 / 60 / 90 | "Vai ir izvads ārā?" *jā* / nē → recirculation / nezinu | Price | Klusums (atvērtai virtuvei), jauda m³/h, filtru izmaksas, zīmoli |
-| **micro** | Picture: *Brīvi stāvoša*, Iebūvējama 38 cm, Iebūvējama 45 cm | Picture: *Tikai sildīšana*, Ar grilu, Kombinētā (arī cepeškrāsns) | People: 1–2, *3–4*, 5+ (→ litres) | Price | Jauda, zīmoli |
-| **vacuum** | Picture: Robots, Robots ar mazgāšanu, *Bezvadu*, Ar vadu | Home size: līdz 50, *50–100*, 100+ m² (→ run time) | "Mājdzīvnieki?" jā / *nē* (→ pet brush, filter) | Price | Paklāji, alerģija (HEPA), klusums, maisiņi vai bez, zīmoli |
-| **steamclean** | Picture: Rokas, *Tvaika mops*, Ar tvertni | Price | | | Grīdām / vannasistabai, zīmoli |
-| **coffee** | Picture: *Automātiskais (pupiņas)*, Kapsulu, Manuālais espresso | "Ar pienu?" *jā* / tikai melnu | Cups a day: 1–2, *3–4*, 5+ (→ cost-per-cup advice) | Price | Dzirnaviņas, ūdens tvertne, zīmoli |
-| **grinder** | Picture: *Dzirnakmeņu*, Asmeņu | "Kādai kafijai?" espresso, *filtra*, abām | Price | | Troksnis, zīmoli |
-| **iron** | Picture: *Gludeklis*, Tvaika stacija | How often: reti, *bieži* | Price | | Pretkaļķu sistēma (Rīgā ciets ūdens: on by default), svars, zīmoli |
-| **steamer** | Picture: *Rokas*, Ar statīvu | Price | | | Audumi, zīmoli |
-| **kettle** | Picture: *Tērauda*, Stikla, Ar temperatūras izvēli | Price | | | Tilpums, ātra uzvārīšana, zīmoli |
-| **blender** | Picture: *Krūzes*, Personīgais (pudele) | For what: *smūtiji*, ledus (→ ≥ 1000 W), zupas | Price | | Jauda, zīmoli |
-| **handblender** | Picture: *Ar vadu*, Bezvadu | Price | | | Komplekts (putotājs, smalcinātājs), zīmoli |
-| **foodproc** | Picture: Planetārais mikseris, *Virtuves kombains* | For what: mīkla, *smalcināšana*, abi | Price | | Bļodas tilpums, jauda, zīmoli |
-| **mixer** | Picture: *Rokas*, Ar bļodu | Price | | | Mīklai (jauda), zīmoli |
-| **chopper** | Picture: *Dārzeņiem*, Riekstiem un garšvielām | Price | | | Izmērs, zīmoli |
-| **mincer** | How often: *reti*, bieži (→ power, metal gears) | Price | | | Uzgaļi (desām, rīvēšanai), zīmoli |
-| **scale** | Picture: *Virtuves svari*, Precīzie 0,1 g | Price | | | Viedie (lietotne), zīmoli |
-| **knife** | Picture: *Ar vadu*, Bezvadu | Price | | | Gaļai / maizei, zīmoli |
-| **grill** | Picture: *Kontakta*, Plātnes | Portions: 2, *4*, 6 | Price | | Programmas, zīmoli |
-| **toaster** | Picture: *2 šķēles*, 4 šķēles | Price | | | Bulciņu turētājs, garās šķēles, zīmoli |
-| **sandwich** | Picture: *Sendviču*, Ar maināmām plātnēm | Price | | | Vienlaikus 2 / 4, zīmoli |
-| **airfryer** | Picture: *Karstā gaisa*, Eļļas fritieris | Portions: 1–2, *3–4*, 5+ (→ litres; two baskets for 5+) | Price | | Logs, programmas, zīmoli |
-| **breadmaker** | Picture: *Baltmaize*, Arī rudzu maize (→ rye programme) | Price | | | Dozators, zīmoli |
-| **minioven** | Picture: *Bez riņķiem*, Ar plīts riņķiem | Size by picture: 20 L ("pica"), *35 L* ("vista") | Price | | Karstais gaiss, zīmoli |
-| **juicer** | Picture: *Lēnā spiede*, Centrifūgas, Citrusu | Price | | | Zaļumiem (the slow press is suggested automatically), zīmoli |
-| **dehydrator** | Picture by size: *Mazs (5 paplātes)*, Liels | Price | | | Termostats, taimeris, zīmoli |
-| **vacuumsealer** | How often: *reti*, bieži (→ duty cycle) | Price | | | Mitriem produktiem, zīmoli |
-
+| Subcategory | Screens up front, in order | On the results page |
+|---|---|---|
+| **fridge** | 1. Picture: *Standarta*, Mazs, Bez saldētavas, Divdurvju, Iebūvējams<br>2. Height: *nav ierobežojuma* / slider; built-in: niche height<br>3. Built-in only: hinge picture: *durvis uz durvīm* / slīdošās / nezinu<br>4. People: 1–2, *3–4*, 5+<br>5. Price | Nav jāatkausē, klusums, patēriņš, tilpums, zīmoli |
+| **freezer** | 1. Picture: *Vertikālā*, Lādes, Iebūvējama, Garāžai (neapsildīta telpa → climate class)<br>2. Height: *nav ierobežojuma* / slider; built-in: niche; skipped for chest<br>3. How much you freeze: maz, *vidēji*, daudz (→ litres)<br>4. Price | Nav jāatkausē, ātrā sasaldēšana, patēriņš, zīmoli |
+| **washer** | 1. Picture: *Priekšējā ielāde*, Augšējā ielāde (šaura vieta), Ar žāvētāju<br>2. Only when the place matters: "Kur stāvēs?" *atsevišķi* / zem darba virsmas (→ height ≤ 85 cm, removable top) / iebūvēta<br>3. Depth: *nav ierobežojuma* / slider with "līdz 45 cm" preset; top-loader: width<br>4. People: 1–2, *3–4*, 5+ (→ kg)<br>5. Price | Klusums, elektrība + ūdens, tvaiks, ātrā programma, zīmoli |
+| **dryer** | 1. Picture: *Siltumsūknis* (with its payback line), Kondensācijas<br>2. Picture: *Blakus*, Uz veļas mašīnas (→ stackable, width match, kit)<br>3. People: 1–2, *3–4*, 5+ (→ kg)<br>4. Price | Klusums, patēriņš, zīmoli |
+| **dish** | 1. Picture: *Iebūvējama 60 cm*, Iebūvējama 45 cm (šaura), Brīvi stāvoša, Galda<br>2. Built-in only: picture *pilnībā iebūvējama* (fully integrated) / daļēji (control panel visible)<br>3. Built-in only: "Niša standarta augstumā (82–87 cm)?" *jā* / slider<br>4. People: 1–2, *3–4*, 5+ (→ place settings)<br>5. Price | Klusums, trešais grozs, automātiskā durvju atvēršana, elektrība + ūdens, zīmoli |
+| **hob** | 1. Picture: *Indukcijas*, Keramiskā, Gāzes, Plīts ar cepeškrāsni<br>2. Picture of the cut-out: 30 cm, *60 cm*, 80 cm+<br>3. Only when the type needs it: power connection *1 fāze* / 3 fāzes / nezinu (help); gas: dabasgāze / balons<br>4. Price | Riņķu skaits, elastīgā zona, booster, zīmoli |
+| **oven** | 1. Picture: *Standarta niša 60 cm*, Kompakta 45 cm<br>2. Price | Pirolīze / katalītiskā tīrīšana, tvaiks, Wi-Fi, tilpums, zīmoli |
+| **hood** | 1. Picture: *Pie sienas*, Salas, Iebūvējams skapī<br>2. Width: *same as the hob* (pre-filled when known) / 50 / 60 / 90<br>3. Built-in only: cabinet inner width<br>4. "Vai ir izvads ārā?" *jā* / nē → recirculation / nezinu<br>5. Price | Klusums (atvērtai virtuvei), jauda m³/h, filtru izmaksas, zīmoli |
+| **micro** | 1. Picture: *Brīvi stāvoša*, Iebūvējama 38 cm, Iebūvējama 45 cm<br>2. Picture: *Tikai sildīšana*, Ar grilu, Kombinētā (arī cepeškrāsns)<br>3. People: 1–2, *3–4*, 5+ (→ litres)<br>4. Price | Jauda, zīmoli |
+| **vacuum** | 1. Picture: Robots, Robots ar mazgāšanu, *Bezvadu*, Ar vadu<br>2. Home size: līdz 50, *50–100*, 100+ m² (→ run time)<br>3. "Mājdzīvnieki?" jā / *nē* (→ pet brush, filter)<br>4. Price | Paklāji, alerģija (HEPA), klusums, maisiņi vai bez, zīmoli |
+| **steamclean** | 1. Picture: Rokas, *Tvaika mops*, Ar tvertni<br>2. Price | Grīdām / vannasistabai, zīmoli |
+| **coffee** | 1. Picture: *Automātiskais (pupiņas)*, Kapsulu, Manuālais espresso<br>2. "Ar pienu?" *jā* / tikai melnu<br>3. Cups a day: 1–2, *3–4*, 5+ (→ cost-per-cup advice)<br>4. Price | Dzirnaviņas, ūdens tvertne, zīmoli |
+| **grinder** | 1. Picture: *Dzirnakmeņu*, Asmeņu<br>2. "Kādai kafijai?" espresso, *filtra*, abām<br>3. Price | Troksnis, zīmoli |
+| **iron** | 1. Picture: *Gludeklis*, Tvaika stacija<br>2. How often: reti, *bieži*<br>3. Price | Pretkaļķu sistēma (Rīgā ciets ūdens: on by default), svars, zīmoli |
+| **steamer** | 1. Picture: *Rokas*, Ar statīvu<br>2. Price | Audumi, zīmoli |
+| **kettle** | 1. Picture: *Tērauda*, Stikla, Ar temperatūras izvēli<br>2. Price | Tilpums, ātra uzvārīšana, zīmoli |
+| **blender** | 1. Picture: *Krūzes*, Personīgais (pudele)<br>2. For what: *smūtiji*, ledus (→ ≥ 1000 W), zupas<br>3. Price | Jauda, zīmoli |
+| **handblender** | 1. Picture: *Ar vadu*, Bezvadu<br>2. Price | Komplekts (putotājs, smalcinātājs), zīmoli |
+| **foodproc** | 1. Picture: Planetārais mikseris, *Virtuves kombains*<br>2. For what: mīkla, *smalcināšana*, abi<br>3. Price | Bļodas tilpums, jauda, zīmoli |
+| **mixer** | 1. Picture: *Rokas*, Ar bļodu<br>2. Price | Mīklai (jauda), zīmoli |
+| **chopper** | 1. Picture: *Dārzeņiem*, Riekstiem un garšvielām<br>2. Price | Izmērs, zīmoli |
+| **mincer** | 1. How often: *reti*, bieži (→ power, metal gears)<br>2. Price | Uzgaļi (desām, rīvēšanai), zīmoli |
+| **scale** | 1. Picture: *Virtuves svari*, Precīzie 0,1 g<br>2. Price | Viedie (lietotne), zīmoli |
+| **knife** | 1. Picture: *Ar vadu*, Bezvadu<br>2. Price | Gaļai / maizei, zīmoli |
+| **grill** | 1. Picture: *Kontakta*, Plātnes<br>2. Portions: 2, *4*, 6<br>3. Price | Programmas, zīmoli |
+| **toaster** | 1. Picture: *2 šķēles*, 4 šķēles<br>2. Price | Bulciņu turētājs, garās šķēles, zīmoli |
+| **sandwich** | 1. Picture: *Sendviču*, Ar maināmām plātnēm<br>2. Price | Vienlaikus 2 / 4, zīmoli |
+| **airfryer** | 1. Picture: *Karstā gaisa*, Eļļas fritieris<br>2. Portions: 1–2, *3–4*, 5+ (→ litres; two baskets for 5+)<br>3. Price | Logs, programmas, zīmoli |
+| **breadmaker** | 1. Picture: *Baltmaize*, Arī rudzu maize (→ rye programme)<br>2. Price | Dozators, zīmoli |
+| **minioven** | 1. Picture: *Bez riņķiem*, Ar plīts riņķiem<br>2. Size by picture: 20 L ("pica"), *35 L* ("vista")<br>3. Price | Karstais gaiss, zīmoli |
+| **juicer** | 1. Picture: *Lēnā spiede*, Centrifūgas, Citrusu<br>2. Price | Zaļumiem (the slow press is suggested automatically), zīmoli |
+| **dehydrator** | 1. Picture by size: *Mazs (5 paplātes)*, Liels<br>2. Price | Termostats, taimeris, zīmoli |
+| **vacuumsealer** | 1. How often: *reti*, bieži (→ duty cycle)<br>2. Price | Mitriem produktiem, zīmoli |
 Notes:
 - Screens that decide fit (height, depth, width, niche, power connection, stacking) always open on the answer that removes nothing ("nav ierobežojuma" or the standard size). A user who has no constraint taps "Tālāk".
 - Core rule 2 still applies on top of this table. Any screen whose answer would not change the remaining stock is skipped, so a thin category can drop to two screens.
@@ -479,7 +488,7 @@ Each batch is done when, for its subcategories:
 
 - **Unit tests:**
   - the core rules over `categories.json`:
-    - no category's longest path has more than four screens;
+    - every flow question has an `up_front_reason`;
     - every hard choice option has an illustration;
     - every screen has a default answer;
   - range filters, the missing-data policy and the pick spread;
@@ -502,7 +511,7 @@ Each batch is done when, for its subcategories:
 | 1 | Phase 0 (deploy-safe ingestion) | small |
 | 2 | Phase 1.1 + 1.4 + 1.5 (spec tables, sanity check, coverage) | medium |
 | 3 | Phase 2.1–2.3 + 2.6 + 2.8 (ranges, missing data, picks, counts, truthful card text) | medium |
-| 4 | Phase 3 (four-screen visual fridge flow) | medium |
+| 4 | Phase 3 (visual fridge flow) | medium |
 | 5 | Phase 4.1–4.2 + 4.4 (editable results) | medium |
 | 6 | Phase 1.2–1.3 + 2.7 (EPREL, same-EAN fill, Claude and web lookup, advice notes) | medium; EPREL needs the key |
 | 7 | Phase 2.4–2.5 + 4.3 (brands, "Vērts apsvērt") | medium, needs the brand table reviewed |
@@ -512,7 +521,7 @@ Steps 1–5 fix everything reported except brands and need no new keys. Fridges 
 ## Decisions
 
 Settled on 18 Oct 2026:
-- **The Jobs rules are the core** (section at the top). There are at most four screens before results in every category, and everything else is refined on the results page. `PRODUCT_SPEC.md` §2.2 (question lists per category) is rewritten with this work.
+- **The Jobs rules are the core** (section at the top). Each category asks up front only what fit, price or the kind of product depends on, so the number of screens varies by category. Everything else is refined on the results page. `PRODUCT_SPEC.md` §2.2 (question lists per category) is rewritten with this work.
 - **AI use.** AI provides the data: extraction, web lookup and the brand table draft. Code does the choosing: filters, picks, the "Vērts apsvērt" card and the advice notes. `CLAUDE.md` rule 4 and the honesty panel stay true.
 - **Missing data.** The goal is complete data (Phase 1). Whatever remains after every source is not shown as a pick.
 - **Budget.** A min–max range replaces the fixed steps, which stay as presets.
