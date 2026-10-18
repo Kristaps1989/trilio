@@ -2,6 +2,7 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
+import { purgeOldWaitlistLeads } from "@/db/queries/waitlist";
 import { stores } from "@/db/schema";
 import { createCaller, extractionEnabled } from "@/services/llm/client";
 import { runExtractionJob } from "@/services/llm/extract-job";
@@ -26,6 +27,8 @@ async function main() {
       // The Railway cron service runs this; new products get attributes when extraction is on.
       if (extractionEnabled()) console.table(await runExtractionJob(db, createCaller(db)));
       console.table(await runRadarJob(db, { baseUrl: appBaseUrl(), texts: radarTexts() }));
+      // Privacy policy retention: waitlist entries older than 12 months.
+      console.log("waitlist leads purged:", await purgeOldWaitlistLeads(db));
       return;
     }
     const [store] = await db.select().from(stores).where(eq(stores.slug, target));

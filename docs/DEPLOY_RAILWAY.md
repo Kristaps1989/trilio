@@ -25,6 +25,7 @@ Open the web service → **Variables** → add:
 | `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each ingestion run (also on the cron service). |
 | `APP_URL` | `https://trilio.lv` | Public URL; payment callback/redirects and auth URLs are built from it. |
 | `GOOGLE_SITE_VERIFICATION` | from Search Console (HTML tag method) | Optional; adds the verification meta tag. |
+| `COMPANY_NAME`, `COMPANY_REG_NO`, `COMPANY_ADDRESS`, `COMPANY_EMAIL` | your company's registry details | Shown on the legal pages; required by Latvian law. `COMPANY_VAT_NO` only if VAT-registered. |
 | `AUTH_SECRET` | `openssl rand -base64 32` | Session signing (Auth.js). |
 | `AUTH_URL` | same as `APP_URL` | |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". Steps: `docs/AUTH_SETUP.md`. |

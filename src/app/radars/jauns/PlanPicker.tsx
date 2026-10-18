@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { type ReactNode, useState, useTransition } from "react";
 import { OptionRow } from "@/ui/OptionRow";
 import { PrimaryButton } from "@/ui/PrimaryButton";
 import { startCheckoutAction } from "../actions";
@@ -16,12 +16,15 @@ export function PlanPicker({
   returnTo,
   payLabel,
   note,
+  legal,
 }: {
   monthly: PlanOption;
   annual: PlanOption;
   returnTo: string;
   payLabel: string;
   note: string;
+  /** Auto-renewal, cancellation, withdrawal and terms: shown next to the pay button (EU consumer law). */
+  legal: ReactNode;
 }) {
   const [plan, setPlan] = useState(annual.id);
   const [pending, start] = useTransition();
@@ -45,6 +48,7 @@ export function PlanPicker({
           onSelect={() => setPlan(monthly.id)}
         />
       </div>
+      <p className="text-sm text-stone">{legal}</p>
       <PrimaryButton
         disabled={pending}
         onClick={() =>

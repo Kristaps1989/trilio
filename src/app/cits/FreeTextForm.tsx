@@ -86,6 +86,7 @@ export function FreeTextForm({
             className="w-full rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 px-4 py-3 text-[17px] text-mist"
           />
         </label>
+        <p className="text-sm text-stone">{t("freeText.aiNote")}</p>
         <PrimaryButton type="submit" disabled={busy}>
           {busy ? t("freeText.searching") : t("freeText.submit")}
         </PrimaryButton>
@@ -118,6 +119,15 @@ export function FreeTextForm({
             />
           </label>
           {emailError ? <p className="text-sm text-warning">{emailError}</p> : null}
+          <p className="text-sm text-stone">
+            {t.rich("waitlist.consent", {
+              privacy: (chunks) => (
+                <Link href="/privatums" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
           <PrimaryButton type="submit">{t("waitlist.notify")}</PrimaryButton>
           <Link href="/izvelies" className="min-h-11 text-center text-base font-semibold text-lime">
             {t("freeText.chooseFromList")}

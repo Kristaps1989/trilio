@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth, enabledProviders, signIn, signOut } from "@/auth";
@@ -114,6 +115,23 @@ export default async function SignInPage({ searchParams }: Props) {
               {t("devSubmit")}
             </PrimaryButton>
           </form>
+        ) : null}
+
+        {enabledProviders.google || enabledProviders.email || enabledProviders.dev ? (
+          <p className="text-sm text-stone">
+            {t.rich("consent", {
+              terms: (chunks) => (
+                <Link href="/noteikumi" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+              privacy: (chunks) => (
+                <Link href="/privatums" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
         ) : null}
 
         {!enabledProviders.google && !enabledProviders.email && !enabledProviders.dev ? (

@@ -12,6 +12,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/izvelies`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/modelis`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    ...["/noteikumi", "/privatums", "/sikdatnes", "/kontakti"].map((path) => ({
+      url: `${base}${path}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.2,
+    })),
   ];
   for (const g of catalog.groups) {
     if (g.id !== "other")

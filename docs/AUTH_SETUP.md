@@ -32,9 +32,11 @@ Time needed: about 15 minutes. Cost: free.
    - Accept the policy and click **Create**.
 4. **Branding** page:
    - **Application home page:** `https://trilio.lv`
+   - **Application privacy policy link:** `https://trilio.lv/privatums`
+   - **Application terms of service link:** `https://trilio.lv/noteikumi`
    - **Authorised domains:** `trilio.lv`
    - Leave the logo empty for now. A logo makes Google review the app,
-     which needs a privacy policy page and takes days.
+     which takes several days.
 5. **Data access** page: the default `openid`, `email` and `profile` scopes
    are all Trilio needs. Add nothing else.
 6. **Audience** page: click **Publish app** so the status reads
@@ -116,8 +118,8 @@ than `trilio.lv`.
 
 ## 3. Before launch
 
-- **Privacy policy:** a page explaining what Trilio stores (email, saved
-  radars, payment status) is needed under GDPR, and Google requires it if
-  you add a logo to the consent screen.
+- **Company details:** set `COMPANY_NAME`, `COMPANY_REG_NO`,
+  `COMPANY_ADDRESS` and `COMPANY_EMAIL` on Railway. The privacy policy,
+  terms and contacts pages show them, and Latvian law requires them.
 - **Secrets:** the Google secret and the Resend key live only in Railway
   variables, never in the repository.

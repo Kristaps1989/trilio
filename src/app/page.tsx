@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { catalog } from "@/domain/questions/catalog";
+import { LegalLinks } from "@/ui/LegalLinks";
 import { Logo } from "@/ui/Logo";
 
 // Welcome screen (spec §1) plus crawlable entry points: search engines and
@@ -95,7 +96,10 @@ export default async function WelcomePage() {
         </section>
       </main>
 
-      <footer className="px-4 py-4 text-sm text-stone">{t("footer.tagline")}</footer>
+      <footer className="flex flex-col gap-2 px-4 py-4 text-sm text-stone">
+        <span>{t("footer.tagline")}</span>
+        <LegalLinks />
+      </footer>
     </>
   );
 }

@@ -12,7 +12,12 @@
   },
   "footer": {
     "tagline": "Salīdzinām cenas partneru veikalos",
-    "back": "Atpakaļ"
+    "back": "Atpakaļ",
+    "terms": "Noteikumi",
+    "privacy": "Privātums",
+    "cookies": "Sīkdatnes",
+    "contacts": "Kontakti",
+    "legalNav": "Juridiskā informācija"
   },
   "welcome": {
     "headline": "Pastāsti, kas tev vajadzīgs. Trīs labākos variantus atradīsim mēs.",
@@ -127,7 +132,8 @@
     "emailLabel": "E-pasts",
     "notify": "Paziņot, kad pievienosim",
     "thanks": "Paldies! Paziņosim, kad pievienosim šo kategoriju.",
-    "invalidEmail": "Ievadi derīgu e-pasta adresi."
+    "invalidEmail": "Ievadi derīgu e-pasta adresi.",
+    "consent": "E-pastu izmantosim tikai, lai paziņotu par šo kategoriju, un dzēsīsim ne vēlāk kā pēc 12 mēnešiem. Sīkāk: <privacy>Privātuma politika</privacy>."
   },
   "freeText": {
     "title": "Pastāsti saviem vārdiem, kas tev vajadzīgs",
@@ -137,7 +143,8 @@
     "searching": "Meklējam…",
     "notUnderstood": "Nesapratām, kas tieši tev vajadzīgs. Izvēlies no saraksta.",
     "chooseFromList": "Izvēlēties no saraksta",
-    "error": "Kaut kas nogāja greizi. Pamēģini vēlreiz."
+    "error": "Kaut kas nogāja greizi. Pamēģini vēlreiz.",
+    "aiNote": "Lai noteiktu kategoriju, tekstu var apstrādāt mākslīgais intelekts. Neraksti tajā personas datus."
   },
   "delta": {
     "volume_l": "{delta} L tilpums",
@@ -217,7 +224,8 @@
     "devSubmit": "Ienākt bez paroles",
     "signOut": "Iziet",
     "signedInAs": "Ienācis kā {email}",
-    "noProviders": "Ienākšana vēl nav iestatīta."
+    "noProviders": "Ienākšana vēl nav iestatīta.",
+    "consent": "Turpinot tu piekrīti <terms>Lietošanas noteikumiem</terms> un apliecini, ka esi iepazinies ar <privacy>Privātuma politiku</privacy>."
   },
   "radar": {
     "title": "Cenu radars",
@@ -294,7 +302,8 @@
     "signedOut": "Ienāc, lai redzētu savu cenu radaru.",
     "enablePush": "Ieslēgt push paziņojumus šajā ierīcē",
     "pushEnabled": "Push paziņojumi ieslēgti",
-    "pushUnsupported": "Šī pārlūkprogramma neatbalsta push paziņojumus."
+    "pushUnsupported": "Šī pārlūkprogramma neatbalsta push paziņojumus.",
+    "legalNote": "Abonements atjaunojas automātiski par to pašu cenu, līdz atsakies. Atteikties vari jebkurā brīdī, un radars darbosies līdz apmaksātā perioda beigām. 14 dienu laikā pēc pirmā maksājuma vari prasīt pilnu atmaksu. Maksājot tu piekrīti <terms>Lietošanas noteikumiem</terms>."
   },
   "account": {
     "title": "Konts",
@@ -345,5 +354,253 @@
     "how1": "Atbildi uz 3–6 jautājumiem par to, kas tev patiešām svarīgs.",
     "how2": "Salīdzinām partneru veikalu krājumus pēc EAN svītrkoda — viens modelis, viena prece.",
     "how3": "Rādām trīs labākos trīs cenu klasēs, atjaunotas preces atsevišķi. Veikalu komisija secību neietekmē."
+  },
+  "legal": {
+    "updated": "Spēkā no 2026. gada 18. oktobra",
+    "notSet": "—",
+    "privacy": {
+      "title": "Privātuma politika",
+      "description": "Kādus personas datus Trilio apstrādā, kāpēc, cik ilgi tos glabā un kādas ir tavas tiesības.",
+      "intro": "Šajā politikā skaidrojam, kādus personas datus Trilio apstrādā, kāpēc, cik ilgi tos glabājam un kādas ir tavas tiesības. Apstrādājam tikai to, kas vajadzīgs pakalpojuma darbībai, un datus nepārdodam.",
+      "sections": [
+        {
+          "h": "Pārzinis",
+          "p": [
+            "Personas datu pārzinis ir {company}, reģistrācijas Nr. {regNo}, juridiskā adrese: {address}. Jautājumus par datiem sūti uz {email}."
+          ]
+        },
+        {
+          "h": "Ko apstrādājam un kāpēc",
+          "items": [
+            "Meklēšana bez konta: atbildes uz jautājumiem (kategorija, budžets, prasības) glabājam bez vārda un e-pasta, lai parādītu rezultātus un saprastu pieprasījumu. Pamats: leģitīmās intereses.",
+            "Klikšķi uz veikalu saitēm: reģistrējam, kurš piedāvājums atvērts un kad, bez tavas identitātes, lai uzskaitītu partneru komisijas. Pamats: leģitīmās intereses.",
+            "Konts: e-pasta adrese. Ja ienāc ar Google, arī vārds, profila attēla saite un Google izsniegtie piekļuves marķieri. Pamats: līguma izpilde.",
+            "Cenu radars: preces un iestatījumi, ko izvēlies, un paziņojumu kanāli. Pārlūka paziņojumiem glabājam pārlūka izsniegto abonēšanas adresi un atslēgas. Pamats: līguma izpilde.",
+            "Abonements un maksājumi: plāns, statuss, maksājumu summas un datumi un Paysera izsniegts maksājuma marķieris, ko glabājam šifrētu. Kartes datus apstrādā tikai Paysera, Trilio tos neredz un neglabā. Pamats: līguma izpilde un juridisks pienākums.",
+            "Gaidītāju saraksts: ja atstāj e-pastu sadaļā “Kaut kas cits”, glabājam e-pastu un pieprasījuma tekstu, lai paziņotu, kad kategorija būs pieejama. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī.",
+            "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses."
+          ]
+        },
+        {
+          "h": "Mākslīgais intelekts",
+          "p": [
+            "Ja sadaļā “Kaut kas cits” apraksti, ko meklē, tekstu var nosūtīt Anthropic Claude modelim, lai noteiktu preces kategoriju. Žurnālā glabājam tikai pieprasījuma laiku un apjomu, nevis tekstu. Lūdzu, neraksti tur personas datus.",
+            "Preču ranžējumu un cenas aprēķina parasta programma, nevis mākslīgais intelekts."
+          ]
+        },
+        {
+          "h": "Kam datus nododam",
+          "p": [
+            "Datus apstrādā tikai šie pakalpojumu sniedzēji un tikai tādā apjomā, kas vajadzīgs to uzdevumam:"
+          ],
+          "items": [
+            "Railway: serveru un datubāzes hostings.",
+            "Cloudflare: domēna vārdu sistēma (DNS).",
+            "Google: ienākšana ar Google kontu, ja to izvēlies.",
+            "Resend: e-pastu nosūtīšana (ES reģions).",
+            "Paysera LT, UAB: maksājumu apstrāde.",
+            "Anthropic: kategorijas noteikšana no brīvā teksta, kā aprakstīts iepriekš.",
+            "Pārlūkprogrammu paziņojumu servisi (piemēram, Google, Mozilla, Apple): pārlūka paziņojumu piegāde, ja tos ieslēdz."
+          ],
+          "after": [
+            "Partneru veikali saņem tikai to, ko tu pats tiem nosūti, atverot to lapu. Tavu e-pastu vai meklēšanas vēsturi tiem nenododam."
+          ]
+        },
+        {
+          "h": "Datu nosūtīšana ārpus ES",
+          "p": [
+            "Daļa pakalpojumu sniedzēju (Railway, Cloudflare, Google, Resend, Anthropic) ir ASV uzņēmumi. Datus tiem nododam, balstoties uz ES un ASV datu privātuma regulējumu vai Eiropas Komisijas apstiprinātām standarta līguma klauzulām."
+          ]
+        },
+        {
+          "h": "Cik ilgi glabājam",
+          "items": [
+            "Konta dati un radari: kamēr konts ir aktīvs. Dzēstu radaru izņemam pēc 24 stundām.",
+            "Konta dzēšana ir galīga: dzēšam kontu, radarus, abonementu un maksājumu ierakstus Trilio sistēmā. Grāmatvedības dokumentus par veiktajiem maksājumiem Paysera un mūsu grāmatvedība glabā likumā noteikto laiku (5 gadus).",
+            "Gaidītāju saraksts: līdz kategorijas palaišanai, bet ne ilgāk par 12 mēnešiem.",
+            "Meklēšanas atbildes un klikšķu statistika: bez konta tās nav saistītas ar tevi, un tās izmantojam statistikai.",
+            "Ienākšanas saites e-pastā: 15 minūtes."
+          ]
+        },
+        {
+          "h": "Tavas tiesības",
+          "p": [
+            "Tev ir tiesības piekļūt saviem datiem, tos labot, dzēst, ierobežot to apstrādi, iebilst pret apstrādi, saņemt datus pārnesamā formātā un jebkurā brīdī atsaukt piekrišanu.",
+            "Sadaļā “Konts” vari pats lejupielādēt visus savus datus un dzēst kontu. Citus pieprasījumus sūti uz {email}, un atbildēsim mēneša laikā.",
+            "Ja uzskati, ka tavi dati apstrādāti nelikumīgi, vari iesniegt sūdzību Datu valsts inspekcijā (www.dvi.gov.lv)."
+          ]
+        },
+        {
+          "h": "Sīkdatnes",
+          "p": [
+            "Izmantojam tikai pakalpojumam nepieciešamās sīkdatnes. Reklāmas, analītikas un izsekošanas sīkdatņu nav. Sīkāk: sīkdatņu politikā."
+          ]
+        },
+        {
+          "h": "Bērni",
+          "p": [
+            "Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam. Maksas abonementu var noformēt pilngadīgas personas."
+          ]
+        },
+        {
+          "h": "Izmaiņas",
+          "p": ["Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Lietošanas noteikumi",
+      "description": "Trilio pakalpojuma un Cenu radara abonementa noteikumi.",
+      "intro": "Šie noteikumi attiecas uz {site} lietošanu un Cenu radara abonementu. Lūdzu, izlasi tos pirms konta izveides vai maksājuma.",
+      "sections": [
+        {
+          "h": "Kas mēs esam",
+          "p": [
+            "Pakalpojumu sniedz {company}, reģistrācijas Nr. {regNo}, juridiskā adrese: {address}, e-pasts: {email}."
+          ]
+        },
+        {
+          "h": "Ko Trilio dara",
+          "p": [
+            "Trilio palīdz izvēlēties sadzīves tehniku: uzdodam dažus jautājumus un parādām piemērotākos piedāvājumus no partneru veikaliem.",
+            "Trilio pats preces nepārdod. Pirkuma līgumu tu slēdz ar veikalu, un uz to attiecas veikala noteikumi, cenas, piegāde, garantija un atteikuma tiesības."
+          ]
+        },
+        {
+          "h": "Cenas un informācijas precizitāte",
+          "p": [
+            "Cenas, krājumi un piegādes termiņi nāk no veikalu datiem un tiek atjaunoti vairākas reizes dienā, taču veikalā tie var mainīties ātrāk. Noteicošā ir cena veikala lapā pirkuma brīdī.",
+            "Atlaides salīdzinām ar zemāko cenu iepriekšējo 30 dienu laikā."
+          ]
+        },
+        {
+          "h": "Kā mēs pelnām",
+          "p": [
+            "Daļa saišu uz veikaliem ir partneru saites. Ja pēc tām nopirksi preci, veikals var mums samaksāt komisiju. Tev tas neko nemaksā.",
+            "Komisija neietekmē ranžējumu. Secību nosaka tikai tavas atbildes, cena un preces īpašības, kā aprakstīts sadaļā “Kā mēs izvēlamies un ranžējam?”.",
+            "Otrs ienākumu avots ir Cenu radara abonements."
+          ]
+        },
+        {
+          "h": "Konts",
+          "p": [
+            "Konts vajadzīgs Cenu radaram. Tu atbildi par sava e-pasta vai Google konta drošību. Kontu vari dzēst jebkurā brīdī sadaļā “Konts”."
+          ]
+        },
+        {
+          "h": "Cenu radara abonements",
+          "items": [
+            "Cena un abonēšanas periods (mēnesis vai gads) ir norādīti pirms maksājuma. Cenas ir eiro.",
+            "Abonements atjaunojas automātiski katru periodu, un maksa tiek iekasēta no tās pašas kartes, līdz tu atsakies.",
+            "Atteikties var jebkurā brīdī sadaļā “Radars”, “Abonements un maksājums”. Radars darbojas līdz apmaksātā perioda beigām, un nākamais maksājums vairs netiek iekasēts. Par iesāktu periodu nauda netiek atgriezta, izņemot atteikuma tiesību gadījumu.",
+            "Ja atjaunošanas maksājums neizdodas, mēģinām vēlreiz pēc 1, 3 un 5 dienām. Ja arī tad neizdodas, abonements beidzas.",
+            "Par cenas izmaiņām paziņosim vismaz 30 dienas iepriekš. Jaunā cena attiecas tikai uz nākamo periodu, un tu vari atteikties pirms tā sākuma.",
+            "Maksājumus apstrādā Paysera LT, UAB. Kartes datus Trilio neredz un neglabā."
+          ]
+        },
+        {
+          "h": "Atteikuma tiesības (14 dienas)",
+          "p": [
+            "Kā patērētājam tev ir tiesības 14 dienu laikā pēc pirmā maksājuma atteikties no abonementa bez iemesla. Uzraksti uz {email} no konta e-pasta adreses. Veidlapa nav obligāta, pietiek ar skaidru paziņojumu.",
+            "Visu samaksāto summu atmaksāsim 14 dienu laikā uz to pašu karti. Turpmākos periodus vari pārtraukt jebkurā brīdī, kā aprakstīts iepriekš."
+          ]
+        },
+        {
+          "h": "Godīga lietošana",
+          "p": [
+            "Neizmanto Trilio automatizētai datu vākšanai, pakalpojuma traucēšanai vai nelikumīgiem mērķiem. Pārkāpuma gadījumā varam ierobežot piekļuvi."
+          ]
+        },
+        {
+          "h": "Atbildība",
+          "p": [
+            "Informāciju apkopojam rūpīgi, bet negarantējam, ka tā vienmēr ir pilnīga un aktuāla. Neatbildam par veikalu precēm, piegādi vai pakalpojumiem.",
+            "Mūsu atbildība pret tevi nepārsniedz pēdējos 12 mēnešos samaksāto abonementa maksu, izņemot gadījumus, kad likums neļauj atbildību ierobežot. Šie noteikumi neierobežo tavas patērētāja tiesības."
+          ]
+        },
+        {
+          "h": "Strīdi",
+          "p": [
+            "Strīdus risinām sarunu ceļā, raksti uz {email}.",
+            "Patērētājs var vērsties arī Patērētāju tiesību aizsardzības centrā (www.ptac.gov.lv), tostarp tā Patērētāju strīdu risināšanas komisijā. Piemēro Latvijas Republikas tiesību aktus."
+          ]
+        },
+        {
+          "h": "Izmaiņas noteikumos",
+          "p": ["Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Sīkdatņu politika",
+      "description": "Kādas sīkdatnes izmanto Trilio un kāpēc.",
+      "intro": "Trilio izmanto tikai sīkdatnes, bez kurām pakalpojums nedarbojas. Reklāmas, analītikas un izsekošanas sīkdatnes neizmantojam, tāpēc piekrišanas logs nav vajadzīgs.",
+      "tableName": "Sīkdatne",
+      "tablePurpose": "Mērķis",
+      "tableDuration": "Ilgums",
+      "rows": [
+        {
+          "name": "authjs.session-token",
+          "purpose": "Saglabā, ka esi ienācis kontā.",
+          "duration": "30 dienas"
+        },
+        {
+          "name": "authjs.csrf-token",
+          "purpose": "Aizsargā ienākšanu pret viltotiem pieprasījumiem.",
+          "duration": "Līdz pārlūka aizvēršanai"
+        },
+        {
+          "name": "authjs.callback-url",
+          "purpose": "Atceras, uz kuru lapu atgriezties pēc ienākšanas.",
+          "duration": "Līdz pārlūka aizvēršanai"
+        }
+      ],
+      "sections": [
+        {
+          "h": "Nosaukumi drošā savienojumā",
+          "p": [
+            "Vietnē trilio.lv šo sīkdatņu nosaukumiem priekšā ir “__Secure-” vai “__Host-”. Tas nozīmē, ka tās tiek sūtītas tikai pa šifrētu savienojumu."
+          ]
+        },
+        {
+          "h": "Pārlūka paziņojumi",
+          "p": [
+            "Ja ieslēdz pārlūka paziņojumus, pārlūks reģistrē Trilio servisa darbinieku (service worker). Tā nav sīkdatne. Paziņojumus vari izslēgt radara lapā vai pārlūka iestatījumos."
+          ]
+        },
+        {
+          "h": "Veikalu lapas",
+          "p": ["Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."]
+        },
+        {
+          "h": "Kā pārvaldīt sīkdatnes",
+          "p": [
+            "Sīkdatnes vari dzēst vai bloķēt pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
+          ]
+        }
+      ]
+    },
+    "contacts": {
+      "title": "Kontakti un rekvizīti",
+      "description": "Trilio uzņēmuma rekvizīti un saziņas iespējas.",
+      "intro": "Trilio ir sadzīves tehnikas izvēles un cenu salīdzināšanas pakalpojums.",
+      "company": "Uzņēmums",
+      "regNo": "Reģistrācijas Nr.",
+      "vatNo": "PVN maksātāja Nr.",
+      "address": "Juridiskā adrese",
+      "email": "E-pasts",
+      "sections": [
+        {
+          "h": "Saziņa",
+          "p": ["Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."]
+        },
+        {
+          "h": "Veikaliem",
+          "p": [
+            "Ja esi veikals un vēlies piedāvāt preču datu plūsmu (feed) vai pievienoties partneru programmai, raksti uz {email}."
+          ]
+        }
+      ]
+    }
   }
 }
