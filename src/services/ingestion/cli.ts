@@ -4,19 +4,25 @@ import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
 import { stores } from "@/db/schema";
 import { runAllJobs } from "@/services/jobs/all";
+import { renormaliseProducts } from "./renormalise";
 import { ingestStore } from "./run";
 
-// `npm run ingest -- all [--force]` or `npm run ingest -- <store-slug> [path/to/local-feed.xml]`
+// `npm run ingest -- all [--force]`, `npm run ingest -- renormalise`
+// or `npm run ingest -- <store-slug> [path/to/local-feed.xml]`
 // The optional local file lets a partner's sample feed be tested before a URL exists.
 
 async function main() {
   const [target, localFile] = process.argv.slice(2);
   if (!target) {
-    console.error("usage: npm run ingest -- <store-slug|all> [local-feed-file]");
+    console.error("usage: npm run ingest -- <store-slug|all|renormalise> [local-feed-file]");
     process.exit(2);
   }
   const { db, client } = createDb();
   try {
+    if (target === "renormalise") {
+      console.log("attributes re-derived for", await renormaliseProducts(db), "products");
+      return;
+    }
     if (target === "all") {
       // The web service schedules the same job; by default only shops that are due run.
       const result = await runAllJobs(db, { force: localFile === "--force" });

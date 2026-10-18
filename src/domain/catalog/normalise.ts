@@ -132,7 +132,8 @@ function labelledSegments(name: string): Record<string, string> {
   const labels = Object.values(attributeCatalog.attributes)
     .flatMap((d) => d.labels)
     .sort((a, b) => b.length - a.length);
-  for (const segment of name.split(/\s*[|;]\s*/)) {
+  // ", " separates segments too ("206 L, augstums 144 cm"); "59,5" has no space, so it stays whole.
+  for (const segment of name.split(/\s*[|;]\s*|,\s+/)) {
     const lower = segment.toLowerCase().trim();
     const label = labels.find((l) => lower.startsWith(l + " ") && /\d/.test(lower.slice(l.length)));
     if (label && out[label] === undefined) out[label] = segment.trim().slice(label.length).trim();
