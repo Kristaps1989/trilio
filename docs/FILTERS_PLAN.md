@@ -10,6 +10,12 @@ Owner feedback on 18 Oct 2026, after the first real-data test with fridges:
 
 The guiding principle is to show the thing instead of describing it. Use few choices, choose sensible defaults, give instant feedback, and never leave the user at a dead end.
 
+**Owner answers (18 Oct, evening):**
+- Keep it cost effective; use AI wherever it adds value.
+- Every product must end up with complete, normalised data, found from public sources when the shop does not give it.
+- Results must advise the user. Example: with a range of €310–523 and "low energy" as a priority, say that €20 more buys class A instead of B, and that the difference pays back in about a year.
+- The EPREL API key has been requested.
+
 **Deploy rule while this is built:** nothing is pushed until the owner says the first ingestion run has finished. The work happens on the local branch. Phase 0 also makes later deploys safe during ingestion.
 
 ---
@@ -34,9 +40,14 @@ Ingestion now runs inside the web service. Each shop's offers are saved only whe
 
 - **Save in batches.** The crawler hands parsed products to the upsert every 100 pages, not once at the end. A redeploy then loses at most about 2–3 minutes of pages.
 - **Stop cleanly on deploy.** On `SIGTERM` (Railway sends it on redeploy), stop the crawl, save what was read, and close the run with `stopReason = "shutdown"`. The next check resumes with the pages not yet seen; rotation already exists.
+- **Schedule each shop on its own.** Today one guard covers the whole job, so a crash after tet finished keeps euronics and m79 waiting for four hours. Instead, each shop becomes due when its own last finished run is four hours old and it has no live run.
+- **Time limit for sitemap reading too.** Today the time budget is checked only between product pages. Reading the sitemap index has no limit, so a slow shop can overrun its budget.
+- **Log progress every 100 pages:** `ingest m79: 400/2000 pages, 371 offers`. Railway logs then show a live run, and `/api/status` gains `pagesSoFar`.
 - Result: deploys no longer need to wait for ingestion.
 
-## Phase 1 — Real product data
+## Phase 1 — Complete, normalised product data (target: every product shown has every key attribute)
+
+Each source fills only what earlier ones left empty, cheapest first. Every value records its source (`spec_table`, `eprel`, `same_ean`, `claude_web`) so the card can say where a number came from.
 
 **1.1 Spec-table parsing (deterministic, all three shops)**
 - A parser per shop for its spec table (`scrape/specs/<shop>.ts`). It returns label → value pairs, keeping the shop's own Latvian labels.
@@ -57,9 +68,20 @@ Ingestion now runs inside the web service. Each shop's offers are saved only whe
 - EPREL values win over shop values for these fields. The spec's energy-cost line already assumes kWh/year comes from EPREL.
 - Owner action: register a free EPREL public API key and add it as `EPREL_API_KEY`.
 
+**1.2b Same product, other shop (free)**
+- Products are already merged by EAN, so a value that tet.lv lists fills the same field for euronics.lv and m79.lv.
+- This costs nothing and should close most gaps once all three shops are read.
+
 **1.3 Claude extraction for the remaining gaps**
 - Turn on `FEATURE_LLM_EXTRACT=1` once 1.1 and 1.2 have run. Extraction then fills only what is still missing, as `docs/LLM.md` already says.
-- It now receives the spec table text as well as the name. Cost stays at a few euros per few hundred products.
+- It now receives the spec table text as well as the name.
+- **Claude with web search, last resort.** Only for products that still miss a fit-critical value (height, width, form, volume) after every source above. It searches the manufacturer's page by EAN and model code and must return the source URL; values without a source are discarded.
+- **Cost control.**
+  - Extraction runs once per product, never per visitor.
+  - It uses the cheapest Claude model that passes a quality check: 50 products with known values, measured before switching it on.
+  - Web search runs only for the remaining gaps.
+  - The existing daily cap and usage log stay.
+- Products that still miss a fit-critical value after all of this are never shown as a pick (2.2). They are listed in the coverage report so they can be fixed by hand.
 
 **1.4 Category sanity check**
 - A product joins a subcategory only if its data fits: a fridge needs a fridge-like height or volume, or the word "ledusskap" in its name or breadcrumb.
@@ -91,7 +113,7 @@ Ingestion now runs inside the web service. Each shop's offers are saved only whe
 - Preferred brands are a **soft** preference that adds score, not a hard filter. "Tikai šie zīmoli" (only these brands) is a separate toggle for people who are sure.
 
 **2.5 "Līdzvērtīgs zīmols" (an equally good brand you did not pick)**
-- There is a conflict here, so this needs a decision; see Decisions below.
+- Decided 18 Oct: AI where it adds value, ranking stays code. So AI provides the brand data, code makes the choice.
 - `CLAUDE.md` rule 4 and `docs/LLM.md` say rankings and picks are deterministic code and never model output. That rule is what makes the "Kā mēs izvēlamies un ranžējam?" panel honest.
 - The proposal keeps the AI as the brains behind the data, not the ranking:
   - `data/brands.json` is a brand quality table per category with:
@@ -109,6 +131,23 @@ Ingestion now runs inside the web service. Each shop's offers are saved only whe
 
 **2.6 Live counts**
 - One pure function `countMatches(products, answers)` drives every "N atbilst" (N match) number in the flow and on the results page, so the numbers always agree.
+
+**2.7 Advice that earns trust ("Vērts zināt", worth knowing)**
+- A pure function looks one step beyond the user's choices and states the trade-off with numbers. It shows at most two notes per result, and only when the gain is real.
+- **Energy payback.** When the price is near the top of the range and "Zems elektrības patēriņš" is a priority:
+  - It finds a product up to 10 % over the maximum that is better on energy.
+  - It calculates the yearly saving from EPREL kWh/year × the configured electricity price (default 0,25 €/kWh).
+  - It shows: "Par +20 € — energoklase A, nevis B: ~18 € mazāk par elektrību gadā, atmaksājas ~1,1 gadā." (For +€20 — energy class A, not B: ~€18 less on electricity per year, pays back in ~1,1 years.)
+- **Other priorities use the same pattern without a payback figure.**
+  - Quiet: "Par +35 € — 35 dB, nevis 41 dB (uz pusi klusāks)" (for +€35 — 35 dB, not 41 dB, half as loud).
+  - Volume: "+60 L par +25 €" (+60 L for +€25).
+  - No Frost: "No Frost par +30 €" (No Frost for +€30).
+- **Cheaper notes too.** For example: "Par 40 € lētāk — tas pats tilpums, energoklase C (+9 € gadā)" (€40 cheaper — same volume, energy class C, +€9 per year).
+- **Honest by rule.**
+  - The suggested product is shown as an extra with the existing "Virs budžeta par X €" (over budget by X €) label, within the +25 % rule.
+  - Payback is shown only when it is under the product's typical life (10 years).
+  - Figures are rounded down in the shop's favour, never in ours.
+  - All of it is deterministic code, not AI.
 
 ## Phase 3 — The fridge flow (one question per screen, visual)
 
@@ -194,14 +233,18 @@ Ingestion now runs inside the web service. Each shop's offers are saved only whe
 | 3 | Phase 2.1–2.3 + 2.6 (ranges, missing data, picks, counts) | medium |
 | 4 | Phase 3 (visual fridge flow) | medium |
 | 5 | Phase 4.1–4.2 + 4.4 (editable results) | medium |
-| 6 | Phase 1.2–1.3 (EPREL, Claude extraction) | small, needs keys |
+| 6 | Phase 1.2–1.3 + 2.7 (EPREL, same-EAN fill, Claude and web lookup, advice notes) | medium; EPREL needs the key |
 | 7 | Phase 2.4–2.5 + 4.3 (brands, "Vērts apsvērt") | medium, needs the brand table reviewed |
 
 Steps 1–5 fix everything reported except brands and need no new keys. Fridges come first; the same schema (range questions, picture cards, filter bar) then applies to washers, vacuums and the rest, because the questions are data.
 
-## Decisions for the owner
+## Decisions
 
-1. **Brand suggestions.** Use the reviewed brand table plus deterministic code (recommended, and it keeps rule 4 and the honesty panel true)? Or let Claude choose the suggestion directly, which means changing `CLAUDE.md` rule 4 and the panel text?
-2. **Products without size data.** Hide them behind the "Vēl N … rādīt" line (recommended)? Or show them mixed in with a warning?
-3. **Budget steps.** Replace the fixed 500, 800 and 1200 € steps with the range slider and keep them as presets (recommended; this changes `PRODUCT_SPEC.md` §2.2)?
-4. **EPREL.** Will you register the free EPREL API key?
+Settled on 18 Oct 2026:
+- **AI use.** AI provides the data: extraction, web lookup and the brand table draft. Code does the choosing: filters, picks, the "Vērts apsvērt" card and the advice notes. `CLAUDE.md` rule 4 and the honesty panel stay true.
+- **Missing data.** The goal is complete data (Phase 1). Whatever remains after every source is not shown as a pick.
+- **Budget.** A min–max range replaces the fixed steps, which stay as presets. `PRODUCT_SPEC.md` §2.2 is updated with this work.
+- **EPREL.** The key has been requested; it goes in as `EPREL_API_KEY` when it arrives.
+
+Still open:
+- The brand table draft (2.5) needs one review by the owner before it ships.
