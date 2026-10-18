@@ -3,6 +3,7 @@ import { recordToOffer } from "../common";
 import { FeedFetchError } from "../fetch";
 import type { AdapterStore, ParseResult } from "../types";
 import { detectBlock } from "./challenge";
+import { extractSpecTable } from "../specs/table";
 import { extractProducts } from "./jsonld";
 import { ALLOW_ALL, crawlDelaySeconds, isAllowed, parseRobots, type RobotsRules } from "./robots";
 import { parseSitemap, sitemapBodyToText } from "./sitemap";
@@ -261,10 +262,12 @@ export async function scrapeStore(
       continue;
     }
     const label = categoryLabel(page, config.categoryFromUrl);
+    // Spec tables describe the page's one product; on a multi-product page we cannot tell whose they are.
+    const specTable = records.length === 1 ? extractSpecTable(html) : undefined;
     for (const record of records) {
       if (record.id && seenIds.has(record.id)) continue;
       if (record.id) seenIds.add(record.id);
-      recordToOffer({ ...record, product_type: label }, strictStore, result, pageUrl);
+      recordToOffer({ ...record, product_type: label, spec_table: specTable }, strictStore, result, pageUrl);
     }
   }
   return result;

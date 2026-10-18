@@ -1,0 +1,2763 @@
+{
+  "note": "Preču atribūti: vienības, specifikāciju tabulu nosaukumi (normalizēti), veida noteikšanas likumi un sanitārās pārbaudes. Skat. docs/ATTRIBUTES.md.",
+  "attributes": {
+    "height_cm": {
+      "type": "number",
+      "unit": "cm",
+      "labels": [
+        "augstums",
+        "augstums (cm)",
+        "ierīces augstums",
+        "produkta augstums",
+        "augstums bez iepakojuma",
+        "iebūvēšanas nišas augstums",
+        "nišas augstums"
+      ]
+    },
+    "width_cm": {
+      "type": "number",
+      "unit": "cm",
+      "labels": [
+        "platums",
+        "platums (cm)",
+        "ierīces platums",
+        "produkta platums",
+        "platums bez iepakojuma"
+      ]
+    },
+    "depth_cm": {
+      "type": "number",
+      "unit": "cm",
+      "labels": [
+        "dziļums",
+        "dziļums (cm)",
+        "ierīces dziļums",
+        "produkta dziļums",
+        "dziļums bez iepakojuma"
+      ]
+    },
+    "volume_l": {
+      "type": "number",
+      "unit": "l",
+      "labels": [
+        "kopējā ietilpība",
+        "totālā neto ietilpība",
+        "kopējā neto ietilpība",
+        "eļļas tvertnes tilpums",
+        "groza tilpums",
+        "katla tilpums",
+        "kopējais tilpums (neto)",
+        "kopējais tilpums (bruto)",
+        "kopējais tilpums",
+        "kopējais neto tilpums",
+        "tilpums",
+        "ietilpība",
+        "ietilpība (l)",
+        "tilpums (l)",
+        "neto tilpums",
+        "krāsns tilpums",
+        "cepeškrāsns tilpums",
+        "kameras tilpums",
+        "bļodas tilpums",
+        "krūzes tilpums",
+        "tvertnes tilpums",
+        "kopējais lietderīgais tilpums"
+      ]
+    },
+    "fridge_volume_l": {
+      "type": "number",
+      "unit": "l",
+      "labels": [
+        "ledusskapja tilpums",
+        "ledusskapja neto ietilpība",
+        "ledusskapja tilpums (neto)",
+        "ledusskapja tilpums (bruto)",
+        "ledusskapja nodalījuma tilpums"
+      ]
+    },
+    "freezer_volume_l": {
+      "type": "number",
+      "unit": "l",
+      "labels": [
+        "saldētavas tilpums",
+        "saldētavas neto ietilpība",
+        "saldētavas tilpums (neto)",
+        "saldētavas tilpums (bruto)",
+        "saldētavas nodalījuma tilpums"
+      ]
+    },
+    "capacity_kg": {
+      "type": "number",
+      "unit": "kg",
+      "labels": [
+        "ietilpība (kg)",
+        "maksimālā ietilpība",
+        "veļas ietilpība",
+        "maksimālā veļas ietilpība",
+        "ielādes svars",
+        "mazgāšanas ietilpība",
+        "žāvēšanas ietilpība",
+        "maksimālā ielāde",
+        "ietilpība mazgāšanai"
+      ]
+    },
+    "place_settings": {
+      "type": "number",
+      "unit": "pcs",
+      "labels": [
+        "ietilpība komplektos",
+        "vietu skaits",
+        "trauku komplektu ietilpība",
+        "trauku komplektu skaits",
+        "komplektu skaits",
+        "ietilpība (trauku komplekti)",
+        "trauku komplekti",
+        "vietu skaits"
+      ]
+    },
+    "tank_l": {
+      "type": "number",
+      "unit": "l",
+      "labels": [
+        "ūdens rezervuāra ietilpība",
+        "ūdens rezervuāra tilpums",
+        "ūdens tvertnes tilpums (l)",
+        "ūdens tvertnes tilpums",
+        "ūdens tvertne",
+        "tvertnes ietilpība",
+        "ūdens tvertnes ietilpība"
+      ]
+    },
+    "energy_class": {
+      "type": "energy_class",
+      "labels": [
+        "energoefektivitātes klase",
+        "energoefektivitātes klase (a - g)",
+        "energoklase",
+        "energoefektivitātes klase (a-g)",
+        "energopatēriņa klase",
+        "energoefektivitāte"
+      ]
+    },
+    "kwh_year": {
+      "type": "number",
+      "unit": "kwh",
+      "labels": [
+        "enerģijas patēriņš gadā",
+        "gada enerģijas patēriņš",
+        "enerģijas patēriņš",
+        "enerģijas patēriņš (kwh/gadā)",
+        "elektroenerģijas patēriņš gadā"
+      ]
+    },
+    "energy_kwh_100": {
+      "type": "number",
+      "unit": "kwh",
+      "labels": [
+        "enerģijas patēriņš (100 cikli)",
+        "enerģijas patēriņš 100 ciklos",
+        "enerģijas patēriņš uz 100 cikliem",
+        "enerģijas patēriņš 100 cikliem",
+        "energopatēriņš uz 100 cikliem (kwh)",
+        "enerģijas patēriņš (eco programmā) 100 ciklos"
+      ]
+    },
+    "water_l_cycle": {
+      "type": "number",
+      "unit": "l",
+      "labels": [
+        "ūdens patēriņš vienā mazgāšanas ciklā",
+        "ūdens patēriņš cikla laikā",
+        "ūdens patēriņš",
+        "ūdens patēriņš ciklā",
+        "ūdens patēriņš (l)",
+        "ūdens patēriņš vienā ciklā",
+        "ūdens patēriņš eco programmā"
+      ]
+    },
+    "noise_db": {
+      "type": "number",
+      "unit": "db",
+      "pick": "max",
+      "labels": [
+        "trokšņa līmenis izgriešanas laikā",
+        "trokšņa līmenis mazgāšanas laikā",
+        "trokšņa līmenis žāvēšanas laikā",
+        "trokšņa līmenis",
+        "trokšņu līmenis",
+        "trokšņa līmenis (db)",
+        "akustiskā trokšņa emisijas līmenis",
+        "trokšņa līmenis centrifūgā",
+        "trokšņa līmenis griešanas režīmā",
+        "trokšņa līmenis mazgāšanas režīmā",
+        "skaļums"
+      ]
+    },
+    "climate_class": {
+      "type": "string",
+      "labels": [
+        "klimata klase",
+        "klimatiskā klase"
+      ]
+    },
+    "power_w": {
+      "type": "number",
+      "unit": "w",
+      "labels": [
+        "jauda",
+        "jauda (w)",
+        "nominālā jauda",
+        "maksimālā jauda",
+        "motora jauda",
+        "kopējā jauda",
+        "mikroviļņu jauda"
+      ]
+    },
+    "spin_rpm": {
+      "type": "number",
+      "unit": "rpm",
+      "labels": [
+        "centrifūgas ātrums",
+        "maksimālais centrifūgas ātrums",
+        "centrifūga",
+        "centrifūgas apgriezieni",
+        "maks. centrifūgas ātrums (apgr./min)"
+      ]
+    },
+    "run_min": {
+      "type": "number",
+      "unit": "min",
+      "labels": [
+        "darbības laiks",
+        "maksimālais darbības laiks",
+        "darbības laiks (min)",
+        "akumulatora darbības laiks",
+        "darba laiks"
+      ]
+    },
+    "airflow_m3h": {
+      "type": "number",
+      "unit": "m3h",
+      "pick": "max",
+      "labels": [
+        "maksimālā izplešanas jauda",
+        "iesūkšanas jauda iec",
+        "iesūkšanas jauda",
+        "gaisa plūsma (maks.)",
+        "maksimālā gaisa plūsma",
+        "gaisa plūsma",
+        "nosūkšanas jauda",
+        "maksimālā nosūkšanas jauda",
+        "ražība"
+      ]
+    },
+    "steam_gmin": {
+      "type": "number",
+      "unit": "gmin",
+      "labels": [
+        "tvaika padeve",
+        "nepārtraukta tvaika padeve",
+        "tvaika plūsma",
+        "pastāvīgā tvaika padeve"
+      ]
+    },
+    "pressure_bar": {
+      "type": "number",
+      "unit": "bar",
+      "labels": [
+        "spiediena sistēma",
+        "spiediens",
+        "sūkņa spiediens",
+        "maksimālais spiediens"
+      ]
+    },
+    "zones": {
+      "type": "number",
+      "unit": "pcs",
+      "labels": [
+        "riņķu skaits",
+        "sildzonu skaits",
+        "gatavošanas zonu skaits",
+        "karsēšanas zonu skaits"
+      ]
+    },
+    "slots": {
+      "type": "number",
+      "unit": "pcs",
+      "labels": [
+        "tostu skaits",
+        "šķēļu skaits",
+        "atveru skaits",
+        "nodalījumu skaits"
+      ]
+    },
+    "trays": {
+      "type": "number",
+      "unit": "pcs",
+      "labels": [
+        "paplāšu skaits",
+        "līmeņu skaits",
+        "sietu skaits"
+      ]
+    },
+    "precision_g": {
+      "type": "number",
+      "unit": "g",
+      "labels": [
+        "precizitāte",
+        "mērīšanas precizitāte",
+        "iedaļa",
+        "solis"
+      ]
+    },
+    "max_kg": {
+      "type": "number",
+      "unit": "kg",
+      "labels": [
+        "maksimālā slodze",
+        "maksimālais svars",
+        "svēršanas diapazons"
+      ]
+    },
+    "weight_kg": {
+      "type": "number",
+      "unit": "kg",
+      "labels": [
+        "svars",
+        "produkta svars",
+        "svars bez iepakojuma",
+        "neto svars"
+      ]
+    },
+    "programs": {
+      "type": "number",
+      "unit": "pcs",
+      "labels": [
+        "programmu skaits"
+      ]
+    },
+    "no_frost": {
+      "type": "boolean",
+      "labels": [
+        "no frost",
+        "nofrost",
+        "saldētavas saldēšanas sistēma",
+        "atkausēšanas režīms saldētavā",
+        "atkausēšanas sistēma",
+        "saldētavas atkausēšana"
+      ],
+      "true": [
+        "no ?frost",
+        "frost ?free",
+        "automātisk"
+      ],
+      "false": [
+        "manuāl",
+        "rokas",
+        "^nav$",
+        "^nē$",
+        "statisk"
+      ],
+      "text": [
+        "no ?frost",
+        "frost ?free",
+        "total no frost"
+      ]
+    },
+    "steam": {
+      "type": "boolean",
+      "labels": [
+        "tvaika funkcija",
+        "tvaiks",
+        "tvaika programma"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "tvaika funkcij",
+        "\\bsteam\\b",
+        "ar tvaiku"
+      ]
+    },
+    "wifi": {
+      "type": "boolean",
+      "labels": [
+        "wi-fi",
+        "wifi",
+        "vadība ar lietotni",
+        "viedā vadība",
+        "home connect"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b",
+        "wi-?fi"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "wi-?fi",
+        "home connect",
+        "smartthings"
+      ]
+    },
+    "pyrolytic": {
+      "type": "boolean",
+      "labels": [
+        "pirolītiskā tīrīšana",
+        "tīrīšanas sistēma",
+        "pašattīrīšanās",
+        "tīrīšanas veids"
+      ],
+      "true": [
+        "pirol",
+        "pyro"
+      ],
+      "false": [
+        "katalīt",
+        "hidrol",
+        "^nav$"
+      ],
+      "text": [
+        "pirol",
+        "pyrolytic"
+      ]
+    },
+    "mop": {
+      "type": "boolean",
+      "labels": [
+        "mazgāšanas funkcija",
+        "slapjā tīrīšana",
+        "grīdas mazgāšana",
+        "mitrā tīrīšana"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "mazgā",
+        "\\bmop",
+        "ar mazgāšanu",
+        "wet"
+      ]
+    },
+    "pet_brush": {
+      "type": "boolean",
+      "labels": [
+        "birste dzīvnieku spalvām",
+        "dzīvnieku spalvu birste"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "animal",
+        "pet\\b",
+        "dzīvnieku",
+        "pets"
+      ]
+    },
+    "hepa": {
+      "type": "boolean",
+      "labels": [
+        "hepa filtrs",
+        "filtra tips",
+        "filtrs"
+      ],
+      "true": [
+        "hepa",
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "hepa"
+      ]
+    },
+    "bagless": {
+      "type": "boolean",
+      "labels": [
+        "putekļu savākšanas veids",
+        "putekļu savākšana",
+        "putekļu maisiņš",
+        "maisiņa tips",
+        "veids"
+      ],
+      "true": [
+        "bez maisiņa",
+        "ciklon",
+        "konteiner",
+        "tvertne"
+      ],
+      "false": [
+        "ar maisiņu",
+        "maisiņš"
+      ],
+      "text": [
+        "bez maisiņa",
+        "ciklon",
+        "bagless"
+      ]
+    },
+    "stackable": {
+      "type": "boolean",
+      "labels": [
+        "var novietot uz veļas mašīnas",
+        "uzstādīšana kolonnā",
+        "novietošana kolonnā"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "kolonn",
+        "stack"
+      ]
+    },
+    "third_basket": {
+      "type": "boolean",
+      "labels": [
+        "grozs galda piederumiem",
+        "trešais grozs",
+        "galda piederumu atvilktne",
+        "trešais līmenis"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "trešais grozs",
+        "trešā atvilktne",
+        "3 grozi",
+        "3rd basket"
+      ]
+    },
+    "auto_open": {
+      "type": "boolean",
+      "labels": [
+        "automātiska durvju atvēršana",
+        "durvju automātiska atvēršana",
+        "autoopen"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "autoopen",
+        "auto open",
+        "automātiska durvju atvēr"
+      ]
+    },
+    "flexi_zone": {
+      "type": "boolean",
+      "labels": [
+        "elastīgā zona",
+        "flexi zona",
+        "flexinduction"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "flex",
+        "elastīg"
+      ]
+    },
+    "booster": {
+      "type": "boolean",
+      "labels": [
+        "booster funkcija",
+        "ātrās sakarsēšanas funkcija",
+        "power boost"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "booster",
+        "boost"
+      ]
+    },
+    "recirculation": {
+      "type": "boolean",
+      "labels": [
+        "recirkulācija",
+        "darbības režīms",
+        "darbības veids",
+        "izplešanas tips"
+      ],
+      "true": [
+        "recirk",
+        "abi",
+        "nosūkšana/recirkulācija"
+      ],
+      "false": [
+        "tikai nosūkšana"
+      ],
+      "text": [
+        "recirkul"
+      ]
+    },
+    "milk_system": {
+      "type": "boolean",
+      "labels": [
+        "piena putošana",
+        "piena putotājs",
+        "piena sistēma",
+        "kapučīno sistēma",
+        "kapučīno pagatavošana"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b",
+        "automātisk",
+        "tvaika caurul"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "piena",
+        "latte",
+        "cappuccino",
+        "kapučīno",
+        "milk"
+      ]
+    },
+    "anti_calc": {
+      "type": "boolean",
+      "labels": [
+        "pretkaļķu sistēma",
+        "pretkaļķu funkcija",
+        "kaļķu noņemšana",
+        "atkaļķošana"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "pretkaļķ",
+        "anti-?calc",
+        "calc clean"
+      ]
+    },
+    "temp_control": {
+      "type": "boolean",
+      "labels": [
+        "temperatūras regulēšana",
+        "temperatūras iestatīšana",
+        "temperatūras kontrole"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "temperatūras (regul|izvēl|kontrol)",
+        "variable temp"
+      ]
+    },
+    "heating": {
+      "type": "boolean",
+      "labels": [
+        "sildīšanas funkcija",
+        "sildīšana"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "sild",
+        "zupu",
+        "soup"
+      ]
+    },
+    "cordless": {
+      "type": "boolean",
+      "labels": [
+        "barošana",
+        "barošanas veids",
+        "bezvadu"
+      ],
+      "true": [
+        "akumulator",
+        "bezvadu",
+        "baterij"
+      ],
+      "false": [
+        "vads",
+        "tīkls",
+        "230"
+      ],
+      "text": [
+        "bezvadu",
+        "akumulator",
+        "cordless"
+      ]
+    },
+    "interchangeable_plates": {
+      "type": "boolean",
+      "labels": [
+        "maināmas plātes",
+        "maināmas plātnes",
+        "noņemamas plātnes"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "maināmas plātnes",
+        "3 in 1",
+        "3 vienā",
+        "vafel"
+      ]
+    },
+    "hotplates": {
+      "type": "boolean",
+      "labels": [
+        "plīts riņķi",
+        "riņķu skaits"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b",
+        "^[1-9]"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b",
+        "^0"
+      ],
+      "text": [
+        "ar riņķiem",
+        "ar plīts virsmu"
+      ]
+    },
+    "convection": {
+      "type": "boolean",
+      "labels": [
+        "karstā gaisa funkcija",
+        "konvekcija",
+        "ventilators"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "konvekc",
+        "karstā gaisa"
+      ]
+    },
+    "garage_ok": {
+      "type": "boolean",
+      "labels": [],
+      "text": [
+        "garāž",
+        "garage",
+        "freezer ?guard"
+      ]
+    },
+    "washer_dryer": {
+      "type": "boolean",
+      "labels": [],
+      "text": [
+        "ar žāvētāju",
+        "ar žāvēšan",
+        "mazgājamā un žāvējamā",
+        "veļas mazgājamā[- ]žāvējamā",
+        "washer dryer",
+        "2 vienā",
+        "divi vienā"
+      ]
+    }
+  },
+  "accessory": [
+    "starpgrīd",
+    "piederum",
+    "rezerves daļ",
+    "\\bfiltr(s|i|a)\\b",
+    "maisiņ",
+    "uzgal",
+    "adapter",
+    "atkaļķotāj",
+    "tīrīšanas līdzek",
+    "kapsulu turētāj",
+    "\\bplaukts\\b",
+    "\\bpaplāte\\b",
+    "\\bkomplekts\\b.*\\b(filtr|maisiņ)"
+  ],
+  "subcategories": {
+    "fridge": {
+      "key": [
+        "form",
+        "height_cm",
+        "width_cm",
+        "depth_cm",
+        "volume_l",
+        "energy_class",
+        "noise_db",
+        "no_frost",
+        "hinge"
+      ],
+      "fit": [
+        "form",
+        "height_cm"
+      ],
+      "enums": {
+        "form": {
+          "values": [
+            "builtin",
+            "sbs",
+            "compact",
+            "single",
+            "combi"
+          ],
+          "rules": [
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "integrēt",
+                "built-?in",
+                "iebūvēt"
+              ]
+            },
+            {
+              "value": "builtin",
+              "spec": {
+                "uzstādīšana": "iebūv",
+                "instalācijas veids": "iebūv",
+                "ierīces novietojums": "iebūv"
+              }
+            },
+            {
+              "value": "sbs",
+              "text": [
+                "side.?by.?side",
+                "french ?door",
+                "divdurvju",
+                "multi.?door",
+                "sbs",
+                "cross ?door"
+              ]
+            },
+            {
+              "value": "sbs",
+              "num": {
+                "width_cm": {
+                  "gte": 80
+                }
+              }
+            },
+            {
+              "value": "compact",
+              "num": {
+                "height_cm": {
+                  "lte": 100
+                }
+              }
+            },
+            {
+              "value": "compact",
+              "text": [
+                "mini ledussk",
+                "minibār",
+                "zem virsmas",
+                "galda ledussk"
+              ]
+            },
+            {
+              "value": "single",
+              "text": [
+                "bez saldētavas",
+                "vienkameras",
+                "vienas kameras",
+                "bez saldēšanas"
+              ]
+            },
+            {
+              "value": "single",
+              "num": {
+                "freezer_volume_l": {
+                  "lte": 0
+                },
+                "height_cm": {
+                  "gte": 120
+                }
+              }
+            },
+            {
+              "value": "combi",
+              "text": [
+                "saldētava apakšā",
+                "saldētava augšā",
+                "kombinēt",
+                "apakšējā saldētava",
+                "augšējā saldētava",
+                "saldētavu apakšā",
+                "saldētavu augšā",
+                "ar saldētavu",
+                "divkameru"
+              ]
+            },
+            {
+              "value": "combi",
+              "num": {
+                "freezer_volume_l": {
+                  "gte": 1
+                },
+                "height_cm": {
+                  "gte": 120
+                }
+              }
+            }
+          ]
+        },
+        "hinge": {
+          "values": [
+            "fixed",
+            "sliding"
+          ],
+          "rules": [
+            {
+              "value": "sliding",
+              "text": [
+                "slīdoš",
+                "sliding"
+              ]
+            },
+            {
+              "value": "fixed",
+              "text": [
+                "durvis uz durvīm",
+                "fiksēt",
+                "door.?on.?door",
+                "fixed hinge"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "ledussk",
+          "refriger",
+          "fridge",
+          "šaldytuv",
+          "külmik",
+          "минибар",
+          "minibār",
+          "vīna skap",
+          "dzērienu dzes"
+        ],
+        "priceEur": [
+          60,
+          15000
+        ]
+      }
+    },
+    "freezer": {
+      "key": [
+        "form",
+        "height_cm",
+        "volume_l",
+        "energy_class",
+        "noise_db",
+        "no_frost",
+        "climate_class",
+        "garage_ok"
+      ],
+      "fit": [
+        "form",
+        "height_cm"
+      ],
+      "enums": {
+        "form": {
+          "values": [
+            "builtin",
+            "chest",
+            "upright"
+          ],
+          "rules": [
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "integrēt",
+                "built-?in"
+              ]
+            },
+            {
+              "value": "builtin",
+              "spec": {
+                "uzstādīšana": "iebūv",
+                "instalācijas veids": "iebūv",
+                "ierīces novietojums": "iebūv"
+              }
+            },
+            {
+              "value": "chest",
+              "text": [
+                "lādes",
+                "saldētavas lāde",
+                "saldēšanas lāde",
+                "\\bchest\\b",
+                "horizontāl"
+              ]
+            },
+            {
+              "value": "chest",
+              "num": {
+                "width_cm": {
+                  "gte": 70
+                },
+                "height_cm": {
+                  "lte": 95
+                }
+              }
+            },
+            {
+              "value": "upright",
+              "text": [
+                "vertikāl",
+                "skapja tipa",
+                "upright",
+                "atvilktn"
+              ]
+            },
+            {
+              "value": "upright",
+              "spec": {
+                "ledusskapja veids": "saldētava",
+                "produkta veids": "vertikāl"
+              }
+            },
+            {
+              "value": "upright",
+              "num": {
+                "height_cm": {
+                  "gte": 100
+                }
+              }
+            },
+            {
+              "value": "upright",
+              "num": {
+                "width_cm": {
+                  "lte": 66
+                }
+              }
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "saldēt",
+          "freezer",
+          "šaldikl",
+          "sügavkülm"
+        ],
+        "priceEur": [
+          80,
+          8000
+        ]
+      }
+    },
+    "washer": {
+      "key": [
+        "loading",
+        "capacity_kg",
+        "depth_cm",
+        "height_cm",
+        "spin_rpm",
+        "energy_class",
+        "noise_db",
+        "steam",
+        "install",
+        "washer_dryer"
+      ],
+      "fit": [
+        "loading",
+        "depth_cm",
+        "height_cm"
+      ],
+      "enums": {
+        "loading": {
+          "values": [
+            "front",
+            "top"
+          ],
+          "rules": [
+            {
+              "value": "top",
+              "spec": {
+                "ielāde": "vertik|augš",
+                "ielādes veids": "vertik|augš"
+              }
+            },
+            {
+              "value": "front",
+              "spec": {
+                "ielāde": "front|priekš",
+                "ielādes veids": "front|priekš"
+              }
+            },
+            {
+              "value": "top",
+              "text": [
+                "augšējā ielāde",
+                "augšējo ielādi",
+                "ar augšējo",
+                "vertikālā ielāde",
+                "ielāde no augšpuses",
+                "top.?load"
+              ]
+            },
+            {
+              "value": "front",
+              "text": [
+                "priekšējā ielāde",
+                "priekšējo ielādi",
+                "ar priekšējo",
+                "ielāde no priekšpuses",
+                "front.?load"
+              ]
+            },
+            {
+              "value": "top",
+              "num": {
+                "width_cm": {
+                  "lte": 45
+                }
+              }
+            },
+            {
+              "value": "front",
+              "num": {
+                "width_cm": {
+                  "gte": 55
+                }
+              }
+            }
+          ]
+        },
+        "install": {
+          "values": [
+            "builtin",
+            "free"
+          ],
+          "rules": [
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "integrēt",
+                "built-?in"
+              ]
+            },
+            {
+              "value": "free",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [
+        "washer_dryer"
+      ],
+      "sanity": {
+        "stems": [
+          "veļas maš",
+          "veļas mazgāj",
+          "washing",
+          "washer",
+          "skalbim",
+          "pesumasin",
+          "veļasmaš"
+        ],
+        "priceEur": [
+          120,
+          6000
+        ]
+      }
+    },
+    "dryer": {
+      "key": [
+        "dryer_type",
+        "capacity_kg",
+        "energy_class",
+        "noise_db",
+        "stackable"
+      ],
+      "fit": [
+        "dryer_type"
+      ],
+      "enums": {
+        "dryer_type": {
+          "values": [
+            "heatpump",
+            "condenser",
+            "vented"
+          ],
+          "rules": [
+            {
+              "value": "heatpump",
+              "text": [
+                "siltumsūk",
+                "heat ?pump"
+              ]
+            },
+            {
+              "value": "condenser",
+              "text": [
+                "kondensāc",
+                "condens"
+              ]
+            },
+            {
+              "value": "vented",
+              "text": [
+                "ventilāc",
+                "vented",
+                "izplūdes"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "žāvētāj",
+          "veļas žāvē",
+          "dryer",
+          "džiovykl",
+          "kuivati"
+        ],
+        "priceEur": [
+          150,
+          4000
+        ]
+      }
+    },
+    "iron": {
+      "key": [
+        "iron_type",
+        "steam_gmin",
+        "anti_calc",
+        "weight_kg",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "iron_type": {
+          "values": [
+            "station",
+            "iron"
+          ],
+          "rules": [
+            {
+              "value": "station",
+              "text": [
+                "tvaika stacij",
+                "gludināšanas sistēm",
+                "station"
+              ]
+            },
+            {
+              "value": "iron",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "gludek",
+          "gludināš",
+          "iron",
+          "tvaika stacij"
+        ],
+        "priceEur": [
+          10,
+          1500
+        ]
+      }
+    },
+    "steamer": {
+      "key": [
+        "steamer_type",
+        "steam_gmin",
+        "tank_l",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "steamer_type": {
+          "values": [
+            "standing",
+            "handheld"
+          ],
+          "rules": [
+            {
+              "value": "standing",
+              "text": [
+                "statīv",
+                "vertikāl",
+                "standing",
+                "grīdas"
+              ]
+            },
+            {
+              "value": "handheld",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "tvaicētāj",
+          "steamer",
+          "apģērbu tvaik"
+        ],
+        "priceEur": [
+          15,
+          800
+        ]
+      }
+    },
+    "dish": {
+      "key": [
+        "install",
+        "width_cm",
+        "height_cm",
+        "integration",
+        "place_settings",
+        "energy_class",
+        "noise_db",
+        "third_basket",
+        "auto_open"
+      ],
+      "fit": [
+        "install",
+        "width_cm",
+        "height_cm"
+      ],
+      "enums": {
+        "install": {
+          "values": [
+            "builtin",
+            "free",
+            "tabletop"
+          ],
+          "rules": [
+            {
+              "value": "tabletop",
+              "text": [
+                "galda trauku",
+                "tabletop",
+                "uz darba virsmas",
+                "galda mašīn"
+              ]
+            },
+            {
+              "value": "tabletop",
+              "num": {
+                "height_cm": {
+                  "lte": 60
+                }
+              }
+            },
+            {
+              "value": "builtin",
+              "spec": {
+                "ierīces novietojums": "iebūv",
+                "instalācijas veids": "iebūv",
+                "uzstādīšana": "iebūv",
+                "uzstādīšanas veids": "iebūv"
+              }
+            },
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "integrēt",
+                "built-?in",
+                "pilnībā iebūv",
+                "daļēji iebūv"
+              ]
+            },
+            {
+              "value": "free",
+              "text": [
+                "brīvi stāvoš",
+                "brīvstāvoš",
+                "free.?stand"
+              ]
+            }
+          ]
+        },
+        "integration": {
+          "values": [
+            "full",
+            "semi"
+          ],
+          "rules": [
+            {
+              "value": "semi",
+              "text": [
+                "daļēji iebūv",
+                "daļēji integr",
+                "semi"
+              ]
+            },
+            {
+              "value": "full",
+              "text": [
+                "pilnībā iebūv",
+                "pilnībā integr",
+                "fully"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "trauku maz",
+          "trauku mašīn",
+          "dishwasher",
+          "indaplov",
+          "nõudepes"
+        ],
+        "priceEur": [
+          150,
+          4000
+        ]
+      }
+    },
+    "hob": {
+      "key": [
+        "hob_type",
+        "width_cm",
+        "zones",
+        "flexi_zone",
+        "booster"
+      ],
+      "fit": [
+        "hob_type",
+        "width_cm"
+      ],
+      "enums": {
+        "hob_type": {
+          "values": [
+            "cooker",
+            "induction",
+            "gas",
+            "ceramic"
+          ],
+          "rules": [
+            {
+              "value": "cooker",
+              "spec": {
+                "cepeškrāsns veids": ".",
+                "cepeškrāsns apjoms": ".",
+                "cepeškrāsns tilpums": "."
+              }
+            },
+            {
+              "value": "cooker",
+              "text": [
+                "plīts ar cepeškrāsni",
+                "elektriskā plīts",
+                "gāzes plīts",
+                "brīvi stāvoša plīts",
+                "cooker",
+                "plīts ar krāsni"
+              ]
+            },
+            {
+              "value": "induction",
+              "text": [
+                "indukc",
+                "induction"
+              ]
+            },
+            {
+              "value": "gas",
+              "text": [
+                "gāzes",
+                "gas"
+              ]
+            },
+            {
+              "value": "ceramic",
+              "text": [
+                "keram",
+                "ceramic",
+                "stikla keram",
+                "hi-?light"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "plīt",
+          "virsm",
+          "hob",
+          "kaitlent",
+          "pliidi",
+          "cooker"
+        ],
+        "priceEur": [
+          60,
+          6000
+        ]
+      }
+    },
+    "oven": {
+      "key": [
+        "height_cm",
+        "volume_l",
+        "pyrolytic",
+        "steam",
+        "wifi",
+        "energy_class"
+      ],
+      "fit": [
+        "height_cm"
+      ],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "cepeškr",
+          "krāsn",
+          "oven",
+          "orkait",
+          "ahi"
+        ],
+        "priceEur": [
+          120,
+          8000
+        ]
+      }
+    },
+    "hood": {
+      "key": [
+        "hood_type",
+        "width_cm",
+        "airflow_m3h",
+        "noise_db",
+        "recirculation"
+      ],
+      "fit": [
+        "hood_type",
+        "width_cm"
+      ],
+      "enums": {
+        "hood_type": {
+          "values": [
+            "island",
+            "builtin",
+            "wall"
+          ],
+          "rules": [
+            {
+              "value": "island",
+              "text": [
+                "salas",
+                "island",
+                "pie griestiem"
+              ]
+            },
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "iebūvēts",
+                "integrēt",
+                "teleskop",
+                "built-?in",
+                "slīdoš"
+              ]
+            },
+            {
+              "value": "wall",
+              "text": [
+                "pie sienas",
+                "sienas",
+                "kamīna",
+                "slīp",
+                "wall",
+                "dekoratīv",
+                "piramīd",
+                "t-veida"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "nosūcēj",
+          "tvaika nos",
+          "hood",
+          "gartraukis",
+          "õhupuhast"
+        ],
+        "priceEur": [
+          50,
+          5000
+        ]
+      }
+    },
+    "micro": {
+      "key": [
+        "install",
+        "micro_type",
+        "volume_l",
+        "power_w",
+        "height_cm"
+      ],
+      "fit": [
+        "install",
+        "height_cm"
+      ],
+      "enums": {
+        "install": {
+          "values": [
+            "builtin",
+            "free"
+          ],
+          "rules": [
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "iebūvēt",
+                "integrēt",
+                "built-?in"
+              ]
+            },
+            {
+              "value": "free",
+              "always": true
+            }
+          ]
+        },
+        "micro_type": {
+          "values": [
+            "combi",
+            "grill",
+            "solo"
+          ],
+          "rules": [
+            {
+              "value": "combi",
+              "text": [
+                "karstā gaisa",
+                "konvekc",
+                "kombinēt",
+                "combi"
+              ]
+            },
+            {
+              "value": "grill",
+              "text": [
+                "grils",
+                "ar grilu",
+                "grill"
+              ]
+            },
+            {
+              "value": "solo",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "mikroviļ",
+          "microwave",
+          "mikrobang",
+          "mikrolaine"
+        ],
+        "priceEur": [
+          40,
+          3000
+        ]
+      }
+    },
+    "vacuum": {
+      "key": [
+        "vacuum_type",
+        "run_min",
+        "noise_db",
+        "mop",
+        "pet_brush",
+        "hepa",
+        "bagless"
+      ],
+      "fit": [
+        "vacuum_type"
+      ],
+      "enums": {
+        "vacuum_type": {
+          "values": [
+            "robot",
+            "stick",
+            "corded",
+            "handheld"
+          ],
+          "rules": [
+            {
+              "value": "robot",
+              "text": [
+                "robot"
+              ]
+            },
+            {
+              "value": "stick",
+              "text": [
+                "vertikāl",
+                "bezvadu",
+                "akumulator",
+                "stick",
+                "cordless"
+              ]
+            },
+            {
+              "value": "handheld",
+              "text": [
+                "rokas putekļ",
+                "handheld"
+              ]
+            },
+            {
+              "value": "corded",
+              "text": [
+                "ar vadu",
+                "ar maisiņu",
+                "bez maisiņa",
+                "ciklonisk",
+                "klasisk",
+                "putekļsūcējs"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "putekļ",
+          "vacuum",
+          "dulkių",
+          "tolmuim",
+          "robot"
+        ],
+        "priceEur": [
+          30,
+          3000
+        ]
+      }
+    },
+    "steamclean": {
+      "key": [
+        "steam_type",
+        "tank_l",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "steam_type": {
+          "values": [
+            "mop",
+            "handheld",
+            "cylinder"
+          ],
+          "rules": [
+            {
+              "value": "mop",
+              "text": [
+                "mops",
+                "grīdas tvaika",
+                "mop"
+              ]
+            },
+            {
+              "value": "handheld",
+              "text": [
+                "rokas",
+                "handheld"
+              ]
+            },
+            {
+              "value": "cylinder",
+              "text": [
+                "tvaika tīrītājs",
+                "ar tvertni",
+                "cylinder"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "tvaika tīr",
+          "tvaika mop",
+          "steam clean",
+          "steam mop",
+          "tvaika"
+        ],
+        "priceEur": [
+          20,
+          1500
+        ]
+      }
+    },
+    "coffee": {
+      "key": [
+        "coffee_type",
+        "milk_system",
+        "pressure_bar",
+        "tank_l"
+      ],
+      "fit": [],
+      "enums": {
+        "coffee_type": {
+          "values": [
+            "capsule",
+            "auto",
+            "manual",
+            "drip"
+          ],
+          "rules": [
+            {
+              "value": "capsule",
+              "text": [
+                "kapsul",
+                "capsule",
+                "nespresso",
+                "dolce gusto",
+                "tassimo"
+              ]
+            },
+            {
+              "value": "auto",
+              "spec": {
+                "kafijas dzirnaviņas": "^(ir|jā)",
+                "iebūvētas kafijas dzirnaviņas": "^(ir|jā)",
+                "kafijas automāta veids": "automāt"
+              }
+            },
+            {
+              "value": "auto",
+              "text": [
+                "pilnībā automāt",
+                "ar dzirnaviņām",
+                "iebūvētas kafijas dzirnaviņas",
+                "iebūvētas dzirnaviņas",
+                "dzirnaviņu uzstādījumi",
+                "kafijas pupiņas",
+                "bean.to.cup"
+              ]
+            },
+            {
+              "value": "manual",
+              "text": [
+                "portafiltr",
+                "pusautomāt",
+                "rokas espresso",
+                "barista",
+                "manuālais espresso",
+                "espresso automāts ar rokas"
+              ]
+            },
+            {
+              "value": "drip",
+              "text": [
+                "filtra kafijas (automāts|aparāts)",
+                "pilienu kafijas",
+                "drip coffee"
+              ]
+            },
+            {
+              "value": "auto",
+              "text": [
+                "automātisk"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "kafij",
+          "espresso",
+          "coffee",
+          "kapsul",
+          "nespresso"
+        ],
+        "priceEur": [
+          25,
+          8000
+        ]
+      }
+    },
+    "grinder": {
+      "key": [
+        "grinder_type",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "grinder_type": {
+          "values": [
+            "burr",
+            "blade"
+          ],
+          "rules": [
+            {
+              "value": "burr",
+              "text": [
+                "dzirnakmeņ",
+                "konisk",
+                "burr",
+                "plakan"
+              ]
+            },
+            {
+              "value": "blade",
+              "text": [
+                "asmeņ",
+                "blade"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "dzirnav",
+          "grinder"
+        ],
+        "priceEur": [
+          10,
+          3000
+        ]
+      }
+    },
+    "kettle": {
+      "key": [
+        "material",
+        "temp_control",
+        "volume_l",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "material": {
+          "values": [
+            "glass",
+            "steel",
+            "plastic"
+          ],
+          "rules": [
+            {
+              "value": "glass",
+              "text": [
+                "stikl",
+                "glass"
+              ]
+            },
+            {
+              "value": "steel",
+              "text": [
+                "nerūsējoš",
+                "metāl",
+                "tērauda",
+                "steel"
+              ]
+            },
+            {
+              "value": "plastic",
+              "text": [
+                "plastmas",
+                "plastic"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [
+        "temp_control"
+      ],
+      "sanity": {
+        "stems": [
+          "tējkann",
+          "kettle",
+          "virdul"
+        ],
+        "priceEur": [
+          8,
+          600
+        ]
+      }
+    },
+    "blender": {
+      "key": [
+        "blender_type",
+        "power_w",
+        "volume_l",
+        "heating"
+      ],
+      "fit": [],
+      "enums": {
+        "blender_type": {
+          "values": [
+            "personal",
+            "jug"
+          ],
+          "rules": [
+            {
+              "value": "personal",
+              "text": [
+                "personīg",
+                "pudel",
+                "smoothie maker",
+                "to go",
+                "nutribullet",
+                "portatīv"
+              ]
+            },
+            {
+              "value": "jug",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "blender",
+          "smūtij",
+          "smoothie"
+        ],
+        "priceEur": [
+          15,
+          1500
+        ]
+      }
+    },
+    "handblender": {
+      "key": [
+        "cordless",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [
+        "cordless"
+      ],
+      "sanity": {
+        "stems": [
+          "rokas blender",
+          "rokas mikser",
+          "hand blender",
+          "blender"
+        ],
+        "priceEur": [
+          10,
+          600
+        ]
+      }
+    },
+    "foodproc": {
+      "key": [
+        "foodproc_type",
+        "power_w",
+        "volume_l"
+      ],
+      "fit": [],
+      "enums": {
+        "foodproc_type": {
+          "values": [
+            "stand_mixer",
+            "processor"
+          ],
+          "rules": [
+            {
+              "value": "stand_mixer",
+              "text": [
+                "planetār",
+                "mīcīš",
+                "kitchen machine",
+                "stand mixer"
+              ]
+            },
+            {
+              "value": "processor",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "kombain",
+          "food processor",
+          "planetār",
+          "virtuves maš",
+          "mīcīš"
+        ],
+        "priceEur": [
+          30,
+          3000
+        ]
+      }
+    },
+    "mixer": {
+      "key": [
+        "mixer_type",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "mixer_type": {
+          "values": [
+            "bowl",
+            "hand"
+          ],
+          "rules": [
+            {
+              "value": "bowl",
+              "text": [
+                "ar bļodu",
+                "bļoda",
+                "stacionār",
+                "kombain",
+                "planetār"
+              ]
+            },
+            {
+              "value": "hand",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "mikser",
+          "mixer"
+        ],
+        "priceEur": [
+          10,
+          1500
+        ]
+      }
+    },
+    "chopper": {
+      "key": [
+        "volume_l",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "smalcinā",
+          "chopper"
+        ],
+        "priceEur": [
+          8,
+          400
+        ]
+      }
+    },
+    "mincer": {
+      "key": [
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "gaļas maļ",
+          "maļamā",
+          "mincer",
+          "gaļasmaļ"
+        ],
+        "priceEur": [
+          25,
+          1500
+        ]
+      }
+    },
+    "scale": {
+      "key": [
+        "precision_g",
+        "max_kg"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "svari",
+          "scale"
+        ],
+        "priceEur": [
+          5,
+          300
+        ]
+      }
+    },
+    "knife": {
+      "key": [
+        "cordless",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [
+        "cordless"
+      ],
+      "sanity": {
+        "stems": [
+          "nazis",
+          "naži",
+          "knife"
+        ],
+        "priceEur": [
+          10,
+          400
+        ]
+      }
+    },
+    "grill": {
+      "key": [
+        "grill_type",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "grill_type": {
+          "values": [
+            "contact",
+            "plate"
+          ],
+          "rules": [
+            {
+              "value": "contact",
+              "text": [
+                "kontakt",
+                "contact",
+                "panīni",
+                "panini"
+              ]
+            },
+            {
+              "value": "plate",
+              "text": [
+                "plātn",
+                "galda grils",
+                "teppan",
+                "plate",
+                "raclette"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "gril"
+        ],
+        "priceEur": [
+          15,
+          1500
+        ]
+      }
+    },
+    "toaster": {
+      "key": [
+        "slots",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "toster",
+          "toaster",
+          "skrudint"
+        ],
+        "priceEur": [
+          10,
+          500
+        ]
+      }
+    },
+    "sandwich": {
+      "key": [
+        "interchangeable_plates",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "sendvič",
+          "sandwich",
+          "vafeļ",
+          "panini"
+        ],
+        "priceEur": [
+          10,
+          400
+        ]
+      }
+    },
+    "airfryer": {
+      "key": [
+        "fryer_type",
+        "volume_l",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "fryer_type": {
+          "values": [
+            "air",
+            "oil"
+          ],
+          "rules": [
+            {
+              "value": "air",
+              "text": [
+                "karstā gaisa",
+                "air ?fryer",
+                "bez eļļas",
+                "airfryer"
+              ]
+            },
+            {
+              "value": "oil",
+              "text": [
+                "fritēšanas katl",
+                "fritieris",
+                "eļļas",
+                "deep"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "fritier",
+          "air ?fryer",
+          "karstā gaisa",
+          "fritēšan",
+          "taukvār"
+        ],
+        "priceEur": [
+          20,
+          1000
+        ]
+      }
+    },
+    "breadmaker": {
+      "key": [
+        "power_w",
+        "programs"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "maizes krāsn",
+          "maizes cep",
+          "bread"
+        ],
+        "priceEur": [
+          40,
+          800
+        ]
+      }
+    },
+    "minioven": {
+      "key": [
+        "hotplates",
+        "volume_l",
+        "convection",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [
+        "hotplates"
+      ],
+      "sanity": {
+        "stems": [
+          "mini krāsn",
+          "mini cepeš",
+          "elektriskā krāsn",
+          "mini oven",
+          "galda cepeš"
+        ],
+        "priceEur": [
+          25,
+          800
+        ]
+      }
+    },
+    "juicer": {
+      "key": [
+        "juicer_type",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {
+        "juicer_type": {
+          "values": [
+            "citrus",
+            "slow",
+            "centrifugal"
+          ],
+          "rules": [
+            {
+              "value": "citrus",
+              "text": [
+                "citrus",
+                "apelsīn"
+              ]
+            },
+            {
+              "value": "slow",
+              "text": [
+                "lēn",
+                "slow",
+                "gliemežveid",
+                "auger"
+              ]
+            },
+            {
+              "value": "centrifugal",
+              "text": [
+                "centrifūg",
+                "centrifugal"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "sulu spied",
+          "juicer",
+          "sulu"
+        ],
+        "priceEur": [
+          15,
+          1500
+        ]
+      }
+    },
+    "dehydrator": {
+      "key": [
+        "trays",
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "žāvētāj",
+          "dehidr",
+          "dehydrator"
+        ],
+        "priceEur": [
+          20,
+          800
+        ]
+      }
+    },
+    "vacuumsealer": {
+      "key": [
+        "power_w"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "vakuum",
+          "vacuum seal",
+          "iepakot",
+          "izsūkš"
+        ],
+        "priceEur": [
+          15,
+          800
+        ]
+      }
+    }
+  }
+}

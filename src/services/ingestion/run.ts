@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { ingestionRuns, offers, stores, type Store } from "@/db/schema";
+import { ingestionRuns, offers, products, stores, type Store } from "@/db/schema";
 import { csvAdapter } from "./csv";
 import { fetchBytes, fetchFeed, type FetchFeedOptions } from "./fetch";
 import { googleXmlAdapter } from "./google-xml";
@@ -151,8 +151,9 @@ export async function ingestStore(db: Db, store: Store, opts: RunOptions = {}): 
 
 async function scrapeDeps(db: Db, store: Store, opts: RunOptions): Promise<ScrapeDeps> {
   const known = await db
-    .select({ url: offers.url, lastSeenAt: offers.lastSeenAt })
+    .select({ url: offers.url, lastSeenAt: offers.lastSeenAt, hasSpecs: isNotNull(products.specTable) })
     .from(offers)
+    .innerJoin(products, eq(products.id, offers.productId))
     .where(eq(offers.storeId, store.id));
   const config = ScrapeConfigSchema.parse(store.scrapeConfig ?? {});
   const host = new URL(config.sitemaps[0]!).hostname;
@@ -168,7 +169,8 @@ async function scrapeDeps(db: Db, store: Store, opts: RunOptions): Promise<Scrap
         ...opts.fetchOptions,
       }),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-    lastSeen: new Map(known.map((k) => [k.url, k.lastSeenAt])),
+    // Pages read before spec tables were stored count as never seen, so they are re-read first.
+    lastSeen: new Map(known.map((k) => [k.url, k.hasSpecs ? k.lastSeenAt : new Date(0)])),
     ...opts.scrapeDeps,
   };
 }

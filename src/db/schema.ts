@@ -62,8 +62,12 @@ export const products = pgTable(
     modelKey: text("model_key").notNull(),
     name: text("name").notNull(),
     subcategoryId: text("subcategory_id").notNull(),
-    /** Shape-independent attributes: w, h, d, volume_l, energy_class, noise_db, no_frost, freezer, run_min, mop, pet … */
+    /** Typed attributes (data/attributes.json): height_cm, volume_l, energy_class, form … */
     attributes: jsonb("attributes").$type<Record<string, unknown>>().notNull().default({}),
+    /** Where each attribute came from: eprel, spec_table, feed, same_ean, rule, claude, claude_web. */
+    attributeSources: jsonb("attribute_sources").$type<Record<string, string>>().notNull().default({}),
+    /** The shop spec table as last read (label → value); re-normalised when the catalogue changes. */
+    specTable: jsonb("spec_table").$type<Record<string, string>>(),
     /** Option values from the question schema this product satisfies (soft-answer matching). */
     tags: text("tags")
       .array()
