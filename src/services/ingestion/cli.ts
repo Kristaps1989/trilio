@@ -20,7 +20,9 @@ async function main() {
     if (target === "all") {
       // The web service schedules the same job; skip if it started one recently.
       if (localFile !== "--force" && (await ingestRecentlyRan(db))) {
-        console.log("an ingestion run started within the interval; skipping (use --force to run anyway)");
+        console.log(
+          "an ingestion run is going or finished in the last 4 hours; skipping (use --force to run anyway)",
+        );
         return;
       }
       const { stores: results, ...rest } = await runAllJobs(db);
