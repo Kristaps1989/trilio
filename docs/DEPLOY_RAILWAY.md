@@ -27,9 +27,8 @@ Open the web service → **Variables** → add:
 | `GOOGLE_SITE_VERIFICATION` | from Search Console (HTML tag method) | Optional; adds the verification meta tag. |
 | `AUTH_SECRET` | `openssl rand -base64 32` | Session signing (Auth.js). |
 | `AUTH_URL` | same as `APP_URL` | |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". |
-| `AUTH_APPLE_ID` / `AUTH_APPLE_SECRET` | from Apple developer | Enables "Turpināt ar Apple". |
-| `RESEND_API_KEY`, `EMAIL_FROM` | from resend.com | Magic-link sign-in, receipts and radar emails. |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". Steps: `docs/AUTH_SETUP.md`. |
+| `RESEND_API_KEY`, `EMAIL_FROM` | from resend.com | Magic-link sign-in, receipts and radar emails. Steps: `docs/AUTH_SETUP.md`. |
 | `PAYSERA_MAC_ID` / `PAYSERA_MAC_KEY` / `PAYSERA_BUSINESS_ID` | from Paysera after approval | Recurring billing (`docs/PAYMENTS.md`). |
 | `PAYMENT_TOKEN_KEY` | `openssl rand -hex 32` | Encrypts stored billing tokens. |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys` | Web push. |
