@@ -6,6 +6,18 @@ login, payment), `design/prototype/Alerts.dc.html` (price radar),
 current build at 1440 px and 390 px were compared with the prototype
 markup on 18 Oct 2026.
 
+## 0. Urgent: the live site has errors (checked 18 Oct 2026)
+
+| Finding on https://trilio.lv | Evidence | Fix |
+|---|---|---|
+| Every page that reads the database returns HTTP 500 | `/kategorija/*`, `/izvelies/<group>/<sub>`, `/rezultati`, `/modelis?q=…`, `/go/…` and `POST /api/free-text` all return 500, while `/api/health` returns `{"ok":true}` and pages without database reads load | The database is reachable but almost certainly has no tables: the deploy step `npm run db:release` did not run or failed. Railway had no database before 18 Oct, so this was its first migration. Owner: send the pre-deploy log of the latest `trilio` deployment. Code: `/api/health` checks the schema too (`select 1 from stores limit 1`), so a deploy with a missing schema fails its health check instead of going live; the migration logs which migrations it applied |
+| The same pages pass locally | The same build against a fresh database prepared by `npm run db:release` and against real scraped products returns 200 | Confirms the cause is the production database state, not the page code |
+| `www.trilio.lv` does not resolve | No DNS record | Cloudflare: CNAME `www` to the Railway target and add `www.trilio.lv` as a custom domain in Railway, or a Cloudflare redirect rule from `www` to `trilio.lv` |
+| Error and 404 pages are the default English Next.js screens | "This page couldn't load", "404: This page could not be found" | Branded Latvian `not-found.tsx`, `error.tsx` and `global-error.tsx` inside the normal header and footer, with "Mēģināt vēlreiz" and a link home |
+| CI never caught the 500s | The e2e suite runs only against a database seeded with sample products | Add the production smoke test and the empty-database run described in section 5 |
+
+These ship first, as PR 0, before any design work.
+
 ## 1. What is wrong today
 
 | Problem | Cause in the code | Prototype |
@@ -99,7 +111,7 @@ Four pull requests, each releasable on its own and each verified at 360,
 
 ### PR 4: Account, radar, sign-in and content pages
 
-1. Sign-in (`/ienakt`): 480 px column, kicker, title, a white Google button (56 px), a "vai" divider, a boxed email field with an outlined submit button, and the 13 px consent line.
+1. Sign-in (`/ienakt`): 480 px column, kicker, title, then the Google button built to Google's sign-in branding guidelines: the official multicolour "G" logo, a white background, a `#747775` border and `#1F1F1F` text reading "Turpināt ar Google". Today it is a dark button without the logo, which Google's brand review can reject. Below it: a "vai" divider, a boxed email field with an outlined submit button, and the 13 px consent line. Also hide the header "Ienākt" button on the sign-in page itself.
 2. Plan and payment (`/radars/jauns`): the prototype's plan box (lime border, 44 px price, check list), the legal note and the primary pay button. Card entry stays on Paysera's hosted page, so the prototype's card form is not built.
 3. Confirmation (`/radars/apstiprinats`): lime check circle, title, text and two inline buttons.
 4. Radar (`/radars`), following `Alerts.dc.html`:
@@ -120,7 +132,20 @@ Four pull requests, each releasable on its own and each verified at 360,
 | "1 € mēnesī" | 1,99 € a month or 12 € a year | Owner decision on pricing |
 | No legal links in the footer | Fixed second footer row | Legal pages must be reachable from every page |
 
-## 5. How each PR is verified
+## 5. End-to-end validation
+
+Three layers, so that an error like the current 500s cannot reach users unnoticed again.
+
+1. **CI, sample data (exists today).** The full Playwright suite at 360 px and desktop, against a database seeded with sample products.
+2. **CI, empty database (new).** The same server started against a database prepared by `npm run db:release` only: partner shops, no products. Every public route must render a proper page or an empty state, never a 500. This is the state a fresh production database is in.
+3. **Production smoke test (new).** A read-only Playwright suite run against `https://trilio.lv` after every deploy to `main`, and hourly. It changes no data, so it is safe in production.
+   - **Every sitemap URL:** opened and checked for a status under 400, no Next.js error screen, the Trilio header present and Latvian text.
+   - **Full flow:** home → category → every question → results, then the comparison table and a click on "Pirkt" that must reach the shop domain.
+   - **Other routes:** `/modelis` search, `/cits` free text, sign-in page with the Google button, legal pages, `robots.txt`, `sitemap.xml`, `llms.txt` and `/api/health`.
+   - **Hosts:** `http://` redirects to `https://`, and `www.` redirects to the main domain.
+   - **On failure:** a red GitHub check and an email to the owner, with the failing URL and the error digest.
+
+Per-PR verification of the design work:
 
 - **Screenshots:** Playwright screenshots of each changed screen at 360, 390, 768, 1 280 and 1 440 px, reviewed next to the prototype canvas before merging.
 - **New end-to-end checks:**
