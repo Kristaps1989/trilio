@@ -7,6 +7,7 @@ import { googleXmlAdapter } from "./google-xml";
 import { sampleAdapter } from "./sample";
 import { ROBOTS_TOKEN, ScrapeConfigSchema, scrapeStore, type ScrapeDeps } from "./scrape/crawler";
 import type { FeedAdapter, ParseResult } from "./types";
+import { stopRequested } from "./shutdown";
 import { markUnseenOutOfStock, upsertOffers } from "./upsert";
 
 // One ingestion run for one store: fetch → parse → upsert → mark unseen.
@@ -38,6 +39,8 @@ export type RunOptions = {
   now?: Date;
   /** Feed types to leave out, e.g. the HTTP cron route skips long scrapes. */
   skipFeedTypes?: Store["feedType"][];
+  /** Stop check for scraped stores (tests); defaults to the process shutdown flag. */
+  shouldStop?: () => boolean;
 };
 
 export type RunResult = {
@@ -71,17 +74,46 @@ export async function ingestStore(db: Db, store: Store, opts: RunOptions = {}): 
     productsCreated: 0,
     rejectedSample: [],
   };
+  // Saves one batch of parsed offers and records progress on the run, so
+  // /api/status and the logs show a live run and a cut-short run keeps its work.
+  const save = async (batch: ParseResult) => {
+    result.rowsRead += batch.offers.length + batch.rejected.length;
+    result.rowsRejected += batch.rejected.length;
+    if (result.rejectedSample.length < 20) {
+      result.rejectedSample.push(...batch.rejected.slice(0, 20 - result.rejectedSample.length));
+    }
+    const stats = await upsertOffers(db, store, batch.offers, now);
+    result.rowsUpserted += stats.offersUpserted;
+    result.productsCreated += stats.productsCreated;
+    await db
+      .update(ingestionRuns)
+      .set({
+        rowsRead: result.rowsRead,
+        rowsUpserted: result.rowsUpserted,
+        rowsRejected: result.rowsRejected,
+      })
+      .where(eq(ingestionRuns.id, run!.id));
+  };
   try {
-    let parsed: ParseResult;
     let graceHours = GRACE_HOURS_FULL_RUN;
     if (store.feedType === "scrape") {
       const config = ScrapeConfigSchema.parse(store.scrapeConfig ?? {});
+      const deps = await scrapeDeps(db, store, opts);
       const scraped = await scrapeStore(
         config,
         { slug: store.slug, categoryMap: store.categoryMap },
-        await scrapeDeps(db, store, opts),
+        {
+          ...deps,
+          onBatch: async (batch, progress) => {
+            await save(batch);
+            console.log(
+              `ingest ${store.slug}: ${progress.pagesFetched}/${progress.pagesPlanned} pages, ${result.rowsUpserted} offers saved`,
+            );
+          },
+          shouldStop: opts.shouldStop ?? stopRequested,
+        },
       );
-      parsed = scraped;
+      await save(scraped);
       result.pagesFetched = scraped.pagesFetched;
       result.stopReason = scraped.stopReason;
       if (!scraped.complete) graceHours = config.staleAfterHours;
@@ -94,14 +126,8 @@ export async function ingestStore(db: Db, store: Store, opts: RunOptions = {}): 
             allowedHosts: [new URL(requireFeedUrl(store)).hostname, ...store.feedAllowedHosts],
             ...opts.fetchOptions,
           });
-      parsed = adapter.parse(body, { slug: store.slug, categoryMap: store.categoryMap });
+      await save(adapter.parse(body, { slug: store.slug, categoryMap: store.categoryMap }));
     }
-    result.rowsRead = parsed.offers.length + parsed.rejected.length;
-    result.rowsRejected = parsed.rejected.length;
-    result.rejectedSample = parsed.rejected.slice(0, 20);
-    const stats = await upsertOffers(db, store, parsed.offers, now);
-    result.rowsUpserted = stats.offersUpserted;
-    result.productsCreated = stats.productsCreated;
     result.markedOut = await markUnseenOutOfStock(db, store, now, graceHours);
     result.ok = true;
     await db.update(stores).set({ lastIngestedAt: now }).where(eq(stores.id, store.id));
@@ -152,13 +178,22 @@ function requireFeedUrl(store: Store): string {
   return store.feedUrl;
 }
 
+/** Stores that real ingestion handles: active, not sample data, with a feed URL or scrape config. */
+export function isIngestible(store: Store, skip: Store["feedType"][] = []): boolean {
+  if (!store.active || store.feedType === "sample" || skip.includes(store.feedType)) return false;
+  return store.feedType === "scrape" ? !!store.scrapeConfig : !!store.feedUrl;
+}
+
 /** All active stores with a feed or scrape config, excluding sample data. */
-export async function ingestAllActive(db: Db, opts: RunOptions = {}): Promise<RunResult[]> {
+export async function ingestAllActive(
+  db: Db,
+  opts: RunOptions & { only?: (store: Store) => boolean } = {},
+): Promise<RunResult[]> {
   const list = await db.select().from(stores).where(eq(stores.active, true));
   const results: RunResult[] = [];
   for (const store of list) {
-    if (store.feedType === "sample" || opts.skipFeedTypes?.includes(store.feedType)) continue;
-    if (store.feedType === "scrape" ? !store.scrapeConfig : !store.feedUrl) continue;
+    if (!isIngestible(store, opts.skipFeedTypes)) continue;
+    if (opts.only && !opts.only(store)) continue;
     results.push(await ingestStore(db, store, opts));
   }
   return results;

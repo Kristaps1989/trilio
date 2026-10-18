@@ -1,5 +1,5 @@
 import type { Db } from "@/db/client";
-import { ingestRecentlyRan, runAllJobs } from "./all";
+import { runAllJobs } from "./all";
 
 // In-process scheduler for the web service, so product data arrives without a
 // separate Railway cron service. Started from src/instrumentation.ts.
@@ -16,14 +16,13 @@ const CHECK_EVERY_MS = 15 * 60_000;
 
 let busy = false;
 
-/** One tick: run the jobs unless a run started within the interval. Never throws. */
+/** One tick: ingest the shops that are due, then the follow-up jobs. Never throws. */
 export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console): Promise<boolean> {
   if (busy) return false;
   busy = true;
   try {
-    if (await ingestRecentlyRan(db)) return false;
-    log.log("ingest scheduler: starting run");
     const result = await runAllJobs(db);
+    if (!result) return false;
     log.log(
       "ingest scheduler: done",
       result.stores.map((s) => ({

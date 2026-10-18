@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
 import { stores } from "@/db/schema";
-import { ingestRecentlyRan, runAllJobs } from "@/services/jobs/all";
+import { runAllJobs } from "@/services/jobs/all";
 import { ingestStore } from "./run";
 
 // `npm run ingest -- all [--force]` or `npm run ingest -- <store-slug> [path/to/local-feed.xml]`
@@ -18,14 +18,13 @@ async function main() {
   const { db, client } = createDb();
   try {
     if (target === "all") {
-      // The web service schedules the same job; skip if it started one recently.
-      if (localFile !== "--force" && (await ingestRecentlyRan(db))) {
-        console.log(
-          "an ingestion run is going or finished in the last 4 hours; skipping (use --force to run anyway)",
-        );
+      // The web service schedules the same job; by default only shops that are due run.
+      const result = await runAllJobs(db, { force: localFile === "--force" });
+      if (!result) {
+        console.log("no shop is due (each runs every 4 hours); use --force to run all now");
         return;
       }
-      const { stores: results, ...rest } = await runAllJobs(db);
+      const { stores: results, ...rest } = result;
       console.table(results.map((r) => ({ ...r, rejectedSample: r.rejectedSample.length })));
       console.log(rest);
       return;

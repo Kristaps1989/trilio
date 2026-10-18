@@ -2,6 +2,7 @@ import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { FeedFetchError } from "../fetch";
 import {
+  BATCH_PAGES,
   categoryLabel,
   ScrapeBlockedError,
   ScrapeConfigSchema,
@@ -171,5 +172,60 @@ describe("scrapeStore", () => {
       "%e0%a4%a",
     );
     expect(categoryLabel(new URL(`${HOST}/x`), undefined)).toBeUndefined();
+  });
+
+  it("hands offers to onBatch every BATCH_PAGES pages and returns only the rest", async () => {
+    const urls = Array.from(
+      { length: BATCH_PAGES + 5 },
+      (_, i) => `${HOST}/p/products/${i + 10}/Ledusskapji/A/M${i}`,
+    );
+    const routes: Record<string, string | Buffer> = {
+      [`${HOST}/robots.txt`]: "User-agent: *",
+      [`${HOST}/sitemap.xml`]: urlset(urls),
+    };
+    urls.forEach(
+      (u, i) =>
+        (routes[u] = GRAPH_PAGE(u)
+          .replace(/3838782525551/g, String(4000000000000 + i))
+          .replace(/RF414EPS4/g, `M${i}`)),
+    );
+    const batches: { offers: number; pages: number }[] = [];
+    const { d } = deps(routes, {
+      onBatch: async (b, p) => void batches.push({ offers: b.offers.length, pages: p.pagesFetched }),
+    });
+    const r = await scrapeStore(config, store, d);
+    expect(batches).toEqual([{ offers: BATCH_PAGES, pages: BATCH_PAGES }]);
+    expect(r.pagesFetched).toBe(BATCH_PAGES + 5);
+    expect(r.offers).toHaveLength(5);
+  });
+
+  it("stops cleanly when asked (shutdown) and keeps what it read", async () => {
+    let fetched = 0;
+    const { d } = deps(BASE_ROUTES, {
+      get: async (url) => {
+        const r = BASE_ROUTES[url as keyof typeof BASE_ROUTES];
+        if (!r) throw new FeedFetchError("not found", "http_error", 404);
+        if (url === P1 || url === P2) fetched++;
+        return Buffer.isBuffer(r) ? r : Buffer.from(r);
+      },
+      shouldStop: () => fetched >= 1,
+    });
+    const r = await scrapeStore(config, store, d);
+    expect(r.stopReason).toBe("shutdown");
+    expect(r.complete).toBe(false);
+    expect(r.offers).toHaveLength(1);
+  });
+
+  it("applies the time budget while reading sitemaps", async () => {
+    let t = 0;
+    const { d } = deps(BASE_ROUTES, {
+      now: () => t,
+      sleep: async () => {
+        t += 60 * 60_000; // each polite wait "takes" an hour
+      },
+    });
+    const r = await scrapeStore({ ...config, maxRunMinutes: 90 }, store, d);
+    expect(r.stopReason).toBe("time_budget");
+    expect(r.pagesFetched).toBe(0);
   });
 });
