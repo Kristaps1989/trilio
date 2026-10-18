@@ -1,6 +1,6 @@
 # Deploying Trilio on Railway
 
-Everything Railway needs is in the repo: `railway.json` (build, start with migrations, healthcheck), `/api/health`, and the ingestion CLI for the cron service. The only things you enter in Railway are environment variables.
+Everything Railway needs is in the repo: `railway.json` (build, start with migrations, healthcheck), `/api/health`, and the ingestion job, which the web service schedules itself. The only things you enter in Railway are environment variables.
 
 ## 1. Create the project
 
@@ -22,7 +22,7 @@ Open the web service → **Variables** → add:
 | `LLM_MODEL` | `claude-opus-5-5` | Optional override. |
 | `LLM_DAILY_CALL_CAP` | `2000` | Per purpose per day; exceeding it degrades gracefully. |
 | `FEATURE_FREE_TEXT_LLM` | `0` | `1` routes "Kaut kas cits" text through Claude when the regex table finds nothing. |
-| `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each ingestion run (also on the cron service). |
+| `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each scheduled ingestion run. |
 | `APP_URL` | `https://trilio.lv` | Public URL; payment callback/redirects and auth URLs are built from it. |
 | `GOOGLE_SITE_VERIFICATION` | from Search Console (HTML tag method) | Optional; adds the verification meta tag. |
 | `COMPANY_NAME`, `COMPANY_REG_NO`, `COMPANY_ADDRESS`, `COMPANY_EMAIL` | your company's registry details | Shown on the legal pages; required by Latvian law. `COMPANY_VAT_NO` only if VAT-registered. |
@@ -74,12 +74,20 @@ After the domain is live:
 2. Bing Webmaster Tools → import from Search Console (covers Bing, DuckDuckGo and ChatGPT search).
 3. Check `https://trilio.lv/robots.txt` and `https://trilio.lv/llms.txt` render as expected.
 
-## 5. Scheduled ingestion (cron service)
+## 5. Scheduled ingestion
 
-The **ingest** service is a second Railway service from the same repository. It does not serve web pages: every four hours it starts, reads the partner shops (euronics.lv, m79.lv, tet.lv), stores new prices and price history, sends price radar alerts, and exits. Without it the site has no product data.
+**Nothing to set up.** On Railway's `production` environment the web service runs the job itself (`src/services/jobs/scheduler.ts`, started from `src/instrumentation.ts`). A minute after it starts, and then every 15 minutes, it checks whether a run is due. A run is due when none is going and none has finished in the last four hours. The run reads the partner shops (euronics.lv, m79.lv, tet.lv), stores new prices and price history, sends price radar alerts and purges old waitlist entries. Its progress is in the web service logs (`ingest scheduler: …`).
+
+`INGEST_SCHEDULE=off` on the web service turns this off; `INGEST_SCHEDULE=on` turns it on in any other environment.
+
+A redeploy stops a run that is in progress. Shops already finished keep their data, and the store being read loses its pages from that run. The next check after the restart starts again, because a dead run stops counting once its store's time budget (`maxRunMinutes`) has passed.
+
+### Optional: a separate cron service
+
+To keep scraping out of the web process, run the same job as a second Railway service, then set `INGEST_SCHEDULE=off` on the web service. If both run, whichever starts second skips, because a run is already going or has just finished.
 
 1. In the project, **+ New → GitHub Repo** → the same repository and branch. Rename the new service to `ingest`.
-2. Service → **Settings → Config-as-code → Railway config file**: `/railway.cron.json`. That file sets the start command `npm run ingest -- all`, the schedule `17 */4 * * *` (every four hours, 17 minutes past), and turns off the web build, health check and restarts.
+2. Service → **Settings → Config-as-code → Railway config file**: `/railway.cron.json`. That file sets the start command `npm run ingest -- all`, the schedule `17 */4 * * *` (every four hours, 17 minutes past), and turns off the web build, health check and restarts. Without this setting the service uses `railway.json` and starts a second copy of the website instead.
 3. Service → **Variables**:
 
    | Variable | Value |
@@ -90,17 +98,17 @@ The **ingest** service is a second Railway service from the same repository. It 
    | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | same as the web service, once web push is set up |
    | `ANTHROPIC_API_KEY`, `FEATURE_LLM_EXTRACT` | only if attribute extraction is on (`docs/LLM.md`) |
 
-4. Deploy. The service then waits for its schedule. To run it at once: service → **Deployments → ⋯ → Run now**.
+4. Deploy. The service then waits for its schedule. To run it at once: service → **Deployments → ⋯ → Run now**. `npm run ingest -- all --force` runs even when a run finished recently.
 
 A run takes about three hours, because the shops are read page by page at a polite pace (`docs/SCRAPING.md`). Railway skips a cron start while the previous run is still going, so the four-hour schedule is safe; if more shops are scraped, change `cronSchedule` in `railway.cron.json` to `17 */6 * * *`.
 
 Results are in the service logs and in the `ingestion_runs` and `radar_events` tables.
 
-**Is ingestion working?** Open `https://trilio.lv/api/status`. It lists each active shop with its in-stock offer count and its last ingestion run (start, finish, ok, rows saved). `"ingestHasRun": false` means the ingest service has never run: create it as above. A run that started but has no `finishedAt` is still going (the first one takes about three hours); the site shows products for each shop as soon as that shop's part of the run is saved.
+**Is ingestion working?** Open `https://trilio.lv/api/status`. It lists each active shop with its in-stock offer count and its last ingestion run (start, finish, ok, rows saved). `"ingestHasRun": false` means no run has started yet: the first one starts about a minute after the web service boots on the `production` environment. If it stays false, check the web service logs for `ingest scheduler`. A run that started but has no `finishedAt` is still going (the first one takes about three hours); the site shows products for each shop as soon as that shop's part of the run is saved.
 
 **Billing cron (only once payments are on):** add a third service from the same repository, set its Railway config file to `/railway.billing.json` (daily at 06:00 UTC, runs `npm run cron:billing`), and give it `APP_URL` and `CRON_SECRET`, the same values as the web service. It charges due renewals and retries (`docs/PAYMENTS.md`).
 
-`/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer, except scraped shops: those run only in the cron service, because they take far longer than an HTTP request may.
+`/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer, except scraped shops: those run only in the scheduler or the cron service, because they take far longer than an HTTP request may.
 
 ## 6. Environments
 
@@ -128,5 +136,6 @@ Enable **Settings → Deploy → Wait for CI** on the production service so a de
 | `railway.cron.json` | Ingest cron service: no web build, `npm run ingest -- all` every four hours. |
 | `railway.billing.json` | Billing cron service: no web build, `npm run cron:billing` daily. |
 | `src/app/api/health/route.ts` | 200 when the database answers within 5 s, else 503. |
-| `src/services/ingestion/cli.ts` | Entry point for the cron service. |
+| `src/services/jobs/scheduler.ts` | Four-hourly ingestion inside the web service. |
+| `src/services/ingestion/cli.ts` | Entry point for the optional cron service. |
 | `package.json` `engines` | Pins Node 22 so Railpack picks the same runtime as CI. |

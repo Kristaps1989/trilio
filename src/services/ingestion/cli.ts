@@ -2,16 +2,11 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
-import { purgeOldWaitlistLeads } from "@/db/queries/waitlist";
 import { stores } from "@/db/schema";
-import { createCaller, extractionEnabled } from "@/services/llm/client";
-import { runExtractionJob } from "@/services/llm/extract-job";
-import { appBaseUrl } from "@/services/payments";
-import { runRadarJob } from "@/services/radar/job";
-import { radarTexts } from "@/services/texts";
-import { ingestAllActive, ingestStore } from "./run";
+import { ingestRecentlyRan, runAllJobs } from "@/services/jobs/all";
+import { ingestStore } from "./run";
 
-// `npm run ingest -- all` or `npm run ingest -- <store-slug> [path/to/local-feed.xml]`
+// `npm run ingest -- all [--force]` or `npm run ingest -- <store-slug> [path/to/local-feed.xml]`
 // The optional local file lets a partner's sample feed be tested before a URL exists.
 
 async function main() {
@@ -23,12 +18,16 @@ async function main() {
   const { db, client } = createDb();
   try {
     if (target === "all") {
-      console.table(await ingestAllActive(db));
-      // The Railway cron service runs this; new products get attributes when extraction is on.
-      if (extractionEnabled()) console.table(await runExtractionJob(db, createCaller(db)));
-      console.table(await runRadarJob(db, { baseUrl: appBaseUrl(), texts: radarTexts() }));
-      // Privacy policy retention: waitlist entries older than 12 months.
-      console.log("waitlist leads purged:", await purgeOldWaitlistLeads(db));
+      // The web service schedules the same job; skip if it started one recently.
+      if (localFile !== "--force" && (await ingestRecentlyRan(db))) {
+        console.log(
+          "an ingestion run is going or finished in the last 4 hours; skipping (use --force to run anyway)",
+        );
+        return;
+      }
+      const { stores: results, ...rest } = await runAllJobs(db);
+      console.table(results.map((r) => ({ ...r, rejectedSample: r.rejectedSample.length })));
+      console.log(rest);
       return;
     }
     const [store] = await db.select().from(stores).where(eq(stores.slug, target));
