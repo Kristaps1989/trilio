@@ -83,6 +83,9 @@ export function questionMatters(ctx: Ctx, q: Question): boolean {
   // Every option leaves the same products: the answer changes nothing.
   const distinct = new Set(real.map((o) => counts[o.value] ?? 0));
   if (distinct.size === 1 && (counts[real[0]!.value] ?? 0) === before.length) return false;
+  // Only one option is possible and it keeps everything: there is nothing to choose.
+  const possible = real.filter((o) => (counts[o.value] ?? 0) > 0);
+  if (possible.length === 1 && counts[possible[0]!.value] === before.length) return false;
   return true;
 }
 

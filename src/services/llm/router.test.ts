@@ -33,8 +33,8 @@ describe("routeFreeText", () => {
       out_of_scope: false,
       confidence: 88,
       prefilled: [
-        { question_id: "form", value: "combi" },
-        { question_id: "height", value: { max: 178 } },
+        { question_id: "install", value: "free" },
+        { question_id: "size", value: "h85" },
         { question_id: "priorities", value: ["quiet", "energy"] },
         { question_id: "household", value: "nine" }, // not an option → dropped
         { question_id: "evil", value: "x" }, // unknown question → dropped
@@ -43,7 +43,7 @@ describe("routeFreeText", () => {
     const r = await routeFreeText("Mazs kluss ledusskapis studentam, lēts", { caller, llmEnabled: true });
     expect(r).toEqual({
       subcategoryId: "fridge",
-      prefilled: { form: "combi", height: { max: 178 }, priorities: ["quiet", "energy"] },
+      prefilled: { install: "free", size: "h85", priorities: ["quiet", "energy"] },
       outOfScope: false,
       source: "llm",
       confidence: 88,
@@ -132,16 +132,16 @@ describe("helpers", () => {
     ).toBe(false);
   });
 
-  it("validateRouterOutput drops answers to questions hidden by showIf (no height for a built-in)", () => {
+  it("validateRouterOutput drops answers to questions hidden by showIf (no freestanding size for a built-in)", () => {
     const r = validateRouterOutput({
       subcategory: "fridge",
       out_of_scope: false,
       confidence: 70,
       prefilled: [
-        { question_id: "form", value: "builtin" },
-        { question_id: "height", value: { max: 178 } },
+        { question_id: "install", value: "builtin" },
+        { question_id: "size", value: "h175" },
       ],
     });
-    expect(r.prefilled).toEqual({ form: "builtin" });
+    expect(r.prefilled).toEqual({ install: "builtin" });
   });
 });

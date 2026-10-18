@@ -5,47 +5,56 @@ import { defaultOption, optionCounts, priceStats, questionMatters, questionsThat
 
 const fridge = getSubcategory("fridge")!;
 const q = (id: string) => fridge.questions.find((x) => x.id === id)!;
+const fr = (name: string, price: number, h: number, doors: string, volume: number) =>
+  product({ name, price, attrs: { install: "free", doors, height_cm: h, volume_l: volume } });
 const stock = [
-  product({ name: "A", price: 400, attrs: { form: "combi", height_cm: 185, volume_l: 300 } }),
-  product({ name: "B", price: 500, attrs: { form: "combi", height_cm: 176, volume_l: 260 } }),
-  product({ name: "C", price: 600, attrs: { form: "combi", height_cm: 201, volume_l: 380 } }),
-  product({ name: "D", price: 150, attrs: { form: "compact", height_cm: 85, volume_l: 120 } }),
+  fr("A", 400, 185, "two", 300),
+  fr("B", 500, 176, "two", 260),
+  fr("C", 600, 201, "two", 380),
+  fr("D", 150, 85, "one", 120),
 ];
 const ctx = { products: stock, sub: fridge, answers: {} };
 
 describe("flow insight (core rules 2, 4, 5)", () => {
-  it("live counts per picture card; unavailable forms show 0", () => {
-    expect(optionCounts(ctx, q("form"))).toMatchObject({
-      combi: 3,
-      compact: 1,
-      builtin: 0,
-      sbs: 0,
-      single: 0,
+  it("live counts per picture card; sizes nobody stocks show 0", () => {
+    expect(optionCounts(ctx, q("install"))).toEqual({ free: 4, builtin: 0 });
+    expect(optionCounts({ ...ctx, answers: { install: "free" } }, q("size"))).toEqual({
+      h54: 0,
+      h85: 1,
+      h140: 0,
+      h175: 1,
+      h195: 2,
     });
   });
 
   it("pre-selects the answer most products fit", () => {
-    expect(defaultOption(q("form"), optionCounts(ctx, q("form")))).toBe("combi");
+    expect(defaultOption(q("install"), optionCounts(ctx, q("install")))).toBe("free");
+    const size = optionCounts({ ...ctx, answers: { install: "free" } }, q("size"));
+    expect(defaultOption(q("size"), size)).toBe("h195");
   });
 
   it("skips a question the stock cannot answer (no hinge data on built-in fridges)", () => {
-    const builtins = [product({ name: "X", attrs: { form: "builtin", height_cm: 177 } })];
+    const builtins = [product({ name: "X", attrs: { install: "builtin", height_cm: 177 } })];
     expect(
-      questionMatters({ products: builtins, sub: fridge, answers: { form: "builtin" } }, q("hinge")),
+      questionMatters({ products: builtins, sub: fridge, answers: { install: "builtin" } }, q("hinge")),
     ).toBe(false);
   });
 
-  it("keeps questions that change the result", () => {
-    expect(questionMatters({ ...ctx, answers: { form: "combi" } }, q("height"))).toBe(true);
-    expect(questionsThatMatter({ ...ctx, answers: { form: "combi" } }).map((x) => x.id)).toEqual([
-      "form",
-      "height",
+  it("keeps questions that change the result, skips the ones that do not", () => {
+    expect(questionMatters({ ...ctx, answers: { install: "free" } }, q("size"))).toBe(true);
+    expect(questionsThatMatter({ ...ctx, answers: { install: "free" } }).map((x) => x.id)).toEqual([
+      "install",
+      "size",
+      "doors",
       "household",
     ]);
+    // After the 85 cm size only one-door fridges remain: the doors question changes nothing.
+    const small = { ...ctx, answers: { install: "free", size: "h85" } };
+    expect(questionMatters(small, q("doors"))).toBe(false);
   });
 
   it("price stats: histogram of real prices and a middle-60 % default rounded to €10", () => {
-    const s = priceStats({ ...ctx, answers: { form: "combi" } })!;
+    const s = priceStats({ ...ctx, answers: { install: "free", doors: "two" } })!;
     expect(s).toMatchObject({ count: 3, minCents: 40000, maxCents: 60000 });
     expect(s.buckets.reduce((a, b) => a + b, 0)).toBe(3);
     expect(s.defaultMinCents % 1000).toBe(0);

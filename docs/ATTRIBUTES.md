@@ -17,9 +17,9 @@ The catalogue is validated by the Zod schema in `src/domain/catalog/attributes.t
   "accessory": ["piederum", "rezerves daļ", "maisiņ", …],   // name patterns of parts and accessories
   "subcategories": {
     "fridge": {
-      "key":   ["form", "height_cm", "width_cm", …],        // attributes this subcategory uses
-      "fit":   ["form", "height_cm"],                       // fit-critical: missing ⇒ not a pick
-      "enums": { "form": { "values": ["builtin", "sbs", …], "rules": [ … ] } },
+      "key":   ["install", "doors", "height_cm", "width_cm", …], // attributes this subcategory uses
+      "fit":   ["install", "height_cm"],                    // fit-critical: missing ⇒ not a pick
+      "enums": { "doors": { "values": ["multi", "one", "two"], "rules": [ … ] } },
       "defaultFalse": [],                                   // feature flags false unless stated
       "sanity": { "stems": ["ledussk", "fridge", …], "priceEur": [60, 15000] }
     }
@@ -110,7 +110,7 @@ Claude extraction goes through the same merge with source `claude`, so it can on
 `GET /api/status` returns `coverage`: per subcategory, the number of in-stock products from active, non-sample stores, and the percentage that state each `fit` attribute.
 
 ```json
-"coverage": { "fridge": { "products": 412, "fit": { "form": 97, "height_cm": 91 } } }
+"coverage": { "fridge": { "products": 412, "fit": { "install": 99, "height_cm": 91 } } }
 ```
 
 The rollout target per category batch is at least 95 % for every fit attribute (`docs/FILTERS_PLAN.md` §6.6). Products that still lack one are left out of the picks and appear in the "Vēl N precēm…" line on the results page.

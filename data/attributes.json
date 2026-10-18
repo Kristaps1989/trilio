@@ -1013,7 +1013,8 @@
   "subcategories": {
     "fridge": {
       "key": [
-        "form",
+        "install",
+        "doors",
         "height_cm",
         "width_cm",
         "depth_cm",
@@ -1021,10 +1022,11 @@
         "energy_class",
         "noise_db",
         "no_frost",
+        "form",
         "hinge"
       ],
       "fit": [
-        "form",
+        "install",
         "height_cm"
       ],
       "enums": {
@@ -1059,9 +1061,8 @@
               "text": [
                 "side.?by.?side",
                 "french ?door",
-                "divdurvju",
                 "multi.?door",
-                "sbs",
+                "\\bsbs\\b",
                 "cross ?door"
               ]
             },
@@ -1121,7 +1122,8 @@
                 "saldētavu apakšā",
                 "saldētavu augšā",
                 "ar saldētavu",
-                "divkameru"
+                "divkameru",
+                "divdurvju"
               ]
             },
             {
@@ -1132,6 +1134,120 @@
                 },
                 "height_cm": {
                   "gte": 120
+                }
+              }
+            }
+          ]
+        },
+        "install": {
+          "values": [
+            "builtin",
+            "free"
+          ],
+          "rules": [
+            {
+              "value": "builtin",
+              "text": [
+                "iebūvējam",
+                "integrēt",
+                "built-?in",
+                "iebūvēt"
+              ]
+            },
+            {
+              "value": "builtin",
+              "spec": {
+                "uzstādīšana": "iebūv",
+                "instalācijas veids": "iebūv",
+                "ierīces novietojums": "iebūv"
+              }
+            },
+            {
+              "value": "free",
+              "always": true
+            }
+          ]
+        },
+        "doors": {
+          "values": [
+            "multi",
+            "one",
+            "two"
+          ],
+          "rules": [
+            {
+              "value": "multi",
+              "text": [
+                "side.?by.?side",
+                "french ?door",
+                "multi.?door",
+                "\\bsbs\\b",
+                "cross ?door",
+                "četrdurvju",
+                "4 durv"
+              ]
+            },
+            {
+              "value": "multi",
+              "num": {
+                "width_cm": {
+                  "gte": 80
+                }
+              }
+            },
+            {
+              "value": "one",
+              "text": [
+                "bez saldētavas",
+                "vienkameras",
+                "vienas kameras",
+                "bez saldēšanas",
+                "vienas durvis",
+                "ar saldēšanas nodalījumu",
+                "mini ledussk",
+                "minibār",
+                "galda ledussk"
+              ]
+            },
+            {
+              "value": "one",
+              "num": {
+                "height_cm": {
+                  "lte": 100
+                }
+              }
+            },
+            {
+              "value": "two",
+              "text": [
+                "saldētava apakšā",
+                "saldētava augšā",
+                "kombinēt",
+                "apakšējā saldētava",
+                "augšējā saldētava",
+                "saldētavu apakšā",
+                "saldētavu augšā",
+                "divkameru",
+                "divdurvju",
+                "2 durv"
+              ]
+            },
+            {
+              "value": "two",
+              "num": {
+                "freezer_volume_l": {
+                  "gte": 20
+                },
+                "height_cm": {
+                  "gte": 120
+                }
+              }
+            },
+            {
+              "value": "one",
+              "num": {
+                "freezer_volume_l": {
+                  "lte": 0
                 }
               }
             }
@@ -1850,10 +1966,10 @@
     "micro": {
       "key": [
         "install",
+        "height_cm",
         "micro_type",
         "volume_l",
-        "power_w",
-        "height_cm"
+        "power_w"
       ],
       "fit": [
         "install",

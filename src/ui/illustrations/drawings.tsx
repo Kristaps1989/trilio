@@ -2,11 +2,13 @@ import type { ReactElement } from "react";
 
 // Picture-card line drawings. One shared style: single-colour line art on a
 // 96 × 96 box, the <svg> wrapper (Illustration.tsx) sets stroke, width 2 and
-// round caps. Objects stand on an implied ground line at y = 88.
+// round caps. Only the appliance is drawn, plus the furniture it fits into
+// where that matters (cabinet column, worktop, niche). No people, no text: the
+// card label carries the numbers.
 //
-// To-scale families (fridge-*, freezer-*, dish-*, washer-*, dryer-*, place-*
-// except place-home / place-garage) use 0.4 px per cm and carry the same 180 cm
-// person at the right edge as a size reference.
+// Size sets (fridge-h*, freezer-h*, niche-n*, washer-d*, dish-w*, dish-h*,
+// micro-n*) share one scale and one floor within each set, so the sizes can be
+// compared side by side; a thin dimension bracket marks the measured size.
 
 export type Drawing = ReactElement; // the inner SVG content
 
@@ -15,19 +17,11 @@ const tint = { fill: "currentColor", fillOpacity: 0.15 } as const;
 const tintOnly = { fill: "currentColor", fillOpacity: 0.15, stroke: "none" } as const;
 const dashed = { strokeDasharray: "3 3", strokeWidth: 1.5 } as const;
 
+/** Round to 0.1 px so path data stays short. */
+const r1 = (v: number) => Math.round(v * 10) / 10;
+
 // ---------------------------------------------------------------------------
 // Shared fragments
-
-/** 180 cm person (72 px), standing on y = 88 at x ≈ 82–92. */
-function person() {
-  return (
-    <g {...fine}>
-      <circle cx={87} cy={20.5} r={4.5} />
-      <rect x={82.5} y={28} width={9} height={26} rx={3.5} />
-      <path d="M85.2 54V88M88.8 54V88" />
-    </g>
-  );
-}
 
 function dot(cx: number, cy: number, r = 1.1) {
   return <circle cx={cx} cy={cy} r={r} fill="currentColor" stroke="none" />;
@@ -44,73 +38,210 @@ function snowflake(cx: number, cy: number, r: number) {
   );
 }
 
-/** Worktop slab whose top is at counter height 90 cm (y = 52). */
-function worktop(x1: number, x2: number) {
-  return <rect x={x1} y={50} width={x2 - x1} height={4} rx={1} />;
+/** Floor line at y = 88. */
+function floor(x1 = 10, x2 = 86) {
+  return <path {...fine} d={`M${x1} 88H${x2}`} />;
 }
 
-/** Plain base cabinet under the worktop (y 54–88) with a small handle. */
-function baseCabinet(x: number, w: number, handleRight = true) {
+/** Vertical dimension bracket (line with end ticks). */
+function vDim(x: number, y1: number, y2: number) {
+  return <path {...fine} d={`M${x} ${y1}V${y2}M${x - 2.5} ${y1}H${x + 2.5}M${x - 2.5} ${y2}H${x + 2.5}`} />;
+}
+
+/** Horizontal dimension bracket (line with end ticks). */
+function hDim(y: number, x1: number, x2: number) {
+  return <path {...fine} d={`M${x1} ${y}H${x2}M${x1} ${y - 2.5}V${y + 2.5}M${x2} ${y - 2.5}V${y + 2.5}`} />;
+}
+
+/** Base cabinet from `top` down to the floor, with a small handle near the top. */
+function baseCabinet(x: number, w: number, top: number, handleRight = true) {
   const hx = handleRight ? x + w - 4 : x + 4;
   return (
     <>
-      <rect x={x} y={54} width={w} height={34} rx={1} />
-      <path {...fine} d={`M${hx} 58V64`} />
+      <rect x={x} y={top} width={w} height={88 - top} rx={1} />
+      <path {...fine} d={`M${hx} ${top + 4}V${top + 11}`} />
     </>
   );
 }
 
-/** Freestanding washer front, 60 × 85 cm, top-left at (x, 54). */
-function washerBody(x: number, y = 54) {
+/** Kitchen run: worktop (y 40–44) over two base cabinets and a 36 px bay at x 30–66. */
+function kitchenRow(bay: ReactElement) {
   return (
     <>
-      <rect x={x} y={y} width={24} height={34} rx={2} />
-      <path {...fine} d={`M${x} ${y + 6}H${x + 24}`} />
-      <circle {...fine} cx={x + 19} cy={y + 3} r={1.4} />
-      <rect {...fine} x={x + 3.5} y={y + 2} width={6} height={2} rx={0.5} />
-      <circle cx={x + 12} cy={y + 20} r={8.5} />
+      <rect x={6} y={40} width={84} height={4} rx={1} />
+      {baseCabinet(6, 24, 44, true)}
+      {baseCabinet(66, 24, 44, false)}
+      {bay}
     </>
   );
 }
 
-function washerDrum(x: number, y = 54) {
-  return <circle {...fine} cx={x + 12} cy={y + 20} r={5.5} />;
-}
-
-/** Warm-air waves inside a dryer door. */
-function airWaves(cx: number, cy: number) {
-  return (
-    <path {...fine} d={`M${cx - 5} ${cy - 2}q2.5 -2.5 5 0t5 0M${cx - 5} ${cy + 2.5}q2.5 -2.5 5 0t5 0`} />
-  );
-}
-
-/** Freestanding dishwasher front, 60 × 85 cm, top-left at (x, 54). */
-function dishwasherBody(x: number) {
+/** Integrated appliance hidden behind a furniture front in the kitchen bay. */
+function hiddenInBay(top: number, extra?: ReactElement) {
   return (
     <>
-      <rect x={x} y={54} width={24} height={34} rx={2} />
-      <path {...fine} d={`M${x} 60H${x + 24}`} />
-      <rect {...fine} x={x + 3.5} y={56} width={6} height={2} rx={0.5} />
-      {dot(x + 14, 57)}
-      {dot(x + 17.5, 57)}
-      {dot(x + 21, 57)}
-      <path d={`M${x + 7} 64H${x + 17}`} />
-      <path {...fine} d={`M${x + 2} 84H${x + 22}`} />
-    </>
-  );
-}
-
-/** Kitchen tall column (60 × 190 cm) next to a base cabinet, with a hidden appliance. */
-function tallColumn(extra?: ReactElement) {
-  return (
-    <>
-      {worktop(10, 36)}
-      {baseCabinet(12, 24, false)}
-      <rect x={36} y={12} width={24} height={76} rx={1} />
-      <path d="M36 58H60" />
-      <path {...fine} d="M57.5 50V55M57.5 61V66" />
-      <rect {...dashed} x={39} y={15.5} width={15} height={69} rx={1.5} />
+      <rect x={30} y={top} width={36} height={88 - top} rx={1} />
+      <path d={`M42 ${top + 5}H54`} />
+      <rect {...dashed} x={33} y={top + 10} width={30} height={75 - top} rx={1} />
       {extra}
+    </>
+  );
+}
+
+/** Tall kitchen column (x 40–76) next to a worktop and base cabinet, with a hidden appliance. */
+function tallColumn(inside: ReactElement) {
+  return (
+    <>
+      <rect x={8} y={50} width={32} height={4} rx={1} />
+      {baseCabinet(8, 32, 54, false)}
+      <rect x={40} y={6} width={36} height={82} rx={1} />
+      <path d="M40 58H76" />
+      <path {...fine} d="M72.5 46V53M72.5 63V70" />
+      <rect {...dashed} x={44} y={10} width={24} height={74} rx={1.5} />
+      {inside}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Fridges and freezers
+
+/** Size sets for fridges and freezers: 0.4 px per cm, floor at y = 88. */
+const FRIDGE_CM = 0.4;
+const fridgeTop = (cm: number) => r1(88 - cm * FRIDGE_CM);
+
+/** Fridge front from `y` to the floor; `split` is the fridge / freezer join. */
+function fridge(x: number, w: number, y: number, split?: number) {
+  const hx = x + w - 3.5;
+  const h = 88 - y;
+  return (
+    <>
+      <rect x={x} y={y} width={w} height={h} rx={2} />
+      {split ? (
+        <>
+          <path d={`M${x} ${split}H${x + w}`} />
+          <path
+            d={`M${hx} ${r1(split - Math.min(16, (split - y) * 0.4))}V${split - 4}M${hx} ${split + 4}V${r1(split + Math.min(10, (88 - split) * 0.4))}`}
+          />
+        </>
+      ) : (
+        <path d={`M${hx} ${r1(y + h * 0.12)}V${r1(y + h * 0.4)}`} />
+      )}
+    </>
+  );
+}
+
+/** Upright freezer: one door with drawer lines behind it. */
+function freezer(x: number, w: number, y: number) {
+  const n = Math.max(3, Math.round((88 - y) / 12));
+  const step = (88 - y) / n;
+  const lines: string[] = [];
+  for (let i = 1; i < n; i++) lines.push(`M${x + 3} ${r1(y + i * step)}H${x + w - 7}`);
+  return (
+    <>
+      <rect x={x} y={y} width={w} height={88 - y} rx={2} />
+      <path {...fine} d={lines.join("")} />
+      <path d={`M${x + w - 3.5} ${y + 4}V${r1(y + Math.min(14, step * 1.2))}`} />
+    </>
+  );
+}
+
+/** One member of a fridge / freezer size set: floor, appliance, height bracket. */
+function sizeSet(body: ReactElement, y: number) {
+  return (
+    <>
+      {floor(16, 80)}
+      {body}
+      {vDim(68, y, 88)}
+    </>
+  );
+}
+
+/** Built-in niche size set: same column for all, niche drawn at 0.38 px per cm. */
+function nicheColumn(cm: number) {
+  const y = r1(82 - cm * 0.38);
+  return (
+    <>
+      <rect x={28} y={6} width={36} height={82} rx={1} />
+      <rect {...tint} {...fine} x={31} y={y} width={30} height={r1(82 - y)} rx={1} />
+      {y > 24 && <path {...fine} d={`M60 ${r1(y - 11)}V${r1(y - 4)}`} />}
+      {vDim(72, y, 82)}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Washers, dryers, dishwashers
+
+/** Front-loading machine front (washer or dryer), top-left at (x, y). */
+function washerBody(x: number, y: number, w: number, h: number, inside: "drum" | "air") {
+  const p = r1(h * 0.16);
+  const cx = r1(x + w / 2);
+  const cy = r1(y + p + (h - p) / 2);
+  const r = r1(Math.min(w, h - p) * 0.36);
+  const a = r1(r * 0.45);
+  return (
+    <>
+      <rect x={x} y={y} width={w} height={h} rx={2} />
+      <path {...fine} d={`M${x} ${y + p}H${x + w}`} />
+      <rect {...fine} x={x + 4} y={r1(y + p / 2 - 1.5)} width={r1(w * 0.25)} height={3} rx={0.5} />
+      <circle {...fine} cx={x + w - 6} cy={r1(y + p / 2)} r={1.6} />
+      <circle cx={cx} cy={cy} r={r} />
+      {inside === "drum" ? (
+        <circle {...fine} cx={cx} cy={cy} r={r1(r * 0.62)} />
+      ) : (
+        <path
+          {...fine}
+          d={`M${cx - a} ${r1(cy - a * 0.45)}q${a / 2} ${-a / 2} ${a} 0t${a} 0M${cx - a} ${r1(cy + a * 0.55)}q${a / 2} ${-a / 2} ${a} 0t${a} 0`}
+        />
+      )}
+    </>
+  );
+}
+
+/** Washer seen from the side at 0.8 px per cm, 85 cm tall, with a depth bracket. */
+function washerSide(depthCm: number) {
+  const d = r1(depthCm * 0.8);
+  const x1 = r1(51 - d / 2);
+  const x2 = r1(x1 + d);
+  return (
+    <>
+      <rect x={x1} y={12} width={d} height={68} rx={2} />
+      <path {...fine} d={`M${x1} 22H${x2}`} />
+      <path d={`M${x1} 36Q${x1 - 7} 50 ${x1} 64`} />
+      <path {...fine} d={`M${x1 + 4} 80V83M${x2 - 4} 80V83`} />
+      {hDim(89, x1, x2)}
+    </>
+  );
+}
+
+/** Dishwasher front at 0.8 px per cm, 85 cm tall, with a width bracket. */
+function dishFront(widthCm: number) {
+  const w = r1(widthCm * 0.8);
+  const x = r1(48 - w / 2);
+  return (
+    <>
+      <rect x={x} y={12} width={w} height={68} rx={2} />
+      <path {...fine} d={`M${x} 21H${x + w}`} />
+      <rect {...fine} x={x + 4} y={15} width={8} height={3} rx={0.5} />
+      <path d={`M${r1(48 - w * 0.18)} 27H${r1(48 + w * 0.18)}`} />
+      <path {...fine} d={`M${x + 3} 75H${x + w - 3}`} />
+      {hDim(88, x, x + w)}
+    </>
+  );
+}
+
+/** Under-counter niche of height h px between two base cabinets, with a height bracket. */
+function underCounter(h: number) {
+  const y = 88 - h;
+  return (
+    <>
+      <rect x={6} y={y - 4} width={70} height={4} rx={1} />
+      {baseCabinet(6, 16, y, true)}
+      {baseCabinet(60, 16, y, false)}
+      <rect {...tintOnly} x={22} y={y} width={38} height={h} />
+      {floor(22, 60)}
+      {vDim(84, y, 88)}
     </>
   );
 }
@@ -118,7 +249,7 @@ function tallColumn(extra?: ReactElement) {
 // ---------------------------------------------------------------------------
 // Microwave / oven parts
 
-function microwave(x: number, y: number, w: number, h: number, inside?: ReactElement) {
+function microwave(x: number, y: number, w: number, h: number) {
   const pad = h < 20 ? 3 : 5;
   const kx = x + w - 14;
   const keys: ReactElement[] = [];
@@ -137,32 +268,21 @@ function microwave(x: number, y: number, w: number, h: number, inside?: ReactEle
       <path {...fine} d={`M${kx - 4} ${y}V${y + h}`} />
       <rect {...fine} x={kx} y={y + pad} width={9} height={4} rx={1} />
       {keys}
-      {inside}
     </>
   );
 }
 
-function fan(cx: number, cy: number) {
-  const blade = `M${cx} ${cy}c-1.5 -4 0.5 -7.5 4.5 -7.5c0.5 4 -1.5 6.5 -4.5 7.5Z`;
+/** Tall cabinet with a microwave niche of nicheH px (0.8 px per cm) starting at y = 24. */
+function microColumn(nicheH: number, bracket: boolean) {
+  const bottom = 24 + nicheH;
   return (
-    <g {...fine}>
-      <path d={blade} />
-      <path d={blade} transform={`rotate(120 ${cx} ${cy})`} />
-      <path d={blade} transform={`rotate(240 ${cx} ${cy})`} />
-    </g>
-  );
-}
-
-function builtInMicro(nicheTop: number, nicheH: number) {
-  const bottom = nicheTop + nicheH;
-  return (
-    <g>
+    <>
       <rect x={22} y={6} width={48} height={82} rx={1} />
-      <path d={`M22 ${nicheTop}H70M22 ${bottom}H70`} />
-      <path {...fine} d={`M64 ${nicheTop - 9}V${nicheTop - 4}M64 ${bottom + 4}V${bottom + 9}`} />
-      {microwave(25, nicheTop + 2.5, 42, nicheH - 5)}
-      <path {...fine} d={`M80 ${nicheTop}V${bottom}M77 ${nicheTop}H83M77 ${bottom}H83`} />
-    </g>
+      <path d={`M22 24H70M22 ${bottom}H70`} />
+      <path {...fine} d={`M64 13V19M64 ${bottom + 5}V${bottom + 11}`} />
+      {microwave(25, 26.5, 42, nicheH - 5)}
+      {bracket && vDim(78, 24, bottom)}
+    </>
   );
 }
 
@@ -245,101 +365,6 @@ function chimneyHood(left: number, right: number) {
 // ---------------------------------------------------------------------------
 // Misc parts
 
-function plate(cx: number, cy: number) {
-  return (
-    <>
-      <circle cx={cx} cy={cy} r={11} />
-      <circle {...fine} cx={cx} cy={cy} r={6.5} />
-    </>
-  );
-}
-
-function cube(cx: number, cy: number, s: number) {
-  const dx = s * 0.866;
-  const dy = s / 2;
-  return (
-    <>
-      <path
-        {...tint}
-        d={`M${cx} ${cy - s}L${cx + dx} ${cy - dy}L${cx} ${cy}L${cx - dx} ${cy - dy}Z`}
-        strokeWidth={0}
-      />
-      <path
-        d={`M${cx} ${cy - s}L${cx + dx} ${cy - dy}V${cy + dy}L${cx} ${cy + s}L${cx - dx} ${cy + dy}V${cy - dy}Z`}
-      />
-      <path {...fine} d={`M${cx - dx} ${cy - dy}L${cx} ${cy}L${cx + dx} ${cy - dy}M${cx} ${cy}V${cy + s}`} />
-    </>
-  );
-}
-
-function kettleBody() {
-  return (
-    <>
-      <path d="M35 30H61L67 80H29Z" />
-      <path d="M37 30Q48 21 59 30" />
-      <path d="M46 23.5H50" />
-      <path d="M61.5 35H69Q75 35 75 41V64Q75 70 69 70H65.5" />
-      <path d="M34 42L23 33Q21 31.5 21 34.5L32.5 54" />
-      <rect x={25} y={80} width={46} height={8} rx={2} />
-    </>
-  );
-}
-
-function stickBlender(cordless: boolean) {
-  return (
-    <>
-      <rect x={40} y={10} width={16} height={36} rx={7} />
-      <path d="M44 46V74M52 46V74" />
-      <path d="M37 74H59L56 84H40Z" />
-      {cordless ? (
-        <>
-          <rect {...fine} x={45} y={22} width={6} height={12} rx={1} />
-          <path {...fine} d="M47 20.5H49" />
-          <rect {...tintOnly} x={45} y={28} width={6} height={6} />
-        </>
-      ) : (
-        <>
-          {dot(48, 22, 2)}
-          <path {...fine} d="M56 16C70 14 78 20 78 34S70 64 86 86" />
-        </>
-      )}
-    </>
-  );
-}
-
-function carvingKnife(cordless: boolean) {
-  return (
-    <>
-      <rect x={48} y={38} width={38} height={18} rx={8} />
-      <path d="M48 42H16L10 47L16 52H48" />
-      <path {...fine} d="M14 47H48" />
-      <path {...fine} d="M60 44H72" />
-      {cordless ? (
-        <>
-          <rect {...fine} x={60} y={47} width={12} height={5} rx={1} />
-          <path {...fine} d="M73.5 48.5V50.5" />
-          <rect {...tintOnly} x={60} y={47} width={6} height={5} />
-        </>
-      ) : (
-        <path {...fine} d="M82 56C84 70 72 72 70 86" />
-      )}
-    </>
-  );
-}
-
-function sofa() {
-  return (
-    <>
-      <path d="M20 66V54Q20 50 24 50H34" />
-      <path d="M62 50H72Q76 50 76 54V66" />
-      <rect x={10} y={62} width={12} height={20} rx={4} />
-      <rect x={74} y={62} width={12} height={20} rx={4} />
-      <path d="M22 68H74M22 82H74" />
-      <path d="M16 82V87M80 82V87" />
-    </>
-  );
-}
-
 function robotDisc(extra?: ReactElement) {
   return (
     <>
@@ -394,265 +419,47 @@ function dehydrator(trays: number, trayH: number) {
   );
 }
 
-function floorPlan(d: string, inner: string) {
-  return (
-    <>
-      <path d={d} strokeWidth={2.5} />
-      <path {...fine} d={inner} />
-    </>
-  );
-}
-
 // ---------------------------------------------------------------------------
 
 export const DRAWINGS: Record<string, Drawing> = {
-  // ---- Fridges (to scale) -------------------------------------------------
-  "fridge-combi": (
+  // ---- Fridges --------------------------------------------------------------
+  "fridge-free": (
     <g>
-      <rect {...tintOnly} x={28} y={62} width={24} height={26} />
-      <rect x={28} y={14} width={24} height={74} rx={2} />
-      <path d="M28 62H52" />
-      <path d="M48.5 48V57M48.5 66V72" />
-      {person()}
+      {floor()}
+      {fridge(31, 34, 14, 60)}
     </g>
   ),
-  "fridge-single": (
+  "fridge-builtin": <g>{tallColumn(<path {...dashed} d="M44 62H68" />)}</g>,
+
+  // Size set: same scale and floor (0.4 px per cm).
+  "fridge-h54": <g>{sizeSet(fridge(38, 20, fridgeTop(54)), fridgeTop(54))}</g>,
+  "fridge-h85": (
     <g>
-      <rect x={28} y={14} width={24} height={74} rx={2} />
-      <path d="M48.5 30V52" />
-      {person()}
+      <path d="M14 51H61" />
+      {sizeSet(fridge(36, 24, fridgeTop(85)), fridgeTop(85))}
     </g>
   ),
-  "fridge-compact": (
+  "fridge-h140": <g>{sizeSet(fridge(36, 24, fridgeTop(140)), fridgeTop(140))}</g>,
+  "fridge-h175": <g>{sizeSet(fridge(36, 24, fridgeTop(175), 60), fridgeTop(175))}</g>,
+  "fridge-h195": <g>{sizeSet(fridge(36, 24, fridgeTop(195), 58), fridgeTop(195))}</g>,
+
+  // Door layout: same height, the doors and width differ.
+  "fridge-one": <g>{fridge(31, 34, 14)}</g>,
+  "fridge-two": <g>{fridge(31, 34, 14, 60)}</g>,
+  "fridge-multi": (
     <g>
-      <rect x={29} y={54} width={22} height={34} rx={2} />
-      <path d="M47.5 58V68" />
-      {person()}
-    </g>
-  ),
-  "fridge-sbs": (
-    <g>
-      <rect {...tintOnly} x={22} y={17} width={18} height={71} />
-      <rect x={22} y={17} width={36} height={71} rx={2} />
-      <path d="M40 17V88" />
-      <path d="M36.5 36V54M43.5 36V54" />
-      {person()}
-    </g>
-  ),
-  "fridge-builtin": (
-    <g>
-      {tallColumn(<path {...dashed} d="M39 64H54" />)}
-      {person()}
+      <rect x={16} y={14} width={64} height={74} rx={2} />
+      <path d="M48 14V62M16 62H80" />
+      <path d="M44 34V54M52 34V54M40 68H56" />
     </g>
   ),
 
-  // ---- Freezers (to scale) ------------------------------------------------
-  "freezer-upright": (
-    <g>
-      <rect x={28} y={26} width={24} height={62} rx={2} />
-      {snowflake(38, 36, 5)}
-      <path {...fine} d="M31 50H45M31 63H45M31 76H45" />
-      <path d="M48.5 32V44" />
-      {person()}
-    </g>
-  ),
-  "freezer-chest": (
-    <g>
-      <rect x={20} y={54} width={40} height={34} rx={2} />
-      <path d="M20 61H60" />
-      <path d="M35 65H45" />
-      {snowflake(40, 77, 5)}
-      {person()}
-    </g>
-  ),
-  "freezer-builtin": (
-    <g>
-      {tallColumn(snowflake(46.5, 32, 5))}
-      {person()}
-    </g>
-  ),
-
-  // ---- Dishwashers (to scale) ---------------------------------------------
-  "dish-free": (
-    <g>
-      {dishwasherBody(28)}
-      {person()}
-    </g>
-  ),
-  "dish-builtin60": (
-    <g>
-      {worktop(8, 76)}
-      {baseCabinet(8, 22, true)}
-      {baseCabinet(54, 22, false)}
-      <rect x={30} y={54} width={24} height={34} rx={1} />
-      <path d="M37 58H47" />
-      <rect {...dashed} x={32.5} y={61} width={19} height={24.5} rx={1} />
-      {person()}
-    </g>
-  ),
-  "dish-builtin45": (
-    <g>
-      {worktop(11, 73)}
-      {baseCabinet(11, 22, true)}
-      {baseCabinet(51, 22, false)}
-      <rect x={33} y={54} width={18} height={34} rx={1} />
-      <path d="M38 58H46" />
-      <rect {...dashed} x={35.5} y={61} width={13} height={24.5} rx={1} />
-      {person()}
-    </g>
-  ),
-  "dish-full": (
-    <g>
-      {worktop(8, 76)}
-      {baseCabinet(8, 22, true)}
-      {baseCabinet(54, 22, false)}
-      <rect x={30} y={54} width={24} height={34} rx={1} />
-      <path d="M37 58H47" />
-      <rect {...dashed} x={32.5} y={61} width={19} height={24.5} rx={1} />
-      {person()}
-    </g>
-  ),
-  "dish-semi": (
-    <g>
-      {worktop(8, 76)}
-      {baseCabinet(8, 22, true)}
-      {baseCabinet(54, 22, false)}
-      <rect {...tint} x={30} y={54} width={24} height={7} rx={1} />
-      <rect {...fine} x={33} y={56} width={6} height={2.5} rx={0.5} />
-      {dot(44, 57.3)}
-      {dot(47.5, 57.3)}
-      {dot(51, 57.3)}
-      <rect x={30} y={61} width={24} height={27} rx={1} />
-      <path d="M37 65H47" />
-      <rect {...dashed} x={32.5} y={68} width={19} height={17.5} rx={1} />
-      {person()}
-    </g>
-  ),
-  "dish-tabletop": (
-    <g>
-      {worktop(10, 70)}
-      <rect x={14} y={54} width={52} height={34} rx={1} />
-      <path d="M40 54V88" />
-      <path {...fine} d="M36 58V64M44 58V64" />
-      <rect x={29} y={32} width={22} height={18} rx={2} />
-      <path {...fine} d="M29 36H51" />
-      {dot(44, 34)}
-      {dot(47.5, 34)}
-      <path d="M35 40H45" />
-      {person()}
-    </g>
-  ),
-
-  // ---- Washers (to scale) -------------------------------------------------
-  "washer-front": (
-    <g>
-      {washerBody(28)}
-      {washerDrum(28)}
-      {person()}
-    </g>
-  ),
-  "washer-top": (
-    <g>
-      <path d="M32 52L35 45H45L48 52" />
-      <ellipse {...fine} cx={40} cy={48.5} rx={4} ry={1.6} />
-      <rect x={32} y={52} width={16} height={36} rx={2} />
-      <path {...fine} d="M32 58H48" />
-      <circle {...fine} cx={44} cy={55} r={1.3} />
-      <path {...fine} d="M34 84H46" />
-      {person()}
-    </g>
-  ),
-  "washer-combo": (
-    <g>
-      {washerBody(28)}
-      {airWaves(40, 74)}
-      {person()}
-    </g>
-  ),
-
-  // ---- Dryers (to scale) --------------------------------------------------
-  "dryer-heatpump": (
-    <g>
-      {washerBody(28)}
-      <path {...tint} {...fine} d="M35.5 79Q35 69 45.5 67.5Q46 78 35.5 79Z" />
-      <path {...fine} d="M35.5 79L42 72" />
-      {person()}
-    </g>
-  ),
-  "dryer-condenser": (
-    <g>
-      {washerBody(28)}
-      <path {...tint} {...fine} d="M40 66.5Q45 72.5 45 75.5A5 5 0 0 1 35 75.5Q35 72.5 40 66.5Z" />
-      {person()}
-    </g>
-  ),
-  "dryer-side": (
-    <g>
-      {washerBody(15)}
-      {washerDrum(15)}
-      {washerBody(41)}
-      {airWaves(53, 74)}
-      {person()}
-    </g>
-  ),
-  "dryer-stack": (
-    <g>
-      {washerBody(28, 19)}
-      {airWaves(40, 39)}
-      {washerBody(28)}
-      {washerDrum(28)}
-      {person()}
-    </g>
-  ),
-
-  // ---- Washer placement (to scale) ----------------------------------------
-  "place-free": (
-    <g>
-      {washerBody(28)}
-      {washerDrum(28)}
-      {person()}
-    </g>
-  ),
-  "place-under": (
-    <g>
-      {worktop(8, 62)}
-      {baseCabinet(8, 20, true)}
-      {washerBody(30)}
-      {washerDrum(30)}
-      {person()}
-    </g>
-  ),
-  "place-builtin": (
-    <g>
-      {worktop(8, 76)}
-      {baseCabinet(8, 22, true)}
-      {baseCabinet(54, 22, false)}
-      <rect x={30} y={54} width={24} height={34} rx={1} />
-      <path d="M37 58H47" />
-      <rect {...dashed} x={32.5} y={61} width={19} height={24.5} rx={1} />
-      <circle {...dashed} cx={42} cy={73.5} r={7.5} />
-      {person()}
-    </g>
-  ),
-  "place-home": (
-    <g>
-      <path d="M12 48L48 18L84 48" />
-      <path d="M20 42V88H76V42" />
-      <rect x={30} y={66} width={26} height={16} rx={2} />
-      <path {...fine} d="M36 66V82M43 66V82M50 66V82M32 82V86M54 82V86" />
-      <path {...fine} d="M36 60q-2 -3 0 -6t0 -6M43 60q-2 -3 0 -6t0 -6M50 60q-2 -3 0 -6t0 -6" />
-      <path {...fine} d="M62 66H70V88" />
-    </g>
-  ),
-  "place-garage": (
-    <g>
-      <path d="M10 44L48 24L86 44" />
-      <path d="M16 41V88M80 41V88" />
-      <rect x={24} y={52} width={48} height={36} rx={1} />
-      <path {...fine} d="M24 61H72M24 70H72M24 79H72" />
-      {snowflake(48, 37, 5.5)}
-    </g>
-  ),
+  // Built-in niche height: same column, niche at one shared scale.
+  "niche-n88": <g>{nicheColumn(88)}</g>,
+  "niche-n122": <g>{nicheColumn(122)}</g>,
+  "niche-n158": <g>{nicheColumn(158)}</g>,
+  "niche-n178": <g>{nicheColumn(178)}</g>,
+  "niche-n194": <g>{nicheColumn(194)}</g>,
 
   // ---- Built-in fridge hinges (side view) ---------------------------------
   "hinge-fixed": (
@@ -683,6 +490,129 @@ export const DRAWINGS: Record<string, Drawing> = {
       <path {...fine} d="M66 62V74M63.5 64.5L66 62L68.5 64.5M63.5 71.5L66 74L68.5 71.5" />
     </g>
   ),
+
+  // ---- Freezers -------------------------------------------------------------
+  "freezer-upright": (
+    <g>
+      {freezer(30, 36, 12)}
+      {snowflake(46, 18.5, 4)}
+    </g>
+  ),
+  "freezer-chest": (
+    <g>
+      <rect x={14} y={46} width={68} height={42} rx={2} />
+      <path d="M14 55H82" />
+      <path d="M40 60H56" />
+      {snowflake(48, 74, 6)}
+    </g>
+  ),
+  "freezer-builtin": <g>{tallColumn(snowflake(56, 24, 5))}</g>,
+  "freezer-h85": <g>{sizeSet(freezer(36, 24, fridgeTop(85)), fridgeTop(85))}</g>,
+  "freezer-h145": <g>{sizeSet(freezer(36, 24, fridgeTop(145)), fridgeTop(145))}</g>,
+  "freezer-h185": <g>{sizeSet(freezer(36, 24, fridgeTop(185)), fridgeTop(185))}</g>,
+
+  // ---- Washers and dryers ---------------------------------------------------
+  "washer-front": <g>{washerBody(28, 30, 40, 56, "drum")}</g>,
+  "washer-combo": <g>{washerBody(28, 30, 40, 56, "air")}</g>,
+  "washer-top": (
+    <g>
+      <path d="M33 30L37 18H59L63 30" />
+      <ellipse {...fine} cx={48} cy={24} rx={8} ry={2.5} />
+      <rect x={33} y={30} width={30} height={58} rx={2} />
+      <path {...fine} d="M33 38H63" />
+      <circle {...fine} cx={57} cy={34} r={1.6} />
+      <path {...fine} d="M37 82H59" />
+    </g>
+  ),
+  "washer-d40": <g>{washerSide(40)}</g>,
+  "washer-d45": <g>{washerSide(47)}</g>,
+  "washer-d55": <g>{washerSide(58)}</g>,
+  "place-free": (
+    <g>
+      {floor()}
+      {washerBody(28, 32, 40, 56, "drum")}
+    </g>
+  ),
+  "place-under": (
+    <g>
+      <rect x={6} y={40} width={84} height={4} rx={1} />
+      {baseCabinet(6, 36, 44, true)}
+      {washerBody(48, 44, 36, 44, "drum")}
+    </g>
+  ),
+  "place-builtin": <g>{kitchenRow(hiddenInBay(44, <circle {...dashed} cx={48} cy={70} r={9} />))}</g>,
+  "dryer-side": (
+    <g>
+      {washerBody(8, 35, 38, 53, "drum")}
+      {washerBody(50, 35, 38, 53, "air")}
+    </g>
+  ),
+  "dryer-stack": (
+    <g>
+      {washerBody(33, 6, 30, 41, "air")}
+      {washerBody(33, 47, 30, 41, "drum")}
+    </g>
+  ),
+
+  // ---- Dishwashers ----------------------------------------------------------
+  "dish-free": (
+    <g>
+      {floor()}
+      <rect x={28} y={32} width={40} height={56} rx={2} />
+      <path {...fine} d="M28 36H68M28 44H68" />
+      <rect {...fine} x={32} y={38.5} width={8} height={3} rx={0.5} />
+      {dot(56, 40)}
+      {dot(60, 40)}
+      {dot(64, 40)}
+      <path d="M41 50H55" />
+      <path {...fine} d="M31 83H65" />
+    </g>
+  ),
+  "dish-builtin": (
+    <g>
+      {kitchenRow(
+        <>
+          <rect x={30} y={44} width={36} height={44} rx={1} />
+          <path {...fine} d="M30 51H66" />
+          <rect {...fine} x={33} y={46} width={8} height={3} rx={0.5} />
+          <path d="M42 56H54" />
+          <path {...fine} d="M33 84H63" />
+        </>,
+      )}
+    </g>
+  ),
+  "dish-full": <g>{kitchenRow(hiddenInBay(44))}</g>,
+  "dish-semi": (
+    <g>
+      {kitchenRow(
+        <>
+          <rect {...tint} x={30} y={44} width={36} height={8} rx={1} />
+          <rect {...fine} x={33} y={46.5} width={8} height={3} rx={0.5} />
+          {dot(54, 48)}
+          {dot(58, 48)}
+          {dot(62, 48)}
+          {hiddenInBay(52)}
+        </>,
+      )}
+    </g>
+  ),
+  "dish-tabletop": (
+    <g>
+      <rect x={8} y={56} width={80} height={4} rx={1} />
+      <rect x={10} y={60} width={76} height={28} rx={1} />
+      <path d="M48 60V88" />
+      <path {...fine} d="M44 64V70M52 64V70" />
+      <rect x={30} y={26} width={36} height={30} rx={2} />
+      <path {...fine} d="M30 33H66" />
+      <rect {...fine} x={33} y={28} width={7} height={3} rx={0.5} />
+      <path d="M42 39H54" />
+    </g>
+  ),
+  "dish-w45": <g>{dishFront(45)}</g>,
+  "dish-w60": <g>{dishFront(60)}</g>,
+  // Under-counter niche height; the 4 cm gap is drawn a little larger so it reads.
+  "dish-h82": <g>{underCounter(46)}</g>,
+  "dish-h86": <g>{underCounter(56)}</g>,
 
   // ---- Hobs ---------------------------------------------------------------
   "hob-ceramic": (
@@ -814,7 +744,7 @@ export const DRAWINGS: Record<string, Drawing> = {
   "oven-std": <g>{builtInOven(28)}</g>,
   "oven-compact": <g>{builtInOven(43)}</g>,
 
-  // ---- Microwaves ---------------------------------------------------------
+  // ---- Microwaves -----------------------------------------------------------
   "micro-free": (
     <g>
       <path d="M4 88H92" />
@@ -822,22 +752,10 @@ export const DRAWINGS: Record<string, Drawing> = {
       <path {...fine} d="M18 84V88M74 84V88" />
     </g>
   ),
-  "micro-solo": <g>{microwave(10, 44, 76, 44)}</g>,
-  "micro-grill": (
-    <g>
-      {microwave(
-        10,
-        44,
-        76,
-        44,
-        <path {...fine} d="M19 56L23 53L27 56L31 53L35 56L39 53L43 56L47 53L51 56L55 53" />,
-      )}
-    </g>
-  ),
-  "micro-combi": <g>{microwave(10, 44, 76, 44, fan(37, 66))}</g>,
-  "micro-builtin38": <g>{builtInMicro(32, 20)}</g>,
-  "micro-builtin45": <g>{builtInMicro(28, 30)}</g>,
-
+  "micro-builtin": <g>{microColumn(30, false)}</g>,
+  // Niche height at 0.8 px per cm.
+  "micro-n38": <g>{microColumn(30.4, true)}</g>,
+  "micro-n45": <g>{microColumn(36, true)}</g>,
   // ---- Mini ovens ---------------------------------------------------------
   "minioven-plain": <g>{miniOven(12, 40, 72, 48)}</g>,
   "minioven-hob": (
@@ -845,42 +763,6 @@ export const DRAWINGS: Record<string, Drawing> = {
       <rect x={18} y={35} width={22} height={5} rx={2} />
       <rect x={46} y={35} width={22} height={5} rx={2} />
       {miniOven(12, 40, 72, 48)}
-    </g>
-  ),
-  "minioven-small": (
-    <g>
-      {miniOven(
-        18,
-        44,
-        60,
-        44,
-        <>
-          <path {...fine} d="M23 77H59" />
-          <ellipse {...tint} {...fine} cx={41} cy={71} rx={13} ry={4.5} />
-          {dot(36, 70)}
-          {dot(44, 72)}
-          {dot(46, 69.5)}
-        </>,
-      )}
-    </g>
-  ),
-  "minioven-big": (
-    <g>
-      {miniOven(
-        8,
-        24,
-        80,
-        64,
-        <>
-          <path {...fine} d="M13 78H67" />
-          <path {...tint} {...fine} d="M24 77Q22 61 40 60Q58 61 56 77Z" />
-          <ellipse {...tint} {...fine} cx={27} cy={66} rx={7} ry={4.5} transform="rotate(-40 27 66)" />
-          <ellipse {...tint} {...fine} cx={53} cy={66} rx={7} ry={4.5} transform="rotate(40 53 66)" />
-          <path {...fine} d="M23 61L19 56.5M57 61L61 56.5" />
-          <circle {...fine} cx={17.5} cy={55.5} r={1.8} />
-          <circle {...fine} cx={62.5} cy={55.5} r={1.8} />
-        </>,
-      )}
     </g>
   ),
 
@@ -920,27 +802,6 @@ export const DRAWINGS: Record<string, Drawing> = {
       <path d="M36 54L18 60" strokeWidth={3.5} />
       <path d="M37 70H47V76Q47 79 44 79H40Q37 79 37 76Z" />
       <path {...fine} d="M30 82H56" />
-    </g>
-  ),
-  "coffee-black": (
-    <g>
-      <path {...fine} d="M44 44q-3 -4 0 -8t0 -8M52 44q-3 -4 0 -8t0 -8" />
-      <path d="M34 52H62V62Q62 74 48 74Q34 74 34 62Z" />
-      <path {...tintOnly} d="M35 55H61V62Q61 72 48 72Q35 72 35 62Z" />
-      <path d="M62 56Q70 56 70 61Q70 66 61 66" />
-      <path d="M24 78H72" />
-    </g>
-  ),
-  "coffee-milk": (
-    <g>
-      <path d="M32 18L36 86H60L64 18" />
-      <path {...fine} d="M33 30H63" />
-      <path {...tintOnly} d="M34.2 56H61.8L60 86H36Z" />
-      <path {...fine} d="M34 56Q41 52 48 56T62 56" />
-      {dot(42, 24)}
-      {dot(50, 22.5)}
-      {dot(56, 25.5)}
-      <path {...fine} d="M44 12L52 76" />
     </g>
   ),
 
@@ -988,10 +849,6 @@ export const DRAWINGS: Record<string, Drawing> = {
       <path {...fine} d="M40 32Q44 30 48 32T56 32" />
     </g>
   ),
-  "handblender-cord": <g>{stickBlender(false)}</g>,
-  "handblender-cordless": <g>{stickBlender(true)}</g>,
-  "knife-cord": <g>{carvingKnife(false)}</g>,
-  "knife-cordless": <g>{carvingKnife(true)}</g>,
 
   // ---- Food processors / mixers -------------------------------------------
   "foodproc-stand": (
@@ -1072,32 +929,6 @@ export const DRAWINGS: Record<string, Drawing> = {
     </g>
   ),
 
-  // ---- Kettles ------------------------------------------------------------
-  "kettle-steel": (
-    <g>
-      {kettleBody()}
-      <path {...fine} d="M41 36L38 72" />
-    </g>
-  ),
-  "kettle-glass": (
-    <g>
-      {kettleBody()}
-      <path {...tintOnly} d="M31.7 54H64.3L67 80H29Z" />
-      <path {...fine} d="M32 54Q40 51 48 54T64 54" />
-      <circle {...fine} cx={44} cy={68} r={1.5} />
-      <circle {...fine} cx={52} cy={62} r={1.2} />
-      <circle {...fine} cx={48} cy={74} r={1.2} />
-    </g>
-  ),
-  "kettle-temp": (
-    <g>
-      {kettleBody()}
-      <circle cx={48} cy={56} r={8} />
-      <path {...fine} d="M48 56L52.5 51.5M42 60.5H54" />
-      {dot(48, 56, 1.3)}
-    </g>
-  ),
-
   // ---- Toasters, grills, sandwich makers ----------------------------------
   "toaster-2": <g>{toaster(26, 70, 2)}</g>,
   "toaster-4": <g>{toaster(12, 82, 4)}</g>,
@@ -1116,30 +947,12 @@ export const DRAWINGS: Record<string, Drawing> = {
   ),
   "grill-plate": (
     <g>
-      <rect x={8} y={52} width={80} height={6} rx={3} />
-      <rect {...tint} {...fine} x={20} y={46} width={14} height={6} rx={3} />
-      <rect {...tint} {...fine} x={40} y={46} width={18} height={6} rx={3} />
-      <circle {...tint} {...fine} cx={68} cy={48.5} r={3.5} />
-      <rect x={16} y={58} width={64} height={24} rx={3} />
-      <path {...fine} d="M24 68H40V72H24ZM56 68H72V72H56Z" />
-      <path {...fine} d="M22 82V88M74 82V88" />
-    </g>
-  ),
-  "sandwich-sand": (
-    <g>
-      <rect x={8} y={26} width={39} height={46} rx={4} />
-      <rect x={49} y={26} width={39} height={46} rx={4} />
-      <path {...fine} d="M13 31H42V67H13ZM13 31L42 67M54 31H83V67H54ZM54 31L83 67" />
-      <path d="M22 72V82H33V72M63 72V82H74V72" />
-    </g>
-  ),
-  "sandwich-multi": (
-    <g>
-      <rect x={8} y={26} width={39} height={46} rx={4} />
-      <rect x={49} y={26} width={39} height={46} rx={4} />
-      <path {...fine} d="M13 31H42V67H13ZM20 31V67M27.5 31V67M35 31V67M13 40H42M13 49H42M13 58H42" />
-      <path {...fine} d="M54 36H83M54 44H83M54 52H83M54 60H83" />
-      <path d="M22 72V82H33V72M63 72V82H74V72" />
+      <path d="M18 48H78L88 68H8Z" />
+      <path d="M48 48V68" />
+      <path {...fine} d="M23.2 50L16.8 66M29.4 50L24.6 66M35.6 50L32.4 66M41.8 50L40.2 66" />
+      <path d="M8 68V78Q8 82 12 82H84Q88 82 88 78V68" />
+      <circle {...fine} cx={78} cy={75} r={3} />
+      <path {...fine} d="M16 82V86M80 82V86" />
     </g>
   ),
 
@@ -1181,11 +994,13 @@ export const DRAWINGS: Record<string, Drawing> = {
   ),
   "iron-station": (
     <g>
-      <rect x={8} y={70} width={80} height={18} rx={5} />
-      <rect {...tint} {...fine} x={56} y={75} width={24} height={8} rx={2} />
-      <path d="M14 70Q18 56 36 55H58V70" />
-      <path d="M32 55Q34 42 44 42H58Q61 42 60 47L58 55" />
-      <path {...fine} d="M58 48Q76 44 82 58Q84 64 80 70" />
+      <path d="M12 56Q18 40 36 38H60V56Z" />
+      <path d="M34 38Q36 24 48 24H58Q62 24 61 30L60 38" />
+      <path {...fine} d="M60 46Q78 44 78 58" />
+      <rect x={8} y={58} width={80} height={30} rx={6} />
+      <rect {...fine} x={56} y={66} width={24} height={14} rx={2} />
+      <path {...fine} d="M56 72H80" />
+      <circle {...fine} cx={20} cy={73} r={3} />
     </g>
   ),
   "steamer-hand": (
@@ -1226,11 +1041,14 @@ export const DRAWINGS: Record<string, Drawing> = {
   ),
   "steamclean-hand": (
     <g>
-      <path d="M36 42Q36 28 50 28H62Q70 28 70 36V42" />
-      <rect x={30} y={42} width={44} height={36} rx={8} />
-      <rect {...tintOnly} x={33} y={60} width={38} height={15} rx={5} />
-      <path d="M30 56H20L14 58V62L20 64H30" />
-      <path {...fine} d="M10 50q-3 -3 0 -6M8 62q-3 -3 0 -6M10 74q-3 -3 0 -6" />
+      <path d="M48 46V36Q48 28 56 28H68Q76 28 76 36V46" />
+      <path {...fine} d="M56 36H68" />
+      <rect x={42} y={46} width={40} height={40} rx={8} />
+      <rect {...fine} x={50} y={60} width={24} height={18} rx={3} />
+      <path {...fine} d="M50 68H74" />
+      <path d="M42 56L22 60V68L42 72" />
+      <rect x={10} y={58} width={12} height={12} rx={2} />
+      <path {...fine} d="M10 74V78M14 74V78M18 74V78M22 74V78" />
     </g>
   ),
   "steamclean-mop": (
@@ -1241,26 +1059,6 @@ export const DRAWINGS: Record<string, Drawing> = {
       <rect {...tintOnly} x={44} y={44} width={10} height={10} rx={3} transform="rotate(15 49 44)" />
       <path d="M46 56L42 78" />
       <path d="M20 80H66Q70 80 70 84V88H16V84Q16 80 20 80Z" />
-      <path {...fine} d="M12 74q-3 -3 0 -6M78 74q3 -3 0 -6" />
-    </g>
-  ),
-
-  // ---- Scales -------------------------------------------------------------
-  "scale-kitchen": (
-    <g>
-      <path d="M26 62Q26 44 48 44Q70 44 70 62" />
-      <rect x={12} y={62} width={72} height={6} rx={3} />
-      <rect x={16} y={68} width={64} height={16} rx={2} />
-      <rect {...fine} x={38} y={72} width={20} height={8} rx={1.5} />
-      <path {...fine} d="M20 84V88M76 84V88" />
-    </g>
-  ),
-  "scale-precise": (
-    <g>
-      <path {...fine} d="M40 70Q40 64 48 64Q56 64 56 70" />
-      <rect x={34} y={70} width={28} height={4} rx={2} />
-      <rect x={32} y={74} width={32} height={14} rx={2} />
-      <rect {...fine} x={42} y={77} width={12} height={6} rx={1} />
     </g>
   ),
 
@@ -1295,85 +1093,6 @@ export const DRAWINGS: Record<string, Drawing> = {
           <path {...tint} {...fine} d="M62 38Q66 44 66 46.5A4 4 0 0 1 58 46.5Q58 44 62 38Z" />
         </>,
       )}
-    </g>
-  ),
-
-  // ---- Pets, portions, area, uses -----------------------------------------
-  "pets-yes": (
-    <g>
-      {sofa()}
-      <path d="M36 68Q34 56 40 52M60 68Q62 56 56 52" />
-      <path d="M36 50L34 32L42 38H54L62 32L60 50Q60 58 48 58Q36 58 36 50Z" />
-      {dot(43, 46, 1.4)}
-      {dot(53, 46, 1.4)}
-      <path {...fine} d="M46.5 50.5H49.5L48 52Z" />
-      <path {...fine} d="M38 52L28 51M38 54L29 56M58 52L68 51M58 54L67 56" />
-    </g>
-  ),
-  "pets-no": (
-    <g>
-      {sofa()}
-      <path d="M34 50H62" />
-      <rect {...fine} x={28} y={54} width={18} height={14} rx={4} />
-    </g>
-  ),
-  "portions-2": (
-    <g>
-      {plate(32, 48)}
-      {plate(64, 48)}
-    </g>
-  ),
-  "portions-4": (
-    <g>
-      {plate(32, 34)}
-      {plate(64, 34)}
-      {plate(32, 62)}
-      {plate(64, 62)}
-    </g>
-  ),
-  "portions-6": (
-    <g>
-      {plate(20, 34)}
-      {plate(48, 34)}
-      {plate(76, 34)}
-      {plate(20, 62)}
-      {plate(48, 62)}
-      {plate(76, 62)}
-    </g>
-  ),
-  "area-small": <g>{floorPlan("M30 30H66V66H30Z", "M30 56A10 10 0 0 1 40 66")}</g>,
-  "area-mid": (
-    <g>{floorPlan("M16 24H80V72H16Z", "M48 24V42M48 52V72M48 52H58M68 52H80M16 62A10 10 0 0 1 26 72")}</g>
-  ),
-  "area-big": (
-    <g>
-      {floorPlan(
-        "M8 10H88V86H8Z",
-        "M36 10V30M36 40V60M8 48H24M30 48H36M36 60V86M60 10V26M60 36V50H76M82 50H88M60 50V70M60 78V86M36 70H48M54 70H60",
-      )}
-    </g>
-  ),
-  "use-ice": (
-    <g>
-      {cube(48, 36, 13)}
-      {cube(31, 66, 13)}
-      {cube(65, 66, 13)}
-    </g>
-  ),
-  "use-smoothie": (
-    <g>
-      <path d="M30 28H66L61 86H35Z" />
-      <path {...tintOnly} d="M31.6 40H64.4L61 86H35Z" />
-      <path {...fine} d="M31.5 40Q40 37 48 40T64.5 40" />
-      <path d="M50 76L58 12H68" />
-    </g>
-  ),
-  "use-soup": (
-    <g>
-      <path {...fine} d="M38 44q-4 -5 0 -10t0 -10M48 42q-4 -5 0 -10t0 -10M58 44q-4 -5 0 -10t0 -10" />
-      <path d="M16 54H80Q78 80 48 80Q18 80 16 54Z" />
-      <path {...tintOnly} d="M18 56H78Q76 66 70 70H26Q20 66 18 56Z" />
-      <path d="M38 80V86H58V80" />
     </g>
   ),
 };

@@ -16,7 +16,7 @@ Every subcategory's questions are data. The page that renders a question never k
           "label": "Ledusskapji",
           "description": "brīvi stāvoši un iebūvējami",
           "budget_steps_eur": [500, 800, 1200],  // price presets, ascending
-          "compare": ["form", "height_cm", "volume_l", "energy_class", …],
+          "compare": ["install", "doors", "height_cm", "volume_l", "energy_class", …],
           "questions": [ /* Question[] */ ]
         }
       ]
@@ -41,7 +41,7 @@ Every subcategory's questions are data. The page that renders a question never k
 
 | Field | Type | Meaning |
 |---|---|---|
-| `id` | string, unique within the subcategory | Answer key, descriptive (`form`, `niche`, `household`). `budget` is reserved for the price screen. |
+| `id` | string, unique within the subcategory | Answer key, descriptive (`install`, `size`, `doors`, `household`). `budget` is reserved for the price screen. |
 | `title` | string | The question, Latvian, informal "tu". |
 | `why` | string \| null | Shown under "Kāpēc jautājam:". |
 | `type` | `"single"` \| `"multi"` \| `"number"` \| `"range"`, default `single` | Single choice pre-selects a default and auto-advances. Range and number questions have no options. |

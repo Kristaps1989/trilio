@@ -6,6 +6,7 @@ import AxeBuilder from "@axe-core/playwright";
 // default answers; this file covers the specific interactions.
 
 async function expectNoAxeViolations(page: Page) {
+  await expect(page).toHaveTitle(/.+/); // a client navigation sets the title a moment later
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 }
@@ -19,6 +20,19 @@ async function next(page: Page) {
   await expect(h1(page)).not.toHaveText(title);
 }
 const picks = (page: Page) => page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
+
+/** A picture card: tapping it selects and moves on to the next screen. */
+async function choose(page: Page, name: RegExp) {
+  const title = (await h1(page).textContent()) ?? "";
+  await page.getByRole("radio", { name }).click();
+  await expect(h1(page)).not.toHaveText(title);
+}
+
+/** Take the pre-selected answers until the price screen. */
+async function toPrice(page: Page) {
+  for (let i = 0; i < 8 && (await h1(page).textContent()) !== "Cik vēlies tērēt?"; i++) await next(page);
+  await expect(h1(page)).toHaveText("Cik vēlies tērēt?");
+}
 
 async function priceOf(card: ReturnType<Page["locator"]>): Promise<number> {
   return Number(await card.locator("[data-price-cents]").first().getAttribute("data-price-cents")) / 100;
@@ -42,25 +56,23 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   await expect(h1(page)).toHaveText("Izvēlies precīzāk");
   await page.getByRole("link", { name: /^Ledusskapji brīvi/ }).click();
 
-  // Picture cards: the most common kind is pre-selected and each card says how many fit.
-  await expect(h1(page)).toHaveText("Kāds ledusskapis tev vajadzīgs?");
-  const standard = page.getByRole("radio", { name: /^Standarta/ });
-  await expect(standard).toHaveAttribute("aria-checked", "true");
-  await expect(standard).toContainText(/\d+ preces/);
+  // Freestanding or built-in: picture cards, the most common pre-selected, each with a live count.
+  await expect(h1(page)).toHaveText("Brīvi stāvošs vai iebūvējams?");
+  const free = page.getByRole("radio", { name: /^Brīvi stāvošs/ });
+  await expect(free).toHaveAttribute("aria-checked", "true");
+  await expect(free).toContainText(/\d+ preces/);
   await expectNoAxeViolations(page);
   await next(page);
 
-  // Height: "has a limit", then the slider by keyboard to 178 cm.
-  await expect(h1(page)).toHaveText("Cik augsts var būt ledusskapis?");
-  await page.getByRole("radio", { name: /Ir ierobežojums/ }).click();
-  const slider = page.getByRole("slider");
-  await expect(slider).toHaveValue("186");
-  await slider.focus();
-  for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowLeft");
-  await expect(slider).toHaveValue("178");
-  await expect(page.getByText(/^Atbilst \d+ prec/)).toBeVisible();
+  // Height as sizes people know; the owner's "up to 178 cm" is the 166–180 cm card.
+  await expect(h1(page)).toHaveText("Cik augstam jābūt?");
+  for (const size of [/^~54 cm/, /^~85 cm/, /^125–160 cm/, /^166–180 cm/, /^181–205 cm/])
+    await expect(page.getByRole("radio", { name: size })).toBeVisible();
   await expectNoAxeViolations(page);
-  await next(page);
+  await choose(page, /^166–180 cm/);
+
+  await expect(h1(page)).toHaveText("Cik durvju?");
+  await choose(page, /^Divas durvis/);
 
   await expect(h1(page)).toHaveText("Cik cilvēku ir tavā mājsaimniecībā?");
   await next(page);
@@ -80,15 +92,15 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   await expect(picks(page).first()).toBeVisible();
   for (const card of await picks(page).all()) {
     expect(await heightOf(card)).toBeGreaterThanOrEqual(150);
-    expect(await heightOf(card)).toBeLessThanOrEqual(178.5);
+    expect(await heightOf(card)).toBeLessThanOrEqual(180.5);
     const text = (await card.textContent()) ?? "";
     expect(await priceOf(card)).toBeGreaterThanOrEqual(350);
     if (!/Virs budžeta par/.test(text)) expect(await priceOf(card)).toBeLessThanOrEqual(500);
   }
   // The choices are chips that say what was asked.
   const chips = page.getByRole("navigation", { name: "Tavas izvēles" });
-  await expect(chips.getByRole("button", { name: "Augstums: līdz 178 cm" })).toBeVisible();
-  await expect(chips.getByRole("button", { name: /^Standarta$/ })).toBeVisible();
+  await expect(chips.getByRole("button", { name: /166–180 cm/ })).toBeVisible();
+  await expect(chips.getByRole("button", { name: /Divas durvis/ })).toBeVisible();
   // Fewer than three would offer the smallest changes ("+ N varianti, ja …") instead of a dead end.
   if ((await picks(page).count()) < 3) await expect(page.getByText(/\+ \d+ variant/).first()).toBeVisible();
   await expectNoAxeViolations(page);
@@ -97,8 +109,9 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
 test("results: compare table, refurbished block and the affiliate redirect", async ({ page }) => {
   await page.goto("/izvelies/cool/fridge");
   await next(page);
-  await next(page);
-  await next(page);
+  // The tallest size: the sample data has a refurbished Bosch of 203 cm.
+  await choose(page, /^181–205 cm/);
+  await toPrice(page);
   await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
   await expect(page).toHaveURL(/\/rezultati\?sub=fridge/);
   await expect(picks(page)).toHaveCount(3);
@@ -123,29 +136,25 @@ test("results: compare table, refurbished block and the affiliate redirect", asy
 test("results: a chip opens a sheet that edits the filter in place", async ({ page }) => {
   await page.goto("/izvelies/cool/fridge");
   await next(page);
-  await page.getByRole("radio", { name: /Ir ierobežojums/ }).click();
-  await next(page);
-  await next(page);
+  await choose(page, /^166–180 cm/);
+  await toPrice(page);
   await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
   await expect(page).toHaveURL(/\/rezultati\?sub=fridge/);
   const url = page.url();
 
   const chips = page.getByRole("navigation", { name: "Tavas izvēles" });
-  await chips.getByRole("button", { name: "Augstums: līdz 186 cm" }).click();
-  const sheet = page.getByRole("dialog", { name: "Cik augsts var būt ledusskapis?" });
+  await chips.getByRole("button", { name: /166–180 cm/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Cik augstam jābūt?" });
   await expect(sheet).toBeVisible();
   await expectNoAxeViolations(page);
-  const slider = sheet.getByRole("slider");
-  await slider.focus();
-  for (let i = 0; i < 6; i++) await page.keyboard.press("ArrowLeft");
-  await expect(slider).toHaveValue("180");
+  await sheet.getByRole("radio", { name: /^181–205 cm/ }).click();
   const apply = sheet.getByRole("button", { name: /^Rādīt \d+ rezultāt/ });
   await expect(apply).toBeEnabled();
   await apply.click();
 
   await expect(page).not.toHaveURL(url);
-  await expect(chips.getByRole("button", { name: "Augstums: līdz 180 cm" })).toBeVisible();
-  for (const card of await picks(page).all()) expect(await heightOf(card)).toBeLessThanOrEqual(180.5);
+  await expect(chips.getByRole("button", { name: /181–205 cm/ })).toBeVisible();
+  for (const card of await picks(page).all()) expect(await heightOf(card)).toBeGreaterThan(180);
 
   // Cancel leaves everything as it was.
   await chips.getByRole("button", { name: /Jebkura cena/ }).click();
@@ -156,9 +165,7 @@ test("results: a chip opens a sheet that edits the filter in place", async ({ pa
 
 test("price screen: an empty range is never a dead end", async ({ page }) => {
   await page.goto("/izvelies/cool/fridge");
-  await next(page);
-  await next(page);
-  await next(page);
+  await toPrice(page);
   await expect(h1(page)).toHaveText("Cik vēlies tērēt?");
   // Both ends at the cheapest price in stock: usually nothing fits exactly.
   const min = page.getByRole("textbox", { name: "Zemākā cena, eiro" });

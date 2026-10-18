@@ -17,78 +17,36 @@
           ],
           "questions": [
             {
-              "id": "form",
-              "title": "Kāds ledusskapis tev vajadzīgs?",
+              "id": "install",
+              "title": "Brīvi stāvošs vai iebūvējams?",
               "type": "single",
               "hard_filter": true,
               "stage": "flow",
               "up_front_reason": "fit",
-              "help": "Iebūvējams ledusskapis ir paslēpts aiz virtuves mēbeļu durvīm, un tam priekšā ir tāda pati fasāde kā skapjiem. Brīvi stāvošs ledusskapis redzams pilnībā, un to var pārvietot. Divdurvju ledusskapji ir ~90 cm plati — pārbaudi, vai tas izies pa durvīm.",
+              "help": "Iebūvējama ierīce ir paslēpta aiz virtuves mēbeļu durvīm, un tai priekšā ir tāda pati fasāde kā skapjiem. Brīvi stāvoša ierīce redzama pilnībā, un to var pārvietot.",
               "options": [
                 {
-                  "value": "combi",
-                  "label": "Standarta",
-                  "sublabel": "ar saldētavu, 170–205 cm",
-                  "table_value": "Ar saldētavu",
+                  "value": "free",
+                  "label": "Brīvi stāvošs",
+                  "sublabel": "redzams pilnībā, var pārvietot",
+                  "table_value": "Brīvi stāvošs",
                   "match": [
                     {
-                      "attr": "form",
-                      "eq": "combi"
+                      "attr": "install",
+                      "eq": "free"
                     }
                   ],
-                  "illustration": "fridge-combi"
-                },
-                {
-                  "value": "compact",
-                  "label": "Mazs",
-                  "sublabel": "zem darba virsmas, ~85 cm",
-                  "card_reason": "Kompakts — ietilpst zem virsmas",
-                  "table_value": "Mazs (~85 cm)",
-                  "match": [
-                    {
-                      "attr": "form",
-                      "eq": "compact"
-                    }
-                  ],
-                  "illustration": "fridge-compact"
-                },
-                {
-                  "value": "single",
-                  "label": "Bez saldētavas",
-                  "sublabel": "viss tilpums dzesēšanai",
-                  "card_reason": "Bez saldētavas — vairāk vietas dzesēšanai",
-                  "table_value": "Bez saldētavas",
-                  "match": [
-                    {
-                      "attr": "form",
-                      "eq": "single"
-                    }
-                  ],
-                  "illustration": "fridge-single"
-                },
-                {
-                  "value": "sbs",
-                  "label": "Divdurvju",
-                  "sublabel": "Side-by-Side vai French Door, ~90 cm plats",
-                  "card_reason": "Divdurvju — liels tilpums",
-                  "table_value": "Divdurvju",
-                  "match": [
-                    {
-                      "attr": "form",
-                      "eq": "sbs"
-                    }
-                  ],
-                  "illustration": "fridge-sbs"
+                  "illustration": "fridge-free"
                 },
                 {
                   "value": "builtin",
                   "label": "Iebūvējams",
                   "sublabel": "aiz virtuves skapja durvīm",
-                  "card_reason": "Iebūvējams — der standarta nišai",
+                  "card_reason": "Iebūvējams — der virtuves nišai",
                   "table_value": "Iebūvējams",
                   "match": [
                     {
-                      "attr": "form",
+                      "attr": "install",
                       "eq": "builtin"
                     }
                   ],
@@ -97,61 +55,226 @@
               ]
             },
             {
-              "id": "height",
-              "title": "Cik augsts var būt ledusskapis?",
-              "type": "range",
+              "id": "size",
+              "title": "Cik augstam jābūt?",
+              "type": "single",
               "hard_filter": true,
               "stage": "flow",
               "up_front_reason": "fit",
-              "why": "Pārbaudi vietu zem augšējā skapīša vai slīpajiem griestiem.",
+              "why": "Izmēri ir ierīces augstums. Pārbaudi vietu zem augšējā skapīša vai slīpajiem griestiem.",
               "showIf": {
-                "q": "form",
+                "q": "install",
                 "in": [
-                  "combi",
-                  "single",
-                  "sbs"
+                  "free"
                 ]
               },
-              "range": {
-                "attr": "height_cm",
-                "unit": "cm",
-                "min": 120,
-                "max": 210,
-                "step": 1,
-                "bound": "max",
-                "presets": [
-                  186,
-                  200
-                ],
-                "toleranceAbove": 0.5
-              },
-              "options": []
+              "options": [
+                {
+                  "value": "h54",
+                  "label": "~54 cm",
+                  "sublabel": "mini, uz galda vai plaukta",
+                  "card_reason": "Mini — ~54 cm",
+                  "table_value": "~54 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "lte": 65
+                    }
+                  ],
+                  "illustration": "fridge-h54"
+                },
+                {
+                  "value": "h85",
+                  "label": "~85 cm",
+                  "sublabel": "zem darba virsmas",
+                  "card_reason": "Ietilpst zem darba virsmas",
+                  "table_value": "~85 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 65.1,
+                      "lte": 100
+                    }
+                  ],
+                  "illustration": "fridge-h85"
+                },
+                {
+                  "value": "h140",
+                  "label": "125–160 cm",
+                  "sublabel": "vidēja augstuma",
+                  "table_value": "125–160 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 100.1,
+                      "lte": 165
+                    }
+                  ],
+                  "illustration": "fridge-h140"
+                },
+                {
+                  "value": "h175",
+                  "label": "166–180 cm",
+                  "sublabel": "augsts, līdz 180 cm",
+                  "table_value": "166–180 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 165.1,
+                      "lte": 180.5
+                    }
+                  ],
+                  "illustration": "fridge-h175"
+                },
+                {
+                  "value": "h195",
+                  "label": "181–205 cm",
+                  "sublabel": "ļoti augsts, lielākais tilpums",
+                  "card_reason": "Liels — virs 180 cm",
+                  "table_value": "181–205 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 180.6
+                    }
+                  ],
+                  "illustration": "fridge-h195"
+                }
+              ]
             },
             {
               "id": "niche",
               "title": "Cik augsta ir niša?",
-              "type": "number",
+              "type": "single",
               "hard_filter": true,
               "stage": "flow",
               "up_front_reason": "fit",
-              "why": "Nepareizs nišas augstums ir biežākais iemesls, kāpēc iebūvējamos ledusskapjus atgriež veikalā. Izmēri centimetros parasti norādīti skapja iekšpusē vai virtuves projektā.",
+              "why": "Nepareizs nišas augstums ir biežākais iemesls, kāpēc iebūvējamos ledusskapjus atgriež veikalā. Izmērs parasti norādīts virtuves projektā vai skapja iekšpusē.",
               "showIf": {
-                "q": "form",
+                "q": "install",
                 "in": [
                   "builtin"
                 ]
               },
-              "input": {
-                "min": 80,
-                "max": 220,
-                "default": 178,
-                "unit": "cm",
-                "step": 1,
-                "attr": "height_cm",
-                "toleranceBelow": 6,
-                "toleranceAbove": 0.5
-              },
-              "options": []
+              "options": [
+                {
+                  "value": "n88",
+                  "label": "82–88 cm",
+                  "sublabel": "zem darba virsmas",
+                  "table_value": "Niša 82–88 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "lte": 90
+                    }
+                  ],
+                  "illustration": "niche-n88"
+                },
+                {
+                  "value": "n122",
+                  "label": "102–123 cm",
+                  "table_value": "Niša 102–123 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 90.1,
+                      "lte": 125
+                    }
+                  ],
+                  "illustration": "niche-n122"
+                },
+                {
+                  "value": "n158",
+                  "label": "140–158 cm",
+                  "table_value": "Niša 140–158 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 125.1,
+                      "lte": 160
+                    }
+                  ],
+                  "illustration": "niche-n158"
+                },
+                {
+                  "value": "n178",
+                  "label": "177–178 cm",
+                  "sublabel": "visizplatītākā",
+                  "table_value": "Niša 177–178 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 160.1,
+                      "lte": 181
+                    }
+                  ],
+                  "illustration": "niche-n178"
+                },
+                {
+                  "value": "n194",
+                  "label": "194 cm un vairāk",
+                  "table_value": "Niša 194 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 181.1
+                    }
+                  ],
+                  "illustration": "niche-n194"
+                }
+              ]
+            },
+            {
+              "id": "doors",
+              "title": "Cik durvju?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "kind",
+              "why": "Divas durvis nozīmē atsevišķu saldētavu ar savu temperatūru.",
+              "options": [
+                {
+                  "value": "one",
+                  "label": "Vienas durvis",
+                  "sublabel": "bez saldētavas vai ar mazu nodalījumu",
+                  "table_value": "Vienas durvis",
+                  "match": [
+                    {
+                      "attr": "doors",
+                      "eq": "one"
+                    }
+                  ],
+                  "illustration": "fridge-one"
+                },
+                {
+                  "value": "two",
+                  "label": "Divas durvis",
+                  "sublabel": "ledusskapis un atsevišķa saldētava",
+                  "card_reason": "Atsevišķa saldētava",
+                  "table_value": "Divas durvis",
+                  "match": [
+                    {
+                      "attr": "doors",
+                      "eq": "two"
+                    }
+                  ],
+                  "illustration": "fridge-two"
+                },
+                {
+                  "value": "multi",
+                  "label": "Side-by-Side vai French Door",
+                  "sublabel": "~90 cm plats, liels tilpums",
+                  "card_reason": "Divdurvju — liels tilpums",
+                  "table_value": "Side-by-Side",
+                  "match": [
+                    {
+                      "attr": "doors",
+                      "eq": "multi"
+                    }
+                  ],
+                  "illustration": "fridge-multi"
+                }
+              ]
             },
             {
               "id": "hinge",
@@ -163,7 +286,7 @@
               "why": "Iebūvējamam ledusskapim jāder pie esošajām skapja durvīm.",
               "help": "Atver skapja durvis: ja tās pieskrūvētas tieši pie ledusskapja durvīm, tās ir “durvis uz durvīm”. Ja durvis savienotas ar sliedi, pa kuru tās slīd, tās ir “slīdošās”.",
               "showIf": {
-                "q": "form",
+                "q": "install",
                 "in": [
                   "builtin"
                 ]
@@ -310,7 +433,8 @@
             }
           ],
           "compare": [
-            "form",
+            "install",
+            "doors",
             "height_cm",
             "width_cm",
             "depth_cm",
@@ -381,6 +505,128 @@
               ]
             },
             {
+              "id": "size",
+              "title": "Cik augstai jābūt?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "showIf": {
+                "q": "form",
+                "in": [
+                  "upright"
+                ]
+              },
+              "options": [
+                {
+                  "value": "h85",
+                  "label": "~85 cm",
+                  "sublabel": "zem darba virsmas",
+                  "table_value": "~85 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "lte": 100
+                    }
+                  ],
+                  "illustration": "freezer-h85"
+                },
+                {
+                  "value": "h145",
+                  "label": "125–160 cm",
+                  "table_value": "125–160 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 100.1,
+                      "lte": 165
+                    }
+                  ],
+                  "illustration": "freezer-h145"
+                },
+                {
+                  "value": "h185",
+                  "label": "170–200 cm",
+                  "sublabel": "lielākais tilpums",
+                  "table_value": "170–200 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 165.1
+                    }
+                  ],
+                  "illustration": "freezer-h185"
+                }
+              ]
+            },
+            {
+              "id": "niche",
+              "title": "Cik augsta ir niša?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "showIf": {
+                "q": "form",
+                "in": [
+                  "builtin"
+                ]
+              },
+              "options": [
+                {
+                  "value": "n88",
+                  "label": "82–88 cm",
+                  "sublabel": "zem darba virsmas",
+                  "table_value": "Niša 82–88 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "lte": 90
+                    }
+                  ],
+                  "illustration": "niche-n88"
+                },
+                {
+                  "value": "n122",
+                  "label": "102–123 cm",
+                  "table_value": "Niša 102–123 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 90.1,
+                      "lte": 125
+                    }
+                  ],
+                  "illustration": "niche-n122"
+                },
+                {
+                  "value": "n158",
+                  "label": "140–158 cm",
+                  "table_value": "Niša 140–158 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 125.1,
+                      "lte": 160
+                    }
+                  ],
+                  "illustration": "niche-n158"
+                },
+                {
+                  "value": "n178",
+                  "label": "177–178 cm",
+                  "table_value": "Niša 177–178 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 160.1
+                    }
+                  ],
+                  "illustration": "niche-n178"
+                }
+              ]
+            },
+            {
               "id": "place",
               "title": "Kur tā stāvēs?",
               "type": "single",
@@ -393,8 +639,7 @@
                   "value": "home",
                   "label": "Mājā",
                   "sublabel": "apsildītā telpā",
-                  "passthrough": true,
-                  "illustration": "place-home"
+                  "passthrough": true
                 },
                 {
                   "value": "garage",
@@ -407,63 +652,9 @@
                       "attr": "garage_ok",
                       "eq": true
                     }
-                  ],
-                  "illustration": "place-garage"
+                  ]
                 }
               ]
-            },
-            {
-              "id": "height",
-              "title": "Cik augsta var būt saldētava?",
-              "type": "range",
-              "hard_filter": true,
-              "stage": "flow",
-              "up_front_reason": "fit",
-              "showIf": {
-                "q": "form",
-                "in": [
-                  "upright"
-                ]
-              },
-              "range": {
-                "attr": "height_cm",
-                "unit": "cm",
-                "min": 50,
-                "max": 200,
-                "step": 1,
-                "bound": "max",
-                "presets": [
-                  86,
-                  145
-                ],
-                "toleranceAbove": 0.5
-              },
-              "options": []
-            },
-            {
-              "id": "niche",
-              "title": "Cik augsta ir niša?",
-              "type": "number",
-              "hard_filter": true,
-              "stage": "flow",
-              "up_front_reason": "fit",
-              "showIf": {
-                "q": "form",
-                "in": [
-                  "builtin"
-                ]
-              },
-              "input": {
-                "min": 60,
-                "max": 220,
-                "default": 178,
-                "unit": "cm",
-                "step": 1,
-                "attr": "height_cm",
-                "toleranceBelow": 6,
-                "toleranceAbove": 0.5
-              },
-              "options": []
             },
             {
               "id": "amount",
@@ -698,11 +889,11 @@
             {
               "id": "depth",
               "title": "Cik dziļa var būt?",
-              "type": "range",
+              "type": "single",
               "hard_filter": true,
               "stage": "flow",
               "up_front_reason": "fit",
-              "why": "Šaurās veļas mašīnas ir līdz 45 cm dziļas un der mazā vannasistabā.",
+              "why": "Šaurās veļas mašīnas der mazā vannasistabā, bet tajās ietilpst mazāk veļas.",
               "showIf": {
                 "q": "loading",
                 "in": [
@@ -710,20 +901,50 @@
                   "combo"
                 ]
               },
-              "range": {
-                "attr": "depth_cm",
-                "unit": "cm",
-                "min": 30,
-                "max": 75,
-                "step": 1,
-                "bound": "max",
-                "presets": [
-                  45,
-                  55
-                ],
-                "toleranceAbove": 0.5
-              },
-              "options": []
+              "options": [
+                {
+                  "value": "d40",
+                  "label": "~40 cm",
+                  "sublabel": "ļoti šaura",
+                  "card_reason": "Šaura — ~40 cm dziļa",
+                  "table_value": "~40 cm",
+                  "match": [
+                    {
+                      "attr": "depth_cm",
+                      "lte": 42.5
+                    }
+                  ],
+                  "illustration": "washer-d40"
+                },
+                {
+                  "value": "d45",
+                  "label": "~45–50 cm",
+                  "sublabel": "šaura",
+                  "card_reason": "Šaura — līdz 50 cm",
+                  "table_value": "~45–50 cm",
+                  "match": [
+                    {
+                      "attr": "depth_cm",
+                      "gte": 42.6,
+                      "lte": 51
+                    }
+                  ],
+                  "illustration": "washer-d45"
+                },
+                {
+                  "value": "d55",
+                  "label": "~55–60 cm",
+                  "sublabel": "standarta",
+                  "table_value": "~55–60 cm",
+                  "match": [
+                    {
+                      "attr": "depth_cm",
+                      "gte": 51.1
+                    }
+                  ],
+                  "illustration": "washer-d55"
+                }
+              ]
             },
             {
               "id": "household",
@@ -859,8 +1080,7 @@
                       "attr": "dryer_type",
                       "eq": "heatpump"
                     }
-                  ],
-                  "illustration": "dryer-heatpump"
+                  ]
                 },
                 {
                   "value": "condenser",
@@ -872,8 +1092,7 @@
                       "attr": "dryer_type",
                       "eq": "condenser"
                     }
-                  ],
-                  "illustration": "dryer-condenser"
+                  ]
                 }
               ]
             },
@@ -1158,47 +1377,26 @@
           ],
           "questions": [
             {
-              "id": "form",
-              "title": "Kāda trauku mazgājamā mašīna tev vajadzīga?",
+              "id": "install",
+              "title": "Iebūvējama vai brīvi stāvoša?",
               "type": "single",
               "hard_filter": true,
               "stage": "flow",
               "up_front_reason": "fit",
+              "help": "Iebūvējama ierīce ir paslēpta aiz virtuves mēbeļu durvīm, un tai priekšā ir tāda pati fasāde kā skapjiem. Brīvi stāvoša ierīce redzama pilnībā, un to var pārvietot.",
               "options": [
                 {
-                  "value": "builtin60",
-                  "label": "Iebūvējama, 60 cm",
-                  "sublabel": "standarta platums",
-                  "table_value": "Iebūvējama 60 cm",
+                  "value": "builtin",
+                  "label": "Iebūvējama",
+                  "sublabel": "zem darba virsmas, aiz fasādes",
+                  "table_value": "Iebūvējama",
                   "match": [
                     {
                       "attr": "install",
                       "eq": "builtin"
-                    },
-                    {
-                      "attr": "width_cm",
-                      "gte": 55
                     }
                   ],
-                  "illustration": "dish-builtin60"
-                },
-                {
-                  "value": "builtin45",
-                  "label": "Iebūvējama, 45 cm",
-                  "sublabel": "šaura",
-                  "card_reason": "Šaura — 45 cm",
-                  "table_value": "Iebūvējama 45 cm",
-                  "match": [
-                    {
-                      "attr": "install",
-                      "eq": "builtin"
-                    },
-                    {
-                      "attr": "width_cm",
-                      "lte": 50
-                    }
-                  ],
-                  "illustration": "dish-builtin45"
+                  "illustration": "dish-builtin"
                 },
                 {
                   "value": "free",
@@ -1229,6 +1427,50 @@
               ]
             },
             {
+              "id": "width",
+              "title": "Cik plata?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "showIf": {
+                "q": "install",
+                "in": [
+                  "builtin",
+                  "free"
+                ]
+              },
+              "options": [
+                {
+                  "value": "w45",
+                  "label": "45 cm",
+                  "sublabel": "šaura, 9–10 komplekti",
+                  "card_reason": "Šaura — 45 cm",
+                  "table_value": "45 cm",
+                  "match": [
+                    {
+                      "attr": "width_cm",
+                      "lte": 50
+                    }
+                  ],
+                  "illustration": "dish-w45"
+                },
+                {
+                  "value": "w60",
+                  "label": "60 cm",
+                  "sublabel": "standarta, 12–15 komplekti",
+                  "table_value": "60 cm",
+                  "match": [
+                    {
+                      "attr": "width_cm",
+                      "gte": 55
+                    }
+                  ],
+                  "illustration": "dish-w60"
+                }
+              ]
+            },
+            {
               "id": "integration",
               "title": "Vai vadības panelim jābūt redzamam?",
               "type": "single",
@@ -1237,17 +1479,16 @@
               "up_front_reason": "fit",
               "why": "Tas nosaka, kādai virtuves fasādei mašīna der.",
               "showIf": {
-                "q": "form",
+                "q": "install",
                 "in": [
-                  "builtin60",
-                  "builtin45"
+                  "builtin"
                 ]
               },
               "options": [
                 {
                   "value": "full",
-                  "label": "Pilnībā iebūvējama",
-                  "sublabel": "panelis paslēpts durvju augšmalā",
+                  "label": "Nē, paslēpts",
+                  "sublabel": "pilnībā iebūvējama",
                   "table_value": "Pilnībā iebūvējama",
                   "match": [
                     {
@@ -1259,8 +1500,8 @@
                 },
                 {
                   "value": "semi",
-                  "label": "Daļēji iebūvējama",
-                  "sublabel": "panelis redzams virs fasādes",
+                  "label": "Jā, virs fasādes",
+                  "sublabel": "daļēji iebūvējama",
                   "table_value": "Daļēji iebūvējama",
                   "match": [
                     {
@@ -1275,32 +1516,45 @@
             {
               "id": "niche",
               "title": "Cik augsta ir niša?",
-              "type": "range",
+              "type": "single",
               "hard_filter": true,
               "stage": "flow",
               "up_front_reason": "fit",
-              "why": "Standarta niša ir 82–87 cm augsta.",
+              "why": "Standarta niša ir 82 cm augsta; augstākās virtuvēs — 86–87 cm.",
               "showIf": {
-                "q": "form",
+                "q": "install",
                 "in": [
-                  "builtin60",
-                  "builtin45"
+                  "builtin"
                 ]
               },
-              "range": {
-                "attr": "height_cm",
-                "unit": "cm",
-                "min": 70,
-                "max": 95,
-                "step": 1,
-                "bound": "max",
-                "presets": [
-                  82,
-                  87
-                ],
-                "toleranceAbove": 0.5
-              },
-              "options": []
+              "options": [
+                {
+                  "value": "h82",
+                  "label": "~82 cm",
+                  "sublabel": "standarta",
+                  "table_value": "~82 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "lte": 84
+                    }
+                  ],
+                  "illustration": "dish-h82"
+                },
+                {
+                  "value": "h86",
+                  "label": "~86–87 cm",
+                  "sublabel": "augstāka, XL",
+                  "table_value": "~86 cm",
+                  "match": [
+                    {
+                      "attr": "height_cm",
+                      "gte": 84.1
+                    }
+                  ],
+                  "illustration": "dish-h86"
+                }
+              ]
             },
             {
               "id": "household",
@@ -1881,8 +2135,8 @@
           ],
           "questions": [
             {
-              "id": "form",
-              "title": "Kādu mikroviļņu krāsni meklē?",
+              "id": "install",
+              "title": "Brīvi stāvoša vai iebūvējama?",
               "type": "single",
               "hard_filter": true,
               "stage": "flow",
@@ -1891,6 +2145,7 @@
                 {
                   "value": "free",
                   "label": "Brīvi stāvoša",
+                  "sublabel": "uz darba virsmas",
                   "table_value": "Brīvi stāvoša",
                   "match": [
                     {
@@ -1901,36 +2156,58 @@
                   "illustration": "micro-free"
                 },
                 {
-                  "value": "builtin38",
-                  "label": "Iebūvējama, 38 cm niša",
-                  "table_value": "Iebūvējama 38 cm",
+                  "value": "builtin",
+                  "label": "Iebūvējama",
+                  "sublabel": "virtuves skapī",
+                  "table_value": "Iebūvējama",
                   "match": [
                     {
                       "attr": "install",
                       "eq": "builtin"
-                    },
+                    }
+                  ],
+                  "illustration": "micro-builtin"
+                }
+              ]
+            },
+            {
+              "id": "niche",
+              "title": "Cik augsta ir niša?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "showIf": {
+                "q": "install",
+                "in": [
+                  "builtin"
+                ]
+              },
+              "options": [
+                {
+                  "value": "n38",
+                  "label": "~38 cm",
+                  "table_value": "Niša 38 cm",
+                  "match": [
                     {
                       "attr": "height_cm",
                       "lte": 40
                     }
                   ],
-                  "illustration": "micro-builtin38"
+                  "illustration": "micro-n38"
                 },
                 {
-                  "value": "builtin45",
-                  "label": "Iebūvējama, 45 cm niša",
-                  "table_value": "Iebūvējama 45 cm",
+                  "value": "n45",
+                  "label": "~45 cm",
+                  "sublabel": "kā kompaktajai cepeškrāsnij",
+                  "table_value": "Niša 45 cm",
                   "match": [
                     {
-                      "attr": "install",
-                      "eq": "builtin"
-                    },
-                    {
                       "attr": "height_cm",
-                      "gte": 41
+                      "gte": 40.1
                     }
                   ],
-                  "illustration": "micro-builtin45"
+                  "illustration": "micro-n45"
                 }
               ]
             },
@@ -1951,8 +2228,7 @@
                       "attr": "micro_type",
                       "eq": "solo"
                     }
-                  ],
-                  "illustration": "micro-solo"
+                  ]
                 },
                 {
                   "value": "grill",
@@ -1967,8 +2243,7 @@
                         "combi"
                       ]
                     }
-                  ],
-                  "illustration": "micro-grill"
+                  ]
                 },
                 {
                   "value": "combi",
@@ -1981,8 +2256,7 @@
                       "attr": "micro_type",
                       "eq": "combi"
                     }
-                  ],
-                  "illustration": "micro-combi"
+                  ]
                 }
               ]
             },
@@ -2033,6 +2307,7 @@
           ],
           "compare": [
             "install",
+            "height_cm",
             "micro_type",
             "volume_l",
             "power_w"
@@ -2149,8 +2424,7 @@
                       "attr": "run_min",
                       "gte": 30
                     }
-                  ],
-                  "illustration": "area-small"
+                  ]
                 },
                 {
                   "value": "100",
@@ -2161,8 +2435,7 @@
                       "attr": "run_min",
                       "gte": 50
                     }
-                  ],
-                  "illustration": "area-mid"
+                  ]
                 },
                 {
                   "value": "150",
@@ -2174,8 +2447,7 @@
                       "attr": "run_min",
                       "gte": 70
                     }
-                  ],
-                  "illustration": "area-big"
+                  ]
                 }
               ]
             },
@@ -2197,14 +2469,12 @@
                       "attr": "pet_brush",
                       "eq": true
                     }
-                  ],
-                  "illustration": "pets-yes"
+                  ]
                 },
                 {
                   "value": "no",
                   "label": "Nē",
-                  "passthrough": true,
-                  "illustration": "pets-no"
+                  "passthrough": true
                 }
               ]
             },
@@ -2420,15 +2690,13 @@
                       "attr": "milk_system",
                       "eq": true
                     }
-                  ],
-                  "illustration": "coffee-milk"
+                  ]
                 },
                 {
                   "value": "no",
                   "label": "Tikai melnu",
                   "sublabel": "espresso, americano",
-                  "passthrough": true,
-                  "illustration": "coffee-black"
+                  "passthrough": true
                 }
               ]
             },
@@ -2552,8 +2820,7 @@
                       "attr": "material",
                       "eq": "steel"
                     }
-                  ],
-                  "illustration": "kettle-steel"
+                  ]
                 },
                 {
                   "value": "glass",
@@ -2565,8 +2832,7 @@
                       "attr": "material",
                       "eq": "glass"
                     }
-                  ],
-                  "illustration": "kettle-glass"
+                  ]
                 },
                 {
                   "value": "temp",
@@ -2579,8 +2845,7 @@
                       "attr": "temp_control",
                       "eq": true
                     }
-                  ],
-                  "illustration": "kettle-temp"
+                  ]
                 }
               ]
             }
@@ -2649,8 +2914,7 @@
                 {
                   "value": "smoothie",
                   "label": "Smūtijiem",
-                  "passthrough": true,
-                  "illustration": "use-smoothie"
+                  "passthrough": true
                 },
                 {
                   "value": "ice",
@@ -2662,8 +2926,7 @@
                       "attr": "power_w",
                       "gte": 1000
                     }
-                  ],
-                  "illustration": "use-ice"
+                  ]
                 },
                 {
                   "value": "soup",
@@ -2675,8 +2938,7 @@
                       "attr": "heating",
                       "eq": true
                     }
-                  ],
-                  "illustration": "use-soup"
+                  ]
                 }
               ]
             }
@@ -2716,8 +2978,7 @@
                       "attr": "cordless",
                       "eq": false
                     }
-                  ],
-                  "illustration": "handblender-cord"
+                  ]
                 },
                 {
                   "value": "cordless",
@@ -2729,8 +2990,7 @@
                       "attr": "cordless",
                       "eq": true
                     }
-                  ],
-                  "illustration": "handblender-cordless"
+                  ]
                 }
               ]
             }
@@ -2902,8 +3162,7 @@
                       "attr": "precision_g",
                       "gte": 1
                     }
-                  ],
-                  "illustration": "scale-kitchen"
+                  ]
                 },
                 {
                   "value": "precise",
@@ -2916,8 +3175,7 @@
                       "attr": "precision_g",
                       "lte": 0.1
                     }
-                  ],
-                  "illustration": "scale-precise"
+                  ]
                 }
               ]
             }
@@ -2954,8 +3212,7 @@
                       "attr": "cordless",
                       "eq": false
                     }
-                  ],
-                  "illustration": "knife-cord"
+                  ]
                 },
                 {
                   "value": "cordless",
@@ -2966,8 +3223,7 @@
                       "attr": "cordless",
                       "eq": true
                     }
-                  ],
-                  "illustration": "knife-cordless"
+                  ]
                 }
               ]
             }
@@ -3109,8 +3365,7 @@
                 {
                   "value": "sand",
                   "label": "Sendviči",
-                  "passthrough": true,
-                  "illustration": "sandwich-sand"
+                  "passthrough": true
                 },
                 {
                   "value": "multi",
@@ -3123,8 +3378,7 @@
                       "attr": "interchangeable_plates",
                       "eq": true
                     }
-                  ],
-                  "illustration": "sandwich-multi"
+                  ]
                 }
               ]
             }
@@ -3202,8 +3456,7 @@
                       "attr": "volume_l",
                       "gte": 2
                     }
-                  ],
-                  "illustration": "portions-2"
+                  ]
                 },
                 {
                   "value": "4",
@@ -3214,8 +3467,7 @@
                       "attr": "volume_l",
                       "gte": 4
                     }
-                  ],
-                  "illustration": "portions-4"
+                  ]
                 },
                 {
                   "value": "6",
@@ -3226,8 +3478,7 @@
                       "attr": "volume_l",
                       "gte": 6
                     }
-                  ],
-                  "illustration": "portions-6"
+                  ]
                 }
               ]
             }
@@ -3317,8 +3568,7 @@
                       "attr": "volume_l",
                       "lte": 28
                     }
-                  ],
-                  "illustration": "minioven-small"
+                  ]
                 },
                 {
                   "value": "big",
@@ -3330,8 +3580,7 @@
                       "attr": "volume_l",
                       "gte": 30
                     }
-                  ],
-                  "illustration": "minioven-big"
+                  ]
                 }
               ]
             }

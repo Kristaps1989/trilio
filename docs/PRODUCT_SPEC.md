@@ -18,6 +18,8 @@ UI strings are in Latvian, as they appear in the prototype. The explanations are
 - never leads to a dead end;
 - uses min–max ranges for price and height instead of fixed steps.
 
+**Owner decision (18 Oct 2026, later the same day): pictures used wisely.** No illustrative people in the drawings. Pictures appear only where the shape or the size is what the shopper decides by, and they show the appliance (and the furniture it fits into) drawn to one scale within a question. Sizes are cards with numbers people know (fridges: ~54 cm, ~85 cm, 125–160 cm, 166–180 cm, 181–205 cm; built-in niches 82–88 / 102–123 / 140–158 / 177–178 / 194 cm), asked after freestanding vs built-in, followed by the number of doors. A few extra steps are fine when each one is meaningful. Choices that are not visual (heat pump vs condenser, cups a day, household size) are plain text cards.
+
 Everything else (priorities, brands, urgency, refurbished) is refined on the results page. The rules and their reasons are in `docs/FILTERS_PLAN.md` ("Core: the Jobs rules").
 
 - One question per screen, large type, and a progress bar. The counter reads "Jautājums N no M" (question N of M). M counts the flow questions that matter right now, plus the price screen. It changes when a conditional question appears or one is skipped.
@@ -72,36 +74,36 @@ The table below is generated from `data/categories.json` (18 Oct 2026). Each row
 
 | Subcategory | Flow questions, before price | "Kas tev vēl ir svarīgi?" chips |
 |---|---|---|
-| fridge | `form` picture cards: Standarta / Mazs / Bez saldētavas / Divdurvju / Iebūvējams — **fit**<br>`height` slider, up to (height_cm 120–210) — **fit**; only if `form` is combi/single/sbs<br>`niche` number, cm (height_cm ±tolerance) — **fit**; only if `form` is builtin<br>`hinge` picture cards: Durvis uz durvīm / Slīdošās / Nezinu — **fit**; only if `form` is builtin<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Nav jāatkausē, Klusums, Zems patēriņš, Liels tilpums |
-| freezer | `form` picture cards: Vertikālā / Lādes / Iebūvējama — **fit**<br>`place` picture cards: Mājā / Garāžā vai neapsildītā telpā — **fit**<br>`height` slider, up to (height_cm 50–200) — **fit**; only if `form` is upright<br>`niche` number, cm (height_cm ±tolerance) — **fit**; only if `form` is builtin<br>`amount` single: Nedaudz / Vidēji / Daudz — **kind**, soft | Nav jāatkausē, Klusums, Zems patēriņš |
-| washer | `loading` picture cards: Priekšējā ielāde / Augšējā ielāde / Ar žāvētāju — **fit**<br>`place` picture cards: Atsevišķi / Zem darba virsmas / Iebūvēta — **fit**; only if `loading` is front/combo<br>`depth` slider, up to (depth_cm 30–75) — **fit**; only if `loading` is front/combo<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Klusums, Zems patēriņš, Tvaika funkcija |
-| dryer | `type` picture cards: Siltumsūkņa / Kondensācijas — **kind**<br>`place` picture cards: Blakus veļas mašīnai / Uz veļas mašīnas — **fit**<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Klusums, Zems patēriņš |
+| fridge | `install` picture cards: Brīvi stāvošs / Iebūvējams — **fit**<br>`size` picture cards: ~54 cm / ~85 cm / 125–160 cm / 166–180 cm / 181–205 cm — **fit**; only if `install` is free<br>`niche` picture cards: 82–88 cm / 102–123 cm / 140–158 cm / 177–178 cm / 194 cm un vairāk — **fit**; only if `install` is builtin<br>`doors` picture cards: Vienas durvis / Divas durvis / Side-by-Side vai French Door — **kind**<br>`hinge` picture cards: Durvis uz durvīm / Slīdošās / Nezinu — **fit**; only if `install` is builtin<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Nav jāatkausē, Klusums, Zems patēriņš, Liels tilpums |
+| freezer | `form` picture cards: Vertikālā / Lādes / Iebūvējama — **fit**<br>`size` picture cards: ~85 cm / 125–160 cm / 170–200 cm — **fit**; only if `form` is upright<br>`niche` picture cards: 82–88 cm / 102–123 cm / 140–158 cm / 177–178 cm — **fit**; only if `form` is builtin<br>`place` single: Mājā / Garāžā vai neapsildītā telpā — **fit**<br>`amount` single: Nedaudz / Vidēji / Daudz — **kind**, soft | Nav jāatkausē, Klusums, Zems patēriņš |
+| washer | `loading` picture cards: Priekšējā ielāde / Augšējā ielāde / Ar žāvētāju — **fit**<br>`place` picture cards: Atsevišķi / Zem darba virsmas / Iebūvēta — **fit**; only if `loading` is front/combo<br>`depth` picture cards: ~40 cm / ~45–50 cm / ~55–60 cm — **fit**; only if `loading` is front/combo<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Klusums, Zems patēriņš, Tvaika funkcija |
+| dryer | `type` single: Siltumsūkņa / Kondensācijas — **kind**<br>`place` picture cards: Blakus veļas mašīnai / Uz veļas mašīnas — **fit**<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Klusums, Zems patēriņš |
 | iron | `type` picture cards: Tvaika gludeklis / Tvaika stacija — **kind** | Pretkaļķu sistēma, Viegls |
 | steamer | `type` picture cards: Rokas / Ar statīvu — **kind** | — |
-| dish | `form` picture cards: Iebūvējama, 60 cm / Iebūvējama, 45 cm / Brīvi stāvoša / Galda — **fit**<br>`integration` picture cards: Pilnībā iebūvējama / Daļēji iebūvējama — **fit**; only if `form` is builtin60/builtin45<br>`niche` slider, up to (height_cm 70–95) — **fit**; only if `form` is builtin60/builtin45<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Klusums, Trešais grozs, Automātiska durvju atvēršana, Zems patēriņš |
+| dish | `install` picture cards: Iebūvējama / Brīvi stāvoša / Galda — **fit**<br>`width` picture cards: 45 cm / 60 cm — **fit**; only if `install` is builtin/free<br>`integration` picture cards: Nē, paslēpts / Jā, virs fasādes — **fit**; only if `install` is builtin<br>`niche` picture cards: ~82 cm / ~86–87 cm — **fit**; only if `install` is builtin<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | Klusums, Trešais grozs, Automātiska durvju atvēršana, Zems patēriņš |
 | hob | `type` picture cards: Indukcijas / Keramiskā / Gāzes / Plīts ar cepeškrāsni — **fit**<br>`width` picture cards: Šaura, ~30 cm / Standarta, ~60 cm / Plata, 70 cm un vairāk — **fit**; only if `type` is not cooker | Elastīgā zona, Ātrā uzsilšana |
 | oven | `niche` picture cards: Standarta, ~60 cm augsta / Kompakta, ~45 cm augsta — **fit** | Pirolītiskā tīrīšana, Tvaika funkcija, Vadība ar telefonu, Liels tilpums |
 | hood | `type` picture cards: Pie sienas / Virs salas / Iebūvēts skapī — **fit**<br>`width` picture cards: ~50 cm / ~60 cm / 80–90 cm — **fit** | Klusums, Jaudīga nosūkšana, Bez izvada ārā |
-| micro | `form` picture cards: Brīvi stāvoša / Iebūvējama, 38 cm niša / Iebūvējama, 45 cm niša — **fit**<br>`function` picture cards: Tikai sildīt / Sildīt un grilēt / Arī cept kā cepeškrāsnī — **kind**<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | — |
-| vacuum | `type` picture cards: Robots / Robots ar mazgāšanu / Bezvadu / Ar vadu — **fit**<br>`area` picture cards: Līdz 50 m² / 50–100 m² / Vairāk nekā 100 m² — **kind**, soft; only if `type` is not corded<br>`pets` picture cards: Jā / Nē — **kind**, soft | Alerģija, Klusums, Bez maisiņiem |
+| micro | `install` picture cards: Brīvi stāvoša / Iebūvējama — **fit**<br>`niche` picture cards: ~38 cm / ~45 cm — **fit**; only if `install` is builtin<br>`function` single: Tikai sildīt / Sildīt un grilēt / Arī cept kā cepeškrāsnī — **kind**<br>`household` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | — |
+| vacuum | `type` picture cards: Robots / Robots ar mazgāšanu / Bezvadu / Ar vadu — **fit**<br>`area` single: Līdz 50 m² / 50–100 m² / Vairāk nekā 100 m² — **kind**, soft; only if `type` is not corded<br>`pets` single: Jā / Nē — **kind**, soft | Alerģija, Klusums, Bez maisiņiem |
 | steamclean | `type` picture cards: Rokas / Tvaika mops / Ar tvertni — **kind** | — |
-| coffee | `type` picture cards: Automātiskais / Kapsulu / Manuālais espresso — **kind**<br>`milk` picture cards: Jā / Tikai melnu — **kind**<br>`cups` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | — |
+| coffee | `type` picture cards: Automātiskais / Kapsulu / Manuālais espresso — **kind**<br>`milk` single: Jā / Tikai melnu — **kind**<br>`cups` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft | — |
 | grinder | `type` picture cards: Ar dzirnakmeņiem / Ar asmeņiem — **kind** | — |
-| kettle | `type` picture cards: Metāla / Stikla / Ar temperatūras izvēli — **kind**, soft | — |
-| blender | `type` picture cards: Ar krūzi / Personīgais — **kind**<br>`use` picture cards: Smūtijiem / Arī ledum / Arī zupām — **kind**, soft | — |
-| handblender | `type` picture cards: Ar vadu / Bezvadu — **kind** | — |
+| kettle | `type` single: Metāla / Stikla / Ar temperatūras izvēli — **kind**, soft | — |
+| blender | `type` picture cards: Ar krūzi / Personīgais — **kind**<br>`use` single: Smūtijiem / Arī ledum / Arī zupām — **kind**, soft | — |
+| handblender | `type` single: Ar vadu / Bezvadu — **kind** | — |
 | foodproc | `type` picture cards: Planetāro mikseri / Virtuves kombainu — **kind** | — |
 | mixer | `type` picture cards: Rokas / Ar bļodu — **kind** | — |
 | chopper | — (price only) | — |
 | mincer | — (price only) | — |
-| scale | `type` picture cards: Virtuves svari / Precīzie svari — **kind** | — |
-| knife | `type` picture cards: Ar vadu / Bezvadu — **kind** | — |
+| scale | `type` single: Virtuves svari / Precīzie svari — **kind** | — |
+| knife | `type` single: Ar vadu / Bezvadu — **kind** | — |
 | grill | `type` picture cards: Kontakta / Plātnes — **kind** | — |
 | toaster | `slots` picture cards: 2 šķēles / 4 šķēles — **kind** | — |
-| sandwich | `type` picture cards: Sendviči / Arī vafeles un grils — **kind** | — |
-| airfryer | `type` picture cards: Karstā gaisa / Eļļas — **kind**<br>`portions` picture cards: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft; only if `type` is air | — |
+| sandwich | `type` single: Sendviči / Arī vafeles un grils — **kind** | — |
+| airfryer | `type` picture cards: Karstā gaisa / Eļļas — **kind**<br>`portions` single: 1–2 / 3–4 / 5 vai vairāk — **kind**, soft; only if `type` is air | — |
 | breadmaker | — (price only) | — |
-| minioven | `type` picture cards: Nē / Jā — **kind**<br>`size` picture cards: Picai / Veselai vistai — **kind**, soft | — |
+| minioven | `type` picture cards: Nē / Jā — **kind**<br>`size` single: Picai / Veselai vistai — **kind**, soft | — |
 | juicer | `type` picture cards: Lēnā spiede / Centrifūgas / Citrusu — **kind** | — |
 | dehydrator | `size` picture cards: Nedaudz / Daudz — **kind**, soft | — |
 | vacuumsealer | — (price only) | — |

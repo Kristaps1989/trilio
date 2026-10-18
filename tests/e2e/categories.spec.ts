@@ -17,6 +17,7 @@ const all = catalog.groups.flatMap((g) => g.subcategories.map((s) => ({ group: g
 const AXE = new Set(["fridge", "washer", "coffee", "vacuum", "kettle"]);
 
 async function expectNoAxeViolations(page: Page) {
+  await expect(page).toHaveTitle(/.+/); // a client navigation sets the title a moment later
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 }

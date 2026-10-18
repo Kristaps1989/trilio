@@ -26,14 +26,16 @@ describe("data/categories.json", () => {
     }
   });
 
-  it("core rule 3: every hard choice between kinds of product is a picture card", () => {
+  it("core rule 3: pictures where the shape or size decides, all-or-nothing within a question", () => {
+    const SIZE = /^(height|width|depth)_cm$/;
     for (const sub of allSubcategories()) {
       for (const q of sub.questions) {
-        if (q.stage !== "flow" || q.type !== "single" || !q.hard_filter) continue;
-        for (const o of q.options) {
-          if (o.passthrough) continue;
-          expect(o.illustration, `${sub.id}.${q.id}.${o.value}`).toBeTruthy();
-        }
+        const real = q.options.filter((o) => !o.passthrough);
+        const drawn = real.filter((o) => o.illustration).length;
+        expect([0, real.length], `${sub.id}.${q.id}: every option drawn or none`).toContain(drawn);
+        // A choice between sizes is always shown as pictures drawn to one scale.
+        const sizeChoice = real.length > 0 && real.every((o) => o.match?.some((m) => SIZE.test(m.attr)));
+        if (q.stage === "flow" && sizeChoice) expect(drawn, `${sub.id}.${q.id}`).toBe(real.length);
       }
     }
   });

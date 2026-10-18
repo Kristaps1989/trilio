@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSubcategory } from "@/domain/questions/catalog";
+import { limitsFridge as fridge } from "@/domain/testing/fixtures";
 import {
   budgetCents,
   decodeState,
@@ -13,13 +13,12 @@ import {
   type FlowState,
 } from "./state";
 
-const fridge = getSubcategory("fridge")!;
 const empty: FlowState = { answers: {}, trailing: {} };
 
 describe("flow state in the URL", () => {
   it("round-trips answers, ranges and results-page settings", () => {
     const s: FlowState = {
-      answers: { form: "combi", height: { max: 186 }, household: "4", priorities: ["quiet"] },
+      answers: { install: "free", height: { max: 186 }, household: "4", priorities: ["quiet"] },
       trailing: {
         budget: { min: 35000, max: 50000 },
         urgency: "asap",
@@ -31,17 +30,20 @@ describe("flow state in the URL", () => {
   });
 
   it("drops invalid settings one by one and never throws", () => {
-    const raw = encodeState({ answers: { form: "combi" }, trailing: {} }).slice(0, -2) + "!!";
+    const raw = encodeState({ answers: { install: "free" }, trailing: {} }).slice(0, -2) + "!!";
     expect(() => decodeState(fridge, raw)).not.toThrow();
     const bad = btoa(
-      JSON.stringify({ form: "combi", $budget: { min: 5, max: 1 }, $urgency: "now", $brands: ["Bosch"] }),
+      JSON.stringify({ install: "free", $budget: { min: 5, max: 1 }, $urgency: "now", $brands: ["Bosch"] }),
     );
-    expect(decodeState(fridge, bad)).toEqual({ answers: { form: "combi" }, trailing: { brands: ["Bosch"] } });
+    expect(decodeState(fridge, bad)).toEqual({
+      answers: { install: "free" },
+      trailing: { brands: ["Bosch"] },
+    });
   });
 
   it("the flow is the visible flow questions, then price (no urgency, no refurbished)", () => {
-    expect(sequence(fridge, withAnswer(empty, "form", "combi"))).toEqual([
-      "form",
+    expect(sequence(fridge, withAnswer(empty, "install", "free"))).toEqual([
+      "install",
       "height",
       "household",
       "budget",
@@ -50,8 +52,8 @@ describe("flow state in the URL", () => {
 
   it("skips questions the stock makes irrelevant, unless already answered", () => {
     const skipHeight = (q: { id: string }) => q.id === "height";
-    const s = withAnswer(empty, "form", "combi");
-    expect(sequence(fridge, s, skipHeight)).toEqual(["form", "household", "budget"]);
+    const s = withAnswer(empty, "install", "free");
+    expect(sequence(fridge, s, skipHeight)).toEqual(["install", "household", "budget"]);
     expect(sequence(fridge, withAnswer(s, "height", { max: 186 }), skipHeight)).toContain("height");
     expect(nextUnanswered(fridge, s, skipHeight)).toBe("household");
   });
