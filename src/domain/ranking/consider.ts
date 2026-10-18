@@ -26,6 +26,8 @@ const BrandSchema = z.object({
 
 const TableSchema = z.object({
   note: z.string().optional(),
+  researchedAt: z.string().optional(),
+  method: z.string().optional(),
   reviewed: z.boolean(),
   brands: z.record(z.string(), BrandSchema),
 });
@@ -39,6 +41,10 @@ export function gradeOf(table: BrandTable, brand: string, subcategoryId?: string
   const hit = Object.entries(table.brands).find(([b]) => sameBrand(b, brand));
   if (!hit) return null;
   return (subcategoryId && hit[1].categories?.[subcategoryId]) || hit[1].grade;
+}
+
+function confidenceOf(table: BrandTable, brand: string) {
+  return Object.entries(table.brands).find(([b]) => sameBrand(b, brand))?.[1].confidence;
 }
 
 /**
@@ -61,6 +67,8 @@ export function worthConsidering(
     if (chosenBrands.some((b) => sameBrand(b, c.product.brand))) return false;
     const g = gradeOf(table, c.product.brand, sub);
     if (g === null || g < chosenGrade || c.fitUnknown) return false;
+    // An "at least as good" claim needs more than one thin source behind it.
+    if (confidenceOf(table, c.product.brand) === "low") return false;
     return (c.score >= top.score && c.price < top.price) || (c.score > top.score && c.price <= top.price);
   });
   options.sort((a, b) => b.score - a.score || a.price - b.price);

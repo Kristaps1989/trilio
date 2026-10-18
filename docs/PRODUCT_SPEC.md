@@ -172,7 +172,7 @@ The results page is the second half of the conversation: it opens on a sensible 
   - vacuum bags: 20 € a year.
 
   All of this is deterministic code, never AI.
-- **"Vērts apsvērt — {zīmols}" (worth considering)** (`src/domain/ranking/consider.ts`). At most one card, for a brand the user did not choose. It appears only when the user has chosen brands and `data/brands.json` is marked `reviewed: true` by the owner. The table is empty and not reviewed yet, so the card never shows today. The product must:
+- **"Vērts apsvērt — {zīmols}" (worth considering)** (`src/domain/ranking/consider.ts`). At most one card, for a brand the user did not choose. It appears only when the user has chosen brands and `data/brands.json` is marked `reviewed: true`. The table (38 brands, graded 1–5 per category from independent reliability surveys, each value with its sources) was switched on on 18 Oct 2026. The owner delegated the review decisions: no evidence is inherited between sister brands, and a brand whose grade rests on low-confidence evidence is never suggested. The product must:
   - have a brand grade at least equal to the best chosen brand's;
   - have known fit data;
   - score at least as well as the top pick for less money, or better for no more money.
