@@ -1,4 +1,5 @@
 import type { Db } from "@/db/client";
+import { renormaliseProducts } from "@/services/ingestion/renormalise";
 import { runAllJobs } from "./all";
 
 // In-process scheduler for the web service, so product data arrives without a
@@ -16,11 +17,14 @@ const CHECK_EVERY_MS = 15 * 60_000;
 
 let busy = false;
 
-/** One tick: ingest the shops that are due, then the follow-up jobs. Never throws. */
+/** One tick: re-derive attributes after a catalogue change, ingest the shops that are due, then the follow-up jobs. Never throws. */
 export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console): Promise<boolean> {
   if (busy) return false;
   busy = true;
   try {
+    // Fast and local: new attribute rules reach stored products before any shop is re-read.
+    const renormalised = await renormaliseProducts(db);
+    if (renormalised) log.log("attributes: re-derived for", renormalised, "products");
     const result = await runAllJobs(db);
     if (!result) return false;
     log.log(

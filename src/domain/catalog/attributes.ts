@@ -64,6 +64,16 @@ export type AttributeCatalog = z.infer<typeof AttributeCatalogSchema>;
 
 export const attributeCatalog: AttributeCatalog = AttributeCatalogSchema.parse(raw);
 
+/** Short FNV-1a hash of the catalogue: stored rows derived with another version are re-derived. */
+export const catalogVersion: string = (() => {
+  let h = 0x811c9dc5;
+  for (const ch of JSON.stringify(raw)) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(36);
+})();
+
 export function subcategoryAttrs(subcategoryId: string): SubcategoryAttrs | undefined {
   return attributeCatalog.subcategories[subcategoryId];
 }
