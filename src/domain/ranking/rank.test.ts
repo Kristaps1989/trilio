@@ -1,251 +1,249 @@
 import { describe, expect, it } from "vitest";
-import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { getSubcategory } from "@/domain/questions/catalog";
-import { passesHardFilters, withinStretch } from "./filters";
-import { rank, type RankInput } from "./rank";
-import { matchedOptions, scoreProduct, whyItFits } from "./score";
+import { offer, product } from "@/domain/testing/builders";
+import { limitsFridge } from "@/domain/testing/fixtures";
+import { evaluateQuestion, passesHardFilters, withinBudget, withinStretch } from "./filters";
+import { assignTiers, countMatches, pickThree, rank, tiersAreMeaningful, type RankInput } from "./rank";
+import { relaxations } from "./relax";
+import { scoreProduct, whyItFits } from "./score";
 
 const fridge = getSubcategory("fridge")!;
-const kettle = getSubcategory("kettle")!;
 
-let seq = 0;
-function offer(o: Partial<OfferView>): OfferView {
-  return {
-    id: `o${++seq}`,
-    storeId: "s1",
-    storeName: "Veikals A",
-    condition: "new",
-    grade: null,
-    warrantyMonths: null,
-    priceCents: 50000,
-    stock: "in",
-    deliveryEtaDays: null,
-    storeDefaultDeliveryDays: 3,
-    url: "https://example.invalid/o",
-    lowest30dCents: null,
-    ...o,
-  };
-}
+const combi = (name: string, price: number, h: number, extra: Record<string, unknown> = {}) =>
+  product({
+    name,
+    price,
+    attrs: { install: "free", doors: "two", height_cm: h, width_cm: 60, volume_l: 300, ...extra },
+  });
+const noHeight = (name: string, price: number) =>
+  product({ name, price, attrs: { install: "free", doors: "two" } });
 
-function product(p: Partial<ProductView> & { name: string }): ProductView {
-  return {
-    id: p.name,
-    ean: null,
-    brand: p.name.split(" ")[0]!,
-    modelCode: p.name,
-    subcategoryId: "fridge",
-    attributes: {},
-    tags: [],
-    specs: null,
-    kwhYear: null,
-    rating: 80,
-    imageUrl: null,
-    extractionConfidence: null,
-    offers: [offer({})],
-    ...p,
-  };
-}
-
-const base = (over: Partial<RankInput> = {}): RankInput => ({
-  products: [],
+// The owner's test on 18 Oct 2026: standard freestanding two-door fridge, at most 180 cm, €350–500.
+const ownerCase = (products: ReturnType<typeof product>[]): RankInput => ({
+  products,
   sub: fridge,
-  answers: { type: "free", size: "tall", freezer: "yes" },
-  budgetCents: 80000,
+  answers: { install: "free", size: "h175", doors: "two", household: "4" },
+  budget: { min: 35000, max: 50000 },
   urgency: "two_weeks",
   includeRefurbished: true,
-  ...over,
 });
 
-const tallTags = ["free", "tall", "yes"];
-
-describe("hard filters", () => {
-  it("excludes products that contradict a hard answer and passes unknown ones as unconfirmed", () => {
-    const builtin = product({ name: "Bosch builtin", tags: ["builtin", "tall", "yes"] });
-    const unknown = product({ name: "Noname", tags: [] });
-    const ok = product({ name: "Bosch tall", tags: tallTags });
-    const a = { type: "free", size: "tall", freezer: "yes" };
-    expect(passesHardFilters(builtin, fridge, a).pass).toBe(false);
-    expect(passesHardFilters(unknown, fridge, a)).toEqual({
-      pass: true,
-      unconfirmed: ["type", "size", "freezer"],
-    });
-    expect(passesHardFilters(ok, fridge, a)).toEqual({ pass: true, unconfirmed: [] });
-  });
-
-  it("passthrough answers never filter", () => {
-    const p = product({ name: "x", tags: ["free", "tall", "yes", "le186"] });
-    expect(passesHardFilters(p, fridge, { type: "free", size: "tall", height_limit: "nolimit" }).pass).toBe(
-      true,
-    );
-  });
-
-  it("niche height compares the height attribute with tolerance", () => {
-    const fits = product({ name: "fits", tags: ["builtin"], attributes: { height_cm: 177.5 } });
-    const tooTall = product({ name: "tall", tags: ["builtin"], attributes: { height_cm: 193 } });
-    const noData = product({ name: "nodata", tags: ["builtin"] });
-    const a = { type: "builtin", niche: 178 };
-    expect(passesHardFilters(fits, fridge, a).pass).toBe(true);
-    expect(passesHardFilters(tooTall, fridge, a).pass).toBe(false);
-    expect(passesHardFilters(noData, fridge, a)).toEqual({ pass: true, unconfirmed: ["niche"] });
-  });
-
-  it("hidden questions are ignored even if an answer lingers", () => {
-    const p = product({ name: "x", tags: ["free", "wide"] });
-    // freezer is hidden for wide; a stale 'no' answer must not filter
-    expect(passesHardFilters(p, fridge, { type: "free", size: "wide", freezer: "no" }).pass).toBe(true);
-  });
+// The same case with the height as a slider limit (range question type).
+const withLimit = (products: ReturnType<typeof product>[]): RankInput => ({
+  ...ownerCase(products),
+  sub: limitsFridge,
+  answers: { install: "free", height: { max: 178 }, household: "4" },
 });
 
-describe("scoring", () => {
-  it("rating plus 12 per soft match, priorities weighted 15/12, −40 over budget", () => {
-    const p = product({ name: "x", rating: 86, tags: [...tallTags, "4", "quiet", "energy"] });
-    const answers = { ...base().answers, household: "4", priorities: ["quiet", "energy"] };
-    const s = scoreProduct(p, fridge, answers);
-    expect(s.score).toBe(86 + 12 + 15 + 12);
-    expect(scoreProduct(p, fridge, answers, true).score).toBe(86 + 12 + 15 + 12 - 40);
-    expect(
-      matchedOptions(p, fridge, answers)
-        .filter((r) => r.points > 0)
-        .map((r) => r.option.value),
-    ).toEqual(["4", "quiet", "energy"]);
+describe("filters: three-valued answers", () => {
+  const q = limitsFridge.questions.find((x) => x.id === "height")!;
+  it("range: within, above (with 0,5 cm tolerance) and unknown", () => {
+    const a = { height: { max: 178 } };
+    expect(evaluateQuestion(combi("A", 400, 177), q, a).result).toBe("pass");
+    expect(evaluateQuestion(combi("A", 400, 178.4), q, a).result).toBe("pass");
+    expect(evaluateQuestion(combi("A", 400, 186), q, a).result).toBe("fail");
+    expect(evaluateQuestion(noHeight("X", 400), q, a)).toEqual({ result: "unknown", unknown: ["height_cm"] });
   });
 
-  it("whyItFits returns up to three distinct card reasons, strongest first", () => {
-    const p = product({ name: "x", tags: [...tallTags, "4", "quiet", "energy", "nofrost"] });
-    const answers = { ...base().answers, household: "4", priorities: ["quiet", "energy"] };
-    const why = whyItFits(matchedOptions(p, fridge, answers));
-    expect(why).toHaveLength(3);
-    expect(why[0]).toBe("Kluss — 38 dB vai mazāk");
+  it("size cards are bands of the same attribute; the owner's 178 cm fits 166–180", () => {
+    const size = fridge.questions.find((x) => x.id === "size")!;
+    expect(evaluateQuestion(combi("A", 400, 178), size, { size: "h175" }).result).toBe("pass");
+    expect(evaluateQuestion(combi("A", 400, 186), size, { size: "h175" }).result).toBe("fail");
+    expect(evaluateQuestion(combi("A", 400, 85), size, { size: "h85" }).result).toBe("pass");
   });
 
-  it("falls back to a default rating when none is known", () => {
-    expect(scoreProduct(product({ name: "x", rating: null }), kettle, {}).score).toBe(70);
+  it("missing fit-critical data is not a match: it keeps the product out of the picks", () => {
+    const v = passesHardFilters(product({ name: "X", attrs: {} }), fridge, { install: "free" });
+    expect(v).toMatchObject({ pass: true, fitUnknown: true });
+  });
+
+  it("niche height compares with tolerance from the data (6 cm lower, 0,5 cm higher)", () => {
+    const builtin = (h: number) => product({ name: "B", attrs: { install: "builtin", height_cm: h } });
+    const a = { install: "builtin", niche: 178 };
+    expect(passesHardFilters(builtin(177), limitsFridge, a).pass).toBe(true);
+    expect(passesHardFilters(builtin(171), limitsFridge, a).pass).toBe(false);
+    expect(passesHardFilters(builtin(179), limitsFridge, a).pass).toBe(false);
+  });
+
+  it("price range has both bounds; a number is an upper limit", () => {
+    expect(withinBudget(40000, { min: 35000, max: 50000 })).toBe(true);
+    expect(withinBudget(8900, { min: 35000, max: 50000 })).toBe(false);
+    expect(withinBudget(60000, 50000)).toBe(false);
+    expect(withinStretch(62500, 50000)).toBe(true);
+    expect(withinStretch(62600, 50000)).toBe(false);
   });
 });
 
-describe("rank", () => {
+describe("rank: the owner's case", () => {
   const products = [
-    product({ name: "A cheap", rating: 70, tags: tallTags, offers: [offer({ priceCents: 45000 })] }),
     product({
-      name: "B best",
-      rating: 90,
-      tags: [...tallTags, "quiet"],
-      offers: [offer({ priceCents: 70000 })],
+      name: "Mini 85",
+      price: 89,
+      attrs: { install: "free", doors: "one", height_cm: 85, width_cm: 48 },
     }),
-    product({ name: "C mid", rating: 80, tags: tallTags, offers: [offer({ priceCents: 60000 })] }),
-    product({ name: "D pricey", rating: 95, tags: tallTags, offers: [offer({ priceCents: 90000 })] }),
-    product({ name: "E far", rating: 99, tags: tallTags, offers: [offer({ priceCents: 150000 })] }),
+    product({ name: "Cheap 80", price: 120, attrs: { install: "free", doors: "one", height_cm: 80 } }),
+    combi("Beko 176", 389, 176),
+    combi("Indesit 177", 449, 177, { no_frost: true }),
+    combi("Bosch 176", 499, 176),
+    combi("Tall 186", 459, 186),
+    combi("Pricey 175", 690, 175),
+    noHeight("NoData 1", 420),
   ];
 
-  it("budget is a hard filter and picks are sorted into tiers with the badge on the top score", () => {
-    const r = rank(base({ products, answers: { ...base().answers, priorities: ["quiet"] } }));
-    expect(r.picks.map((p) => p.product.name)).toEqual(["A cheap", "C mid", "B best"]);
-    expect(r.picks.map((p) => p.tier)).toEqual(["budget", "mid", "top"]);
-    expect(r.picks.map((p) => p.recommended)).toEqual([false, false, true]);
-    expect(r.picks.every((p) => p.offer.priceCents <= 80000)).toBe(true);
-    expect(r.extras).toEqual([]);
-    expect(r.matchingCount).toBe(3);
-    expect(r.eligibleCount).toBe(5);
+  it("never shows a fridge under 150 cm or under €350, and none over the height limit", () => {
+    const r = rank(ownerCase(products));
+    const all = [...r.picks, ...r.extras];
+    expect(all.length).toBeGreaterThan(0);
+    for (const p of all) {
+      expect(p.product.attributes.height_cm as number).toBeGreaterThanOrEqual(150);
+      expect(p.product.attributes.height_cm as number).toBeLessThanOrEqual(178.5);
+      expect(p.offer.priceCents).toBeGreaterThanOrEqual(35000);
+    }
+    expect(all.map((p) => p.product.name)).not.toContain("Mini 85");
   });
 
-  it("adds at most two extras up to 25 % over budget only when fewer than three fit", () => {
-    const r = rank(base({ products, budgetCents: 50000 }));
-    expect(r.picks.map((p) => p.product.name)).toEqual(["A cheap"]);
-    expect(r.picks[0]!.tier).toBe("mid");
-    expect(r.extras.map((p) => p.product.name)).toEqual(["C mid"]); // 60000 ≤ 62500; 70000 is not
-    expect(r.extras[0]!.overBudgetByCents).toBe(10000);
-    expect(withinStretch(62500, 50000)).toBe(true);
-    expect(withinStretch(62501, 50000)).toBe(false);
+  it("counts products hidden for missing fit data and can show them on request", () => {
+    const r = rank(ownerCase(products));
+    expect(r.hiddenUnknownCount).toBe(1);
+    const shown = rank({ ...ownerCase(products), showUnknown: true });
+    const nodata = shown.picks.find((p) => p.product.name === "NoData 1");
+    expect(shown.picks.length + shown.extras.length).toBeGreaterThan(0);
+    if (nodata) expect(nodata.fitUnknown).toBe(true);
   });
 
-  it("returns nothing when nothing is within budget or close", () => {
-    const r = rank(base({ products, budgetCents: 20000 }));
-    expect(r.picks).toEqual([]);
-    expect(r.extras).toEqual([]);
-    expect(r.eligibleCount).toBe(5);
+  it("counts which answer excluded how many products", () => {
+    const r = rank(ownerCase(products));
+    expect(r.excludedBy.size).toBe(3);
+    expect(r.excludedBy.doors ?? 0).toBe(0);
   });
 
-  it("no budget means everything is in budget and no extras", () => {
-    const r = rank(base({ products, budgetCents: null }));
-    expect(r.picks).toHaveLength(3);
-    expect(r.extras).toEqual([]);
+  it("countMatches agrees with the number of in-range products", () => {
+    expect(countMatches(ownerCase(products))).toBe(rank(ownerCase(products)).matchingCount);
+  });
+});
+
+describe("picks spread over the range (§2.3)", () => {
+  it("best overall, best in the lower third, best in the upper third — not simply the cheapest", () => {
+    const cands = [100, 120, 300, 310, 480, 500].map((eur, i) => ({
+      product: product({ name: `P${i}`, price: eur }),
+      score: [70, 60, 90, 80, 75, 85][i]!,
+      reasons: [],
+      offer: offer({ priceCents: eur * 100 }),
+      unconfirmed: [],
+      fitUnknown: false,
+      price: eur * 100,
+    }));
+    const picks = pickThree(cands).map((c) => c.product.name);
+    expect(picks).toEqual(["P2", "P0", "P5"]);
+  });
+});
+
+describe("tiers and the recommendation must mean something (§2.8)", () => {
+  it("no tier labels when neighbouring picks are within 10 %", () => {
+    expect(tiersAreMeaningful([38700, 39600, 41000])).toBe(false);
+    expect(tiersAreMeaningful([30000, 45000, 70000])).toBe(true);
   });
 
-  it("respects urgency: asap uses in-stock offers only", () => {
-    const soonOnly = product({
-      name: "Soon",
-      tags: tallTags,
-      offers: [offer({ priceCents: 40000, stock: "soon" })],
-    });
-    const both = product({
-      name: "Both",
-      tags: tallTags,
-      offers: [offer({ priceCents: 40000, stock: "soon" }), offer({ priceCents: 48000, stock: "in" })],
-    });
-    const asap = rank(base({ products: [soonOnly, both], urgency: "asap" }));
-    expect(asap.picks.map((p) => p.product.name)).toEqual(["Both"]);
-    expect(asap.picks[0]!.offer.priceCents).toBe(48000);
-    const later = rank(base({ products: [soonOnly, both], urgency: "no_rush" }));
-    expect(later.picks.map((p) => p.product.name).sort()).toEqual(["Both", "Soon"]);
-    expect(later.picks.find((p) => p.product.name === "Both")!.offer.priceCents).toBe(40000);
+  const cand = (name: string, eur: number, score: number, attrs = { install: "free", height_cm: 180 }) => ({
+    product: product({ name, price: eur, attrs }),
+    score,
+    reasons: [],
+    offer: offer({ priceCents: eur * 100 }),
+    unconfirmed: [],
+    fitUnknown: false,
+    price: eur * 100,
   });
 
-  it("never mixes refurbished offers into the picks and shows them in their own block with the saving", () => {
-    const shared = product({
-      name: "Samsung RB34",
-      rating: 85,
-      tags: tallTags,
-      offers: [
-        offer({ priceCents: 62900, condition: "new" }),
-        offer({ priceCents: 46900, condition: "refurbished", grade: "A", warrantyMonths: 12 }),
-      ],
-    });
-    const r = rank(base({ products: [...products, shared] }));
+  it("badge only for a clear winner with known fit data", () => {
+    const tie = assignTiers([cand("A", 387, 80), cand("B", 396, 80), cand("C", 410, 80)], fridge);
+    expect(tie.picks.some((p) => p.recommended)).toBe(false);
+    expect(tie.meaningful).toBe(false);
+    expect(tie.picks.every((p) => p.tier === null)).toBe(true);
+
+    const clear = assignTiers([cand("A", 300, 80), cand("B", 450, 92), cand("C", 700, 81)], fridge);
+    expect(clear.picks.find((p) => p.recommended)?.product.name).toBe("B");
+    expect(clear.picks.map((p) => p.tier)).toEqual(["budget", "mid", "top"]);
+
+    const unknownFit = assignTiers(
+      [cand("A", 300, 80), cand("B", 450, 92, { install: "free" } as never)],
+      fridge,
+    );
+    expect(unknownFit.picks.some((p) => p.recommended)).toBe(false);
+  });
+});
+
+describe("extras and refurbished", () => {
+  it("fewer than three in range → at most two extras ≤ 25 % over the upper limit, labelled", () => {
+    const r = rank(
+      ownerCase([
+        combi("In 1", 450, 176),
+        combi("Over 1", 560, 176),
+        combi("Over 2", 600, 176),
+        combi("Way over", 700, 176),
+      ]),
+    );
+    expect(r.picks).toHaveLength(1);
+    expect(r.extras.map((e) => e.product.name)).toEqual(["Over 1", "Over 2"]);
+    expect(r.extras[0]!.overBudgetByCents).toBe(6000);
+  });
+
+  it("refurbished offers never mix with the picks", () => {
+    const refurb = combi("Refurb", 400, 176);
+    refurb.offers = [offer({ condition: "refurbished", priceCents: 30000 }), offer({ priceCents: 52000 })];
+    const r = rank({ ...ownerCase([refurb, combi("New", 420, 176)]), budget: null });
     expect(r.picks.every((p) => p.offer.condition === "new")).toBe(true);
-    expect(r.extras.every((p) => p.offer.condition === "new")).toBe(true);
-    expect(r.refurbished).toHaveLength(1);
-    expect(r.refurbished[0]!.offer.condition).toBe("refurbished");
-    expect(r.refurbished[0]!.savingVsNewCents).toBe(16000);
-    expect(r.refurbished[0]!.newPriceCents).toBe(62900);
+    expect(r.refurbished[0]!.savingVsNewCents).toBe(22000);
+  });
+});
 
-    const off = rank(base({ products: [...products, shared], includeRefurbished: false }));
-    expect(off.refurbished).toEqual([]);
+describe("brands (§2.4)", () => {
+  it("a preferred brand scores higher; 'only these' filters", () => {
+    const ps = [combi("Bosch A", 400, 176), combi("Beko B", 410, 176)];
+    const soft = rank({ ...ownerCase(ps), brands: ["Beko"] });
+    expect(soft.picks.find((p) => p.recommended)?.product.brand ?? soft.picks[0]!.product.brand).toBe("Beko");
+    const strict = rank({ ...ownerCase(ps), brands: ["Beko"], brandsOnly: true });
+    expect(strict.picks.map((p) => p.product.brand)).toEqual(["Beko"]);
+    expect(strict.excludedBy.$brands).toBe(1);
+  });
+});
+
+describe("relax suggestions (§4.2)", () => {
+  it("offers the smallest budget step that adds products, with the true gain", () => {
+    const ps = [combi("A", 450, 176), combi("B", 540, 176), combi("C", 545, 176)];
+    const r = relaxations(ownerCase(ps));
+    expect(r[0]).toEqual({ kind: "price_max", maxCents: 55000, gain: 2 });
   });
 
-  it("refurbished block also obeys budget and hard filters", () => {
-    const refurbOnly = product({
-      name: "Refurb builtin",
-      tags: ["builtin", "tall", "yes"],
-      offers: [offer({ priceCents: 30000, condition: "refurbished" })],
-    });
-    const refurbPricey = product({
-      name: "Refurb pricey",
-      tags: tallTags,
-      offers: [offer({ priceCents: 99000, condition: "refurbished" })],
-    });
-    const r = rank(base({ products: [refurbOnly, refurbPricey] }));
-    expect(r.picks).toEqual([]);
-    expect(r.refurbished).toEqual([]);
+  it("offers to drop the lower price limit, 'only these brands' and the missing-data filter", () => {
+    const ps = [
+      combi("Cheap", 300, 176),
+      combi("Beko", 420, 176),
+      combi("Bosch", 430, 176),
+      noHeight("NoData", 440),
+    ];
+    const open = relaxations(ownerCase(ps));
+    expect(open.find((x) => x.kind === "price_min")?.gain).toBe(1);
+    expect(open.at(-1)).toMatchObject({ kind: "show_unknown", gain: 1 });
+    const strict = relaxations({ ...ownerCase(ps), brands: ["Beko"], brandsOnly: true });
+    expect(strict.find((x) => x.kind === "brands")?.gain).toBe(1);
   });
 
-  it("the best price across stores is the one used", () => {
-    const p = product({
-      name: "Multi",
-      tags: tallTags,
-      offers: [
-        offer({ priceCents: 71900, storeId: "s2", storeName: "Veikals B" }),
-        offer({ priceCents: 68900, storeId: "s3", storeName: "Veikals C" }),
-        offer({ priceCents: 60000, storeId: "s4", storeName: "Veikals D", stock: "out" }),
-      ],
-    });
-    const r = rank(base({ products: [p] }));
-    expect(r.picks[0]!.offer.priceCents).toBe(68900);
-    expect(r.picks[0]!.offer.storeName).toBe("Veikals C");
+  it("drops a height limit entirely when raising it does not help", () => {
+    const r = relaxations(withLimit([combi("A", 450, 176), combi("Tall", 450, 205)]));
+    expect(r.find((x) => x.kind === "range_max")).toMatchObject({ questionId: "height", max: null, gain: 1 });
   });
 
-  it("carries unconfirmed question ids for products with missing data", () => {
-    const p = product({ name: "Mystery", tags: [], offers: [offer({ priceCents: 50000 })] });
-    const r = rank(base({ products: [p] }));
-    expect(r.picks[0]!.unconfirmed).toEqual(["type", "size", "freezer"]);
+  it("offers to raise a height limit", () => {
+    const r = relaxations(withLimit([combi("A", 450, 176), combi("B", 450, 182)]));
+    expect(r.find((x) => x.kind === "range_max")).toMatchObject({ questionId: "height", max: 183, gain: 1 });
+  });
+});
+
+describe("score", () => {
+  it("soft answers earn points through attribute conditions; reasons explain them", () => {
+    const p = combi("A", 400, 176, { no_frost: true, noise_db: 36 });
+    const s = scoreProduct(p, fridge, { install: "free", priorities: ["nofrost", "quiet"] });
+    expect(s.score).toBe(80 + 15 + 12);
+    expect(whyItFits(s.reasons)).toEqual(["No Frost — nav jāatkausē", "Kluss — 38 dB vai mazāk"]);
   });
 });

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import raw from "../../../data/categories.json";
+import { attributeCatalog } from "@/domain/catalog/attributes";
 import { allSubcategories, catalog, detectSubcategory, getSubcategory } from "./catalog";
 import { CatalogSchema } from "./schema";
 
-// Guards the data file: a bad edit fails CI before it reaches the UI.
+// Guards the data file: a bad edit fails CI before it reaches the UI. The
+// core rules of docs/FILTERS_PLAN.md are checked here for every category.
 
 describe("data/categories.json", () => {
   it("matches the schema", () => {
@@ -16,15 +18,65 @@ describe("data/categories.json", () => {
     expect(allSubcategories()).toHaveLength(33);
   });
 
-  it("no subcategory still uses a bespoke flow", () => {
+  it("core rule 1: every flow question says why it is asked up front", () => {
     for (const sub of allSubcategories()) {
-      expect(sub.custom_flow ?? false, sub.id).toBe(false);
-      expect(sub.questions.length, sub.id).toBeGreaterThan(0);
-      expect(sub.budget_steps_eur.length, sub.id).toBeGreaterThanOrEqual(3);
+      for (const q of sub.questions.filter((x) => x.stage === "flow")) {
+        expect(["fit", "price", "kind"], `${sub.id}.${q.id}`).toContain(q.up_front_reason);
+      }
     }
   });
 
-  it("every hard-filter single question with an 'I don't know' option marks it passthrough", () => {
+  it("core rule 3: pictures where the shape or size decides, all-or-nothing within a question", () => {
+    const SIZE = /^(height|width|depth)_cm$/;
+    for (const sub of allSubcategories()) {
+      for (const q of sub.questions) {
+        const real = q.options.filter((o) => !o.passthrough);
+        const drawn = real.filter((o) => o.illustration).length;
+        expect([0, real.length], `${sub.id}.${q.id}: every option drawn or none`).toContain(drawn);
+        // A choice between sizes is always shown as pictures drawn to one scale.
+        const sizeChoice = real.length > 0 && real.every((o) => o.match?.some((m) => SIZE.test(m.attr)));
+        if (q.stage === "flow" && sizeChoice) expect(drawn, `${sub.id}.${q.id}`).toBe(real.length);
+      }
+    }
+  });
+
+  it("every answer condition refers to a real attribute and enum value", () => {
+    for (const sub of allSubcategories()) {
+      const attrs = attributeCatalog.subcategories[sub.id]!;
+      for (const q of sub.questions) {
+        const keys = [
+          ...q.options.flatMap((o) => (o.match ?? []).map((m) => m)),
+          ...(q.range ? [{ attr: q.range.attr }] : []),
+          ...(q.input?.attr ? [{ attr: q.input.attr }] : []),
+        ];
+        for (const m of keys) {
+          const isEnum = !!attrs.enums[m.attr];
+          expect(isEnum || !!attributeCatalog.attributes[m.attr], `${sub.id}.${q.id}: ${m.attr}`).toBe(true);
+          const eq = (m as { eq?: unknown }).eq;
+          if (isEnum && typeof eq === "string") {
+            expect(attrs.enums[m.attr]!.values, `${sub.id}.${q.id}: ${m.attr}=${eq}`).toContain(eq);
+          }
+        }
+      }
+      for (const key of sub.compare) {
+        expect(!!attrs.enums[key] || !!attributeCatalog.attributes[key], `${sub.id} compare ${key}`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  it("hard choice options either have attribute conditions or are passthrough", () => {
+    for (const sub of allSubcategories()) {
+      for (const q of sub.questions) {
+        if (!q.hard_filter || q.type === "number" || q.type === "range") continue;
+        for (const o of q.options)
+          expect(!!o.match || !!o.passthrough, `${sub.id}.${q.id}.${o.value}`).toBe(true);
+      }
+    }
+  });
+
+  it("every 'I don't know' style option is passthrough", () => {
     for (const sub of allSubcategories()) {
       for (const q of sub.questions) {
         for (const o of q.options) {
@@ -32,17 +84,6 @@ describe("data/categories.json", () => {
             expect(o.passthrough, `${sub.id}.${q.id}.${o.value}`).toBe(true);
           }
         }
-      }
-    }
-  });
-
-  it("no option is labelled 'Dizains' (cannot be scored from data)", () => {
-    for (const sub of allSubcategories()) {
-      for (const q of sub.questions) {
-        expect(
-          q.options.map((o) => o.label),
-          `${sub.id}.${q.id}`,
-        ).not.toContain("Dizains");
       }
     }
   });
@@ -61,7 +102,7 @@ describe("data/categories.json", () => {
     expect(detectSubcategory("gribu jaunu televizoru")).toBeNull();
   });
 
-  it("budget steps are ascending", () => {
+  it("budget steps are ascending (they are the price presets)", () => {
     for (const sub of allSubcategories()) {
       const steps = sub.budget_steps_eur;
       expect(
@@ -69,5 +110,10 @@ describe("data/categories.json", () => {
         sub.id,
       ).toEqual(steps);
     }
+  });
+
+  it("every subcategory has attribute data", () => {
+    for (const sub of allSubcategories())
+      expect(attributeCatalog.subcategories[sub.id], sub.id).toBeDefined();
   });
 });

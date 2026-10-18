@@ -33,9 +33,9 @@ describe("routeFreeText", () => {
       out_of_scope: false,
       confidence: 88,
       prefilled: [
-        { question_id: "type", value: "free" },
-        { question_id: "size", value: "compact" },
-        { question_id: "priorities", value: ["quiet", "price"] },
+        { question_id: "install", value: "free" },
+        { question_id: "size", value: "h85" },
+        { question_id: "priorities", value: ["quiet", "energy"] },
         { question_id: "household", value: "nine" }, // not an option → dropped
         { question_id: "evil", value: "x" }, // unknown question → dropped
       ],
@@ -43,7 +43,7 @@ describe("routeFreeText", () => {
     const r = await routeFreeText("Mazs kluss ledusskapis studentam, lēts", { caller, llmEnabled: true });
     expect(r).toEqual({
       subcategoryId: "fridge",
-      prefilled: { type: "free", size: "compact", priorities: ["quiet", "price"] },
+      prefilled: { install: "free", size: "h85", priorities: ["quiet", "energy"] },
       outOfScope: false,
       source: "llm",
       confidence: 88,
@@ -132,16 +132,16 @@ describe("helpers", () => {
     ).toBe(false);
   });
 
-  it("validateRouterOutput drops hidden-question answers (grinder burr implied by espresso)", () => {
+  it("validateRouterOutput drops answers to questions hidden by showIf (no freestanding size for a built-in)", () => {
     const r = validateRouterOutput({
-      subcategory: "grinder",
+      subcategory: "fridge",
       out_of_scope: false,
       confidence: 70,
       prefilled: [
-        { question_id: "g0", value: "espresso" },
-        { question_id: "g1", value: "blade" },
+        { question_id: "install", value: "builtin" },
+        { question_id: "size", value: "h175" },
       ],
     });
-    expect(r.prefilled).toEqual({ g0: "espresso" });
+    expect(r.prefilled).toEqual({ install: "builtin" });
   });
 });

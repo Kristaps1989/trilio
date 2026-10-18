@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { subcategoriesWithRefurbished } from "@/db/queries/catalog";
-import { urgencyDate } from "@/domain/delivery/delivery";
+import { loadCandidates } from "@/db/queries/catalog";
+import { defaultOption, optionCounts, priceStats, questionsThatMatter } from "@/domain/flow/insight";
 import { decodeState, encodeState, nextUnanswered, sequence, TRAILING } from "@/domain/flow/state";
-import { progress } from "@/domain/questions/engine";
+import { flowQuestions } from "@/domain/questions/engine";
 import { getGroup, getSubcategory } from "@/domain/questions/catalog";
-import type { Question, Subcategory } from "@/domain/questions/schema";
-import { formatDateDative, formatEur } from "@/i18n/format";
+import type { Answers, Question } from "@/domain/questions/schema";
 import { Screen } from "@/ui/layout";
 import { TopProgress } from "@/ui/shell/TopProgress";
 import { QuestionScreen, type ScreenQuestion } from "../../QuestionScreen";
@@ -25,77 +24,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: getSubcategory(sub)?.label ?? "" };
 }
 
-function toScreen(q: Question): ScreenQuestion {
-  return {
-    id: q.id,
-    title: q.title,
-    why: q.why ?? null,
-    help: q.help ?? null,
-    type: q.type,
-    maxSelect: q.max_select,
-    input: q.input,
-    options: q.options.map((o) => ({
-      value: o.value,
-      label: o.label,
-      sublabel: o.sublabel ?? null,
-      exclusive: o.exclusive,
-    })),
-  };
+/** Answers to the flow questions before `q`, so counts show what each option would leave. */
+function answersBefore(questions: Question[], answers: Answers, q: Question): Answers {
+  const out: Answers = {};
+  for (const x of questions) {
+    if (x.id === q.id) break;
+    if (answers[x.id] !== undefined) out[x.id] = answers[x.id]!;
+  }
+  return out;
 }
 
-async function trailingScreen(id: string, sub: Subcategory): Promise<ScreenQuestion> {
-  const t = await getTranslations();
-  if (id === TRAILING.budget) {
-    return {
-      id,
-      title: t("budget.title"),
-      why: t("budget.why"),
-      type: "single",
-      options: [
-        ...sub.budget_steps_eur.map((eur) => ({
-          value: String(eur * 100),
-          label: t("budget.upTo", { amount: formatEur(eur * 100) }),
-        })),
-        { value: "custom", label: t("budget.custom") },
-        { value: "none", label: t("budget.notSet") },
-      ],
-      customNumber: { optionValue: "custom", label: t("budget.customLabel"), min: 10, max: 100000 },
-    };
-  }
-  if (id === TRAILING.refurbished) {
-    return {
-      id,
-      title: t("refurbished.title"),
-      why: t("refurbished.why"),
-      type: "single",
-      options: [
-        { value: "yes", label: t("refurbished.yes") },
-        { value: "no", label: t("refurbished.no") },
-      ],
-    };
-  }
-  const now = new Date();
-  return {
-    id,
-    title: t("urgency.title"),
-    type: "single",
-    options: [
-      {
-        value: "asap",
-        label: t("urgency.asap"),
-        sublabel: t("urgency.asapSub", { date: formatDateDative(urgencyDate("asap", now, "LV")) }),
-      },
-      {
-        value: "two_weeks",
-        label: t("urgency.twoWeeks"),
-        sublabel: t("urgency.twoWeeksSub", { date: formatDateDative(urgencyDate("two_weeks", now, "LV")) }),
-      },
-      { value: "no_rush", label: t("urgency.noRush"), sublabel: t("urgency.noRushSub") },
-    ],
-  };
-}
-
-/** Spec §2.2: one question per screen; the URL carries the answers. */
+/**
+ * One question per screen (spec §2.2, docs/FILTERS_PLAN.md core rules): only
+ * the questions that decide fit, price or the kind of product, skipped when
+ * the stock makes them irrelevant, then the price range; the URL carries the answers.
+ */
 export default async function QuestionPage({ params, searchParams }: Props) {
   const { group, sub: subId } = await params;
   const { a, q } = await searchParams;
@@ -104,30 +47,79 @@ export default async function QuestionPage({ params, searchParams }: Props) {
   if (!g || !sub || !g.subcategories.some((s) => s.id === sub.id)) notFound();
 
   const state = decodeState(sub, a);
-  const hasRefurbished = (await subcategoriesWithRefurbished(db)).has(sub.id);
-  const ids = sequence(sub, state, hasRefurbished);
-  const currentId = q && ids.includes(q) ? q : nextUnanswered(sub, state, hasRefurbished);
+  const products = await loadCandidates(db, sub.id);
+  const ctx = { products, sub, answers: state.answers };
+  const matter = new Set(questionsThatMatter(ctx).map((x) => x.id));
+  const skip = (x: Question) => !matter.has(x.id);
+  const ids = sequence(sub, state, skip);
+  const currentId = q && ids.includes(q) ? q : nextUnanswered(sub, state, skip);
   const basePath = `/izvelies/${g.id}/${sub.id}`;
   if (!currentId) redirect(`/rezultati?sub=${sub.id}&a=${encodeState(state)}`);
 
-  const question = sub.questions.find((x) => x.id === currentId);
-  // Budget is stored in cents; the screen's option values are cents too, so the current answer highlights.
-  const screen = question ? toScreen(question) : await trailingScreen(currentId, sub);
-  const trailingIds = ids.filter((id) => !sub.questions.some((x) => x.id === id));
-  const { n, m } = progress(sub, state.answers, currentId, trailingIds);
   const t = await getTranslations();
-  const screenState =
-    currentId === TRAILING.budget && typeof state.trailing.budget === "number"
-      ? { ...state, trailing: { ...state.trailing, budget: state.trailing.budget } }
-      : state;
+  const flow = flowQuestions(sub, state.answers);
+  const question = sub.questions.find((x) => x.id === currentId);
+  let screen: ScreenQuestion;
+  if (question) {
+    const before = { ...ctx, answers: answersBefore(flow, state.answers, question) };
+    const common = {
+      id: question.id,
+      title: question.title,
+      why: question.why ?? null,
+      help: question.help ?? null,
+    };
+    if (question.type === "range") {
+      const r = question.range!;
+      screen = {
+        ...common,
+        kind: "range",
+        unit: r.unit,
+        min: r.min,
+        max: r.max,
+        step: r.step,
+        presets: r.presets ?? [],
+      };
+    } else if (question.type === "number") {
+      screen = { ...common, kind: "number", input: question.input! };
+    } else {
+      const counts = optionCounts(before, question);
+      const real = question.options.filter((o) => !o.passthrough).map((o) => counts[o.value] ?? 0);
+      const sameCounts = real.length > 1 && real.every((c) => c === real[0]);
+      screen = {
+        ...common,
+        kind: "choice",
+        defaultValue: defaultOption(question, counts),
+        options: question.options.map((o) => ({
+          value: o.value,
+          label: o.label,
+          sublabel: o.sublabel ?? null,
+          illustration: o.illustration,
+          // Equal counts on every option say nothing; they are left out.
+          count: sameCounts ? undefined : counts[o.value],
+        })),
+      };
+    }
+  } else {
+    const stats = priceStats(ctx);
+    screen = {
+      id: TRAILING.budget,
+      title: t("budget.title"),
+      why: t("budget.why"),
+      kind: "price",
+      stats,
+      presetsCents: sub.budget_steps_eur.map((eur) => eur * 100),
+    };
+  }
 
+  const n = Math.max(1, ids.indexOf(currentId) + 1);
+  const m = ids.length;
   return (
     <Screen>
       <TopProgress percent={(n / (m + 1)) * 100} />
       <p id="flow-progress" className="text-[15px] font-bold text-lime" aria-live="polite">
         {t("flow.progress", { n, m })}
       </p>
-      <QuestionScreen key={currentId} question={screen} state={screenState} basePath={basePath} />
+      <QuestionScreen key={currentId} question={screen} state={state} basePath={basePath} subId={sub.id} />
     </Screen>
   );
 }

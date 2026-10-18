@@ -5,7 +5,7 @@ import type { AdapterStore, FeedAdapter, ParseResult } from "./types";
 // attribute names by default; a store can map its own headers through
 // `columnMap` ({ "Prece": "title", "Cena": "price", … }).
 
-const DEFAULT_COLUMNS: Record<string, keyof FeedRecord> = {
+const DEFAULT_COLUMNS: Record<string, Exclude<keyof FeedRecord, "spec_table">> = {
   id: "id",
   title: "title",
   description: "description",
@@ -76,10 +76,13 @@ export const csvAdapter: FeedAdapter = {
       result.rejected.push({ reason: "empty", raw: null });
       return result;
     }
-    const map: Record<string, keyof FeedRecord> = {
+    const map: Record<string, Exclude<keyof FeedRecord, "spec_table">> = {
       ...DEFAULT_COLUMNS,
       ...Object.fromEntries(
-        Object.entries(store.columnMap ?? {}).map(([k, v]) => [k.toLowerCase(), v as keyof FeedRecord]),
+        Object.entries(store.columnMap ?? {}).map(([k, v]) => [
+          k.toLowerCase(),
+          v as Exclude<keyof FeedRecord, "spec_table">,
+        ]),
       ),
     };
     const columns = header.map((h) => map[h.trim().toLowerCase().replace(/^g:/, "")]);

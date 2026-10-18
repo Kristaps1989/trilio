@@ -4,7 +4,7 @@ import { createDb, type Db } from "@/db/client";
 import { offers, priceSnapshots, products, stores } from "@/db/schema";
 import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { markUnseenOutOfStock, upsertOffers } from "./upsert";
-import type { NormalisedOffer } from "./types";
+import type { UpsertRow } from "./types";
 
 // Integration test against the database in DATABASE_URL (CI starts Postgres).
 // Rows are namespaced with "test:" so the test is safe on a seeded database.
@@ -15,7 +15,7 @@ const run = url ? describe : describe.skip;
 // A GTIN that no real feed will carry, so the test never touches seeded rows.
 const EAN = "990000000001" + gtinCheckDigit("990000000001");
 
-function row(overrides: Partial<NormalisedOffer>): NormalisedOffer {
+function row(overrides: Partial<UpsertRow>): UpsertRow {
   return {
     externalId: "test:x1",
     ean: EAN,

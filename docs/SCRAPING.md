@@ -25,8 +25,58 @@ matching, price history, the 30-day low and the radar all work the same way.
    agreeing `data-ean`, `data-product-ean` or `data-flix-ean` attribute on a
    one-product page is used instead. Used items are rejected. Refurbished
    items go to the refurbished block, as with feeds.
-5. Pages never seen before are read first, then the ones unseen longest, so
-   a run capped at `maxPages` rotates through a large catalogue.
+5. **The spec table** of a one-product page is read too (see below). It
+   becomes the product's typed attributes, and the raw table is stored in
+   `products.spec_table`.
+6. **Sanity check.** Each row is checked against the subcategory before it is
+   saved, so mis-filed products and accessories are rejected (see below).
+7. Pages never seen before are read first, then the ones unseen longest, so
+   a run capped at `maxPages` rotates through a large catalogue. Pages read
+   before spec tables were stored also count as never seen, so they are
+   re-read first.
+
+## Spec tables
+
+JSON-LD has no dimensions, volume, type or energy class. The shop's
+specification table does, so `extractSpecTable` in
+`src/services/ingestion/specs/table.ts` reads it as label → value pairs:
+
+| Shop | Markup |
+|---|---|
+| euronics.lv | `<span class="specification__title">` + `<span class="specification__value">` |
+| tet.lv | `i-specs-table__label-text` + `i-specs-table__value-el` (across tooltip markup) |
+| m79.lv | `<div class="spec_line">Label: <span class="value">…</span></div>` |
+| any shop | `<th>`/`<td>` rows and `<dt>`/`<dd>` pairs |
+| fallback | "Label: value, Label: value" in the meta description (tet.lv and m79.lv put key specs there) |
+
+Labels are normalised: lower case, single spaces, no trailing colon. The
+first value for a repeated label wins, because shops repeat key specs in
+summaries. Labels over 80 characters and values over 300 are skipped. m79.lv
+names such as "… | Dziļums 54 cm | Mazgāšanas ietilpība 7kg" are read as
+label/value pairs as well.
+
+The labels are mapped to our attributes by `data/attributes.json`, not by
+per-shop code. A new shop label is usually a one-line data change. See
+`docs/ATTRIBUTES.md` for the mapping, units, source priority and how values
+from several shops are merged by EAN. Saved real pages for the parser tests
+are in `src/services/ingestion/specs/__fixtures__/pages.json`.
+
+## Rejected rows
+
+Every rejected row is counted in the run's `rowsRejected`, and up to 20
+appear in `rejectedSample` with their reason:
+
+| Reason | Meaning |
+|---|---|
+| `unmapped_category` | The shop category is not in `stores.category_map`. |
+| `price`, `availability`, `condition` | Missing or unreadable price, stock or condition. Used items are rejected too. |
+| `no_identity` | Neither an EAN nor a model code. |
+| `accessory` | The name matches a spare-part or accessory pattern (filters, bags, shelves …). |
+| `category_mismatch` | Nothing in the name, description or spec table shows the product belongs to the subcategory. The shop's category label alone is not trusted: m79.lv lists toys under coffee machines. A spec table that states a category-specific attribute, such as a dehydrator's trays, also counts as proof. |
+| `implausible_price` | The price is outside the subcategory's plausible range. |
+
+The word stems, accessory patterns and price ranges are data in
+`data/attributes.json` (`docs/ATTRIBUTES.md`, "Sanity rules").
 
 ## Politeness and limits
 
@@ -109,9 +159,14 @@ by `npm run db:seed`.
    `Product` that has an EAN and an offer price in EUR.
 2. Find which URL path segment carries the category, and write `include`,
    `categoryFromUrl` and `category_map` for the categories we handle.
-3. Add the store to `src/db/stores.ts`, run `npm run db:seed`, then try a few
+3. Check that its spec table is read: save a product page and run it through
+   `extractSpecTable`. If the shop uses new markup, add a pattern and a
+   fixture. Add any labels we do not know yet to `data/attributes.json`.
+4. Add the store to `src/db/stores.ts`, run `npm run db:seed`, then try a few
    pages: `npm run ingest -- <slug>` and check `rowsRejected` and the
-   rejected sample.
+   rejected sample. A high `category_mismatch` count usually means a missing
+   word stem or spec label. Then check `/api/status` coverage for the
+   categories the shop sells.
 
 ## Legal note
 

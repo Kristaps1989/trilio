@@ -1,4 +1,5 @@
 import { normalizeEan } from "@/domain/catalog/ean";
+import { normaliseProduct, sanityCheck } from "@/domain/catalog/normalise";
 import { detectSubcategory, getSubcategory } from "@/domain/questions/catalog";
 import { acceptRow, type AdapterStore, type ParseResult } from "./types";
 
@@ -26,6 +27,8 @@ export type FeedRecord = {
   warranty_months?: string;
   grade?: string;
   energy_kwh_year?: string;
+  /** Label → value pairs from the product page's spec table (scraped shops). */
+  spec_table?: Record<string, string>;
 };
 
 /** "699.00 EUR", "1 079,00 EUR", "649" → cents. Only EUR is accepted. */
@@ -83,6 +86,10 @@ export function mapCategory(record: FeedRecord, store: AdapterStore): string | n
   return null;
 }
 
+function numberOrNull(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? Math.round(v) : null;
+}
+
 function intOrNull(text: string | undefined): number | null {
   if (!text) return null;
   const n = Number.parseInt(text, 10);
@@ -116,6 +123,20 @@ export function recordToOffer(
   const modelCode = record.mpn?.trim() || "";
   if (!ean && !modelCode) return void result.rejected.push({ reason: "no_identity", raw });
 
+  // Typed attributes from the spec table and product text (data/attributes.json),
+  // then the sanity check that keeps mis-filed products and accessories out.
+  const text = {
+    name: record.title?.trim() ?? "",
+    category: [record.product_type, record.google_product_category].filter(Boolean).join(" | "),
+    description: record.description ?? null,
+    specTable: record.spec_table ?? null,
+  };
+  const normalised = normaliseProduct(subcategoryId, text);
+  const sane = sanityCheck(subcategoryId, text, priceCents, normalised);
+  if (!sane.ok)
+    return void result.rejected.push({ reason: sane.reason, raw: record.link ?? record.title ?? null });
+  const kwhYear = intOrNull(record.energy_kwh_year) ?? numberOrNull(normalised.attributes.kwh_year);
+
   acceptRow(
     result,
     {
@@ -126,10 +147,12 @@ export function recordToOffer(
       name: record.title?.trim(),
       description: record.description?.trim() || null,
       subcategoryId,
-      attributes: {},
+      attributes: normalised.attributes,
+      attributeSources: normalised.sources,
+      specTable: record.spec_table && Object.keys(record.spec_table).length ? record.spec_table : null,
       tags: [],
       specs: null,
-      kwhYear: intOrNull(record.energy_kwh_year),
+      kwhYear,
       rating: null,
       imageUrl: record.image_link?.trim() || null,
       condition,

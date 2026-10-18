@@ -1,13 +1,17 @@
-import type { Answers, AnswerValue, Option, Question, ShowIf, Subcategory } from "./schema";
+import type { Answers, AnswerValue, Option, Question, RangeAnswer, ShowIf, Subcategory } from "./schema";
 
 // Pure question-flow logic. No React, no DB. The UI calls these with the
 // subcategory definition and the answers collected so far.
 
-/** Number of shared trailing questions appended by the UI: budget, refurbished (conditional), urgency. */
-export const TRAILING_QUESTION_IDS = ["budget", "refurbished", "urgency"] as const;
+/** The shared trailing question appended to every flow: the price range. */
+export const TRAILING_QUESTION_IDS = ["budget"] as const;
+
+export function isRangeAnswer(a: AnswerValue | undefined): a is RangeAnswer {
+  return typeof a === "object" && a !== null && !Array.isArray(a);
+}
 
 function answerMatches(answer: AnswerValue | undefined, values: string[]): boolean {
-  if (answer === undefined) return false;
+  if (answer === undefined || isRangeAnswer(answer)) return false;
   if (Array.isArray(answer)) return answer.some((a) => values.includes(a));
   return values.includes(String(answer));
 }
@@ -38,9 +42,19 @@ export function impliedAnswers(sub: Subcategory, answers: Answers): Answers {
   return implied;
 }
 
-/** Questions currently visible, in order, given the answers so far. */
+/** Questions currently visible, in order, given the answers so far (both stages). */
 export function visibleQuestions(sub: Subcategory, answers: Answers): Question[] {
   return sub.questions.filter((q) => showIfSatisfied(q.showIf, answers));
+}
+
+/** Visible questions asked before results (core rule 1: fit, price or kind of product). */
+export function flowQuestions(sub: Subcategory, answers: Answers): Question[] {
+  return visibleQuestions(sub, answers).filter((q) => q.stage === "flow");
+}
+
+/** Visible questions refined on the results page (priorities, comfort features). */
+export function resultsQuestions(sub: Subcategory, answers: Answers): Question[] {
+  return visibleQuestions(sub, answers).filter((q) => q.stage === "results");
 }
 
 /**
@@ -61,9 +75,9 @@ export function effectiveAnswers(sub: Subcategory, answers: Answers): Answers {
   return result;
 }
 
-/** The first visible question without an answer, or null when the category questions are complete. */
+/** The first visible flow question without an answer, or null when the category questions are complete. */
 export function nextQuestion(sub: Subcategory, answers: Answers): Question | null {
-  for (const q of visibleQuestions(sub, answers)) {
+  for (const q of flowQuestions(sub, answers)) {
     if (answers[q.id] === undefined) return q;
   }
   return null;
@@ -81,7 +95,7 @@ export function progress(
   currentId: string,
   trailing: readonly string[] = TRAILING_QUESTION_IDS,
 ): Progress {
-  const visible = visibleQuestions(sub, answers);
+  const visible = flowQuestions(sub, answers);
   const ids = [...visible.map((q) => q.id), ...trailing];
   const idx = ids.indexOf(currentId);
   return { n: idx >= 0 ? idx + 1 : ids.length, m: ids.length };
@@ -91,6 +105,25 @@ export type ValidationResult = { ok: true; value: AnswerValue } | { ok: false; r
 
 /** Validate a raw answer against the question. Multi answers are normalised (exclusive option wins, max_select enforced). */
 export function validateAnswer(q: Question, raw: unknown): ValidationResult {
+  if (q.type === "range") {
+    // { min?, max? }; "any" or {} is "no limit". Bounds are clamped to the slider; a one-handle slider keeps max only.
+    if (raw === "any") return { ok: true, value: {} };
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw))
+      return { ok: false, reason: "not_a_range" };
+    const r = q.range!;
+    const out: RangeAnswer = {};
+    for (const key of ["min", "max"] as const) {
+      const v = (raw as Record<string, unknown>)[key];
+      if (v === undefined || v === null || v === "") continue;
+      const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
+      if (!Number.isFinite(n)) return { ok: false, reason: "not_a_number" };
+      out[key] = Math.min(r.max, Math.max(r.min, n));
+    }
+    if (r.bound === "max") delete out.min;
+    if (out.min !== undefined && out.max !== undefined && out.min > out.max)
+      return { ok: false, reason: "min_above_max" };
+    return { ok: true, value: out };
+  }
   if (q.type === "number") {
     const n = typeof raw === "number" ? raw : Number(String(raw).replace(",", "."));
     if (!Number.isFinite(n)) return { ok: false, reason: "not_a_number" };
@@ -117,7 +150,7 @@ export function validateAnswer(q: Question, raw: unknown): ValidationResult {
 /** Options the user chose for a question (empty for number questions or no answer). */
 export function chosenOptions(q: Question, answers: Answers): Option[] {
   const answer = answers[q.id];
-  if (answer === undefined || q.type === "number") return [];
+  if (answer === undefined || q.type === "number" || q.type === "range" || isRangeAnswer(answer)) return [];
   const chosen = Array.isArray(answer) ? answer : [String(answer)];
   return q.options.filter((o) => chosen.includes(o.value));
 }

@@ -1,83 +1,77 @@
 import { describe, expect, it } from "vitest";
-import { getSubcategory } from "@/domain/questions/catalog";
-import { budgetCents, decodeState, encodeState, nextUnanswered, sequence, withAnswer } from "./state";
+import { limitsFridge as fridge } from "@/domain/testing/fixtures";
+import {
+  budgetCents,
+  decodeState,
+  encodeState,
+  nextUnanswered,
+  priceRange,
+  sequence,
+  withAnswer,
+  withSetting,
+  withoutAnswer,
+  type FlowState,
+} from "./state";
 
-const fridge = getSubcategory("fridge")!;
+const empty: FlowState = { answers: {}, trailing: {} };
 
-describe("flow state codec", () => {
-  it("round-trips answers and trailing values through a URL-safe string", () => {
-    const state = {
-      answers: { type: "builtin", niche: 178, priorities: ["quiet", "energy"] },
-      trailing: { budget: 80000, refurbished: "yes" as const },
+describe("flow state in the URL", () => {
+  it("round-trips answers, ranges and results-page settings", () => {
+    const s: FlowState = {
+      answers: { install: "free", height: { max: 186 }, household: "4", priorities: ["quiet"] },
+      trailing: {
+        budget: { min: 35000, max: 50000 },
+        urgency: "asap",
+        brands: ["Bosch", "Samsung"],
+        brandsOnly: true,
+      },
     };
-    const encoded = encodeState(state);
-    expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(decodeState(fridge, encoded)).toEqual(state);
+    expect(decodeState(fridge, encodeState(s))).toEqual(s);
   });
 
-  it("drops invalid answers, hidden questions, unknown keys and bad trailing values", () => {
-    const encoded = encodeState({
-      answers: { type: "builtin", size: "tall", household: "99", evil: "x" } as never,
-      trailing: { budget: -5 as never, urgency: "asap" },
+  it("drops invalid settings one by one and never throws", () => {
+    const raw = encodeState({ answers: { install: "free" }, trailing: {} }).slice(0, -2) + "!!";
+    expect(() => decodeState(fridge, raw)).not.toThrow();
+    const bad = btoa(
+      JSON.stringify({ install: "free", $budget: { min: 5, max: 1 }, $urgency: "now", $brands: ["Bosch"] }),
+    );
+    expect(decodeState(fridge, bad)).toEqual({
+      answers: { install: "free" },
+      trailing: { brands: ["Bosch"] },
     });
-    const s = decodeState(fridge, encoded);
-    expect(s.answers).toEqual({ type: "builtin" });
-    expect(s.trailing).toEqual({});
   });
 
-  it("never throws on garbage", () => {
-    expect(decodeState(fridge, "not base64 at all!!")).toEqual({ answers: {}, trailing: {} });
-    expect(decodeState(fridge, "W10")).toEqual({ answers: {}, trailing: {} }); // "[]"
-    expect(decodeState(fridge, null)).toEqual({ answers: {}, trailing: {} });
-    expect(decodeState(fridge, "x".repeat(5000))).toEqual({ answers: {}, trailing: {} });
-  });
-});
-
-describe("sequence and progress", () => {
-  it("lists visible questions then budget, refurbished (if stock) and urgency", () => {
-    const s = { answers: { type: "builtin" }, trailing: {} };
-    expect(sequence(fridge, s, true)).toEqual([
-      "type",
-      "niche",
-      "freezer",
+  it("the flow is the visible flow questions, then price (no urgency, no refurbished)", () => {
+    expect(sequence(fridge, withAnswer(empty, "install", "free"))).toEqual([
+      "install",
+      "height",
       "household",
-      "priorities",
       "budget",
-      "refurbished",
-      "urgency",
-    ]);
-    expect(sequence(fridge, s, false)).toEqual([
-      "type",
-      "niche",
-      "freezer",
-      "household",
-      "priorities",
-      "budget",
-      "urgency",
     ]);
   });
 
-  it("walks to the next unanswered id and completes", () => {
-    let s = { answers: {}, trailing: {} } as ReturnType<typeof decodeState>;
-    expect(nextUnanswered(fridge, s, false)).toBe("type");
-    s = withAnswer(s, "type", "free");
-    s = withAnswer(s, "size", "wide");
-    s = withAnswer(s, "household", "4");
-    s = withAnswer(s, "priorities", ["quiet"]);
-    expect(nextUnanswered(fridge, s, false)).toBe("budget");
-    s = withAnswer(s, "budget", "none");
-    expect(nextUnanswered(fridge, s, false)).toBe("urgency");
-    s = withAnswer(s, "urgency", "no_rush");
-    expect(nextUnanswered(fridge, s, false)).toBeNull();
-    expect(budgetCents(s)).toBeNull();
-    expect(budgetCents(withAnswer(s, "budget", 50000))).toBe(50000);
+  it("skips questions the stock makes irrelevant, unless already answered", () => {
+    const skipHeight = (q: { id: string }) => q.id === "height";
+    const s = withAnswer(empty, "install", "free");
+    expect(sequence(fridge, s, skipHeight)).toEqual(["install", "household", "budget"]);
+    expect(sequence(fridge, withAnswer(s, "height", { max: 186 }), skipHeight)).toContain("height");
+    expect(nextUnanswered(fridge, s, skipHeight)).toBe("household");
   });
 
-  it("withAnswer ignores an invalid trailing value and coerces a budget option string to cents", () => {
-    const s = { answers: {}, trailing: {} };
-    expect(withAnswer(s, "urgency", "tomorrow")).toEqual(s);
-    expect(withAnswer(s, "budget", "120000").trailing.budget).toBe(120000);
-    expect(withAnswer(s, "budget", "none").trailing.budget).toBe("none");
-    expect(withAnswer(s, "budget", "abc")).toEqual(s);
+  it("price range: object, legacy upper limit (landing pages) and none", () => {
+    expect(priceRange(withAnswer(empty, "budget", { min: 31000, max: 52300 }))).toEqual({
+      min: 31000,
+      max: 52300,
+    });
+    expect(priceRange(withAnswer(empty, "budget", "50000"))).toEqual({ max: 50000 });
+    expect(priceRange(withAnswer(empty, "budget", "none"))).toBeNull();
+    expect(budgetCents(withAnswer(empty, "budget", { min: 100, max: 900 }))).toBe(900);
+  });
+
+  it("settings and cleared answers", () => {
+    const s = withSetting(withAnswer(empty, "household", "2"), "showUnknown", true);
+    expect(s.trailing.showUnknown).toBe(true);
+    expect(withSetting(s, "showUnknown", undefined).trailing).toEqual({});
+    expect(withoutAnswer(s, "household").answers).toEqual({});
   });
 });

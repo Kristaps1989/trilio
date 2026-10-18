@@ -2,7 +2,8 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { offers, priceSnapshots, products, type Store } from "@/db/schema";
 import { modelKey } from "@/domain/catalog/ean";
-import type { NormalisedOffer } from "./types";
+import { mergeAttributes } from "@/domain/catalog/normalise";
+import type { UpsertRow } from "./types";
 
 export type UpsertStats = { productsCreated: number; offersUpserted: number; snapshots: number };
 
@@ -15,7 +16,7 @@ export type UpsertStats = { productsCreated: number; offersUpserted: number; sna
 export async function upsertOffers(
   db: Db,
   store: Pick<Store, "id">,
-  rows: NormalisedOffer[],
+  rows: UpsertRow[],
   capturedAt = new Date(),
 ): Promise<UpsertStats> {
   const stats: UpsertStats = { productsCreated: 0, offersUpserted: 0, snapshots: 0 };
@@ -26,7 +27,14 @@ export async function upsertOffers(
     const eans = [...new Set(rows.map((r) => r.ean).filter((e): e is string => !!e))];
     const keys = [...new Set(rows.map((r) => modelKey(r.brand, r.modelCode)))];
     const existing = await tx
-      .select({ id: products.id, ean: products.ean, modelKey: products.modelKey })
+      .select({
+        id: products.id,
+        ean: products.ean,
+        modelKey: products.modelKey,
+        name: products.name,
+        attributes: products.attributes,
+        attributeSources: products.attributeSources,
+      })
       .from(products)
       .where(
         eans.length
@@ -35,6 +43,10 @@ export async function upsertOffers(
       );
     const byEan = new Map(existing.filter((p) => p.ean).map((p) => [p.ean!, p.id]));
     const byKey = new Map(existing.map((p) => [p.modelKey, p.id]));
+    // What each product already knows, updated as rows of this batch are merged in.
+    const known = new Map(
+      existing.map((p) => [p.id, { name: p.name, attributes: p.attributes, sources: p.attributeSources }]),
+    );
 
     const productIdFor = new Map<number, string>();
     for (const [i, row] of rows.entries()) {
@@ -51,6 +63,8 @@ export async function upsertOffers(
             name: row.name,
             subcategoryId: row.subcategoryId,
             attributes: row.attributes,
+            attributeSources: sourcesOf(row),
+            specTable: row.specTable ?? null,
             tags: row.tags,
             specs: row.specs,
             description: row.description,
@@ -60,20 +74,34 @@ export async function upsertOffers(
           })
           .returning({ id: products.id });
         id = created!.id;
+        known.set(id, { name: row.name, attributes: row.attributes, sources: sourcesOf(row) });
         stats.productsCreated++;
         if (row.ean) byEan.set(row.ean, id);
         byKey.set(key, id);
       } else if (row.condition === "new") {
-        // Refurbished rows never overwrite the product's descriptive data.
+        // Refurbished rows never overwrite the product's descriptive data. Attributes
+        // merge by source strength, so each shop's spec table fills the others' gaps.
+        const before = known.get(id) ?? { name: row.name, attributes: {}, sources: {} };
+        const merged = mergeAttributes(before, { attributes: row.attributes, sources: sourcesOf(row) });
+        // The more descriptive name wins: some shops list only the model code.
+        const name = row.name.length >= before.name.length ? row.name : before.name;
+        known.set(id, { name, attributes: merged.attributes, sources: merged.sources });
         await tx
           .update(products)
           .set({
-            name: row.name,
-            attributes: row.attributes,
+            name,
+            attributes: merged.attributes,
+            attributeSources: merged.sources,
+            specTable: row.specTable ?? sql`${products.specTable}`,
             tags: row.tags,
             specs: row.specs,
             description: row.description,
-            kwhYear: row.kwhYear ?? sql`${products.kwhYear}`,
+            kwhYear:
+              row.kwhYear ??
+              (typeof merged.attributes.kwh_year === "number"
+                ? Math.round(merged.attributes.kwh_year)
+                : null) ??
+              sql`${products.kwhYear}`,
             rating: row.rating ?? sql`${products.rating}`,
             imageUrl: row.imageUrl ?? sql`${products.imageUrl}`,
             ean: row.ean ?? sql`${products.ean}`,
@@ -143,4 +171,10 @@ export async function markUnseenOutOfStock(
     .where(and(eq(offers.storeId, store.id), lt(offers.lastSeenAt, cutoff), sql`${offers.stock} <> 'out'`))
     .returning({ id: offers.id });
   return updated.length;
+}
+
+/** Provenance for a row's attributes; feed rows without explicit sources count as "feed". */
+function sourcesOf(row: UpsertRow): Record<string, string> {
+  if (row.attributeSources && Object.keys(row.attributeSources).length) return row.attributeSources;
+  return Object.fromEntries(Object.keys(row.attributes).map((k) => [k, "feed"]));
 }

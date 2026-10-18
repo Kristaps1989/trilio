@@ -46,35 +46,16 @@ test("guided flow: home → category → every question → results → shop", a
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ko tu meklē?");
   await page.getByRole("link", { name: /Virtuves mazā tehnika/ }).click();
   await page.getByRole("link", { name: /^Tējkannas/ }).click();
-  // Answer every question with its first option until the results page.
+  // Take the pre-selected answer on every screen ("Tālāk"); on the price
+  // screen choose "no budget" so a sparse catalogue still has results.
   const results = page.getByRole("heading", { level: 1, name: "Trīs labākie varianti tev" });
   for (let step = 0; step < 15; step++) {
-    // The last answer redirects through the question URL to /rezultati.
     await expect(page.getByText(/Jautājums \d+ no \d+/).or(results)).toBeVisible();
     if (await results.isVisible()) break;
     const before = page.url();
-    if (
-      await page
-        .getByRole("checkbox")
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
-      await page.getByRole("checkbox").first().click();
-      await page.getByRole("button", { name: "Turpināt" }).click();
-    } else if (
-      await page
-        .getByRole("textbox")
-        .isVisible()
-        .catch(() => false)
-    ) {
-      await page.getByRole("button", { name: "Turpināt" }).click();
-    } else {
-      // Prefer "no budget" so a sparse catalogue still has results.
-      const noBudget = page.getByRole("radio", { name: /Budžets nav noteikts/ });
-      if (await noBudget.isVisible().catch(() => false)) await noBudget.click();
-      else await page.getByRole("radio").first().click();
-    }
+    const noBudget = page.getByRole("button", { name: "Budžets nav noteikts" });
+    if (await noBudget.isVisible().catch(() => false)) await noBudget.click();
+    else await page.getByRole("button", { name: "Tālāk", exact: true }).click();
     // Each answer changes the URL (the answers live in it); wait for that.
     await page.waitForURL((u) => u.toString() !== before);
   }

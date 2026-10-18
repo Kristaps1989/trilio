@@ -1,11 +1,14 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { products } from "@/db/schema";
+import { mergeAttributes } from "@/domain/catalog/normalise";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { type StructuredCaller, llmModel } from "./client";
-import { extractProduct, mergeExtraction } from "./extract";
+import { extractProduct } from "./extract";
 
-// Background job: fill attributes and tags for products that have none yet.
+// Background job: fill attribute gaps that the spec table, feed and rules left.
+// Extracted values carry the source "claude", the weakest, so a later spec
+// table or EPREL record replaces them and they never overwrite better data.
 // Runs after ingestion (cron) or from the CLI. Each product is extracted
 // once; re-extraction happens only when `extracted_at` is cleared by hand.
 
@@ -36,7 +39,8 @@ export async function runExtractionJob(
       description: products.description,
       subcategoryId: products.subcategoryId,
       attributes: products.attributes,
-      tags: products.tags,
+      attributeSources: products.attributeSources,
+      specTable: products.specTable,
     })
     .from(products)
     .where(
@@ -52,7 +56,7 @@ export async function runExtractionJob(
   async function worker() {
     for (let p = queue.shift(); p; p = queue.shift()) {
       const sub = getSubcategory(p.subcategoryId);
-      if (!sub || (!p.description && !p.specs)) {
+      if (!sub || (!p.description && !p.specs && !p.specTable)) {
         // Nothing to read from: mark as done so it is not retried every run.
         await db
           .update(products)
@@ -62,7 +66,7 @@ export async function runExtractionJob(
         continue;
       }
       const extracted = await extractProduct(
-        { name: p.name, specs: p.specs, description: p.description },
+        { name: p.name, specs: p.specs, description: p.description, specTable: p.specTable },
         sub,
         caller,
       );
@@ -70,12 +74,18 @@ export async function runExtractionJob(
         result.failed++;
         continue; // left for the next run (cap, transient error)
       }
-      const merged = mergeExtraction({ attributes: p.attributes, tags: p.tags }, extracted);
+      const merged = mergeAttributes(
+        { attributes: p.attributes, sources: p.attributeSources },
+        {
+          attributes: extracted.attributes,
+          sources: Object.fromEntries(Object.keys(extracted.attributes).map((k) => [k, "claude"])),
+        },
+      );
       await db
         .update(products)
         .set({
           attributes: merged.attributes,
-          tags: merged.tags,
+          attributeSources: merged.sources,
           extractedAt: new Date(),
           extractionConfidence: extracted.confidence,
           extractionModel: llmModel(),
