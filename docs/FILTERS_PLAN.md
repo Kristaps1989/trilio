@@ -244,6 +244,141 @@ What changes:
 - Touch targets are at least 44 px and contrast at least 4.5:1.
 - The bottom sheet traps focus and closes with Esc.
 
+## Phase 6 — Every category, not just fridges
+
+Phases 0–2 and 4 are category-agnostic code. They apply to all 33 subcategories as soon as each one has its data defined. Phase 3 was written for fridges. This phase applies the same principles to every subcategory, based on a review of `data/categories.json`.
+
+### 6.1 What the review found (same pattern in every category)
+
+1. **Measurable things are asked as buckets.** Examples:
+   - washer capacity 7/9/10 kg and "slim/standard" depth;
+   - dish width 45/60;
+   - hood width 50/60/90;
+   - microwave volume 20/25/30 L;
+   - freezer size small/mid/big;
+   - air fryer portions;
+   - mini oven volume 20/35 L.
+
+   A bucket hides the real limit ("my niche is 44 cm deep") and fails the same way the fridge height did.
+2. **No question says which attribute it filters on.** A hard filter matches option values against product `tags`, and scraped products have no tags. So every hard filter in every category passes everything as "unconfirmed", exactly like the fridge case.
+3. **Type questions are text-only.** There are 35 hard choice questions with 90 options in total, for example:
+   - freezer: chest, upright, built-in;
+   - washer: front, top, combo;
+   - vacuum: robot, stick, corded;
+   - coffee: automatic, capsule, manual;
+   - juicer: slow, centrifugal, citrus.
+
+   Each is a choice a picture explains faster than a sentence.
+4. **Things that decide fit or running cost are missing.** Examples:
+   - a garage freezer needs a climate class rated for an unheated room (SN/T);
+   - a hood should be at least as wide as the hob;
+   - a dryer that stacks on a washer needs matching width and a stacking kit;
+   - washers and dishwashers use water as well as electricity;
+   - capsule coffee costs several times more per cup than beans;
+   - vacuums need bags or filters.
+5. **Compare rows are labels, not attributes.** `compare_row_labels` such as "Priekšrocības" or "Piemērots" have no attribute behind them, so the comparison and the upgrade delta (2.8) have nothing to compare.
+6. **Budget steps are fixed per category.** For example, the €30/60/120 kettle steps are fine as presets, but they are the only way to say a price.
+
+### 6.2 One data definition per subcategory (`data/attributes.json`)
+
+For every subcategory, list its key attributes with:
+- unit and normalisation (cm, L, kg, dB, W, m³/h, min);
+- whether it is **fit-critical** (decides whether the product fits or works at all) or a **comfort** attribute;
+- the source order (EPREL → spec table → same EAN → Claude → web);
+- which question and compare row use it.
+
+This replaces `NUMBER_FILTERS` hard-coded in `filters.ts`. It also turns `compare_row_labels` into real attributes and drives the delta text, the "Vērts zināt" notes and the coverage report. Tags are derived from attributes by code (Phase 1.1), so hard filters finally have data to match.
+
+| Subcategory | Fit-critical | Comfort and value |
+|---|---|---|
+| fridge | form, install, height, width, depth (built-in: niche height) | volume, energy class + kWh, noise, No Frost |
+| freezer | form, install, height (built-in), **climate class** for a garage | volume, energy + kWh, No Frost, fast freeze |
+| washer | loading (front/top), **depth**, width, washer-dryer combo | capacity kg, spin rpm, energy + kWh, **water L/cycle**, noise, steam |
+| dryer | type (heat pump/condenser), **stackable + kit**, depth | capacity kg, energy + kWh, noise |
+| dish | install, **width**, height (built-in) | place settings, noise, energy + kWh, **water**, third basket, auto-open drying |
+| hob | type, **cut-out width/depth**, **power connection** (1- or 3-phase, gas type) | zones, flexi zone, bridge, booster |
+| oven | **niche height × width** (60 or compact 45 cm) | volume L, cleaning (pyrolysis/catalytic), steam, Wi-Fi, energy class |
+| hood | install, **width ≥ hob width** | airflow m³/h, noise dB, extraction or recirculation, **filter cost** |
+| micro | install, **niche size** (built-in) | volume L, grill, combi, power W |
+| vacuum | type, mop | run time vs floor area, suction, noise, pet brush, HEPA, **bags/filters cost**, mapping and self-empty (robot) |
+| steamclean | type | heat-up time, tank L, accessories |
+| coffee | type (automatic/capsule/manual) | milk system, **cost per cup**, pressure, grinder, cups per day |
+| grinder | burr or blade | grind range (espresso to filter), noise |
+| iron, steamer | type | steam g/min, anti-calc, weight |
+| small kitchen (kettle, blender, handblender, foodproc, mixer, chopper, mincer, scale, knife) | type (corded/cordless, jug/personal …) | power W, capacity L, material, accessories |
+| cooking (grill, toaster, sandwich, airfryer, breadmaker, minioven) | type, slots, **external size** (minioven) | capacity L or portions, programmes, power W |
+| healthy (juicer, dehydrator, vacuumsealer) | type | tray area or capacity, speed rpm, wet mode |
+
+### 6.3 Questions: pictures for types, ranges for measurements
+
+- **Picture cards for every hard choice question.** That is 35 questions, each card a simple lime line drawing in one shared style (Phase 3.1). Where size matters (freezer, washer, dryer, dish, oven, micro, mini oven), drawings are to scale with the 180 cm person marker.
+  - The drawings are stored as data: `options[].illustration` in `categories.json`, with SVG files in `public/illustrations/`.
+  - About 90 drawings in total, made once, reused in the flow, the filter bar and landing pages.
+- **Ranges replace buckets wherever the value is measurable.**
+  - washer and dryer depth (with "līdz 45 cm" as a preset), capacity in kg;
+  - dish, hob and hood width;
+  - oven and microwave niche;
+  - fridge and freezer height;
+  - volume in L for microwave, mini oven and air fryer.
+
+  Buckets stay only where they describe intent, not size: "how often", "what for", "household size".
+- **Cross-question rules in data**, for example `{"hood.width": ">= hob.width"}`. If the user recently searched for a hob, the hood flow pre-fills its width and says so: "Plīts virsma 60 cm → nosūcējs vismaz 60 cm" (60 cm hob → hood at least 60 cm).
+- **New questions where fit is decided:**
+  - freezer: "Kur stāvēs?" (where will it stand?) with a garage option → filters by climate class;
+  - dryer: "Uz veļas mašīnas?" (on top of a washer?) → stackable and width match;
+  - hob: "Kāds pieslēgums?" (which power connection?) with 1-phase, 3-phase, and "nezinu" (don't know) with help;
+  - dish built-in: niche height.
+- **Brands:**
+  - Large appliances (fridge, freezer, washer, dryer, dish, oven, hob, hood, coffee, vacuum) get the optional brand step (2.4).
+  - Small appliances skip it in the flow, keeping 3–4 questions in total, and offer brands only as a filter chip on the results page.
+
+### 6.4 "Vērts zināt" advice per category (2.7 generalised)
+
+Every running cost uses a configurable price shown in the "Kā mēs izvēlamies…" panel:
+- electricity, default 0,25 €/kWh;
+- water and sewage, default 3,5 €/m³ (Riga water tariff, to be confirmed);
+- coffee beans and capsule prices.
+
+| Category | The trade-off worth telling |
+|---|---|
+| fridge, freezer | energy class payback; volume per € |
+| washer | energy + **water** payback; "9 kg par +25 €" (9 kg for +€25) for big households |
+| dryer | **heat pump vs condenser**: "Par +90 € — siltumsūknis, ~60 € mazāk elektrībai gadā, atmaksājas ~1,5 gadā" (for +€90, heat pump, ~€60 less electricity a year, pays back in ~1,5 years) |
+| dish | energy + water payback; noise for open-plan kitchens |
+| oven | pyrolysis convenience vs its energy use per cleaning |
+| hood | recirculation **filter cost per year** vs extraction; noise at normal speed, not booster |
+| vacuum | **bags or filters per year**; robot mapping vs random navigation for large areas |
+| coffee | **cost per cup**: "Kapsulas ~0,45 €/krūze, pupiņas ~0,15 € → pie 4 krūzēm dienā automāts atmaksājas ~10 mēnešos" (capsules ~€0,45 per cup, beans ~€0,15 → at 4 cups a day an automatic machine pays back in ~10 months) |
+| small appliances | power vs task ("blenderim ledum vajag ≥ 1000 W", a blender needs ≥ 1000 W for ice); capacity vs household |
+
+Payback is shown only when it is shorter than the product's typical life: 10 years for large appliances, 5 for small. If a note has no real numbers behind it, it is not shown.
+
+### 6.5 Category sanity rules (Phase 1.4 generalised)
+
+Each subcategory gets the following in `data/attributes.json`:
+- a required word stem in the name or breadcrumb (`ledusskap`, `veļas mašīn`, `putekļsūc` …);
+- a plausible price range;
+- one required plausible attribute.
+
+This stops shop mis-filing everywhere (the m79 toys under coffee machines) and spare parts and accessories appearing as products (kettle filters, vacuum bags).
+
+### 6.6 Rollout order
+
+The same code serves every category. What differs per category is data: attributes, sanity rules, illustrations, advice models and question edits.
+
+| Batch | Subcategories | Why first |
+|---|---|---|
+| 1 | fridge | owner test case; pattern reference |
+| 2 | washer, dish, dryer | EPREL data, water + energy advice, highest ticket after fridges |
+| 3 | vacuum, coffee | most searched, strong running-cost advice |
+| 4 | oven, hob, hood, micro, freezer | built-in fit rules and cross-question rules |
+| 5 | the other 22 subcategories (small appliances, iron, steamer, steam cleaner, grinder) | short flows; picture cards + ranges + sanity rules in one pass |
+
+Each batch is done when, for its subcategories:
+- at least 95 % of in-stock products have every fit-critical attribute (`/api/status` coverage);
+- an e2e test runs one realistic search;
+- the real-data review sheet (Phase 5) has been checked.
+
 ## Phase 5 — Proof
 
 - **Unit tests:**
@@ -272,7 +407,7 @@ What changes:
 | 6 | Phase 1.2–1.3 + 2.7 (EPREL, same-EAN fill, Claude and web lookup, advice notes) | medium; EPREL needs the key |
 | 7 | Phase 2.4–2.5 + 4.3 (brands, "Vērts apsvērt") | medium, needs the brand table reviewed |
 
-Steps 1–5 fix everything reported except brands and need no new keys. Fridges come first; the same schema (range questions, picture cards, filter bar) then applies to washers, vacuums and the rest, because the questions are data.
+Steps 1–5 fix everything reported except brands and need no new keys. Fridges come first. Phase 6 then rolls the same code out to every other category in five batches. Only data changes per category: attributes, illustrations, questions and advice models.
 
 ## Decisions
 
