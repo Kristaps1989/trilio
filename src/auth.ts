@@ -1,14 +1,14 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import NextAuth, { type NextAuthConfig } from "next-auth";
-import Apple from "next-auth/providers/apple";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 
-// Spec §5.1 step 4: Apple, Google, email magic link. Each provider is on
+// Google and email magic link (spec §5.1 step 4; Apple deferred by the owner
+// on 18 Oct 2026, see docs/AUTH_SETUP.md). Each provider is on
 // only when its credentials exist, so a missing secret never breaks the
 // build. Database sessions with httpOnly cookies (Auth.js defaults).
 //
@@ -23,9 +23,6 @@ function providers(): NextAuthConfig["providers"] {
   const list: NextAuthConfig["providers"] = [];
   if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     list.push(Google({ clientId: process.env.AUTH_GOOGLE_ID, clientSecret: process.env.AUTH_GOOGLE_SECRET }));
-  }
-  if (process.env.AUTH_APPLE_ID && process.env.AUTH_APPLE_SECRET) {
-    list.push(Apple({ clientId: process.env.AUTH_APPLE_ID, clientSecret: process.env.AUTH_APPLE_SECRET }));
   }
   if (process.env.RESEND_API_KEY) {
     list.push(
@@ -87,7 +84,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
 
 export const enabledProviders = {
   google: !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
-  apple: !!(process.env.AUTH_APPLE_ID && process.env.AUTH_APPLE_SECRET),
   email: !!process.env.RESEND_API_KEY,
   dev: devLoginEnabled,
 };

@@ -8,7 +8,7 @@ Trilio is a web app (mobile-first) that guides a shopper through a short one-que
 ## Recommended stack (confirm with the owner before scaffolding)
 - **Next.js (App Router) + TypeScript + Tailwind CSS.** SSR matters for SEO of category landing pages.
 - **PostgreSQL** (Supabase or Neon) **+ Prisma or Drizzle.**
-- **Auth:** Sign in with Apple, Sign in with Google, and email magic link (Auth.js or Supabase Auth).
+- **Auth:** Sign in with Google and email magic link (Auth.js). Sign in with Apple is deferred (owner decision, 18 Oct 2026).
 - **Payments:** a PSP with hosted card fields plus Apple Pay and Google Pay (Stripe, or Montonio for the Baltics). Card data must never touch our servers.
 - **Background jobs** for partner feed ingestion and price-history snapshots, plus a radar evaluator: cron or a queue worker.
 - **Notifications:** transactional email (Resend or Postmark) and web push.

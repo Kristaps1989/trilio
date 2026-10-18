@@ -147,7 +147,7 @@ UI strings are in Latvian, as they appear in the prototype. The explanations are
 
    Alternatives must satisfy the user's saved requirements.
 3. **"Kā tev paziņot?"** (how should we notify you?): push, email, or both.
-4. **Sign in**, if the user isn't signed in yet: Apple, Google, or an email magic link. The text explains why an account is needed: to manage filters from any device.
+4. **Sign in**, if the user isn't signed in yet: Google or an email magic link (Apple deferred by the owner on 18 Oct 2026). The text explains why an account is needed: to manage filters from any device.
 5. **Plan screen:** €1/month, unlimited tracked products, prices checked several times a day, cancel anytime.
 6. **Payment:** Apple Pay and Google Pay buttons, then a card form.
    - Card number grouped in fours, MM/GG expiry auto-formatted, CVC, name.
@@ -172,7 +172,7 @@ Users who are already subscribed skip the plan and payment steps. Users who are 
   - Current method ("Karte •••• 4242, derīga līdz 08/28", card ending 4242, valid until 08/28, or Apple Pay / Google Pay), with "Mainīt" (change) to update it inline.
   - "Atteikties no abonementa" (cancel subscription) asks for confirmation, then shows "Atjaunot abonementu" (resume subscription).
 - Account line ("Ienācis kā… · Google", signed in as… via Google) and "Iziet" (sign out).
-- When signed out, the page shows only the Apple and Google sign-in buttons.
+- When signed out, the page shows only the sign-in options (Google and email; Apple deferred).
 
 ## 6. Identity of products
 - The card shows the manufacturer model code and EAN, so the same name never hides different products.

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { auth, enabledProviders, signIn, signOut } from "@/auth";
@@ -18,7 +19,7 @@ function safeCallback(url: string | undefined): string {
   return url && url.startsWith("/") && !url.startsWith("//") ? url : "/radars";
 }
 
-/** Spec §5.1 step 4: Apple, Google, email magic link. Real <form>s so it works without JS. */
+/** Google and email magic link (Apple deferred). Real <form>s so it works without JS. */
 export default async function SignInPage({ searchParams }: Props) {
   const { callbackUrl, sent } = await searchParams;
   const t = await getTranslations("auth");
@@ -59,18 +60,6 @@ export default async function SignInPage({ searchParams }: Props) {
           >
             <PrimaryButton type="submit" variant="light" className="border border-mist-32">
               {t("google")}
-            </PrimaryButton>
-          </form>
-        ) : null}
-        {enabledProviders.apple ? (
-          <form
-            action={async () => {
-              "use server";
-              await signIn("apple", { redirectTo: target });
-            }}
-          >
-            <PrimaryButton type="submit" variant="light" className="border border-mist-32">
-              {t("apple")}
             </PrimaryButton>
           </form>
         ) : null}
@@ -128,10 +117,24 @@ export default async function SignInPage({ searchParams }: Props) {
           </form>
         ) : null}
 
-        {!enabledProviders.google &&
-        !enabledProviders.apple &&
-        !enabledProviders.email &&
-        !enabledProviders.dev ? (
+        {enabledProviders.google || enabledProviders.email || enabledProviders.dev ? (
+          <p className="text-sm text-stone">
+            {t.rich("consent", {
+              terms: (chunks) => (
+                <Link href="/noteikumi" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+              privacy: (chunks) => (
+                <Link href="/privatums" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
+        ) : null}
+
+        {!enabledProviders.google && !enabledProviders.email && !enabledProviders.dev ? (
           <p className="text-base text-stone">{t("noProviders")}</p>
         ) : null}
       </div>

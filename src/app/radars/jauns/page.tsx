@@ -9,6 +9,7 @@ import { loadProduct } from "@/db/queries/catalog";
 import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { formatEur } from "@/i18n/format";
 import { paymentsEnabled } from "@/services/payments";
+import Link from "next/link";
 import { PrimaryLink } from "@/ui/PrimaryButton";
 import { Shell } from "@/ui/Shell";
 import { createRadarAction } from "../actions";
@@ -120,6 +121,13 @@ export default async function NewRadarPage({ searchParams }: Props) {
             returnTo={`${current}&step=create`}
             payLabel={t("pay")}
             note={t("payNote")}
+            legal={t.rich("legalNote", {
+              terms: (chunks) => (
+                <Link href="/noteikumi" className="text-mist underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           />
         ) : (
           <div className="mt-6 flex flex-col gap-3">

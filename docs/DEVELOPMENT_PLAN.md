@@ -1,6 +1,6 @@
 # Trilio — Development plan
 
-> **Status (17 Oct 2026):** Phases 0–3 are implemented and merged (see PRs #1–#5). Open items that need the owner: Paysera recurring-billing approval and credentials, partner feed URLs, Google/Apple/Resend credentials, LT/EE translations, and the "Trilio vērtējums" inputs (currently the sample rating). `docs/PAYMENTS.md`, `docs/LOCALES.md`, `docs/LLM.md`, `docs/RUNBOOK.md` and `docs/DEPLOY_RAILWAY.md` describe operations.
+> **Status (17 Oct 2026):** Phases 0–3 are implemented and merged (see PRs #1–#5). Open items that need the owner: Paysera recurring-billing approval and credentials, partner feed URLs, Google and Resend credentials (Apple sign-in deferred, owner decision 18 Oct 2026), LT/EE translations, and the "Trilio vērtējums" inputs (currently the sample rating). `docs/PAYMENTS.md`, `docs/LOCALES.md`, `docs/LLM.md`, `docs/RUNBOOK.md` and `docs/DEPLOY_RAILWAY.md` describe operations.
 
 Written after reviewing the handoff package (`CLAUDE.md`, `docs/*`, `data/*`, `reference/prototype-logic.js`, `design/prototype/*`). It turns the roadmap into concrete milestones, with the security, quality and mobile requirements each one has to meet. It does not re-decide anything `docs/PRODUCT_SPEC.md` already settles; where the handoff is silent or inconsistent, the point is listed under "Decisions needed" at the end.
 

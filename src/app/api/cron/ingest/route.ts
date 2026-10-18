@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
+import { purgeOldWaitlistLeads } from "@/db/queries/waitlist";
 import { ingestAllActive } from "@/services/ingestion/run";
 import { createCaller, extractionEnabled } from "@/services/llm/client";
 import { runExtractionJob } from "@/services/llm/extract-job";
@@ -32,12 +33,15 @@ export async function POST(request: Request) {
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
   // Price radar: evaluate every active radar against the fresh prices (docs/DATA_MODEL.md).
   const radar = await runRadarJob(db, { baseUrl: appBaseUrl(), texts: radarTexts() });
+  // Privacy policy retention: waitlist entries older than 12 months.
+  const waitlistPurged = await purgeOldWaitlistLeads(db);
   // Rejected samples stay in the log, not in the HTTP response.
   return NextResponse.json({
     ok: results.every((r) => r.ok),
     stores: results.map((r) => ({ ...r, rejectedSample: undefined })),
     extraction,
     radar,
+    waitlistPurged,
   });
 }
 
