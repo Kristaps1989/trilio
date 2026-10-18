@@ -126,4 +126,64 @@ describe("adviceNotes (§2.7 'Vērts zināt')", () => {
       }),
     ).toEqual([]);
   });
+
+  const base = (pick: ReturnType<typeof offered>, pool: ReturnType<typeof offered>[], extra = {}) => ({
+    subcategoryId: "fridge",
+    answers: {},
+    pick,
+    pool,
+    anyType: [],
+    budgetMaxCents: null,
+    costs: DEFAULT_COSTS,
+    ...extra,
+  });
+
+  it("quieter, bigger and No Frost follow the user's priorities, at most 10 % over budget", () => {
+    const pick = offered(fridge("P", "C", 200, { noise_db: 40, no_frost: false }), 500);
+    const quiet = offered(fridge("Q", "C", 200, { noise_db: 35, no_frost: false }), 540);
+    const big = offered(fridge("B", "C", 200, { noise_db: 40, volume_l: 360, no_frost: false }), 545);
+    const nf = offered(fridge("N", "C", 200, { noise_db: 40, no_frost: true }), 530);
+    const tooDear = offered(fridge("T", "C", 200, { noise_db: 30, no_frost: true }), 900);
+    const pool = [pick, quiet, big, nf, tooDear];
+    const kinds = (priorities: string[]) =>
+      adviceNotes(base(pick, pool, { answers: { priorities }, budgetMaxCents: 50000 }), 4).map((n) => [
+        n.kind,
+        n.to?.product.name,
+      ]);
+    expect(kinds(["quiet"])[0]).toEqual(["quieter", "Q"]);
+    expect(kinds(["volume"])[0]).toEqual(["bigger", "B"]);
+    expect(kinds(["nofrost"])[0]).toEqual(["nofrost", "N"]);
+    expect(kinds(["quiet", "volume", "nofrost"]).map((k) => k[1])).not.toContain("T");
+  });
+
+  it("a cheaper, similar product is suggested only when the saving outweighs ten years of running cost", () => {
+    const pick = offered(fridge("Pick", "C", 200), 600);
+    const cheap = offered(fridge("Cheap", "C", 210), 450);
+    const hungry = offered(fridge("Hungry", "F", 400), 500);
+    const notes = adviceNotes(base(pick, [pick, cheap, hungry]));
+    expect(notes[0]).toMatchObject({ kind: "cheaper_similar", savingCents: 15000 });
+    expect(notes[0]!.to?.product.name).toBe("Cheap");
+  });
+
+  it("vacuums with bags: the running cost, and a bagless alternative when one fits the budget", () => {
+    const vac = (name: string, bagless: boolean) =>
+      product({ name, subcategoryId: "vacuum", attrs: { vacuum_type: "corded", bagless } });
+    const pick = offered(vac("Bag", false), 100);
+    const alt = offered(vac("Cyclone", true), 120);
+    const [withAlt] = adviceNotes(
+      base(pick, [pick, alt], { subcategoryId: "vacuum", budgetMaxCents: 15000 }),
+    );
+    expect(withAlt).toMatchObject({ kind: "bags", extraCents: 2000 });
+    const [alone] = adviceNotes(base(pick, [pick], { subcategoryId: "vacuum" }));
+    expect(alone).toMatchObject({ kind: "bags", to: null, extraCents: 0 });
+  });
+
+  it("coffee: no note for one cup a day or without an automatic machine", () => {
+    const caps = offered(
+      product({ name: "C", subcategoryId: "coffee", attrs: { coffee_type: "capsule" } }),
+      90,
+    );
+    expect(adviceNotes(base(caps, [caps], { subcategoryId: "coffee", answers: { cups: "1" } }))).toEqual([]);
+    expect(adviceNotes(base(caps, [caps], { subcategoryId: "coffee", answers: { cups: "4" } }))).toEqual([]);
+  });
 });

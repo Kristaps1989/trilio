@@ -192,6 +192,25 @@ describe("relax suggestions (§4.2)", () => {
     expect(r[0]).toEqual({ kind: "price_max", maxCents: 55000, gain: 2 });
   });
 
+  it("offers to drop the lower price limit, 'only these brands' and the missing-data filter", () => {
+    const ps = [
+      combi("Cheap", 300, 176),
+      combi("Beko", 420, 176),
+      combi("Bosch", 430, 176),
+      product({ name: "NoData", price: 440, attrs: { form: "combi" } }),
+    ];
+    const open = relaxations(ownerCase(ps));
+    expect(open.find((x) => x.kind === "price_min")?.gain).toBe(1);
+    expect(open.at(-1)).toMatchObject({ kind: "show_unknown", gain: 1 });
+    const strict = relaxations({ ...ownerCase(ps), brands: ["Beko"], brandsOnly: true });
+    expect(strict.find((x) => x.kind === "brands")?.gain).toBe(1);
+  });
+
+  it("drops a height limit entirely when raising it does not help", () => {
+    const r = relaxations(ownerCase([combi("A", 450, 176), combi("Tall", 450, 205)]));
+    expect(r.find((x) => x.kind === "range_max")).toMatchObject({ questionId: "height", max: null, gain: 1 });
+  });
+
   it("offers to raise a height limit", () => {
     const r = relaxations(ownerCase([combi("A", 450, 176), combi("B", 450, 182)]));
     expect(r.find((x) => x.kind === "range_max")).toMatchObject({ questionId: "height", max: 183, gain: 1 });
