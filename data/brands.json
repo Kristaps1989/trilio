@@ -1,5 +1,823 @@
 {
   "note": "Zīmolu kvalitātes tabula “Vērts apsvērt” kartītei (docs/FILTERS_PLAN.md §2.5). Vērtības sagatavo Claude no publiskiem avotiem, īpašnieks pārbauda; kamēr reviewed=false, kartīte netiek rādīta. Katram ierakstam jānorāda avots.",
   "reviewed": false,
-  "brands": {}
+  "researchedAt": "2026-10-18",
+  "method": "Grades use only independent owner-survey or service-rate evidence that could be read without a login. Main sources: Euroconsumers (Altroconsumo/OCU/Test-Achats/Deco Proteste) brand rankings 2023-2026, which publish a per-brand reliability index (0-100) for small appliances; OCU 2025 durability/reliability survey (~40,000 consumers, 11 countries); 60 Millions de consommateurs April 2025 reliability survey (5,000 people), read through secondary press articles; Consumer Reports 2026 kitchen and laundry brand reliability (US, CR reprint PDFs); CHOICE (AU) 2025 and Consumer NZ 2026; Yale Appliance first-year service rates (US retailer, 33,190 calls); Stiftung Warentest 2018 reader survey (old, used only as a secondary signal). Which? 2025 brand reliability tables (washing machines, fridge freezers, dishwashers, air fryers, coffee machines) exist but every brand score is behind the paywall, so NO Which? figures are used. Consumentenbond and Test-Achats brand results were also members-only and are not used. Scale: 5 = top in two or more independent sources and never weak; 4 = above average in most sources; 3 = average or sources conflict; 2 = below average in two or more sources; 1 = consistently poor (no brand reached 1). Altroconsumo 'global scores' combine lab tests (45%), reliability (25%), satisfaction (20%) and the share of excellent models (10%), so they were used only as a weak reliability signal; where a separate reliability index was printed, that index was used. US/AU/NZ results were down-weighted because product lines differ (US 'Hotpoint' is a GE brand and is ignored for the EU Hotpoint brand). A brand grade backed by one source has confidence 'low'. serviceLv is true only where a manufacturer page in Latvian, or an explicit authorised-service listing, was seen; null means not verified, not 'no service'. warrantyYears is the manufacturer's standard warranty where a page was seen, otherwise null. The Latvian statutory 2-year seller liability applies regardless. Extended warranties usually need registration, vary by country and were rarely confirmed for Latvia.",
+  "brands": {
+    "Miele": {
+      "grade": 5,
+      "categories": {
+        "washer": 5,
+        "dryer": 5,
+        "dish": 5,
+        "vacuum": 5,
+        "oven": 3
+      },
+      "serviceLv": true,
+      "warrantyYears": 2,
+      "extendedWarranty": "Latvian Euronics/Elesen/Novastar campaign (3-30 Nov 2025, expired) added +2 years on washers/dryers on top of the 2-year Miele SIA warranty. No current LV extended warranty was confirmed.",
+      "confidence": "high",
+      "evidence": [
+        "Consumer Reports 2026 laundry brand reliability (US, 204,923 washers/dryers bought 2015-2025): Miele first with predicted-reliability score 99, ahead of LG (93) and Speed Queen (90).",
+        "Consumer Reports 2026 kitchen brand reliability (US, 252,640 appliances): Miele third, overall score 69 (LG 74, Wolf/Sub-Zero 72).",
+        "60 Millions de consommateurs Apr 2025 (survey of 5,000 people, Nov-Dec 2024): Miele washing machines 84.3% never broke down within 12 years, the only one of the top brands named with a figure (13 of 17 brands were below 80%).",
+        "60 Millions 2025 vacuums: Miele 95.4% reliability, the highest listed (category average 81%).",
+        "Altroconsumo Aug 2026 corded vacuums (Euroconsumers, ~24,000 reliability ratings): Miele reliability index 87, the highest in the table.",
+        "Altroconsumo Jul 2024 summary: Miele first for dishwashers and second for heat-pump dryers (overall score, includes lab tests).",
+        "OCU Nov 2025 (~40,000 consumers, 11 EU countries): Miele the most durable washers (~16 years) and dryers (>14.5 years), jointly the most reliable dryers (with Zanussi), and dishwashers ~14 years.",
+        "CHOICE (AU) Mar 2025 dishwashers: Miele 88% reliability (Bosch 90%), 93% satisfaction (highest).",
+        "Yale Appliance 2026 (US first-year service rate): Miele 7.4%, third lowest overall.",
+        "Contrary signal: CHOICE Best Brand 2025 (AU) said Miele ovens were ineligible 'due to below-average reliability', hence oven 3."
+      ],
+      "sources": [
+        "https://www.lg.com/us/cr/LG_MostReliableApplianceBrands.pdf",
+        "https://reprints.theygsgroup.com/cr/reprints/LG_MostReliableKitchenApplianceBrands.pdf",
+        "https://www.24matins.fr/la-marque-de-lave-linge-la-plus-fiable-selon-60-millions-de-consommateurs-1388308",
+        "https://www.itmag-dz.com/news/60-millions-de-consommateurs-devoile-le-palmares-2025-des-meilleures-marques-daspirateurs-cafetieres-et-robots-de-cuisine/",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.choice.com.au/home-and-living/kitchen/dishwashers/articles/most-reliable-dishwasher-brands",
+        "https://www.choice.com.au/shopping/everyday-shopping/bargain-hunting/articles/best-brands-in-australia",
+        "https://blog.yaleappliance.com/the-least-serviced-most-reliable-appliance-brands",
+        "https://www.euronics.lv/UserFiles/Campaign/rules/Miele-2-years.pdf"
+      ]
+    },
+    "Bosch": {
+      "grade": 4,
+      "categories": {
+        "dish": 5,
+        "washer": 4,
+        "fridge": 4,
+        "vacuum": 4,
+        "micro": 4,
+        "foodproc": 2
+      },
+      "serviceLv": true,
+      "warrantyYears": 2,
+      "confidence": "high",
+      "evidence": [
+        "60 Millions 2025: Bosch dishwashers 86.8% reliability, the best listed for dishwashers (Brandt 71.4%). The same survey reported a 'significant drop' for Bosch washing machines, with no figure given.",
+        "CHOICE (AU) Mar 2025 dishwashers: Bosch 90% reliability, the highest of 9 brands.",
+        "Altroconsumo Nov 2025 washing machines (~60,000 responses, 10 countries): Bosch second (overall 78), and the article names Siemens and Bosch the most reliable over the long term.",
+        "Altroconsumo Nov 2025 fridges (~38,000 ratings): Bosch 'very high reliability scores, low incidence of faults'.",
+        "Consumer Reports 2026 (US): kitchen brands tied 4th (score 67); laundry 'middling' (behind Miele, LG, Speed Queen and others).",
+        "Altroconsumo Aug 2026 vacuums: reliability index 81 corded and 81 cordless. Microwaves Aug 2026: reliability 83, joint top overall score 64.",
+        "60 Millions 2025 food processors: Bosch 63.7% reliability (Moulinex 95.5%, Thermomix 91.3%), the lowest listed. Single source, so foodproc 2 is low confidence.",
+        "Yale Appliance 2026 (US): Bosch 8.7% first-year service rate (Benchmark line 7.8%).",
+        "Stiftung Warentest 2018 reader survey (~14,500): Bosch washers and dishwashers less fault-prone than average (old)."
+      ],
+      "sources": [
+        "https://consonews.ma/59215.html",
+        "https://meilleure-innovation.com/meilleures-marques-electromenager-2025/",
+        "https://www.choice.com.au/home-and-living/kitchen/dishwashers/articles/most-reliable-dishwasher-brands",
+        "https://www.altroconsumo.it/elettrodomestici/lavatrici/news/migliori-marche-lavatrici",
+        "https://www.altroconsumo.it/elettrodomestici/frigoriferi/news/migliori-marche-frigoriferi",
+        "https://reprints.theygsgroup.com/cr/reprints/LG_MostReliableKitchenApplianceBrands.pdf",
+        "https://www.lg.com/us/cr/LG_MostReliableApplianceBrands.pdf",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026",
+        "https://www.itmag-dz.com/news/60-millions-de-consommateurs-devoile-le-palmares-2025-des-meilleures-marques-daspirateurs-cafetieres-et-robots-de-cuisine/",
+        "https://blog.yaleappliance.com/the-least-serviced-most-reliable-appliance-brands",
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/",
+        "https://www.siemens-home.bsh-group.com/lv/garantija",
+        "https://www.neff-home.com/lv/serviss/kontaktinformacija"
+      ]
+    },
+    "Siemens": {
+      "grade": 4,
+      "categories": {
+        "washer": 4,
+        "fridge": 4,
+        "dish": 4,
+        "dryer": 4
+      },
+      "serviceLv": true,
+      "warrantyYears": 2,
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Nov 2025 washing machines: Siemens first (overall 80/100), and the article names Siemens and Bosch the most reliable long-term.",
+        "Altroconsumo Nov 2025 fridges: Siemens 'Best Brand 2025' for fridge-freezers (overall score, includes lab tests).",
+        "Altroconsumo Jul 2024 summary: Siemens second for dishwashers and third for heat-pump dryers (overall scores).",
+        "OCU 2016 (old): Siemens washers 91/100 reliability, fridges 93/100.",
+        "Contrary signal: Stiftung Warentest 2018 found Siemens dishwashers less reliable than sister brands Neff and Bosch (old).",
+        "BSH Latvia branch: Siemens LV warranty page gives 24 months from delivery and names factory customer service plus service partners."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/lavatrici/news/migliori-marche-lavatrici",
+        "https://www.altroconsumo.it/elettrodomestici/frigoriferi/news/migliori-marche-frigoriferi",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.ocu.org/electrodomesticos/lavadora/noticias/encuesta-electrodomesticos",
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/",
+        "https://www.siemens-home.bsh-group.com/lv/garantija"
+      ]
+    },
+    "Neff": {
+      "grade": 4,
+      "categories": {
+        "dish": 5,
+        "oven": 4
+      },
+      "serviceLv": true,
+      "warrantyYears": 2,
+      "extendedWarranty": "NEFF Collection 5-year warranty in Latvia for appliances bought from listed retailers 1 May 2023 - 30 Apr 2025, registered within 8 weeks (campaign ended). No current extension confirmed.",
+      "confidence": "medium",
+      "evidence": [
+        "OCU Nov 2025 (~40,000 consumers): Neff dishwashers the least likely to break down (then LG, Balay).",
+        "60 Millions 2025 built-in ovens: Neff 89.1% reliability (Hotpoint-Ariston 91.6%, Electrolux 91.2%, Brandt 87.1%).",
+        "Stiftung Warentest 2018 (old): Neff and Bosch had the most reliable recent dishwashers.",
+        "Neff LV site lists Latvian service partners (General Serviss, TSC Autorizēts Serviss, Baltic Continent) and a BSH LV careline."
+      ],
+      "sources": [
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://consonews.ma/59215.html",
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/",
+        "https://www.neff-home.com/lv/serviss/kontaktinformacija",
+        "https://www.neff-home.com/lv/serviss/garantija/nosacijumi"
+      ]
+    },
+    "Gaggenau": {
+      "grade": 4,
+      "categories": {},
+      "confidence": "low",
+      "evidence": [
+        "Yale Appliance 2026 (US, first-year service): Gaggenau 7.7%, among the 11 brands under 10%. This is the only quantitative source found.",
+        "General Serviss (Riga), a BSH-listed Latvian service partner, shows a Gaggenau logo, but the page does not say it is authorised for Gaggenau. Thin evidence: grade based on one US retailer's first-year data."
+      ],
+      "sources": [
+        "https://blog.yaleappliance.com/the-least-serviced-most-reliable-appliance-brands",
+        "https://www.serviscentrs.lv"
+      ]
+    },
+    "LG": {
+      "grade": 4,
+      "categories": {
+        "washer": 4,
+        "dryer": 4,
+        "dish": 4,
+        "fridge": 3,
+        "vacuum": 3
+      },
+      "serviceLv": true,
+      "warrantyYears": 2,
+      "extendedWarranty": "LG Latvia: 10 years on the linear compressor (fridges), 10 years on the Direct Drive motor (washers), and 10 years on the motor and compressor (dryers, since 2018). Parts only. Source: lg.com/lv/atbalsts/garantija.",
+      "confidence": "medium",
+      "evidence": [
+        "Consumer Reports 2026 kitchen brand reliability (US): LG first, score 74.",
+        "Consumer Reports 2026 laundry (US): LG second, score 93.",
+        "Yale Appliance 2026 (US): LG 5.5% first-year service rate, second lowest.",
+        "Altroconsumo 2023 and Jul 2024 (overall scores): LG first for fridges (83/100 in 2023) and first for heat-pump dryers (2024); third for washers in Nov 2025 (75).",
+        "OCU Nov 2025: LG dishwashers second least likely to break down; but LG fridges among the least durable.",
+        "Contrary signal: 60 Millions 2025 fridges: LG 78.5% reliability, the lowest named (Liebherr 98.5%). This conflicts with CR and Altroconsumo, hence fridge 3.",
+        "CHOICE (AU) Mar 2025 dishwashers: LG 78% (below Bosch 90% and Miele 88%). CHOICE 2025 Best Brand dryers: LG won with above-average reliability.",
+        "Vacuums conflict: 60 Millions 2025 LG 63.4% (lowest listed, average 81%), while CHOICE 2025 named LG Best Brand for stick vacuums (78%, combined score)."
+      ],
+      "sources": [
+        "https://reprints.theygsgroup.com/cr/reprints/LG_MostReliableKitchenApplianceBrands.pdf",
+        "https://www.lg.com/us/cr/LG_MostReliableApplianceBrands.pdf",
+        "https://blog.yaleappliance.com/the-least-serviced-most-reliable-appliance-brands",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/frigoriferi-bosch-samsung-o-lg-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.altroconsumo.it/elettrodomestici/lavatrici/news/migliori-marche-lavatrici",
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://consonews.ma/59215.html",
+        "https://www.choice.com.au/home-and-living/kitchen/dishwashers/articles/most-reliable-dishwasher-brands",
+        "https://www.choice.com.au/shopping/everyday-shopping/bargain-hunting/articles/best-brands-in-australia",
+        "https://www.itmag-dz.com/news/60-millions-de-consommateurs-devoile-le-palmares-2025-des-meilleures-marques-daspirateurs-cafetieres-et-robots-de-cuisine/",
+        "https://www.lg.com/lv/atbalsts/garantija"
+      ]
+    },
+    "Samsung": {
+      "grade": 3,
+      "categories": {
+        "washer": 3,
+        "fridge": 3,
+        "micro": 3,
+        "vacuum": 3
+      },
+      "serviceLv": true,
+      "warrantyYears": 2,
+      "extendedWarranty": "Samsung announced (IFA 2022) a 20-year warranty on Digital Inverter motors (washers/dryers) and compressors (fridges) for EU appliances sold after July 2022. Component only. Latvian terms were not seen.",
+      "confidence": "medium",
+      "evidence": [
+        "Consumer Reports 2026 laundry (US): Samsung among the 'middling' brands. In the 2026 kitchen chart it is outside the top 5.",
+        "Altroconsumo 2023 fridges: second overall (80/100). Washers 2023: above 70 overall (Siemens 78).",
+        "Altroconsumo Aug 2026 cordless vacuums: Samsung first overall (73), reliability index 91, the highest of 6 brands.",
+        "Consumer Reports (via BGR, Mar 2026): Samsung robot vacuums low brand reliability, cordless sticks second only to Makita.",
+        "Altroconsumo Aug 2026 microwaves: Samsung reliability 78 (Beko 89, Panasonic 86, Bosch 83).",
+        "Samsung LV pages (search snippet): 24-month warranty, authorised service centres listed in Riga."
+      ],
+      "sources": [
+        "https://www.lg.com/us/cr/LG_MostReliableApplianceBrands.pdf",
+        "https://reprints.theygsgroup.com/cr/reprints/LG_MostReliableKitchenApplianceBrands.pdf",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/frigoriferi-bosch-samsung-o-lg-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/lavatrici-bosch-candy-o-samsung-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.bgr.com/2132733/most-reliable-vacuum-cleaner-brands-consumer-reports/",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026",
+        "https://www.samsung.com/lv/shop-faq/service-and-warranty/",
+        "https://www.sammobile.com/news/samsung-electronics-extends-home-appliance-warranties-to-20-years/"
+      ]
+    },
+    "Liebherr": {
+      "grade": 4,
+      "categories": {
+        "fridge": 4
+      },
+      "serviceLv": true,
+      "extendedWarranty": "Liebherr offers a 10-year compressor warranty with registration within 2 years in several EU countries (e.g. Portugal, Italy). Latvian availability was not confirmed.",
+      "confidence": "medium",
+      "evidence": [
+        "60 Millions 2025 fridges: Liebherr 98.5% reliability, the highest named.",
+        "Altroconsumo 2023 fridges: third overall (76/100); Jul 2024: third.",
+        "Contrary signal: OCU Nov 2025: Liebherr combis last under 12 years (below the 13-year average), although satisfaction is among the highest. Hence fridge 4 rather than 5.",
+        "Liebherr LV site has a Latvian information centre and warranty-claim and service forms."
+      ],
+      "sources": [
+        "https://consonews.ma/59215.html",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/frigoriferi-bosch-samsung-o-lg-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.liebherr.com/lv-lv/ledusskapji-saldētavas/buj-3265198",
+        "https://www.liebherr.com/en-pt/fridges-freezers/compressor-terms-6955082"
+      ]
+    },
+    "Electrolux": {
+      "grade": 3,
+      "categories": {
+        "oven": 4,
+        "dish": 3
+      },
+      "serviceLv": true,
+      "extendedWarranty": "10-year inverter-motor warranty after registration exists in some EU markets (retailer pages in ES/CZ for AEG/Electrolux). Not confirmed for Latvia.",
+      "confidence": "low",
+      "evidence": [
+        "60 Millions 2025 built-in ovens: Electrolux 91.2% reliability (second).",
+        "60 Millions 2025: Electrolux dishwasher reliability fell about 20 points in a year (no absolute figure), and the washing machine rate fell significantly.",
+        "Altroconsumo Nov 2025 washers: Electrolux 'praised for consistent performance over time' (qualitative).",
+        "Consumer Reports 2026 (US product lines, down-weighted): laundry 'very good'; kitchen near the bottom.",
+        "Latvia: Aktivserviss (Riga) lists itself as authorised AEG/Electrolux/Zanussi warranty service (directory listing, not a manufacturer page)."
+      ],
+      "sources": [
+        "https://consonews.ma/59215.html",
+        "https://meilleure-innovation.com/meilleures-marques-electromenager-2025/",
+        "https://www.24matins.fr/la-marque-de-lave-linge-la-plus-fiable-selon-60-millions-de-consommateurs-1388308",
+        "https://www.altroconsumo.it/elettrodomestici/lavatrici/news/migliori-marche-lavatrici",
+        "https://www.lg.com/us/cr/LG_MostReliableApplianceBrands.pdf",
+        "https://www.zl.lv/en/company/aktivserviss-sia/"
+      ]
+    },
+    "AEG": {
+      "grade": 3,
+      "categories": {
+        "washer": 4,
+        "vacuum": 3,
+        "micro": 3
+      },
+      "serviceLv": true,
+      "extendedWarranty": "10-year inverter-motor warranty after registration in some markets (e.g. ES, CZ retailer pages). Not confirmed for Latvia.",
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Nov 2025 washers: AEG named after Siemens, Bosch and LG among the most reliable long-term. In 2023 it was third overall (73).",
+        "Altroconsumo Aug 2026 vacuums: corded first overall but reliability index 80 (Miele 87); cordless reliability 77.",
+        "Altroconsumo Aug 2026 microwaves: reliability 77.",
+        "Stiftung Warentest 2018 (old): AEG among the brands with more reported faults.",
+        "Latvia: Aktivserviss lists authorised AEG service (directory listing)."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/lavatrici/news/migliori-marche-lavatrici",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/lavatrici-bosch-candy-o-samsung-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026",
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/",
+        "https://www.zl.lv/en/company/aktivserviss-sia/"
+      ]
+    },
+    "Zanussi": {
+      "grade": 4,
+      "categories": {
+        "fridge": 4,
+        "washer": 4,
+        "dish": 4,
+        "dryer": 4
+      },
+      "serviceLv": true,
+      "confidence": "low",
+      "evidence": [
+        "OCU Nov 2025 (~40,000 consumers, 11 countries): Zanussi the longest-lasting fridges (~15 years vs 13 average), washers second for durability (up to 2 years behind Miele), dishwashers ~14 years, and jointly the most reliable dryers (with Miele).",
+        "Xataka (Dec 2025, reporting OCU): Zanussi second least likely to break among washers (after Hisense).",
+        "OCU 2016 (old): Zanussi washers 91/100.",
+        "Effectively a single survey family (OCU/Euroconsumers), so confidence is low despite consistent results."
+      ],
+      "sources": [
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.xatakahome.com/hogar/quiero-que-mi-proximo-electrodomestico-dure-monton-anos-estas-marcas-fiables-ultimo-estudio-ocu",
+        "https://www.ocu.org/electrodomesticos/lavadora/noticias/encuesta-electrodomesticos",
+        "https://www.zl.lv/en/company/aktivserviss-sia/"
+      ]
+    },
+    "Whirlpool": {
+      "grade": 3,
+      "categories": {
+        "fridge": 4,
+        "dryer": 2
+      },
+      "confidence": "low",
+      "evidence": [
+        "60 Millions 2025 fridges: Whirlpool above 90% reliability (no exact figure).",
+        "Altroconsumo Jul 2024 heat-pump dryers: Whirlpool last (overall score, includes lab tests).",
+        "Stiftung Warentest 2018 (old): Whirlpool washers among the lower-satisfaction brands.",
+        "Latvia: General Serviss (Riga, a BSH-listed partner) shows a Whirlpool logo and calls itself an 'authorised service centre', but not explicitly for Whirlpool."
+      ],
+      "sources": [
+        "https://consonews.ma/59215.html",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/",
+        "https://www.serviscentrs.lv"
+      ]
+    },
+    "Hotpoint": {
+      "grade": 3,
+      "categories": {
+        "fridge": 4,
+        "oven": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "60 Millions 2025: Hotpoint-Ariston built-in ovens 91.6% reliability (the highest listed); fridges above 90%.",
+        "Consumer Reports' 'Hotpoint' is a GE (US) brand and was deliberately NOT used.",
+        "No usable European washer or dishwasher reliability data was found (the Which? 2025 tables include Hotpoint but are paywalled), so the brand grade stays at 3.",
+        "Latvia: General Serviss shows a Hotpoint Ariston logo; authorisation is not explicit."
+      ],
+      "sources": [
+        "https://consonews.ma/59215.html",
+        "https://meilleure-innovation.com/meilleures-marques-electromenager-2025/",
+        "https://www.serviscentrs.lv"
+      ]
+    },
+    "Indesit": {
+      "grade": 3,
+      "categories": {
+        "fridge": 4,
+        "washer": 2,
+        "dish": 2,
+        "dryer": 2
+      },
+      "confidence": "low",
+      "evidence": [
+        "60 Millions 2025 fridges: Indesit above 90% reliability (no exact figure).",
+        "OCU Nov 2025: Indesit washers among the least durable (about 5-6 years less than Miele's ~16); dishwashers among the least durable; dryers 'barely over 8 years' (average 11.4).",
+        "Durability is not the same as fault rate. The washer/dish/dryer 2s rest on one survey.",
+        "Latvia: General Serviss shows an Indesit logo; authorisation is not explicit."
+      ],
+      "sources": [
+        "https://consonews.ma/59215.html",
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.serviscentrs.lv"
+      ]
+    },
+    "Beko": {
+      "grade": 3,
+      "categories": {
+        "micro": 4,
+        "dish": 3,
+        "fridge": 2
+      },
+      "extendedWarranty": "10-year parts warranty on ProSmart Inverter motor/compressor after registration (typically within 90 days) in several EU countries. Parts only, terms vary. Latvia not confirmed.",
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Aug 2026 microwaves: Beko reliability index 89, the highest of 10 brands (joint top overall 64).",
+        "CHOICE (AU) Mar 2025 dishwashers: Beko 84% reliability (Bosch 90%, average-to-good).",
+        "Consumer NZ May 2026 fridges: Beko one of the two least reliable brands ('significantly more problems'). Aug 2026 cooktops: under 50% would buy Beko again.",
+        "Stiftung Warentest 2018 (old): Beko washers under 500 EUR had below-average fault rates.",
+        "60 Millions 2025 washers: Beko criticised as noisy (not a reliability finding)."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026",
+        "https://www.choice.com.au/home-and-living/kitchen/dishwashers/articles/most-reliable-dishwasher-brands",
+        "https://consumer.org.nz/home-and-living/kitchen/fridges/the-most-and-least-reliable-fridges-in-nz",
+        "https://consumer.org.nz/home-and-living/kitchen/most-and-least-reliable-dishwashers-cooktops-and-rangehoods",
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/",
+        "https://www.beko.com/en-en/Warranty"
+      ]
+    },
+    "Gorenje": {
+      "grade": 3,
+      "categories": {},
+      "confidence": "low",
+      "evidence": [
+        "Only finding: Stiftung Warentest 2018 reader survey said Gorenje washers under 500 EUR had below-average fault rates. That is old and single-source, so the grade is set to average (3).",
+        "Gorenje is Hisense-owned. No recent independent brand reliability data was found."
+      ],
+      "sources": [
+        "https://www.test.de/Umfrage-Haushaltsgeraete-Das-sind-die-zuverlaessigsten-Marken-5298604-0/"
+      ]
+    },
+    "Hisense": {
+      "grade": 3,
+      "categories": {
+        "washer": 3,
+        "micro": 3
+      },
+      "confidence": "low",
+      "evidence": [
+        "OCU Nov 2025: Hisense washing machines 'break down least' (best reliability).",
+        "Contrary signal: Altroconsumo 2023 and Jul 2024 washers: Hisense last on overall score (58/100 in 2023; this includes lab tests, not only reliability).",
+        "Altroconsumo Aug 2026 microwaves: reliability 76, satisfaction 64 (second lowest).",
+        "Sources disagree on washers, so the grade is 3."
+      ],
+      "sources": [
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/lavatrici-bosch-candy-o-samsung-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026"
+      ]
+    },
+    "Haier": {
+      "grade": 3,
+      "categories": {
+        "dish": 2,
+        "fridge": 3
+      },
+      "warrantyYears": 2,
+      "confidence": "medium",
+      "evidence": [
+        "Consumer NZ May 2026 fridges: Haier one of the two least reliable brands and lowest satisfaction.",
+        "Consumer NZ Aug 2026 dishwashers: Haier low reliability, lowest satisfaction. CHOICE (AU) Mar 2025 dishwashers: Haier 71% reliability (joint lowest with Smeg).",
+        "Contrary signal: Altroconsumo Nov 2025 fridges: Haier's overall score 'very close' behind Siemens (combined score with lab tests). Hence fridge 3, not 2.",
+        "Haier LV warranty policy: 24 months from purchase in the Baltics (6 months on PSUs/batteries); repairs at service centres. Named LV service centres were not seen, so serviceLv is null."
+      ],
+      "sources": [
+        "https://consumer.org.nz/home-and-living/kitchen/fridges/the-most-and-least-reliable-fridges-in-nz",
+        "https://consumer.org.nz/home-and-living/kitchen/most-and-least-reliable-dishwashers-cooktops-and-rangehoods",
+        "https://www.choice.com.au/home-and-living/kitchen/dishwashers/articles/most-reliable-dishwasher-brands",
+        "https://www.altroconsumo.it/elettrodomestici/frigoriferi/news/migliori-marche-frigoriferi",
+        "https://www.haier-europe.com/lv_LV/tehniskais-atbalsts/garantijas-politika/"
+      ]
+    },
+    "Candy": {
+      "grade": 2,
+      "categories": {
+        "washer": 2,
+        "dish": 2,
+        "dryer": 2,
+        "micro": 3
+      },
+      "confidence": "medium",
+      "evidence": [
+        "60 Millions 2025: Candy washers flagged for unreliable models (last); Candy dishwasher reliability fell ~20 points in one year.",
+        "Altroconsumo Jul 2024: Candy last for dishwashers (overall score). Fridges 2023: 55/100 overall, 'insufficient'.",
+        "OCU Nov 2025: Candy dryers 'barely over 8 years' (average 11.4).",
+        "Altroconsumo Aug 2026 microwaves: reliability 78 (middle)."
+      ],
+      "sources": [
+        "https://meilleure-innovation.com/meilleures-marques-electromenager-2025/",
+        "https://consonews.ma/59215.html",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/frigoriferi-bosch-samsung-o-lg-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026"
+      ]
+    },
+    "Hoover": {
+      "grade": 2,
+      "categories": {
+        "washer": 2,
+        "fridge": 2,
+        "vacuum": 3
+      },
+      "confidence": "low",
+      "evidence": [
+        "OCU Nov 2025: Hoover washers among the least durable (about 5-6 years less than Miele).",
+        "Altroconsumo 2023 fridges: 54/100 overall ('insufficient'); Jul 2024: last for fridges (overall scores, include lab tests).",
+        "Altroconsumo Aug 2026 vacuums: corded reliability 86 (high), cordless 78 (lower; last overall 55), hence vacuum 3."
+      ],
+      "sources": [
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.greenme.it/lifestyle/sai-cosa-compri/frigoriferi-bosch-samsung-o-lg-sono-queste-le-marche-migliori-e-piu-affidabili-secondo-altroconsumo/",
+        "https://www.thesocialpost.it/2024/07/03/grandi-elettrodomestici/",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026"
+      ]
+    },
+    "Smeg": {
+      "grade": 2,
+      "categories": {
+        "dish": 2,
+        "micro": 1
+      },
+      "confidence": "low",
+      "evidence": [
+        "CHOICE (AU) Mar 2025 dishwashers: Smeg 71% reliability, joint lowest of 9 brands, satisfaction 76% (lowest).",
+        "Altroconsumo Aug 2026 microwaves: Smeg reliability index 53 and satisfaction 67, the lowest of 10 brands by a wide margin (next lowest 72).",
+        "No European large-appliance reliability figure was readable (Smeg is in the paywalled Which? fridge table)."
+      ],
+      "sources": [
+        "https://www.choice.com.au/home-and-living/kitchen/dishwashers/articles/most-reliable-dishwasher-brands",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026"
+      ]
+    },
+    "Teka": {
+      "grade": 2,
+      "categories": {
+        "washer": 2,
+        "dish": 2,
+        "micro": 3
+      },
+      "confidence": "low",
+      "evidence": [
+        "OCU Nov 2025: Teka washers and dishwashers among the least durable brands.",
+        "OCU 2016 (old): Teka among the least reliable dishwashers per users.",
+        "Altroconsumo Aug 2026 microwaves: reliability 78 (middle)."
+      ],
+      "sources": [
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://www.ocu.org/electrodomesticos/lavadora/noticias/encuesta-electrodomesticos",
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026"
+      ]
+    },
+    "Sharp": {
+      "grade": 4,
+      "categories": {
+        "fridge": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "OCU Nov 2025: Sharp combi fridges the most reliable (fewest breakdowns) and highest satisfaction.",
+        "Yale Appliance 2026 (US): Sharp 7.5% first-year service rate (US range is mostly microwaves/drawers, so down-weighted).",
+        "Thin evidence: in Europe this rests on one survey."
+      ],
+      "sources": [
+        "https://www.ocu.org/electrodomesticos/frigorificos/noticias/electrodomesticos-marcas-mas-duraderas",
+        "https://blog.yaleappliance.com/the-least-serviced-most-reliable-appliance-brands"
+      ]
+    },
+    "Panasonic": {
+      "grade": 4,
+      "categories": {
+        "micro": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Aug 2026 microwaves (>25,000 reliability ratings, 9 countries): Panasonic reliability index 86 (second of 10), satisfaction 84, joint top overall 64.",
+        "Single category, single source."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/forni-a-microonde/news/migliori-marche-forni-microonde-2026"
+      ]
+    },
+    "Philips": {
+      "grade": 3,
+      "categories": {
+        "iron": 4,
+        "vacuum": 4,
+        "airfryer": 3,
+        "coffee": 3
+      },
+      "warrantyYears": 2,
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Sep 2026 irons and steam generators (>24,000 reliability ratings): Philips reliability 82 (Braun 86, Rowenta 79, Tefal 73), first overall 77.",
+        "Altroconsumo Aug 2026 corded vacuums: reliability 85. Robot vacuums: reliability 77.",
+        "Altroconsumo Aug 2026 air fryers (>11,000 ratings): Philips reliability 79 (Ninja 91, Cosori 85, Moulinex 74), first overall 68.",
+        "Altroconsumo Aug 2026 capsule coffee machines: Philips reliability 77 (Krups 87, De'Longhi 85), lowest overall 62.",
+        "Which? (Aug 2025, visible text): Philips air fryer guarantee 'two years as standard' (UK)."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/ferri-stiro/news/migliori-marche-ferri-stiro-2026",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.altroconsumo.it/elettrodomestici/friggitrici-ad-aria/news/migliori-marche-friggitrici-ad-aria-2026",
+        "https://www.altroconsumo.it/elettrodomestici/macchina-caffe/news/migliori-marche-macchine-caffe-2026",
+        "https://www.which.co.uk/reviews/air-fryers/article/which-air-fryer-brand-to-buy-afid98U6UDPM"
+      ]
+    },
+    "Tefal": {
+      "grade": 3,
+      "categories": {
+        "iron": 2
+      },
+      "warrantyYears": 2,
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Sep 2026 irons: Tefal reliability index 73, the lowest of 4 brands (Braun 86, Philips 82, Rowenta 79).",
+        "Related but not used for grading: sister brand Moulinex (Groupe SEB, many shared models such as Easy Fry) scored reliability 74 for air fryers in Altroconsumo 2026, and Moulinex food processors scored 95.5% in 60 Millions 2025. Owner should decide whether Moulinex evidence may be applied to Tefal.",
+        "Which? (Aug 2025, visible text): Tefal 'offers a two-year guarantee on its products' (UK)."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/ferri-stiro/news/migliori-marche-ferri-stiro-2026",
+        "https://www.altroconsumo.it/elettrodomestici/friggitrici-ad-aria/news/migliori-marche-friggitrici-ad-aria-2026",
+        "https://www.itmag-dz.com/news/60-millions-de-consommateurs-devoile-le-palmares-2025-des-meilleures-marques-daspirateurs-cafetieres-et-robots-de-cuisine/",
+        "https://www.which.co.uk/reviews/air-fryers/article/which-air-fryer-brand-to-buy-afid98U6UDPM"
+      ]
+    },
+    "Rowenta": {
+      "grade": 4,
+      "categories": {
+        "vacuum": 4,
+        "iron": 3
+      },
+      "confidence": "medium",
+      "evidence": [
+        "60 Millions 2025 vacuums: Rowenta 94.6% reliability, second only to Miele (average 81%).",
+        "Altroconsumo Aug 2026: corded vacuum reliability 85, cordless 80. Robot vacuums only 59 (joint lowest), so robot models should not inherit the vacuum grade.",
+        "Altroconsumo Sep 2026 irons: reliability 79 (third of 4)."
+      ],
+      "sources": [
+        "https://www.itmag-dz.com/news/60-millions-de-consommateurs-devoile-le-palmares-2025-des-meilleures-marques-daspirateurs-cafetieres-et-robots-de-cuisine/",
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.altroconsumo.it/elettrodomestici/ferri-stiro/news/migliori-marche-ferri-stiro-2026"
+      ]
+    },
+    "Braun": {
+      "grade": 4,
+      "categories": {
+        "iron": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Sep 2026 irons and steam generators: Braun reliability index 86, the highest of 4 brands; overall 73 (second).",
+        "Single source and category. General Serviss (Riga) has a Braun service page, but authorisation was not stated explicitly."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/ferri-stiro/news/migliori-marche-ferri-stiro-2026",
+        "https://www.serviscentrs.lv"
+      ]
+    },
+    "De'Longhi": {
+      "grade": 4,
+      "categories": {
+        "coffee": 4
+      },
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Aug 2026 automatic coffee machines (>5,200 reliability ratings): De'Longhi reliability 83 (Krups 76), first overall 76.",
+        "Altroconsumo Aug 2026 capsule machines (>7,000 ratings): De'Longhi reliability 85, first overall 73.",
+        "CHOICE (AU) 2025 Best Brand espresso: De'Longhi 84% reliability and De'Longhi Nespresso 87% (Breville 82%).",
+        "Latvia: General Serviss shows a DeLonghi logo; authorisation is not explicit."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/macchina-caffe/news/migliori-marche-macchine-caffe-2026",
+        "https://www.choice.com.au/home-and-living/kitchen/coffee-machines/articles/breville-vs-delonghi-which-coffee-machines-are-best?nb=1",
+        "https://www.serviscentrs.lv"
+      ]
+    },
+    "Krups": {
+      "grade": 3,
+      "categories": {
+        "coffee": 3
+      },
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Aug 2026: Krups capsule machines reliability 87 (highest; the article says it 'stands out for its high reliability index'), but automatic bean-to-cup machines only 76 (vs De'Longhi 83) and 0% rated excellent.",
+        "The single 'coffee' category mixes the two, so it is graded 3. Consider splitting by machine type: capsule 4, bean-to-cup 3."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/macchina-caffe/news/migliori-marche-macchine-caffe-2026"
+      ]
+    },
+    "Nespresso": {
+      "grade": 4,
+      "categories": {
+        "coffee": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "Nespresso machines are made under licence by De'Longhi and Krups (and Breville outside the EU), so the maker's grade arguably applies. Altroconsumo ranks them under De'Longhi/Krups, not as Nespresso.",
+        "CHOICE (AU) 2025: De'Longhi Nespresso 87% reliability, Breville Nespresso 85%, the highest-reliability rows in that table.",
+        "Altroconsumo Aug 2026 capsule machines (largely Nespresso/Dolce Gusto formats): Krups 87, De'Longhi 85.",
+        "Recommendation: in code, resolve a Nespresso product to its maker (De'Longhi or Krups) rather than using this row."
+      ],
+      "sources": [
+        "https://www.choice.com.au/home-and-living/kitchen/coffee-machines/articles/breville-vs-delonghi-which-coffee-machines-are-best?nb=1",
+        "https://www.altroconsumo.it/elettrodomestici/macchina-caffe/news/migliori-marche-macchine-caffe-2026"
+      ]
+    },
+    "Dyson": {
+      "grade": 2,
+      "categories": {
+        "vacuum": 2
+      },
+      "warrantyYears": 2,
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Aug 2026 cordless sticks: Dyson reliability index 73, the lowest of 6 brands (Samsung 91).",
+        "60 Millions 2025 vacuums: Dyson 70% reliability vs category average 81% (Miele 95.4%).",
+        "Consumer Reports via BGR (Mar 2026): Dyson cordless sticks 'low', uprights 'satisfactory', robots 'solid'.",
+        "Dyson guarantee is 2 years on Dyson's own UK/AU pages; in the EU it is valid in the country of sale. Latvian terms were not seen."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://www.itmag-dz.com/news/60-millions-de-consommateurs-devoile-le-palmares-2025-des-meilleures-marques-daspirateurs-cafetieres-et-robots-de-cuisine/",
+        "https://www.bgr.com/2132733/most-reliable-vacuum-cleaner-brands-consumer-reports/",
+        "https://www.dyson.co.uk/inside-dyson/terms/the-dyson-guarantee"
+      ]
+    },
+    "iRobot": {
+      "grade": 2,
+      "categories": {
+        "vacuum": 2
+      },
+      "confidence": "medium",
+      "evidence": [
+        "Altroconsumo Aug 2026 robot vacuums (>8,500 ratings): iRobot reliability index 63 (Dreame 96, Roborock 83).",
+        "Consumer NZ Aug 2026: iRobot robot vacuums had low reliability and low brand satisfaction.",
+        "Not used for grading but relevant to service: a search snippet reports iRobot filed for bankruptcy at the end of 2025. Verify before relying on it for after-sales support."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026",
+        "https://consumer.org.nz/home-and-living/vacuums-and-floorcare/most-and-least-reliable-vacuum-cleaners"
+      ]
+    },
+    "Roborock": {
+      "grade": 4,
+      "categories": {
+        "vacuum": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Aug 2026 robot vacuums: Roborock reliability index 83 (second of 8), overall 64.",
+        "Single source."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026"
+      ]
+    },
+    "Dreame": {
+      "grade": 4,
+      "categories": {
+        "vacuum": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Aug 2026 robot vacuums: Dreame reliability index 96, the best of 8 robot brands; first overall 65.",
+        "Kept at 4, not 5, because it is a single source (5 requires agreement across independent sources)."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026"
+      ]
+    },
+    "Xiaomi": {
+      "grade": 3,
+      "categories": {
+        "vacuum": 3
+      },
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Aug 2026 robot vacuums: Xiaomi reliability index 75 (third overall 60; Dreame 96, Roborock 83, iRobot 63).",
+        "Single source. Xiaomi cordless sticks were excluded for too few tested models."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/aspirapolvere/news/migliori-marche-aspirapolvere-con-senza-filo-robot-2026"
+      ]
+    },
+    "Ninja": {
+      "grade": 4,
+      "categories": {
+        "airfryer": 4
+      },
+      "warrantyYears": 1,
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Aug 2026 air fryers (>11,000 ratings, 9 countries): Ninja reliability index 91, the highest of 4 brands (Cosori 85, Philips 79, Moulinex 74).",
+        "Which? (Aug 2025, visible text): Ninja 'manufacturer's guarantee lasts for one year from the date of purchase as standard' (UK). Baltic terms were not seen.",
+        "Single reliability source."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/friggitrici-ad-aria/news/migliori-marche-friggitrici-ad-aria-2026",
+        "https://www.which.co.uk/reviews/air-fryers/article/which-air-fryer-brand-to-buy-afid98U6UDPM"
+      ]
+    },
+    "Cosori": {
+      "grade": 4,
+      "categories": {
+        "airfryer": 4
+      },
+      "confidence": "low",
+      "evidence": [
+        "Altroconsumo Aug 2026 air fryers: Cosori reliability index 85 (second of 4), satisfaction 87 (highest).",
+        "A Homes & Gardens comparison notes some Cosori models were recalled over a wiring fault (a safety recall, not a survey reliability figure).",
+        "Single reliability source."
+      ],
+      "sources": [
+        "https://www.altroconsumo.it/elettrodomestici/friggitrici-ad-aria/news/migliori-marche-friggitrici-ad-aria-2026",
+        "https://www.homesandgardens.com/shopping/ninja-vs-cosori-air-fryers"
+      ]
+    }
+  },
+  "skipped": {
+    "Grundig": "No independent reliability data found (Beko sister brand; do not inherit Beko's grade without owner approval). A 10-year Grundig motor warranty document exists for Italy only.",
+    "Snaige": "No reliability survey covers Snaige (too small in the surveyed markets). The only result was a 2022 financial-distress news item.",
+    "Midea": "Only Consumer NZ Aug 2026: under 50% of cooktop and rangehood owners would buy again. That is satisfaction, not reliability, so too thin to grade.",
+    "Kenwood": "Listed in the Which? 2025 fridge and dishwasher tables (UK Kenwood is a Currys own-label, not the De'Longhi small-appliance brand), but scores are paywalled. No other data.",
+    "Jura": "No brand reliability figure found. Altroconsumo 2026 had too few Jura models to rank; Consumentenbond Nov 2025 includes Jura but results are members-only.",
+    "Melitta": "Excluded from Altroconsumo 2026 automatic-coffee ranking (fewer than 5 models). Which?/Consumentenbond figures are paywalled.",
+    "Sencor": "No independent reliability data found.",
+    "Severin": "Excluded from Altroconsumo 2026 microwave and vacuum rankings (too few models). No other data.",
+    "Russell Hobbs": "No independent reliability data found (Which? kettle/iron brand data is paywalled)."
+  },
+  "openQuestionsForOwner": [
+    "Which? 2025 brand reliability tables (UK, the largest European dataset for washers, fridges, dishwashers, coffee machines and air fryers) are paywalled. A Which? subscription for one month would let us replace several low-confidence grades.",
+    "Should a sister brand inherit evidence (Moulinex->Tefal, Beko->Grundig, Hisense->Gorenje, Nespresso->De'Longhi/Krups)? This draft does not, except as notes.",
+    "serviceLv is null for most brands because manufacturer service pages for Latvia could not be opened (403/401). A manual check of each brand's .lv site is recommended before showing a 'serviss Latvijā' claim.",
+    "Since grades back an 'at least as good' claim, consider requiring confidence >= medium before a brand can be suggested as an alternative."
+  ]
 }

@@ -48,6 +48,22 @@ describe("worthConsidering (§2.5)", () => {
     expect(worthConsidering(pool, top, ["Bosch"], t)).toBeNull();
   });
 
+  it("never suggests a brand whose grade rests on low-confidence evidence", () => {
+    const t: BrandTable = {
+      ...table,
+      brands: {
+        ...table.brands,
+        Beko: { grade: 4, confidence: "low", sources: ["https://example.invalid/b"] },
+      },
+    };
+    expect(worthConsidering([top, cand("Beko Same", 430, 90)], top, ["Bosch"], t)).toBeNull();
+  });
+
+  it("the drafted table parses, cites sources for every brand and ships switched off", () => {
+    expect(Object.keys(brandTable.brands).length).toBeGreaterThan(30);
+    for (const b of Object.values(brandTable.brands)) expect(b.sources.length).toBeGreaterThan(0);
+  });
+
   it("ships switched off until the owner reviews the drafted table", () => {
     expect(brandTable.reviewed).toBe(false);
   });
