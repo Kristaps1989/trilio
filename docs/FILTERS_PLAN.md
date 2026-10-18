@@ -375,6 +375,59 @@ This replaces `NUMBER_FILTERS` hard-coded in `filters.ts`. It also turns `compar
   The hob power connection is asked only when the chosen hob type needs it. It is pre-selected to the most common answer, with "nezinu" (don't know) help.
 - **Rule 2 is applied per category**: auto-skip of questions whose answer would not change the result. It matters most in small categories, where stock is thin.
 
+### 6.3b The flow for every category: at most four screens, then results
+
+The core rules applied to all 33 subcategories. In each flow:
+- Price is always the last screen. Its button says "Rādīt N …" (show N …) and it uses the histogram and presets (3.4).
+- **Picture** marks a picture-card screen.
+- The pre-selected default is in *italics*.
+- Everything in the last column is a results-page chip, not a question.
+- Urgency and refurbished leave every flow, as in 3.6: urgency defaults to within two weeks, and refurbished stock appears in its own block.
+
+The current flows have 3–9 screens: specific questions, then budget, refurbished and urgency. The new flows have 2–4.
+
+| Subcategory | Screen 1 | Screen 2 | Screen 3 | Screen 4 | On the results page |
+|---|---|---|---|---|---|
+| **fridge** | Picture: *Standarta*, Mazs, Bez saldētavas, Divdurvju, Iebūvējams | Height: *nav ierobežojuma* / slider; built-in: niche height | People: 1–2, *3–4*, 5+ | Price | Nav jāatkausē, klusums, patēriņš, tilpums, zīmoli |
+| **freezer** | Picture: *Vertikālā*, Lādes, Iebūvējama, Garāžai (neapsildīta telpa → climate class) | Height: *nav ierobežojuma* / slider; built-in: niche; skipped for chest | How much you freeze: maz, *vidēji*, daudz (→ litres) | Price | Nav jāatkausē, ātrā sasaldēšana, patēriņš, zīmoli |
+| **washer** | Picture: *Priekšējā ielāde*, Augšējā ielāde (šaura vieta), Ar žāvētāju | Depth: *nav ierobežojuma* / slider with "līdz 45 cm" preset; top-loader: width | People: 1–2, *3–4*, 5+ (→ kg) | Price | Klusums, elektrība + ūdens, tvaiks, ātrā programma, zīmoli |
+| **dryer** | Picture: *Siltumsūknis* (with its payback line), Kondensācijas | Picture: *Blakus*, Uz veļas mašīnas (→ stackable, width match, kit) | People: 1–2, *3–4*, 5+ (→ kg) | Price | Klusums, patēriņš, zīmoli |
+| **dish** | Picture: *Iebūvējama 60 cm*, Iebūvējama 45 cm (šaura), Brīvi stāvoša, Galda | Built-in only: "Niša standarta augstumā (82–87 cm)?" *jā* / slider | People: 1–2, *3–4*, 5+ (→ place settings) | Price | Klusums, trešais grozs, automātiskā durvju atvēršana, elektrība + ūdens, zīmoli |
+| **hob** | Picture: *Indukcijas*, Keramiskā, Gāzes, Plīts ar cepeškrāsni | Picture of the cut-out: 30 cm, *60 cm*, 80 cm+ | Only when the type needs it: power connection *1 fāze* / 3 fāzes / nezinu (help); gas: dabasgāze / balons | Price | Riņķu skaits, elastīgā zona, booster, zīmoli |
+| **oven** | Picture: *Standarta niša 60 cm*, Kompakta 45 cm | Price | | | Pirolīze / katalītiskā tīrīšana, tvaiks, Wi-Fi, tilpums, zīmoli |
+| **hood** | Picture: *Pie sienas*, Salas, Iebūvējams skapī | Width: *same as the hob* (pre-filled when known) / 50 / 60 / 90 | "Vai ir izvads ārā?" *jā* / nē → recirculation / nezinu | Price | Klusums (atvērtai virtuvei), jauda m³/h, filtru izmaksas, zīmoli |
+| **micro** | Picture: *Brīvi stāvoša*, Iebūvējama 38 cm, Iebūvējama 45 cm | Picture: *Tikai sildīšana*, Ar grilu, Kombinētā (arī cepeškrāsns) | People: 1–2, *3–4*, 5+ (→ litres) | Price | Jauda, zīmoli |
+| **vacuum** | Picture: Robots, Robots ar mazgāšanu, *Bezvadu*, Ar vadu | Home size: līdz 50, *50–100*, 100+ m² (→ run time) | "Mājdzīvnieki?" jā / *nē* (→ pet brush, filter) | Price | Paklāji, alerģija (HEPA), klusums, maisiņi vai bez, zīmoli |
+| **steamclean** | Picture: Rokas, *Tvaika mops*, Ar tvertni | Price | | | Grīdām / vannasistabai, zīmoli |
+| **coffee** | Picture: *Automātiskais (pupiņas)*, Kapsulu, Manuālais espresso | "Ar pienu?" *jā* / tikai melnu | Cups a day: 1–2, *3–4*, 5+ (→ cost-per-cup advice) | Price | Dzirnaviņas, ūdens tvertne, zīmoli |
+| **grinder** | Picture: *Dzirnakmeņu*, Asmeņu | "Kādai kafijai?" espresso, *filtra*, abām | Price | | Troksnis, zīmoli |
+| **iron** | Picture: *Gludeklis*, Tvaika stacija | How often: reti, *bieži* | Price | | Pretkaļķu sistēma (Rīgā ciets ūdens: on by default), svars, zīmoli |
+| **steamer** | Picture: *Rokas*, Ar statīvu | Price | | | Audumi, zīmoli |
+| **kettle** | Picture: *Tērauda*, Stikla, Ar temperatūras izvēli | Price | | | Tilpums, ātra uzvārīšana, zīmoli |
+| **blender** | Picture: *Krūzes*, Personīgais (pudele) | For what: *smūtiji*, ledus (→ ≥ 1000 W), zupas | Price | | Jauda, zīmoli |
+| **handblender** | Picture: *Ar vadu*, Bezvadu | Price | | | Komplekts (putotājs, smalcinātājs), zīmoli |
+| **foodproc** | Picture: Planetārais mikseris, *Virtuves kombains* | For what: mīkla, *smalcināšana*, abi | Price | | Bļodas tilpums, jauda, zīmoli |
+| **mixer** | Picture: *Rokas*, Ar bļodu | Price | | | Mīklai (jauda), zīmoli |
+| **chopper** | Picture: *Dārzeņiem*, Riekstiem un garšvielām | Price | | | Izmērs, zīmoli |
+| **mincer** | How often: *reti*, bieži (→ power, metal gears) | Price | | | Uzgaļi (desām, rīvēšanai), zīmoli |
+| **scale** | Picture: *Virtuves svari*, Precīzie 0,1 g | Price | | | Viedie (lietotne), zīmoli |
+| **knife** | Picture: *Ar vadu*, Bezvadu | Price | | | Gaļai / maizei, zīmoli |
+| **grill** | Picture: *Kontakta*, Plātnes | Portions: 2, *4*, 6 | Price | | Programmas, zīmoli |
+| **toaster** | Picture: *2 šķēles*, 4 šķēles | Price | | | Bulciņu turētājs, garās šķēles, zīmoli |
+| **sandwich** | Picture: *Sendviču*, Ar maināmām plātnēm | Price | | | Vienlaikus 2 / 4, zīmoli |
+| **airfryer** | Picture: *Karstā gaisa*, Eļļas fritieris | Portions: 1–2, *3–4*, 5+ (→ litres; two baskets for 5+) | Price | | Logs, programmas, zīmoli |
+| **breadmaker** | Picture: *Baltmaize*, Arī rudzu maize (→ rye programme) | Price | | | Dozators, zīmoli |
+| **minioven** | Picture: *Bez riņķiem*, Ar plīts riņķiem | Size by picture: 20 L ("pica"), *35 L* ("vista") | Price | | Karstais gaiss, zīmoli |
+| **juicer** | Picture: *Lēnā spiede*, Centrifūgas, Citrusu | Price | | | Zaļumiem (the slow press is suggested automatically), zīmoli |
+| **dehydrator** | Picture by size: *Mazs (5 paplātes)*, Liels | Price | | | Termostats, taimeris, zīmoli |
+| **vacuumsealer** | How often: *reti*, bieži (→ duty cycle) | Price | | | Mitriem produktiem, zīmoli |
+
+Notes:
+- Screens that decide fit (height, depth, width, niche, power connection, stacking) always open on the answer that removes nothing ("nav ierobežojuma" or the standard size). A user who has no constraint taps "Tālāk".
+- Core rule 2 still applies on top of this table. Any screen whose answer would not change the remaining stock is skipped, so a thin category can drop to two screens.
+- `categories.json` gains a `stage: "flow" | "results"` field per question. Today's comfort questions keep their data and scoring and move to results chips. Nothing measured is lost.
+- `PRODUCT_SPEC.md` §2.2 (question lists) is rewritten from this table.
+
 ### 6.4 "Vērts zināt" advice per category (2.7 generalised)
 
 Every running cost uses a configurable price shown in the "Kā mēs izvēlamies…" panel:
