@@ -73,7 +73,7 @@ export async function upsertPlans(db: Db) {
 }
 
 /**
- * Production (Railway pre-deploy) sets SEED_SAMPLE_DATA=0: partner stores and
+ * Production (`npm run db:release` at Railway start) sets SEED_SAMPLE_DATA=0: partner stores and
  * plans only, no placeholder shops. Local development and CI keep the samples.
  */
 export function seedSampleData(env: Record<string, string | undefined> = process.env): boolean {

@@ -1,6 +1,6 @@
 # Deploying Trilio on Railway
 
-Everything Railway needs is in the repo: `railway.json` (build, pre-deploy migrations, start, healthcheck), `/api/health`, and the ingestion CLI for the cron service. The only things you enter in Railway are environment variables.
+Everything Railway needs is in the repo: `railway.json` (build, start with migrations, healthcheck), `/api/health`, and the ingestion CLI for the cron service. The only things you enter in Railway are environment variables.
 
 ## 1. Create the project
 
@@ -43,14 +43,14 @@ Railway injects `PORT`; `next start` binds to it automatically on `0.0.0.0`.
 
 ## 3. First deploy
 
-Railway builds with Railpack (`npm install`, `npm run build`), then runs the **pre-deploy command** `npm run db:release` against `DATABASE_URL`, then starts `npm run start` and waits for `/api/health` to return 200 (it checks the database connection). A failed pre-deploy step or health check leaves the previous deployment running.
+Railway builds with Railpack (`npm install`, `npm run build`), then starts the service with `npm run start:release`: it runs `npm run db:release` against `DATABASE_URL` and then `next start`. Railway waits for `/api/health` to return 200, which needs both the database connection and the migrated schema. A failed migration or health check leaves the previous deployment running. (Migrations used to run as a Railway pre-deploy command; on the first production deploy that step left the database empty, so they now run in the start command, where their output is in the deploy log.)
 
 `npm run db:release` applies migrations and seeds the partner stores (with their crawl config and category maps) and the subscription plans. It runs on every deploy and is safe to repeat: store settings in `src/db/stores.ts` reach production with the next deploy, while the `active` flag, feed URLs and affiliate templates you change in the database are kept. Production never gets the placeholder sample shops (`SEED_SAMPLE_DATA=0`).
 
 ### If the deploy fails
 
 - **Build step:** the build needs no database or secrets (CI builds the same way). Category landing pages, `robots.txt`, `sitemap.xml` and `llms.txt` are rendered at runtime, so they always use the runtime `APP_URL`.
-- **Pre-deploy step (`npm run db:release`) or start fails with "DATABASE_URL is not set":** the web service is missing the `DATABASE_URL` reference variable. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}` under the web service's **Variables** (the Postgres service must be in the same project), then redeploy.
+- **Start (`npm run db:release`) fails with "DATABASE_URL is not set":** the web service is missing the `DATABASE_URL` reference variable. Add `DATABASE_URL=${{Postgres.DATABASE_URL}}` under the web service's **Variables** (the Postgres service must be in the same project), then redeploy.
 - **`npm install` reports vulnerabilities:** Railway audits the full dependency tree, including build-only tools. `npm audit --omit=dev` (what ships) reports none.
 
 ## 4. Custom domain and TLS
@@ -114,7 +114,7 @@ Enable **Settings → Deploy → Wait for CI** on the production service so a de
 
 | File | Purpose |
 |---|---|
-| `railway.json` | Web service: Railpack build, `npm run db:release` (migrations and store/plan seed) before each deploy, `npm run start`, healthcheck on `/api/health`, restart on failure. |
+| `railway.json` | Web service: Railpack build, `npm run start:release` (migrations and store/plan seed, then `next start`), healthcheck on `/api/health`, restart on failure. |
 | `railway.cron.json` | Ingest cron service: no web build, `npm run ingest -- all` every four hours. |
 | `railway.billing.json` | Billing cron service: no web build, `npm run cron:billing` daily. |
 | `src/app/api/health/route.ts` | 200 when the database answers within 5 s, else 503. |
