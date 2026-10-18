@@ -64,7 +64,7 @@ describe("worthConsidering (§2.5)", () => {
     for (const b of Object.values(brandTable.brands)) expect(b.sources.length).toBeGreaterThan(0);
   });
 
-  it("ships switched off until the owner reviews the drafted table", () => {
-    expect(brandTable.reviewed).toBe(false);
+  it("is switched on: the owner reviewed the table on 18 Oct 2026", () => {
+    expect(brandTable.reviewed).toBe(true);
   });
 });
