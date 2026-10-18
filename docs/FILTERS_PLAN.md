@@ -8,7 +8,21 @@ Owner feedback on 18 Oct 2026, after the first real-data test with fridges:
 4. A €500 budget returned an €89 mini fridge. Price and height should be min–max ranges.
 5. The first results should be easy to adjust (price, size, brands) so the user finds the right product on the first try.
 
-The guiding principle is to show the thing instead of describing it. Use few choices, choose sensible defaults, give instant feedback, and never leave the user at a dead end.
+## Core: the product decides for the user, then lets them adjust (the Jobs rules)
+
+Decided by the owner on 18 Oct 2026: this is the core of the plan and of every category. Every phase below follows it, and a phase that conflicts with it gives way. Steve Jobs's test for a product was what it leaves out. For Trilio that means the user answers as little as possible and sees a right answer as soon as possible.
+
+1. **At most four screens before results, in every category.** Only questions that decide fit or set the price range are asked up front. Everything else is refined on the results page: priorities, brands, urgency, refurbished. A test over `categories.json` fails if any category's longest path has more than four screens.
+2. **Ask only what changes the answer.** Before a question is shown, the code checks whether any answer would change the remaining products. If not, the question is skipped. Example: when every matching fridge is No Frost, the No Frost question never appears. A question is never asked when its answer can be worked out from earlier answers or from stock.
+3. **Show, don't describe.** Every choice between kinds of product is a picture card in one consistent line style, drawn to scale where size matters. Help text exists, but the picture should make it unnecessary.
+4. **The right answer is already selected.** Each screen opens with the most common answer pre-selected, so "Tālāk" (next) is always one tap. Defaults come from real data, for example the most common fridge form in stock and the middle of the real price distribution.
+5. **Every tap gets an instant answer.** Each screen shows a live "Atbilst 42" (42 match) from real stock. The results page updates as chips change, without reloading the flow.
+6. **No dead ends, no surprises.** The user never reaches zero results without being offered the one change that fixes it. Results never contain something that contradicts an answer (Phase 2.2).
+7. **One sentence, no jargon.** Each screen has one question, at most one short line of why, and no technical term without a picture or a plain-language label. "No Frost" becomes "Nav jāatkausē" (no defrosting) with "No Frost" in small print.
+8. **Calm and honest.** No urgency tricks, no decoys, no fake badges. A recommendation appears only when it is earned (2.8). Advice uses real numbers or is not shown (2.7).
+9. **Fewer, better things.** Three picks, not thirty. At most one "Vērts apsvērt" card and two "Vērts zināt" notes. Removing an element is preferred to adding one.
+
+These rules are checked in review for every category batch (Phase 6.6). Rules 1, 3, 4 and 5 are checked by automated tests.
 
 **Owner answers (18 Oct, evening):**
 - Keep it cost effective; use AI wherever it adds value.
@@ -109,7 +123,7 @@ Each source fills only what earlier ones left empty, cheapest first. Every value
 - Rule 2 (extras up to 25 % over the maximum, labelled "Virs budžeta par X €") stays.
 
 **2.4 Brands**
-- An optional "Vēlamie zīmoli" (preferred brands) step and filter: multi-select with product counts. "Jebkurš" (any) is the default.
+- A "Zīmoli" (brands) chip on the results page, not a flow screen (core rule 1): multi-select with product counts. "Jebkurš" (any) is the default.
 - Preferred brands are a **soft** preference that adds score, not a hard filter. "Tikai šie zīmoli" (only these brands) is a separate toggle for people who are sure.
 
 **2.5 "Līdzvērtīgs zīmols" (an equally good brand you did not pick)**
@@ -184,9 +198,24 @@ What changes:
   - different brands with equal values → the brand-and-design sentence;
   - picks within 10 % → no tier pills.
 
-## Phase 3 — The fridge flow (one question per screen, visual)
+## Phase 3 — The fridge flow: four screens, then results
 
-**3.1 "Kāds ledusskapis tev vajadzīgs?" (which fridge do you need?)**
+Today a freestanding fridge takes up to nine screens: type, size, height limit, freezer, household, priorities, budget, refurbished, urgency. Under the core rules it takes four:
+
+| Screen | Question | Replaces |
+|---|---|---|
+| 1 | "Kāds ledusskapis tev vajadzīgs?" (picture cards) | type, size, freezer |
+| 2 | "Cik augstu var būt?" (slider, or niche height for built-in) | height limit, niche |
+| 3 | "Cik cilvēku ēd mājās?" (how many people eat at home?) | household (sets the volume) |
+| 4 | "Cik vēlies tērēt?" (range over real prices) | budget |
+
+Priorities, brands, urgency and refurbished move to the results page (Phase 4) with sensible defaults:
+- priorities: none, ranked by overall rating;
+- brands: any;
+- urgency: within two weeks;
+- refurbished: shown automatically in its own block when stock exists.
+
+**3.1 Screen 1: "Kāds ledusskapis tev vajadzīgs?" (which fridge do you need?)**
 - Picture cards replace the type, size and freezer questions.
 - Each card is a simple lime line drawing to scale, with a person silhouette for size. The label is underneath, plus a typical height and volume:
 
@@ -198,30 +227,36 @@ What changes:
   | **Divdurvju** (double door) | Side-by-Side vai French Door, ~90 cm plats | two doors next to each other |
   | **Iebūvējams** (built-in) | aiz skapja durvīm | a cabinet front with a dashed outline inside |
 
-- Each card shows a live count, "42 veikalos" (in 42 shops), from real stock. A form with 0 products is shown dimmed with "Pašlaik nav pieejams" (not available right now) instead of being hidden, so the layout stays stable.
+- Each card shows a live count, "42 veikalos" (in 42 shops), from real stock.
+- A form with 0 products is shown dimmed with "Pašlaik nav pieejams" (not available right now) instead of being hidden, so the layout stays stable.
 - "Nezinu, kā atšķirt" (I don't know the difference) opens the existing help.
 
-**3.2 "Cik augstu var būt?" (how tall can it be?)**
-- A two-handle height slider. The default comes from the chosen card, e.g. standard → 170–205 cm.
-- The ends are labelled in cm with a decimal comma.
-- A small fridge outline grows as the handle moves, next to a 180 cm person marker.
-- Built-in keeps the niche-height number input. That is the measurement people have. The tolerance logic stays.
+**3.2 Screen 2: "Cik augstu var būt?" (how tall can it be?)**
+- Opens on "Nav ierobežojuma" (no limit), pre-selected; most kitchens have no limit. One tap reveals a single height slider ("līdz 186 cm", up to 186 cm).
+- A small fridge outline grows as the handle moves, next to a 180 cm person marker. The ends are labelled in cm with a decimal comma.
+- Built-in asks for the niche height instead, as a number with a "kā izmērīt" (how to measure) drawing. That is the measurement people have. The tolerance logic stays.
+- The screen is skipped for "Mazs" (small), where height is never a limit.
 - A live line under the slider: "Atbilst 31 ledusskapis" (31 fridges match).
 
-**3.3 Household size and priorities** stay; they are soft and they already work.
+**3.3 Screen 3: "Cik cilvēku ēd mājās?" (how many people eat at home?)**
+- 1–2, 3–4 or 5+, shown as people icons, with 3–4 pre-selected. This sets the recommended volume.
+- It becomes a hard minimum only when it would remove too-small fridges and leave at least three. Otherwise it adds score.
 
-**3.4 "Kurus zīmolus tu apsver?" (which brands are you considering?)**
-- Optional and skippable with "Jebkurš zīmols" (any brand).
-- Brand chips with counts, sorted by availability. Logos are not used: shop names and brands are configuration, and logo licensing is unclear.
-
-**3.5 "Cik vēlies tērēt?" (how much do you want to spend?)**
-- A two-handle price slider above a small histogram of real prices for the chosen form and height, so the user sees where the products are.
-- Defaults are the middle 60 % of that distribution.
+**3.4 Screen 4: "Cik vēlies tērēt?" (how much do you want to spend?)**
+- A two-handle price slider above a small histogram of real prices for the choices so far, so the user sees where the products are.
+- It opens on the middle 60 % of that distribution. The button reads "Rādīt 18 ledusskapjus" (show 18 fridges), not "Tālāk" (next), because this is the last screen.
 - The fixed 500, 800 and 1200 € steps become quick presets under the slider. The SEO landing pages `/kategorija/fridge/[budget]` keep working: the budget in their URL becomes the maximum.
 
-**3.6 Never a dead end.** If a choice would leave 0 matches, the screen says so before the user moves on: "Šajā cenu robežā nav neviena — paplašināt līdz 550 €?" (nothing in this price range — widen to €550?).
+**3.5 Never a dead end.** If a choice would leave 0 matches, the screen says so before the user moves on, with the one change that fixes it: "Šajā cenu robežā nav neviena — paplašināt līdz 550 €?" (nothing in this price range — widen to €550?).
+
+**3.6 Removed from the flow, not from the product.**
+- **Brands (2.4) and priorities** are results-page chips. "Kas tev svarīgāk?" (what matters more to you?) sits on the results page as chips: Nav jāatkausē, Klusums, Mazs patēriņš, Liels tilpums. Each tap re-ranks instantly and can add a "Vērts zināt" note.
+- **Urgency** defaults to within two weeks and can be changed with a chip that shows the delivery date.
+- **Refurbished** shows its own block whenever stock exists. There is no question.
 
 ## Phase 4 — Results you can adjust in place
+
+**4.0 Results are the second half of the conversation.** Under the core rules, everything not asked up front is refined here: priorities, brands, urgency and refurbished. The page therefore opens with a sensible answer and makes improving it effortless.
 
 **4.1 Filter bar** under the title
 - One chip per active filter: "Standarta", "170–205 cm", "350–500 €", "Bosch, Samsung", "No Frost".
@@ -323,14 +358,22 @@ This replaces `NUMBER_FILTERS` hard-coded in `filters.ts`. It also turns `compar
 
   Buckets stay only where they describe intent, not size: "how often", "what for", "household size".
 - **Cross-question rules in data**, for example `{"hood.width": ">= hob.width"}`. If the user recently searched for a hob, the hood flow pre-fills its width and says so: "Plīts virsma 60 cm → nosūcējs vismaz 60 cm" (60 cm hob → hood at least 60 cm).
-- **New questions where fit is decided:**
+- **Where fit is decided** (these become cards or conditional answers within the four screens, never extra screens):
   - freezer: "Kur stāvēs?" (where will it stand?) with a garage option → filters by climate class;
   - dryer: "Uz veļas mašīnas?" (on top of a washer?) → stackable and width match;
   - hob: "Kāds pieslēgums?" (which power connection?) with 1-phase, 3-phase, and "nezinu" (don't know) with help;
   - dish built-in: niche height.
-- **Brands:**
-  - Large appliances (fridge, freezer, washer, dryer, dish, oven, hob, hood, coffee, vacuum) get the optional brand step (2.4).
-  - Small appliances skip it in the flow, keeping 3–4 questions in total, and offer brands only as a filter chip on the results page.
+- **Brands** are a results-page chip in every category, never a flow screen (core rule 1).
+- **Every category fits in four screens.** Each category's questions are split into:
+  - **up front**: fit-critical questions and the price range, at most four screens;
+  - **on the results page**: priorities, comfort features, brands, urgency and refurbished, as chips.
+
+  New fit questions do not add screens: they become picture cards on an existing screen. For example:
+  - the freezer card set includes "Garāžai / neapsildītai telpai" (for a garage or unheated room);
+  - the dryer card set includes "Uz veļas mašīnas" (on top of a washer).
+
+  The hob power connection is asked only when the chosen hob type needs it. It is pre-selected to the most common answer, with "nezinu" (don't know) help.
+- **Rule 2 is applied per category**: auto-skip of questions whose answer would not change the result. It matters most in small categories, where stock is thin.
 
 ### 6.4 "Vērts zināt" advice per category (2.7 generalised)
 
@@ -382,6 +425,10 @@ Each batch is done when, for its subcategories:
 ## Phase 5 — Proof
 
 - **Unit tests:**
+  - the core rules over `categories.json`:
+    - no category's longest path has more than four screens;
+    - every hard choice option has an illustration;
+    - every screen has a default answer;
   - range filters, the missing-data policy and the pick spread;
   - the card-text rules (2.8);
   - `countMatches`, the relax suggestions and the "Vērts apsvērt" rule;
@@ -402,7 +449,7 @@ Each batch is done when, for its subcategories:
 | 1 | Phase 0 (deploy-safe ingestion) | small |
 | 2 | Phase 1.1 + 1.4 + 1.5 (spec tables, sanity check, coverage) | medium |
 | 3 | Phase 2.1–2.3 + 2.6 + 2.8 (ranges, missing data, picks, counts, truthful card text) | medium |
-| 4 | Phase 3 (visual fridge flow) | medium |
+| 4 | Phase 3 (four-screen visual fridge flow) | medium |
 | 5 | Phase 4.1–4.2 + 4.4 (editable results) | medium |
 | 6 | Phase 1.2–1.3 + 2.7 (EPREL, same-EAN fill, Claude and web lookup, advice notes) | medium; EPREL needs the key |
 | 7 | Phase 2.4–2.5 + 4.3 (brands, "Vērts apsvērt") | medium, needs the brand table reviewed |
@@ -412,9 +459,10 @@ Steps 1–5 fix everything reported except brands and need no new keys. Fridges 
 ## Decisions
 
 Settled on 18 Oct 2026:
+- **The Jobs rules are the core** (section at the top). There are at most four screens before results in every category, and everything else is refined on the results page. `PRODUCT_SPEC.md` §2.2 (question lists per category) is rewritten with this work.
 - **AI use.** AI provides the data: extraction, web lookup and the brand table draft. Code does the choosing: filters, picks, the "Vērts apsvērt" card and the advice notes. `CLAUDE.md` rule 4 and the honesty panel stay true.
 - **Missing data.** The goal is complete data (Phase 1). Whatever remains after every source is not shown as a pick.
-- **Budget.** A min–max range replaces the fixed steps, which stay as presets. `PRODUCT_SPEC.md` §2.2 is updated with this work.
+- **Budget.** A min–max range replaces the fixed steps, which stay as presets.
 - **EPREL.** The key has been requested; it goes in as `EPREL_API_KEY` when it arrives.
 
 Still open:
