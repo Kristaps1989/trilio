@@ -35,6 +35,8 @@ jobs:
       AUTH_DEV_LOGIN: "1"
       PAYMENTS_PROVIDER: mock
       ALLOW_INSECURE_TEST_FEATURES: "1"
+      # A fake GA4 id so the e2e suite exercises the consent banner and events (requests are stubbed).
+      GA_MEASUREMENT_ID: G-TEST12345
       PAYMENT_TOKEN_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       CI: "1"
     steps:

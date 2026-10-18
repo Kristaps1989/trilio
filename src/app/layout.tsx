@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Figtree } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
+import { Suspense } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
+import { analyticsId } from "@/config/analytics";
 import { appBaseUrl } from "@/services/payments";
+import { Analytics } from "@/ui/analytics/Analytics";
 import "./globals.css";
 
 // Latin Extended covers Latvian, Lithuanian and Estonian diacritics.
@@ -56,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const t = await getTranslations("meta");
   const base = appBaseUrl();
+  const measurementId = analyticsId();
   // Site-level structured data for search engines and AI assistants.
   const jsonLd = [
     {
@@ -83,7 +87,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className={`${spaceGrotesk.variable} ${figtree.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          {measurementId ? (
+            <Suspense fallback={null}>
+              <Analytics measurementId={measurementId} />
+            </Suspense>
+          ) : null}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

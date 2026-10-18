@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { analyticsId } from "@/config/analytics";
+import { ConsentSettingsButton } from "./analytics/Analytics";
 
 /** Terms, privacy, cookies and contacts: linked from every page's footer. */
 export async function LegalLinks() {
   const t = await getTranslations("footer");
+  const consent = await getTranslations("consent");
   const links = [
     ["/noteikumi", t("terms")],
     ["/privatums", t("privacy")],
@@ -20,6 +23,11 @@ export async function LegalLinks() {
             </Link>
           </li>
         ))}
+        {analyticsId() ? (
+          <li>
+            <ConsentSettingsButton label={consent("settings")} />
+          </li>
+        ) : null}
       </ul>
     </nav>
   );
