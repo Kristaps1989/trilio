@@ -1,0 +1,12 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "echo 'billing cron: no web build needed'"
+  },
+  "deploy": {
+    "startCommand": "npm run cron:billing",
+    "cronSchedule": "0 6 * * *",
+    "restartPolicyType": "NEVER"
+  }
+}

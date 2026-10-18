@@ -16,7 +16,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
+    "db:release": "tsx src/db/migrate.ts && SEED_SAMPLE_DATA=0 tsx src/db/seed.ts",
     "ingest": "tsx src/services/ingestion/cli.ts",
+    "cron:billing": "node scripts/cron-billing.mjs",
     "extract": "tsx src/services/llm/cli.ts"
   },
   "dependencies": {
