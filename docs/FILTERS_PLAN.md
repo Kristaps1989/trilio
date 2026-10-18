@@ -149,6 +149,41 @@ Each source fills only what earlier ones left empty, cheapest first. Every value
   - Figures are rounded down in the shop's favour, never in ours.
   - All of it is deterministic code, not AI.
 
+**2.8 Card text that is always true (owner screenshot, 18 Oct 18:45, dryers)**
+
+What the screenshot showed:
+- Two Indesit dryers at 387 € and 396 €. The second card said "Par +9 € vairāk … tu iegūsti: atšķirība galvenokārt zīmolā un dizainā" (for +€9 you get: the difference is mainly brand and design), although both are Indesit.
+- Both cards said "Nav apstiprināts: Kādu žāvētāju meklē?" (not confirmed: which dryer are you looking for?), which shows a raw question title.
+- The cheapest one carried "Trilio ieteikums" (Trilio's recommendation) with nothing behind it.
+
+What changes:
+- **Unknown is not the same as equal.** `upgradeDelta` reports three cases separately:
+  - the values differ (list them);
+  - the values are known and equal;
+  - a value is unknown on either side.
+
+  The brand-and-design sentence is used only when the brands differ and every key attribute is known and equal. If the brands are the same and everything is equal: "Tehniski līdzvērtīgi — atšķiras tikai cena" (technically equivalent — only the price differs). This tells the user to take the cheaper one. If values are unknown, the box is not shown. A box must never guess.
+- **Compare what matters for the category and the user's answers.** The delta lists the attributes behind the user's choices first, then the category's compare rows (`compare_row_labels` in `categories.json`). For dryers that means:
+  - type: heat pump or condenser;
+  - capacity: 8 vs 9 kg;
+  - energy class and 10-year electricity cost;
+  - noise.
+
+  In the screenshot's case it would read, for example: "Par +9 € — 9 kg, nevis 8 kg; siltumsūknis (−35 € elektrībai 10 gados)" (for +€9 — 9 kg, not 8 kg; heat pump, −€35 on electricity over 10 years).
+- **"Nav apstiprināts" names the attribute, not the question.** For example: "Nav zināms: žāvētāja veids". With complete data (Phase 1) this line almost never appears. When it does, the product is not a pick for a fit-critical question (2.2).
+- **The recommendation must be earned.**
+  - "Trilio ieteikums" is shown only when the top pick's score is clearly above the others and its key attributes are known.
+  - With equal scores there is no badge. The panel "Kā mēs izvēlamies un ranžējam?" says why: "Šoreiz neviens nav skaidri labāks — izvēlies pēc cenas" (none is clearly better this time — choose by price).
+- **Tiers must mean something.**
+  - "Budžeta variants / Vidējā klase / Augstākā klase" are used only when the picks are meaningfully apart: at least 10 % or 30 € between neighbours.
+  - Otherwise the cards are shown without tier pills and the lead says "Trīs līdzīgi varianti ap 390 €" (three similar options around €390). Two near-identical models from one brand are not shown as different classes.
+- **The name says what the product is.** Card titles add the product type when the shop's name lacks it: "Indesit veļas žāvētājs C YSD 83D WW EE". The model line keeps the model code and EAN.
+- **Tests.** One unit test per rule above, including:
+  - same brand with unknown values → no box;
+  - same brand with equal values → "Tehniski līdzvērtīgi";
+  - different brands with equal values → the brand-and-design sentence;
+  - picks within 10 % → no tier pills.
+
 ## Phase 3 — The fridge flow (one question per screen, visual)
 
 **3.1 "Kāds ledusskapis tev vajadzīgs?" (which fridge do you need?)**
@@ -213,6 +248,7 @@ Each source fills only what earlier ones left empty, cheapest first. Every value
 
 - **Unit tests:**
   - range filters, the missing-data policy and the pick spread;
+  - the card-text rules (2.8);
   - `countMatches`, the relax suggestions and the "Vērts apsvērt" rule;
   - spec parsers on saved real pages.
 - **e2e:**
@@ -230,7 +266,7 @@ Each source fills only what earlier ones left empty, cheapest first. Every value
 |---|---|---|
 | 1 | Phase 0 (deploy-safe ingestion) | small |
 | 2 | Phase 1.1 + 1.4 + 1.5 (spec tables, sanity check, coverage) | medium |
-| 3 | Phase 2.1–2.3 + 2.6 (ranges, missing data, picks, counts) | medium |
+| 3 | Phase 2.1–2.3 + 2.6 + 2.8 (ranges, missing data, picks, counts, truthful card text) | medium |
 | 4 | Phase 3 (visual fridge flow) | medium |
 | 5 | Phase 4.1–4.2 + 4.4 (editable results) | medium |
 | 6 | Phase 1.2–1.3 + 2.7 (EPREL, same-EAN fill, Claude and web lookup, advice notes) | medium; EPREL needs the key |
