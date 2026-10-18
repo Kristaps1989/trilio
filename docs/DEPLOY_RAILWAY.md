@@ -96,6 +96,8 @@ A run takes about three hours, because the shops are read page by page at a poli
 
 Results are in the service logs and in the `ingestion_runs` and `radar_events` tables.
 
+**Is ingestion working?** Open `https://trilio.lv/api/status`. It lists each active shop with its in-stock offer count and its last ingestion run (start, finish, ok, rows saved). `"ingestHasRun": false` means the ingest service has never run: create it as above. A run that started but has no `finishedAt` is still going (the first one takes about three hours); the site shows products for each shop as soon as that shop's part of the run is saved.
+
 **Billing cron (only once payments are on):** add a third service from the same repository, set its Railway config file to `/railway.billing.json` (daily at 06:00 UTC, runs `npm run cron:billing`), and give it `APP_URL` and `CRON_SECRET`, the same values as the web service. It charges due renewals and retries (`docs/PAYMENTS.md`).
 
 `/api/cron/ingest` on the web service does the same work over HTTP (`Authorization: Bearer $CRON_SECRET`) for any external scheduler you prefer, except scraped shops: those run only in the cron service, because they take far longer than an HTTP request may.

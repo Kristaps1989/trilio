@@ -91,8 +91,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <NextIntlClientProvider>
           {/* One shell for every page (docs/DESIGN_FIX_PLAN.md PR 1): the progress
-              track, header and footer render once and persist across navigation. */}
-          <div aria-hidden="true" className="h-1 shrink-0 bg-track" />
+              track, header and footer render once and persist across navigation.
+              The track and header stay pinned to the top while the page scrolls. */}
+          <div aria-hidden="true" className="sticky top-0 z-50 h-1 shrink-0 bg-night">
+            <div className="h-full bg-track" />
+          </div>
           <Header />
           <main id="saturs" className="flex flex-1 flex-col px-gutter">
             {children}

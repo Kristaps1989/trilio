@@ -102,3 +102,13 @@ test("sign-in page shows the Google button per Google's branding and hides the h
     await expect(google).toHaveCSS("background-color", "rgb(255, 255, 255)");
   }
 });
+
+test("header stays pinned to the top while the page scrolls", async ({ page }) => {
+  await page.goto("/");
+  await page.mouse.wheel(0, 2000);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+  const header = await box(page, "body > header");
+  expect(header.y).toBeGreaterThanOrEqual(0);
+  expect(header.y).toBeLessThanOrEqual(4);
+  await expect(page.getByRole("banner").getByRole("link", { name: /radars/i })).toBeInViewport();
+});
