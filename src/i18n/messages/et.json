@@ -71,6 +71,8 @@
     "maxLabel": "Augstākā cena, eiro",
     "show": "{count, plural, =0 {Šajā robežā nav preču} one {Rādīt # preci} other {Rādīt # preces}}",
     "showPending": "Rādīt preces",
+    "widenBy": "Palielināt:",
+    "widenByAria": "Palielināt augšējo robežu par {amount}",
     "widen": "Šajā cenu robežā nav nevienas preces — paplašināt līdz {amount}?",
     "histogram": "Preču cenas no {min} līdz {max}; augstākie stabiņi rāda, kur preču ir visvairāk.",
     "range": "{min}–{max}"
@@ -125,6 +127,7 @@
     "howCommission": "Par pirkumiem partneru veikalos saņemam komisiju. Tā nekad neietekmē ne atlasi, ne secību.",
     "howEnergy": "Elektrības izmaksas rēķinām 10 gadiem pēc cenas {price}/kWh un ES energomarķējuma datiem.",
     "howRefurbished": "Atjaunotas preces vienmēr rādām atsevišķi, nekad kopā ar jaunām.",
+    "brandReliable": "Uzticams zīmols — {grade}/5 šajā kategorijā",
     "howUnconfirmed": "Ja veikala datos trūkst kāda parametra, preci neizslēdzam, bet atzīmējam „nav apstiprināts”.",
     "delivery": "piegāde līdz {date}",
     "deliveryDays": "{days, plural, =1 {# darba diena} other {# darba dienas}}",
