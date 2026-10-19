@@ -6,6 +6,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db, plans } from "@/db";
 import { loadProduct } from "@/db/queries/catalog";
+import type { ProductView } from "@/domain/catalog/types";
 import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { formatEur } from "@/i18n/format";
 import { paymentsEnabled } from "@/services/payments";
@@ -17,12 +18,15 @@ import { TopProgress } from "@/ui/shell/TopProgress";
 import { createRadarAction } from "../actions";
 import { PlanPicker } from "./PlanPicker";
 import { RadarWaitlist } from "./RadarWaitlist";
-import { RadarSetup, type SetupState } from "./RadarSetup";
+import { RadarSetup, type Choice, type SetupState } from "./RadarSetup";
 
 export const dynamic = "force-dynamic";
 
 const Params = z.object({
-  product: z.string().uuid().optional(),
+  /** One product id, or several (comma-separated) when following all the results. */
+  product: z.string().optional(),
+  /** Results to choose from (the results-page panel). */
+  choose: z.string().optional(),
   s: z.string().uuid().optional().or(z.literal("")).optional(),
   threshold: z.enum(["any", "5", "10"]).optional(),
   scope: z.enum(["only", "brand", "any"]).optional(),
@@ -37,6 +41,17 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("newTitle") };
 }
 
+/** Comma-separated product ids: valid UUIDs only, no repeats, at most three. */
+function idList(raw: string | undefined): string[] {
+  const ids = (raw ?? "").split(",").filter((id) => z.string().uuid().safeParse(id).success);
+  return [...new Set(ids)].slice(0, 3);
+}
+
+function lowestPrice(p: ProductView): number | null {
+  const prices = p.offers.filter((o) => o.condition === "new" && o.stock !== "out").map((o) => o.priceCents);
+  return prices.length ? Math.min(...prices) : null;
+}
+
 function selfUrl(state: Record<string, string | undefined>): string {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(state)) if (v) p.set(k, v);
@@ -44,7 +59,7 @@ function selfUrl(state: Record<string, string | undefined>): string {
 }
 
 /**
- * Spec §5.1: when → scope → channel → sign in → plan → pay → confirmation.
+ * Spec §5.1: (which, from the results panel) → when → scope → sign in → plan → pay → confirmation.
  * State lives in the URL so the browser back button and the payment
  * redirect both bring the shopper back to the right step.
  */
@@ -56,10 +71,20 @@ export default async function NewRadarPage({ searchParams }: Props) {
   const p = parsed.success ? parsed.data : {};
   // Notifications go by e-mail to the signed-in address; a web app cannot rely on push (owner, 19 Oct 2026).
   const channels: ("push" | "email")[] = ["email"];
-  const product = p.product ? await loadProduct(db, p.product) : null;
+  const products = (await Promise.all(idList(p.product).map((id) => loadProduct(db, id)))).filter(
+    (x): x is ProductView => x !== null,
+  );
+  const product = products.length === 1 ? products[0]! : null;
+  const choiceIds = idList(p.choose);
+  const choices = products.length
+    ? []
+    : (await Promise.all(choiceIds.map((id) => loadProduct(db, id)))).filter(
+        (x): x is ProductView => x !== null,
+      );
 
   const state: SetupState = {
-    productId: product?.id ?? null,
+    productIds: products.map((x) => x.id),
+    choices: choiceIds,
     searchSessionId: p.s || null,
     threshold: p.threshold ?? null,
     scope: p.scope ?? null,
@@ -74,14 +99,16 @@ export default async function NewRadarPage({ searchParams }: Props) {
       ? "plan"
       : p.step && p.step !== "create"
         ? p.step
-        : !state.threshold
-          ? "when"
-          : !state.scope
-            ? "scope"
-            : "gate";
+        : !products.length && choices.length
+          ? "which"
+          : !state.threshold
+            ? "when"
+            : !state.scope
+              ? "scope"
+              : "gate";
 
   // A radar follows one model: without a product there is nothing to set up.
-  if ((step === "when" || step === "scope") && !product) {
+  if ((step === "when" || step === "scope") && !products.length) {
     return (
       <Screen size="narrow">
         <PageTitle>{t("noProductTitle")}</PageTitle>
@@ -93,20 +120,27 @@ export default async function NewRadarPage({ searchParams }: Props) {
     );
   }
 
-  if (step === "when" || step === "scope") {
-    const index = ["when", "scope"].indexOf(step);
+  if (step === "which" || step === "when" || step === "scope") {
+    const steps = choiceIds.length ? ["which", "when", "scope"] : ["when", "scope"];
+    const index = steps.indexOf(step);
+    const brands = [...new Set(products.map((x) => x.brand))];
+    const options: Choice[] = choices.map((c) => {
+      const price = lowestPrice(c);
+      return { id: c.id, label: c.name, sublabel: price === null ? null : formatEur(price) };
+    });
     return (
       <Screen>
-        <TopProgress percent={((index + 1) / 4) * 100} />
+        <TopProgress percent={((index + 1) / (steps.length + 2)) * 100} />
         <p className="text-[15px] font-bold text-lime">
-          {t("newTitle")} · {tf("stepOf", { n: index + 1, m: 2 })}
+          {t("newTitle")} · {tf("stepOf", { n: index + 1, m: steps.length })}
         </p>
         <RadarSetup
           state={state}
           step={step}
-          brand={product?.brand ?? ""}
+          brand={brands.length === 1 ? brands[0]! : ""}
           modelCode={product?.modelCode ?? ""}
-          description={product ? product.name : null}
+          description={products.length ? products.map((x) => x.name).join(" · ") : null}
+          choices={options}
         />
       </Screen>
     );
@@ -151,22 +185,29 @@ export default async function NewRadarPage({ searchParams }: Props) {
             })}
           />
         ) : (
-          <RadarWaitlist email={email} note={product ? `radar: ${product.name}` : "radar"} />
+          <RadarWaitlist
+            email={email}
+            note={products.length ? `radar: ${products.map((x) => x.name).join("; ")}` : "radar"}
+          />
         )}
       </Screen>
     );
   }
 
-  // Create (after payment or for subscribed users): then confirmation.
-  if (!state.productId) redirect("/radars");
-  const created = await createRadarAction({
-    productId: state.productId,
-    searchSessionId: state.searchSessionId,
-    threshold: state.threshold!,
-    scope: state.scope!,
-    channels,
-  });
-  if (!created.ok) redirect("/radars");
+  // Create (after payment or for subscribed users): one radar per product, then confirmation.
+  if (!state.productIds.length) redirect("/radars");
+  let createdAny = false;
+  for (const productId of state.productIds) {
+    const created = await createRadarAction({
+      productId,
+      searchSessionId: state.searchSessionId,
+      threshold: state.threshold!,
+      scope: state.scope!,
+      channels,
+    });
+    createdAny ||= created.ok;
+  }
+  if (!createdAny) redirect("/radars");
   return (
     <Confirmation title={t("confirmTitle")} body={`${t("confirmBody")} ${t("sendTo", { email })}`}>
       <ButtonLink href="/radars">{t("toRadar")}</ButtonLink>

@@ -528,7 +528,12 @@
     "feature3": "Sekošanu vai abonementu vari atslēgt jebkurā brīdī",
     "noProductTitle": "Izvēlies preci, kurai sekot",
     "noProductBody": "Cenu radars seko konkrētam modelim. Atrodi preci un spied “Sekot cenai” tās kartītē.",
-    "noProductCta": "Izvēlēties preci"
+    "noProductCta": "Izvēlēties preci",
+    "qWhich": "Kurai precei sekot?",
+    "whichWhy": "Radars seko konkrētam modelim. Nākamajā solī vari pievienot arī citus modeļus, kas atbilst tavām atbildēm.",
+    "whichAll": "{count, plural, =2 {Abām precēm} =3 {Visām trim precēm} other {Visām # precēm}}",
+    "whichAllSub": "katrai savs radars",
+    "scopeBrandMany": "Arī par citiem šo zīmolu modeļiem"
   },
   "account": {
     "title": "Konts",

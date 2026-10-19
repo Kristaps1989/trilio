@@ -11,18 +11,24 @@ import { WhyLine } from "../../izvelies/QuestionScreen";
 // URL so back works and the state survives the sign-in and payment redirects.
 
 export type SetupState = {
-  productId: string | null;
+  /** One radar per product; several when the shopper follows all the results. */
+  productIds: string[];
+  /** The results the shopper chooses from (results-page panel), kept so back works. */
+  choices: string[];
   searchSessionId: string | null;
   threshold: "any" | "5" | "10" | null;
   scope: "only" | "brand" | "any" | null;
   channels: ("push" | "email")[];
 };
 
-const LETTERS = ["A", "B", "C"];
+const LETTERS = ["A", "B", "C", "D"];
+
+export type Choice = { id: string; label: string; sublabel: string | null };
 
 function toUrl(state: SetupState, step?: string): string {
   const p = new URLSearchParams();
-  if (state.productId) p.set("product", state.productId);
+  if (state.productIds.length) p.set("product", state.productIds.join(","));
+  if (state.choices.length) p.set("choose", state.choices.join(","));
   if (state.searchSessionId) p.set("s", state.searchSessionId);
   if (state.threshold) p.set("threshold", state.threshold);
   if (state.scope) p.set("scope", state.scope);
@@ -37,13 +43,17 @@ export function RadarSetup({
   brand,
   modelCode,
   description,
+  choices = [],
 }: {
   state: SetupState;
-  step: "when" | "scope";
+  step: "which" | "when" | "scope";
+  /** The products' brand; empty when they differ. */
   brand: string;
   modelCode: string;
   /** Product name and current price under the title. */
   description?: string | null;
+  /** Step "which": the results to choose from. */
+  choices?: Choice[];
 }) {
   const t = useTranslations("radar");
   const tf = useTranslations("flow");
@@ -56,6 +66,17 @@ export function RadarSetup({
   }
 
   const screens = {
+    which: {
+      title: t("qWhich"),
+      why: t("whichWhy"),
+      options: [
+        ...choices.map((c) => ({ value: c.id, label: c.label, sublabel: c.sublabel })),
+        ...(choices.length > 1
+          ? [{ value: "all", label: t("whichAll", { count: choices.length }), sublabel: t("whichAllSub") }]
+          : []),
+      ],
+      pick: (v: string) => go({ ...state, productIds: v === "all" ? choices.map((c) => c.id) : [v] }),
+    },
     when: {
       title: t("qWhen"),
       why: null,
@@ -75,7 +96,7 @@ export function RadarSetup({
           label: t("scopeOnly"),
           sublabel: modelCode ? t("scopeOnlySub", { code: modelCode }) : null,
         },
-        { value: "brand", label: t("scopeBrand", { brand: brand || "—" }) },
+        { value: "brand", label: brand ? t("scopeBrand", { brand }) : t("scopeBrandMany") },
         { value: "any", label: t("scopeAny") },
       ],
       pick: (v: string) => go({ ...state, scope: v as SetupState["scope"] }),

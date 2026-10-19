@@ -156,6 +156,44 @@ test("payment cancelled on the hosted page returns to the plan without charging"
   await expect(page.getByText("Nav aktīva abonementa.")).toBeVisible();
 });
 
+test("radar from the results panel: choose which product, or all of them", async ({ page }) => {
+  const email = `e2e-choose-${Date.now()}@example.invalid`;
+  await devLogin(page, email, "/radars");
+  await page.goto("/izvelies/kitchensmall/kettle");
+  await page.getByRole("button", { name: "Tālāk", exact: true }).click();
+  await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
+  await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
+  const picks = await page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").count();
+  await page.getByRole("link", { name: /Ieslēgt cenu radaru/ }).click();
+
+  // Step 1 of 3: one radio per pick, with its price, plus "all of them"
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kurai precei sekot?");
+  await expect(page.getByText(/1\. solis no 3/)).toBeVisible();
+  await expectNoAxeViolations(page);
+  const options = page.getByRole("main").getByRole("radio");
+  await expect(options).toHaveCount(picks > 1 ? picks + 1 : picks);
+  await expect(options.first()).toContainText("€");
+  await page.getByRole("radio", { name: /Visām trim precēm|Abām precēm/ }).click();
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kad tev paziņot?");
+  await page.getByRole("radio", { name: /jebkuru kritumu/ }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/citiem modeļiem/);
+  await expect(page.getByRole("radio", { name: /Arī par citiem — / })).toHaveCount(0);
+  await page.getByRole("radio", { name: /Par jebkura zīmola modeļiem/ }).click();
+
+  await page.getByRole("button", { name: "Maksāt" }).click();
+  await page.getByRole("button", { name: "Maksāt (tests)" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Radars ieslēgts!");
+  await page.goto("/radars");
+  await expect(page.getByRole("article")).toHaveCount(picks);
+
+  // Clean up
+  await page.goto("/konts");
+  await page.getByRole("button", { name: "Dzēst kontu" }).click();
+  await page.getByRole("button", { name: "Jā, dzēst" }).click();
+  await page.waitForURL(/\/\?deleted=1/);
+});
+
 test("radar setup without a product asks to choose one instead of an empty setup", async ({ page }) => {
   await page.goto("/radars/jauns?s=");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Izvēlies preci, kurai sekot");

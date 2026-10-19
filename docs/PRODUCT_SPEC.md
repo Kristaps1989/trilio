@@ -262,7 +262,8 @@ Pure code in `src/domain/ranking/` (`filters.ts`, `score.ts`, `rank.ts`).
 
 ## 5. Price radar ("Cenu radars", €1/month)
 
-### 5.1 Setup (from any card's "Sekot cenai")
+### 5.1 Setup (from any card's "Sekot cenai", or the "Sekot cenām" panel under the results)
+0. **"Kurai precei sekot?"** (which product to follow?), only from the results panel: one option per pick with its current price, plus "Visām trim precēm" (all three), which creates one radar per product (owner, 19 Oct 2026). A card's own "Sekot cenai" skips this step.
 1. **"Kad tev paziņot?"** (when should we notify you?):
    - any drop
    - at least −5 %
