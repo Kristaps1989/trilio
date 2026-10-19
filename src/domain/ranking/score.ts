@@ -21,6 +21,8 @@ export type Scored = {
   product: ProductView;
   score: number;
   reasons: ScoreReason[];
+  /** Quality points inside `score` (rank.ts): brand reliability and specs versus the search. */
+  quality?: { brand: number; spec: number };
 };
 
 /** Does the product meet a chosen option? Attribute conditions when the option has them, else its tag. */

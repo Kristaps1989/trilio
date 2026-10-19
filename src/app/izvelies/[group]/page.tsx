@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getGroup } from "@/domain/questions/catalog";
 import { Kicker, PageTitle, Screen } from "@/ui/layout";
+import { Illustration } from "@/ui/illustrations/Illustration";
 import { Tile, TileGrid, TileIcon } from "@/ui/Tile";
 
 type Params = { params: Promise<{ group: string }> };
@@ -28,7 +29,13 @@ export default async function SubcategoriesPage({ params }: Params) {
             <Tile
               key={s.id}
               href={`/izvelies/${g.id}/${s.id}`}
-              icon={<TileIcon path={g.icon_svg_path} />}
+              icon={
+                s.illustration ? (
+                  <Illustration name={s.illustration} className="h-14 w-14 text-lime" />
+                ) : (
+                  <TileIcon path={g.icon_svg_path} />
+                )
+              }
               label={s.label}
               sublabel={s.description}
             />

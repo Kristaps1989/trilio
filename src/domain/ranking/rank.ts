@@ -9,6 +9,7 @@ import {
   withinStretch,
   type PriceBounds,
 } from "./filters";
+import { brandPoints, specPoints, valueScore } from "./quality";
 import { sameBrand, scoreProduct, type Scored } from "./score";
 
 // Spec §3.1 and docs/FILTERS_PLAN.md §2.3 / §2.8 in one pure function.
@@ -77,6 +78,23 @@ export type Candidate = Scored & {
   price: number;
 };
 
+/**
+ * Adds quality to the answer-based score: the brand's reliability for this
+ * category and the specs relative to the other candidates. Applied to the
+ * whole pool at once, because spec points are relative.
+ */
+function withQuality<T extends Candidate>(pool: T[], sub: Subcategory): T[] {
+  const specs = specPoints(
+    pool.map((c) => c.product),
+    sub.compare,
+  );
+  return pool.map((c) => {
+    const brand = brandPoints(c.product.brand, sub.id);
+    const spec = specs.get(c.product.id) ?? 0;
+    return { ...c, score: c.score + brand + spec, quality: { brand, spec } };
+  });
+}
+
 function bounds(budget: RankInput["budget"]): PriceBounds {
   return typeof budget === "number" ? { max: budget } : budget;
 }
@@ -114,7 +132,7 @@ function candidatesFor(input: RankInput, condition: OfferView["condition"]): Poo
       price: offer.priceCents,
     });
   }
-  return { candidates: out, excludedBy };
+  return { candidates: withQuality(out, input.sub), excludedBy };
 }
 
 const byScoreThenPrice = (a: Candidate, b: Candidate) => b.score - a.score || a.price - b.price;
@@ -126,11 +144,13 @@ const byScoreThenPrice = (a: Candidate, b: Candidate) => b.score - a.score || a.
  * cannot appear in a €350–500 search.
  */
 export function pickThree(candidates: Candidate[]): Candidate[] {
-  if (candidates.length <= 3) return [...candidates].sort(byScoreThenPrice);
-  const sorted = [...candidates].sort(byScoreThenPrice);
   const prices = candidates.map((c) => c.price).sort((a, b) => a - b);
-  const lo = prices[0]!;
-  const hi = prices[prices.length - 1]!;
+  const lo = prices[0] ?? 0;
+  const hi = prices[prices.length - 1] ?? 0;
+  // Best value first: quality, discounted by where the price sits in the range.
+  const value = (c: Candidate) => valueScore(c.score, c.price, lo, hi);
+  const sorted = [...candidates].sort((a, b) => value(b) - value(a) || a.price - b.price);
+  if (candidates.length <= 3) return sorted;
   const third = (hi - lo) / 3;
   const picks: Candidate[] = [sorted[0]!];
   const take = (pred: (c: Candidate) => boolean) => {

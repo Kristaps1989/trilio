@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { db, searchSessions } from "@/db";
 import { loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
-import { displayName } from "@/domain/catalog/naming";
+import { canonicalBrand, displayName } from "@/domain/catalog/naming";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { deliveryDate, urgencyDate, workingDaysUntil } from "@/domain/delivery/delivery";
 import { upgradeDelta } from "@/domain/delta/delta";
@@ -28,7 +28,7 @@ import { priceLine } from "@/domain/pricing/omnibus";
 import { chosenOptions, isRangeAnswer, visibleQuestions } from "@/domain/questions/engine";
 import { getGroupOfSubcategory, getSubcategory } from "@/domain/questions/catalog";
 import type { Answers, Question, Subcategory } from "@/domain/questions/schema";
-import { worthConsidering } from "@/domain/ranking/consider";
+import { brandTable, gradeOf, worthConsidering } from "@/domain/ranking/consider";
 import { candidatePool, rank, type Pick, type RefurbishedPick } from "@/domain/ranking/rank";
 import { relaxations, type Relaxation } from "@/domain/ranking/relax";
 import { whyItFits } from "@/domain/ranking/score";
@@ -144,13 +144,21 @@ export default async function ResultsPage({ searchParams }: Props) {
     for (const key of sub!.compare) {
       const v = p.attributes[key];
       if (v === undefined || v === null || v === "" || v === false) continue;
-      parts.push(v === true ? attrLabel(key) : formatAttr(key, v, ta, enums));
+      // Sizes say which size they are ("dziļums 63 cm"); other values read on their own.
+      const value = v === true ? attrLabel(key) : formatAttr(key, v, ta, enums);
+      parts.push(key.endsWith("_cm") ? `${attrLabel(key).toLowerCase()} ${value}` : value);
       if (parts.length === 4) break;
     }
     return parts.length ? parts.join(" · ") : null;
   };
 
   const unknownText = (keys: string[]) => keys.map((k) => attrLabel(k).toLowerCase()).join(", ");
+
+  // Brand reliability earns a "why" line only when it lifted the pick (grade 4–5 with solid evidence).
+  const brandLine = (pick: Pick): string[] => {
+    const grade = gradeOf(brandTable, pick.product.brand, sub!.id);
+    return (pick.quality?.brand ?? 0) >= 8 && grade !== null ? [t("brandReliable", { grade })] : [];
+  };
 
   function toCard(pick: Pick): CardModel {
     const others = otherOffers(pick.product, pick.offer);
@@ -184,7 +192,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       best: cardOffer(pick.offer, now),
       overBudgetByCents: pick.overBudgetByCents,
       priceLine: priceLine(pick.offer.priceCents, pick.offer.lowest30dCents),
-      whyFits: whyItFits(pick.reasons),
+      whyFits: [...brandLine(pick), ...whyItFits(pick.reasons)].slice(0, 3),
       unconfirmed: pick.fitUnknown ? [] : pick.unconfirmed.map((k) => attrLabel(k).toLowerCase()),
       unknownData: pick.fitUnknown ? unknownText(pick.unconfirmed) : null,
       energy: energyFor(pick.product, pick.offer.priceCents),
@@ -445,10 +453,18 @@ export default async function ResultsPage({ searchParams }: Props) {
     editor: { kind: "price", stats, presetsCents: sub.budget_steps_eur.map((e) => e * 100) },
   });
   for (const q of qs) if (q.stage === "results") chips.push(choiceChip(q));
+  // One entry per brand however shops spell it ("SAMSUNG" and "Samsung" are one brand).
+  const knownBrands = Object.keys(brandTable.brands);
   const brandCounts = new Map<string, number>();
   for (const c of candidatePool({ ...input, brandsOnly: false })) {
-    brandCounts.set(c.product.brand, (brandCounts.get(c.product.brand) ?? 0) + 1);
+    const name = canonicalBrand(c.product.brand, knownBrands);
+    brandCounts.set(name, (brandCounts.get(name) ?? 0) + 1);
   }
+  const chosenBrands = [
+    ...new Map(
+      (state.trailing.brands ?? []).map((b) => [b.toLowerCase(), canonicalBrand(b, knownBrands)]),
+    ).values(),
+  ];
   if (brandCounts.size > 1) {
     const brands = [...brandCounts.entries()]
       .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
@@ -456,8 +472,8 @@ export default async function ResultsPage({ searchParams }: Props) {
     chips.push({
       id: "brands",
       title: t("brandsChip"),
-      label: state.trailing.brands?.length ? state.trailing.brands.join(", ") : t("brandsAny"),
-      active: !!state.trailing.brands?.length,
+      label: chosenBrands.length ? chosenBrands.join(", ") : t("brandsAny"),
+      active: chosenBrands.length > 0,
       editor: { kind: "brands", brands },
     });
   }

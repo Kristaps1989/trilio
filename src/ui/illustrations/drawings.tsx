@@ -553,6 +553,19 @@ export const DRAWINGS: Record<string, Drawing> = {
       {washerBody(33, 47, 30, 41, "drum")}
     </g>
   ),
+  dryer: (
+    <g>
+      <rect x={28} y={30} width={40} height={56} rx={2} />
+      <path {...fine} d="M28 39H68" />
+      <path {...fine} d="M32 32.5V36.5M35 32.5V36.5M38 32.5V36.5M41 32.5V36.5" />
+      <circle {...fine} cx={62} cy={34.5} r={1.6} />
+      <circle cx={48} cy={62.5} r={14.4} />
+      <path
+        {...fine}
+        d="M42 57.5q1.5 -2 3 0t3 0t3 0t3 0M42 62.5q1.5 -2 3 0t3 0t3 0t3 0M42 67.5q1.5 -2 3 0t3 0t3 0t3 0"
+      />
+    </g>
+  ),
 
   // ---- Dishwashers ----------------------------------------------------------
   "dish-free": (
@@ -1093,6 +1106,112 @@ export const DRAWINGS: Record<string, Drawing> = {
           <path {...tint} {...fine} d="M62 38Q66 44 66 46.5A4 4 0 0 1 58 46.5Q58 44 62 38Z" />
         </>,
       )}
+    </g>
+  ),
+
+  // ---- Small kitchen appliances ---------------------------------------------
+  kettle: (
+    <g>
+      <rect x={24} y={80} width={46} height={8} rx={2} />
+      <path {...tintOnly} d="M31.8 56H62.2L64 80H30Z" />
+      <path d="M34 28H60L64 80H30Z" />
+      <path {...fine} d="M31.8 56Q39 53 47 56T62.2 56" />
+      <path d="M34 28Q47 20 60 28" />
+      <path {...fine} d="M45 22.5V20H49V22.5" />
+      <path d="M33.6 33L20 26L33.1 42" />
+      <path d="M60.4 34H70Q76 34 76 40V64Q76 70 70 70H62.6" />
+    </g>
+  ),
+  handblender: (
+    <g>
+      <rect x={39} y={8} width={18} height={34} rx={8} />
+      <rect {...tint} {...fine} x={44.5} y={15} width={7} height={9} rx={3} />
+      <rect x={44.5} y={42} width={7} height={28} rx={1} />
+      <path d="M44.5 70L35 82Q33 87 38 87H58Q63 87 61 82L51.5 70" />
+      <path {...fine} d="M41 81H55" />
+    </g>
+  ),
+  chopper: (
+    <g>
+      <rect {...fine} x={42} y={24} width={12} height={6} rx={2} />
+      <path d="M32 52V44Q32 30 48 30Q64 30 64 44V52" />
+      <path d="M26 52H70" />
+      <path d="M28 52L31 80Q32 88 40 88H56Q64 88 65 80L68 52" />
+      <path {...tintOnly} d="M30 70H66L65 80Q64 86 56 86H40Q32 86 31 80Z" />
+      <path {...fine} d="M48 54V78M40 70L56 64" />
+    </g>
+  ),
+  mincer: (
+    <g>
+      <path d="M10 28L16 36H56L62 28" />
+      <path d="M30 36V46M40 36V46" />
+      <rect x={52} y={46} width={34} height={40} rx={5} />
+      <circle {...fine} cx={69} cy={66} r={3} />
+      <path d="M20 46H52V70H20" />
+      <circle cx={20} cy={58} r={12} />
+      {dot(20, 52, 1.4)}
+      {dot(15, 57, 1.4)}
+      {dot(25, 57, 1.4)}
+      {dot(17, 63, 1.4)}
+      {dot(23, 63, 1.4)}
+      {dot(20, 58, 1.4)}
+      <path {...fine} d="M56 86V88M82 86V88" />
+    </g>
+  ),
+  scale: (
+    <g>
+      <path d="M20 50H76L86 62H10Z" />
+      <rect x={10} y={62} width={76} height={18} rx={3} />
+      <rect {...tint} {...fine} x={34} y={66} width={20} height={10} rx={1.5} />
+      <circle {...fine} cx={64} cy={71} r={2} />
+      <circle {...fine} cx={72} cy={71} r={2} />
+      <path {...fine} d="M16 80V84M80 80V84" />
+    </g>
+  ),
+  knife: (
+    <g>
+      <path d="M54 42H14L6 48L12 54L15 51.5L18 54L21 51.5L24 54L27 51.5L30 54L33 51.5L36 54L39 51.5L42 54L45 51.5L48 54L51 51.5L54 54" />
+      <path {...fine} d="M12 48H54" />
+      <rect x={54} y={39} width={6} height={18} rx={1.5} />
+      <path d="M60 40H80Q90 40 90 48Q90 58 80 58H60" />
+      <path {...fine} d="M66 58Q70 65 76 58" />
+      <rect {...tint} {...fine} x={68} y={44} width={12} height={5} rx={2.5} />
+    </g>
+  ),
+  sandwich: (
+    <g>
+      <rect x={14} y={62} width={62} height={18} rx={6} />
+      <path {...fine} d="M20 62V59H28V62M32 62V59H40V62M44 62V59H52V62M56 62V59H64V62" />
+      <path {...fine} d="M20 84V80M70 84V80" />
+      <g transform="rotate(-10 76 60)">
+        <path d="M76 58V46Q76 40 70 40H20Q14 40 14 46V52Q14 58 20 58Z" />
+        <path d="M14 49H4" strokeWidth={3} />
+        <circle {...fine} cx={64} cy={49} r={2} />
+      </g>
+      <circle {...fine} cx={76} cy={60} r={2.5} />
+    </g>
+  ),
+  breadmaker: (
+    <g>
+      <path d="M16 40Q16 24 32 24H64Q80 24 80 40" />
+      <rect {...fine} x={26} y={28} width={44} height={12} rx={4} />
+      <path {...tint} {...fine} d="M34 40V37Q34 31 41 31H55Q62 31 62 37V40Z" />
+      <rect x={16} y={40} width={64} height={46} rx={4} />
+      <rect {...fine} x={26} y={50} width={44} height={18} rx={2} />
+      <rect {...tint} {...fine} x={30} y={54} width={16} height={10} rx={1} />
+      <circle {...fine} cx={53} cy={59} r={2} />
+      <circle {...fine} cx={62} cy={59} r={2} />
+      <path {...fine} d="M22 86V88M74 86V88" />
+    </g>
+  ),
+  vacuumsealer: (
+    <g>
+      <path d="M8 60Q8 50 18 50H78Q88 50 88 60V62H8Z" />
+      <circle {...fine} cx={72} cy={56} r={1.8} />
+      <circle {...fine} cx={79} cy={56} r={1.8} />
+      <path d="M8 62H88V72Q88 76 84 76H64M32 76H12Q8 76 8 72V62" />
+      <path {...tint} {...fine} d="M33 62H63L64 82Q64 88 58 88H38Q32 88 32 82Z" />
+      <path {...dashed} d="M33 67H63" />
     </g>
   ),
 };
