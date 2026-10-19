@@ -1223,4 +1223,193 @@ export const DRAWINGS: Record<string, Drawing> = {
       <path {...dashed} d="M33 67H63" />
     </g>
   ),
+
+  // Personal care -----------------------------------------------------------
+  "shaver-rotary": (
+    <g>
+      <rect x={24} y={8} width={48} height={36} rx={14} />
+      <circle {...tint} cx={38} cy={21} r={7} />
+      <circle {...tint} cx={58} cy={21} r={7} />
+      <circle {...tint} cx={48} cy={33} r={7} />
+      {dot(38, 21, 1.4)}
+      {dot(58, 21, 1.4)}
+      {dot(48, 33, 1.4)}
+      <path d="M34 44L38 84Q38 90 44 90H52Q58 90 58 84L62 44" />
+      <circle {...fine} cx={48} cy={62} r={3.5} />
+    </g>
+  ),
+  "shaver-foil": (
+    <g>
+      <path d="M30 34V20Q48 6 66 20V34Z" />
+      <path {...tint} {...fine} d="M34 30V21Q48 10 62 21V30Z" />
+      <path {...fine} d="M48 15V30" />
+      <path d="M32 34L36 84Q36 90 42 90H54Q60 90 60 84L64 34" />
+      <rect {...fine} x={43} y={52} width={10} height={14} rx={5} />
+    </g>
+  ),
+  "shaver-hybrid": (
+    <g>
+      <rect {...tint} x={24} y={8} width={48} height={10} rx={3} />
+      <path
+        {...fine}
+        d="M28 13L31 11L34 15L37 11L40 15L43 11L46 15L49 11L52 15L55 11L58 15L61 11L64 15L67 13"
+      />
+      <path d="M42 18V26M54 18V26" />
+      <rect x={38} y={26} width={20} height={64} rx={10} />
+      <circle {...fine} cx={48} cy={44} r={3} />
+      <path {...tintOnly} d="M42 70H54V82Q54 86 48 86Q42 86 42 82Z" />
+    </g>
+  ),
+  "shaver-lady": (
+    <g transform="rotate(18 48 50)">
+      <rect {...tint} x={34} y={10} width={28} height={12} rx={5} />
+      <path {...fine} d="M38 16H58" />
+      <path d="M34 22Q30 50 38 78Q42 90 48 90Q54 90 58 78Q66 50 62 22Z" />
+      <circle {...fine} cx={48} cy={46} r={3} />
+    </g>
+  ),
+  "trimmer-beard": (
+    <g>
+      <path d="M32 26V12M36 26V12M40 26V12M44 26V12M48 26V12M52 26V12M56 26V12M60 26V12M64 26V12" {...fine} />
+      <path d="M30 12H66M30 26H66" />
+      <rect {...tint} x={36} y={26} width={24} height={6} rx={1} />
+      <rect x={36} y={32} width={24} height={58} rx={10} />
+      <circle {...fine} cx={48} cy={52} r={3} />
+    </g>
+  ),
+  "trimmer-clipper": (
+    <g>
+      <rect {...tint} x={28} y={10} width={40} height={8} rx={1} />
+      <path {...fine} d="M31 10V6M36 10V6M41 10V6M46 10V6M51 10V6M56 10V6M61 10V6M65 10V6" />
+      <path d="M28 18H68L64 76Q63 82 56 82H40Q33 82 32 76Z" />
+      <rect {...fine} x={42} y={32} width={12} height={20} rx={6} />
+      <path d="M48 82V86Q48 92 56 92H76" />
+    </g>
+  ),
+  "trimmer-body": (
+    <g>
+      <circle {...tint} cx={48} cy={20} r={12} />
+      <path {...fine} d="M40 20H56M42 15H54M42 25H54" />
+      <path d="M42 31L40 40M54 31L56 40" />
+      <rect x={36} y={40} width={24} height={50} rx={12} />
+      <circle {...fine} cx={48} cy={58} r={3} />
+    </g>
+  ),
+  "trimmer-multi": (
+    <g>
+      <path {...fine} d="M18 22V12M22 22V12M26 22V12M30 22V12M34 22V12" />
+      <path d="M16 12H36M16 22H36" />
+      <rect x={18} y={22} width={16} height={66} rx={8} />
+      <circle {...fine} cx={26} cy={40} r={2.5} />
+      <rect {...tint} x={50} y={14} width={30} height={18} rx={3} />
+      <path {...fine} d="M54 14V32M59 14V32M64 14V32M69 14V32M74 14V32" />
+      <rect {...tint} x={52} y={42} width={26} height={16} rx={3} />
+      <path {...fine} d="M56 42V58M61 42V58M66 42V58M71 42V58" />
+      <circle {...tint} cx={65} cy={76} r={10} />
+      <path {...fine} d="M59 76H71M60 71H70M60 81H70" />
+    </g>
+  ),
+  hairdryer: (
+    <g>
+      <rect x={10} y={18} width={56} height={30} rx={15} />
+      <path d="M66 22H80Q84 22 84 26V40Q84 44 80 44H66" />
+      <circle {...tint} {...fine} cx={24} cy={33} r={8} />
+      <path {...fine} d="M20 33H28M24 29V37" />
+      <path d="M34 48L40 86Q41 90 45 90H51Q55 90 54 86L50 48" />
+      <path {...fine} d="M44 60H50" />
+      <path {...dashed} d="M88 28H94M88 38H94" />
+    </g>
+  ),
+  "styler-straight": (
+    <g>
+      <path d="M45 88L34 12Q34 8 38 8H42Q45 8 45 12L50 88" />
+      <path d="M51 88L62 12Q62 8 58 8H54Q51 8 51 12L46 88" />
+      <path {...tint} {...fine} d="M37 14L40 40H44L42 14Z" />
+      <path {...tint} {...fine} d="M59 14L56 40H52L54 14Z" />
+      <circle {...fine} cx={48} cy={84} r={3} />
+    </g>
+  ),
+  "styler-curler": (
+    <g>
+      <path {...fine} d="M44 6H52V10H44Z" />
+      <rect {...tint} x={41} y={10} width={14} height={50} rx={7} />
+      <path d="M58 16V52Q58 56 54 56" />
+      <path d="M58 16Q62 16 62 20V30" />
+      <rect x={40} y={60} width={16} height={30} rx={6} />
+      <path {...fine} d="M44 70H52" />
+    </g>
+  ),
+  "styler-air": (
+    <g>
+      <rect {...tint} x={36} y={8} width={24} height={44} rx={12} />
+      {dot(42, 16)}
+      {dot(48, 14)}
+      {dot(54, 16)}
+      {dot(42, 26)}
+      {dot(48, 24)}
+      {dot(54, 26)}
+      {dot(42, 36)}
+      {dot(48, 34)}
+      {dot(54, 36)}
+      {dot(48, 44)}
+      <path d="M40 52L42 88Q42 90 45 90H51Q54 90 54 88L56 52" />
+      <path {...dashed} d="M30 18H24M30 30H22M30 42H24" />
+    </g>
+  ),
+  "brush-sonic": (
+    <g>
+      <rect {...tint} x={42} y={6} width={12} height={20} rx={5} />
+      <path {...fine} d="M44 10H52M44 14H52M44 18H52M44 22H52" />
+      <path d="M45 26L44 36M51 26L52 36" />
+      <rect x={38} y={36} width={20} height={54} rx={9} />
+      <circle {...fine} cx={48} cy={52} r={3} />
+    </g>
+  ),
+  "brush-round": (
+    <g>
+      <circle {...tint} cx={48} cy={15} r={9} />
+      {dot(48, 15, 1.4)}
+      {dot(43, 12)}
+      {dot(53, 12)}
+      {dot(43, 18)}
+      {dot(53, 18)}
+      {dot(48, 9.5)}
+      {dot(48, 20.5)}
+      <path d="M45 24L44 36M51 24L52 36" />
+      <rect x={38} y={36} width={20} height={54} rx={9} />
+      <circle {...fine} cx={48} cy={52} r={3} />
+    </g>
+  ),
+  "brush-kids": (
+    <g>
+      <circle {...tint} cx={48} cy={26} r={6} />
+      {dot(46, 24)}
+      {dot(50, 24)}
+      {dot(46, 28)}
+      {dot(50, 28)}
+      <path d="M45 32L44 42M51 32L52 42" />
+      <rect x={34} y={42} width={28} height={46} rx={13} />
+      <path
+        {...fine}
+        d="M48 54L50.4 59.2L56 59.8L51.8 63.6L53 69L48 66.2L43 69L44.2 63.6L40 59.8L45.6 59.2Z"
+      />
+    </g>
+  ),
+  "epilator-epil": (
+    <g>
+      <rect x={30} y={8} width={36} height={18} rx={6} />
+      <rect {...tint} {...fine} x={34} y={12} width={28} height={10} rx={3} />
+      <path {...fine} d="M38 12V22M42 12V22M46 12V22M50 12V22M54 12V22M58 12V22" />
+      <path d="M32 26Q30 60 38 82Q41 90 48 90Q55 90 58 82Q66 60 64 26" />
+      <circle {...fine} cx={48} cy={46} r={3.5} />
+    </g>
+  ),
+  "epilator-ipl": (
+    <g>
+      <rect {...tint} x={36} y={12} width={24} height={14} rx={2} />
+      <path {...fine} d="M42 8L40 4M48 8V3M54 8L56 4M32 14L28 11M64 14L68 11" />
+      <path d="M32 10H64V30Q64 36 60 40L56 44V84Q56 90 50 90H46Q40 90 40 84V44L36 40Q32 36 32 30Z" />
+      <circle {...fine} cx={48} cy={58} r={3} />
+    </g>
+  ),
 };

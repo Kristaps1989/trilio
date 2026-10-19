@@ -110,7 +110,7 @@ one sitemap, one product page.
 |---|---|---|---|---|---|
 | rdveikals.lv | No, Cloudflare challenge | n/a | n/a | n/a | Needs a feed or allow-listing |
 | ksenukai.lv | No, Cloudflare challenge | n/a | schema.org Product: name, brand, price, stock, energy class, rating (from a page saved in a browser) | Yes, in `data-flix-ean` | Needs a feed or allow-listing |
-| tet.lv | Yes | Yes, about 12 300 URLs | schema.org Product: name, mpn, price, stock | Yes, in `data-ean` | Scraped, about 2 500 appliance pages |
+| tet.lv | Yes | Yes, about 12 300 URLs | schema.org Product: name, mpn, price, stock | Yes, in `data-ean` | Scraped, about 2 900 appliance and personal-care pages |
 | depo.lv (online.depo.lv) | Yes | No | None in HTML, JavaScript app | No | Needs a feed |
 | ikea.com/lv | Yes | Yes | schema.org Product: name, price, stock | No, IKEA article numbers only | Own-brand products only, nothing to compare across shops |
 | 1a.lv | No, Cloudflare block | n/a | n/a | n/a | Needs a feed or allow-listing |
@@ -123,6 +123,15 @@ one sitemap, one product page.
 | elkor.lv | No, redirect loop to elkor.com | n/a | n/a | n/a | Not reachable |
 | discover.lv | Yes | No | None | No | Needs a feed |
 | photopoint.lv | Redirects to photopoint.ee | n/a | n/a | n/a | No Latvian shop |
+
+Personal care (shavers, trimmers, hair dryers, stylers, electric toothbrushes,
+epilators) was added on 19 Oct 2026. The shop sections were measured on the
+live sitemaps: tet.lv `/veikals/skuvekli/` and nine more category slugs,
+euronics.lv `skaistums-un-veseliba/…` (16 more product sitemaps), and m79.lv
+categories such as "Viriesu skuvekli" and "Matu ieveidotaji". The maps live
+in `src/db/stores.ts`. m79.lv names are often only a model code, so some of
+its personal-care pages fail the sanity check unless their description or
+spec table says what they are.
 
 1a.lv and ksenukai.lv both belong to Kesko Senukai, so one agreement covers
 two of the largest appliance sellers.

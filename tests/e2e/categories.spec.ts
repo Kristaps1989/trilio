@@ -30,7 +30,7 @@ export function euros(text: string): number {
 }
 
 test("all categories are in the test list", () => {
-  expect(all.length).toBeGreaterThanOrEqual(33);
+  expect(all.length).toBeGreaterThanOrEqual(39);
 });
 
 for (const { group, sub } of all) {

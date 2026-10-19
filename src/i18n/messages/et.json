@@ -278,7 +278,13 @@
       "stackable": "var novietot uz veļas mašīnas",
       "hotplates": "plīts riņķi",
       "washer_dryer": "žāvēšana",
-      "garage_ok": "der neapsildītai telpai"
+      "garage_ok": "der neapsildītai telpai",
+      "wet_dry": "lietojams ar ūdeni (Wet & Dry)",
+      "clean_station": "tīrīšanas stacija",
+      "ionic": "jonizācija",
+      "foldable": "salokāms",
+      "pressure_sensor": "spiediena sensors",
+      "app": "lietotne"
     },
     "airflow_m3h": "{delta} m³/h nosūkšanas jauda",
     "tank_l": "{delta} L ūdens tvertne",
@@ -369,7 +375,19 @@
     "hotplates": "Plīts riņķi",
     "convection": "Karstais gaiss",
     "juicer_type": "Veids",
-    "garage_ok": "Neapsildītai telpai"
+    "garage_ok": "Neapsildītai telpai",
+    "shaver_type": "Skuvekļa veids",
+    "trimmer_type": "Trimmera veids",
+    "styler_type": "Veidotāja veids",
+    "brush_type": "Birstes veids",
+    "epilator_type": "Epilatora veids",
+    "wet_dry": "Wet & Dry",
+    "clean_station": "Tīrīšanas stacija",
+    "ionic": "Jonizācija",
+    "foldable": "Salokāms",
+    "pressure_sensor": "Spiediena sensors",
+    "app": "Lietotne",
+    "doors": "Durvis"
   },
   "model": {
     "title": "Es jau zinu modeli",

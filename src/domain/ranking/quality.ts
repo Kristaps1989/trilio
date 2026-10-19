@@ -1,5 +1,5 @@
 import type { ProductView } from "@/domain/catalog/types";
-import { brandTable, gradeOf, type BrandTable } from "./consider";
+import { brandTable, gradeOf, ungradedSubcategory, type BrandTable } from "./consider";
 import { sameBrand } from "./score";
 
 // Product quality, so the picks are "the best quality for the money" rather
@@ -59,6 +59,10 @@ export const FEATURES = new Set([
   "third_basket",
   "wifi",
   "interchangeable_plates",
+  "wet_dry",
+  "clean_station",
+  "ionic",
+  "pressure_sensor",
 ]);
 
 const ENERGY_ORDER = ["A", "B", "C", "D", "E", "F", "G"];
@@ -71,7 +75,7 @@ export const UNGRADED_BRAND_POINTS = -4;
 export const SPEC_POINTS = 24;
 
 export function brandPoints(brand: string, subcategoryId: string, table: BrandTable = brandTable): number {
-  if (!table.reviewed) return 0;
+  if (!table.reviewed || ungradedSubcategory(table, subcategoryId)) return 0;
   const grade = gradeOf(table, brand, subcategoryId);
   if (grade === null) return UNGRADED_BRAND_POINTS;
   const entry = Object.entries(table.brands).find(([b]) => sameBrand(b, brand))?.[1];

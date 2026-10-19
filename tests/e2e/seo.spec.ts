@@ -52,7 +52,7 @@ test("home page links every category page and llms.txt describes the site", asyn
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Populārākās kategorijas" })).toBeVisible();
   const links = await page.locator('a[href^="/kategorija/"]').count();
-  expect(links).toBe(33);
+  expect(links).toBe(39);
   await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "Trilio");
   const llms = await request.get("/llms.txt");
   expect(llms.status()).toBe(200);

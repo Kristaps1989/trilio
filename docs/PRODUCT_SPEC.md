@@ -45,6 +45,7 @@ Everything else (priorities, brands, urgency, refurbished) is refined on the res
    - Virtuves mazā tehnika (small kitchen appliances)
    - Grili, tosteri un friteri (grills, toasters and fryers)
    - Veselīgam uzturam (healthy eating)
+   - Personīgā kopšana (personal care: shavers, trimmers, hair dryers, stylers, electric toothbrushes, epilators; owner request, 19 Oct 2026)
    - Full-width: "Kaut kas cits — pastāstīšu saviem vārdiem" (something else — I'll describe it in my own words)
 2. **Subcategory list.** The full tree is in `data/categories.json`.
    - Duplicates from the shop menus are merged. Microwaves appear only once, with a question about countertop or built-in. Hoods and fridges likewise.
@@ -107,12 +108,19 @@ The table below is generated from `data/categories.json` (18 Oct 2026). Each row
 | juicer | `type` picture cards: Lēnā spiede / Centrifūgas / Citrusu — **kind** | — |
 | dehydrator | `size` picture cards: Nedaudz / Daudz — **kind**, soft | — |
 | vacuumsealer | — (price only) | — |
+| shaver | `type` picture cards: Ar rotējošām galviņām / Ar sietiņu / Skuj un apgriež / Sieviešu — **kind**<br>`wet` single: Jā / Nē, tikai sausi — **kind**, soft; only if `type` is rotary/foil/lady | Ilgi strādā, Tīrīšanas stacija |
+| trimmer | `type` picture cards: Bārdai / Matu griešanai / Ķermenim / Visam — **kind** | Ilgi strādā, Mazgājams zem ūdens |
+| hairdryer | `hair` single: Īsi vai vidēji / Gari vai biezi / Vajag ceļojumiem — **kind**, soft | Mazāk sprogainu matu, Viegls |
+| styler | `type` picture cards: Iztaisnot / Saloki / Žāvēt un veidot — **kind** | Temperatūras regulēšana, Mazāk sprogainu matu |
+| toothbrush | `type` picture cards: Soniskā / Ar apaļu galviņu / Bērnu — **kind** | Spiediena sensors, Ar lietotni |
+| epilator | `type` picture cards: Epilators / Fotoepilators (IPL) — **kind** | Lietojams dušā, Bezvadu |
 
 Notes:
 - chopper, mincer, breadmaker and vacuumsealer have no category questions yet, so their flow is the price screen only. `docs/FILTERS_PLAN.md` §6.3b proposes questions for them.
 - Built-in fridges and freezers ask for the niche height as a number: a product passes when it is up to 6 cm lower or 0,5 cm higher than the niche. Height sliders allow 0,5 cm over the limit, because shops round.
 - The freezer garage card filters on `garage_ok`, which is set when the climate class includes SN or the text mentions a garage.
 - The dryer "Uz veļas mašīnas" (on top of a washer) card filters on `stackable`.
+- Personal care has no brand reliability grades: no independent survey in the brand table's sources covers these devices, so every brand scores the same there (`ungradedSubcategories` in `data/brands.json`). Picks rest on specs and price.
 
 ### 2.3 Urgency ("Cik ātri prece tev vajadzīga?", how soon do you need it?)
 Urgency is no longer a flow screen. It is the "Piegāde" (delivery) chip on the results page, set by default to "Tuvāko divu nedēļu laikā" (within two weeks).
