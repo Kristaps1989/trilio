@@ -137,7 +137,7 @@ Each source fills only what earlier ones left empty, cheapest first. Every value
 
 **2.5 "Līdzvērtīgs zīmols" (an equally good brand you did not pick)**
 - Decided 18 Oct: AI where it adds value, ranking stays code. So AI provides the brand data, code makes the choice.
-- `CLAUDE.md` rule 4 and `docs/LLM.md` say rankings and picks are deterministic code and never model output. That rule is what makes the "Kā mēs izvēlamies un ranžējam?" panel honest.
+- `CLAUDE.md` rule 4 and `docs/LLM.md` say rankings and picks are deterministic code and never model output. That rule is what makes the "Kā mēs izvēlamies un prioritizējam?" panel honest.
 - The proposal keeps the AI as the brains behind the data, not the ranking:
   - `data/brands.json` is a brand quality table per category with:
     - reliability grade;
@@ -196,7 +196,7 @@ What changes:
 - **"Nav apstiprināts" names the attribute, not the question.** For example: "Nav zināms: žāvētāja veids". With complete data (Phase 1) this line almost never appears. When it does, the product is not a pick for a fit-critical question (2.2).
 - **The recommendation must be earned.**
   - "Trilio ieteikums" is shown only when the top pick's score is clearly above the others and its key attributes are known.
-  - With equal scores there is no badge. The panel "Kā mēs izvēlamies un ranžējam?" says why: "Šoreiz neviens nav skaidri labāks — izvēlies pēc cenas" (none is clearly better this time — choose by price).
+  - With equal scores there is no badge. The panel "Kā mēs izvēlamies un prioritizējam?" says why: "Šoreiz neviens nav skaidri labāks — izvēlies pēc cenas" (none is clearly better this time — choose by price).
 - **Tiers must mean something.**
   - "Budžeta variants / Vidējā klase / Augstākā klase" are used only when the picks are meaningfully apart: at least 10 % or 30 € between neighbours.
   - Otherwise the cards are shown without tier pills and the lead says "Trīs līdzīgi varianti ap 390 €" (three similar options around €390). Two near-identical models from one brand are not shown as different classes.
@@ -282,7 +282,7 @@ Priorities, brands, urgency and refurbished move to the results page (Phase 4) w
 
 **4.3 "Vērts apsvērt"** (the 2.5 card) sits below the three picks and above the refurbished block. It is clearly separate and never mixed with refurbished offers.
 
-**4.4 Explain every exclusion.** "Kā mēs izvēlamies un ranžējam?" gains a line that lists how many products each filter removed. This makes the logic visible.
+**4.4 Explain every exclusion.** "Kā mēs izvēlamies un prioritizējam?" gains a line that lists how many products each filter removed. This makes the logic visible.
 
 **4.5 Accessibility**
 - Sliders are native `input type="range"` pairs with labels and keyboard steps, plus number fields for exact entry.

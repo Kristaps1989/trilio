@@ -148,7 +148,7 @@ All in `src/domain/ranking`, pure, with table-driven tests. Inputs are plain pro
 
 ### Milestone 1.5 — Results, compare, refurbished (weeks 5–6)
 
-- `/rezultati` server-rendered from the URL answers: title, lead text, answer chips, EAN note, "Kā mēs izvēlamies un ranžējam?" `<details>` panel with the commission disclosure and energy price assumption.
+- `/rezultati` server-rendered from the URL answers: title, lead text, answer chips, EAN note, "Kā mēs izvēlamies un prioritizējam?" `<details>` panel with the commission disclosure and energy price assumption.
 - `ResultCard` per spec 3.2, with the over-budget variant (dashed orange border, pill) and the refurbished variant (blue scheme, separate block, "RĀDĪTA ATSEVIŠĶI").
 - Compare grid: `<table>` with `<th scope>`, sticky first column, horizontal scroll inside a container at narrow widths, best-value shading only when values differ, "Rādīt tikai atšķirības" toggle.
 - "Mainīt atbildes" returns to the first question with answers intact; "Sākt no jauna" clears the URL state.

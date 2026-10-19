@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /**
- * The EAN note with the "Kā mēs izvēlamies un ranžējam?" toggle beside it,
+ * The EAN note with the "Kā mēs izvēlamies un prioritizējam?" toggle beside it,
  * opening the bordered explanation panel (CLAUDE.md rule 4, prototype).
  */
 export function HowWeRank({

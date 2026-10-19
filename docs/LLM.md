@@ -1,6 +1,6 @@
 # Claude API usage in Trilio
 
-Claude is used in exactly two places at runtime. Rankings, picks, tiers, prices, deltas, energy costs, the "Vērts zināt" advice and the "Vērts apsvērt" card are deterministic code (`src/domain/**`) and are never influenced by a model. This is what makes the "Kā mēs izvēlamies un ranžējam?" panel truthful. The rule from `docs/FILTERS_PLAN.md` holds: AI provides data, code does the choosing.
+Claude is used in exactly two places at runtime. Rankings, picks, tiers, prices, deltas, energy costs, the "Vērts zināt" advice and the "Vērts apsvērt" card are deterministic code (`src/domain/**`) and are never influenced by a model. This is what makes the "Kā mēs izvēlamies un prioritizējam?" panel truthful. The rule from `docs/FILTERS_PLAN.md` holds: AI provides data, code does the choosing.
 
 | Purpose | Where | When it runs | Cost shape |
 |---|---|---|---|
