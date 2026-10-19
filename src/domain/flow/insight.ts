@@ -104,11 +104,19 @@ export type PriceStats = {
   count: number;
   minCents: number;
   maxCents: number;
-  /** Ten equal-width buckets from min to max: product counts for the histogram. */
+  /**
+   * Right end of the slider and histogram: the 95th percentile, so one
+   * €5 000 outlier does not squeeze every other price into the first bar.
+   * Higher limits are typed or reached with the "+" buttons.
+   */
+  scaleMaxCents: number;
+  /** Ten equal-width buckets from min to scaleMax (outliers in the last one): counts for the histogram. */
   buckets: number[];
-  /** Pre-selected range: the middle 60 % of prices, rounded outward to €10. */
+  /** Pre-selected range: around the typical price of the category (30th–70th percentile), rounded. */
   defaultMinCents: number;
   defaultMaxCents: number;
+  /** Rounding step: €5 for cheap categories, €10 otherwise. */
+  stepCents: number;
 };
 
 function percentile(sorted: number[], p: number): number {
@@ -124,16 +132,22 @@ export function priceStats(ctx: Ctx): PriceStats | null {
   if (prices.length === 0) return null;
   const min = prices[0]!;
   const max = prices[prices.length - 1]!;
-  const width = Math.max(1, (max - min) / 10);
+  const step = percentile(prices, 0.5) < 10_000 ? 500 : 1000;
+  const floor = (c: number) => Math.floor(c / step) * step;
+  const ceil = (c: number) => Math.ceil(c / step) * step;
+  const scaleMax = Math.max(ceil(percentile(prices, 0.95)), floor(min) + step);
+  const width = Math.max(1, (scaleMax - min) / 10);
   const buckets = Array.from({ length: 10 }, () => 0);
-  for (const p of prices) buckets[Math.min(9, Math.floor((p - min) / width))]!++;
-  const step = 1000;
+  for (const p of prices) buckets[Math.min(9, Math.max(0, Math.floor((p - min) / width)))]!++;
+  const defaultMin = floor(percentile(prices, 0.3));
   return {
     count: prices.length,
     minCents: min,
     maxCents: max,
+    scaleMaxCents: scaleMax,
     buckets,
-    defaultMinCents: Math.floor(percentile(prices, 0.2) / step) * step,
-    defaultMaxCents: Math.ceil(percentile(prices, 0.8) / step) * step,
+    defaultMinCents: defaultMin,
+    defaultMaxCents: Math.max(defaultMin + step, ceil(percentile(prices, 0.7))),
+    stepCents: step,
   };
 }

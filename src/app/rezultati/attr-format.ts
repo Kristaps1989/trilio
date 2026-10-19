@@ -14,10 +14,11 @@ export function enumLabels(sub: Subcategory): Record<string, Record<string, stri
   const out: Record<string, Record<string, string>> = {};
   for (const q of sub.questions) {
     for (const o of q.options) {
-      if (!o.match || o.match.length !== 1) continue;
-      const c = o.match[0]!;
-      if (typeof c.eq !== "string") continue;
-      (out[c.attr] ??= {})[c.eq] ??= o.table_value ?? o.label;
+      // An option may combine conditions (front loading AND not a washer-dryer): label each enum it names.
+      for (const c of o.match ?? []) {
+        if (typeof c.eq !== "string") continue;
+        (out[c.attr] ??= {})[c.eq] ??= o.table_value ?? o.label;
+      }
     }
   }
   return out;
@@ -56,27 +57,4 @@ export function formatAttr(
   return enums[key]?.[String(value)] ?? String(value);
 }
 
-/** Which way is better for the compare table's green shading (null: no "better"). */
-export function betterDirection(key: string): "min" | "max" | null {
-  switch (key) {
-    case "volume_l":
-    case "capacity_kg":
-    case "place_settings":
-    case "run_min":
-    case "airflow_m3h":
-    case "spin_rpm":
-    case "tank_l":
-    case "zones":
-    case "slots":
-    case "trays":
-    case "steam_gmin":
-      return "max";
-    case "noise_db":
-    case "weight_kg":
-    case "kwh_year":
-    case "water_l_cycle":
-      return "min";
-    default:
-      return null;
-  }
-}
+export { betterDirection } from "@/domain/ranking/quality";

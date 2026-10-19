@@ -20,3 +20,18 @@ export function displayName(name: string, brand: string, subcategoryId: string, 
   }
   return brand ? `${brand} ${typeLabel} ${trimmed}` : `${typeLabel} ${trimmed}`;
 }
+
+/**
+ * One spelling per brand for display: shops write "SAMSUNG", "Samsung" or
+ * "samsung". Known brands use the spelling of the brand table; others are
+ * title-cased unless they are a short acronym such as LG or AEG.
+ */
+export function canonicalBrand(raw: string, known: readonly string[] = []): string {
+  const trimmed = raw.trim();
+  const hit = known.find((k) => k.toLowerCase() === trimmed.toLowerCase());
+  if (hit) return hit;
+  if (trimmed.length <= 3) return trimmed.toUpperCase();
+  if (trimmed === trimmed.toUpperCase() || trimmed === trimmed.toLowerCase())
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+  return trimmed;
+}

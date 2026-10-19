@@ -1,5 +1,7 @@
 "use client";
 
+import type { PriceStats } from "@/domain/flow/insight";
+import { PriceRange, priceScale, rangeAnswer, type CentsRange } from "@/ui/PriceRange";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,10 +13,9 @@ import {
   type FlowState,
   type Trailing,
 } from "@/domain/flow/state";
-import { formatEur } from "@/i18n/format";
 import { Button } from "@/ui/Button";
 import { OptionRow } from "@/ui/OptionRow";
-import { DualRange, Histogram, SingleRange } from "@/ui/RangeSlider";
+import { SingleRange } from "@/ui/RangeSlider";
 import { useLiveCount } from "@/ui/useLiveCount";
 
 // Results you can adjust in place (docs/FILTERS_PLAN.md §4.1): one chip per
@@ -46,7 +47,7 @@ export type Editor =
   | { kind: "number"; questionId: string; min: number; max: number; unit: string }
   | {
       kind: "price";
-      stats: { minCents: number; maxCents: number; buckets: number[] } | null;
+      stats: PriceStats | null;
       presetsCents: number[];
     }
   | { kind: "brands"; brands: { name: string; count: number }[] }
@@ -180,7 +181,6 @@ function EditorBody({
 }) {
   const t = useTranslations("results");
   const tf = useTranslations("flow");
-  const tb = useTranslations("budget");
 
   switch (editor.kind) {
     case "choice": {
@@ -284,68 +284,26 @@ function EditorBody({
     }
     case "price": {
       const s = editor.stats;
-      const step = 1000;
-      const lo = s ? Math.floor(s.minCents / step) * step : 0;
-      const hi = s ? Math.max(lo + step, Math.ceil(s.maxCents / step) * step) : 100_000;
+      const { lo, top } = priceScale(s);
       const b = working.trailing.budget;
       const range =
         typeof b === "object" && b !== null
-          ? { min: b.min ?? lo, max: b.max ?? hi }
+          ? { min: b.min ?? lo, max: b.max ?? top }
           : typeof b === "number"
             ? { min: lo, max: b }
-            : { min: lo, max: hi };
-      const set = (r: { min: number; max: number }) =>
-        setWorking(
-          withSetting(
-            working,
-            "budget",
-            r.min <= lo && r.max >= hi
-              ? "none"
-              : { min: r.min > lo ? r.min : undefined, max: r.max < hi ? r.max : undefined },
-          ),
-        );
-      return (
-        <div className="flex flex-col gap-3">
-          <p className="font-heading text-[28px] font-semibold" aria-hidden="true">
-            {tb("range", { min: formatEur(range.min), max: formatEur(range.max) })}
-          </p>
-          {s ? (
-            <Histogram
-              buckets={s.buckets}
-              min={s.minCents}
-              max={s.maxCents}
-              value={range}
-              description={tb("histogram", { min: formatEur(s.minCents), max: formatEur(s.maxCents) })}
-            />
-          ) : null}
-          <DualRange
-            labels={{ min: tb("minLabel"), max: tb("maxLabel") }}
-            min={lo}
-            max={hi}
-            step={step}
-            value={range}
-            onChange={set}
-            valueText={(v) => formatEur(v)}
-          />
-          <div className="flex flex-wrap gap-2">
-            {editor.presetsCents.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => set({ min: lo, max: p })}
-                className="min-h-11 rounded-full bg-chip px-4 text-sm font-semibold text-mist hover:bg-lime-18"
-              >
-                {tb("upTo", { amount: formatEur(p) })}
-              </button>
-            ))}
-          </div>
-        </div>
-      );
+            : { min: lo, max: top };
+      const set = (r: CentsRange) => {
+        const a = rangeAnswer(r, s);
+        setWorking(withSetting(working, "budget", a.min === undefined && a.max === undefined ? "none" : a));
+      };
+      return <PriceRange stats={s} value={range} onChange={set} big={false} />;
     }
     case "brands": {
       const chosen = working.trailing.brands ?? [];
+      // Shops spell brands differently ("SAMSUNG", "Samsung"): compare without case.
+      const isChosen = (b: string) => chosen.some((x) => x.toLowerCase() === b.toLowerCase());
       const toggle = (b: string) => {
-        const next = chosen.includes(b) ? chosen.filter((x) => x !== b) : [...chosen, b];
+        const next = isChosen(b) ? chosen.filter((x) => x.toLowerCase() !== b.toLowerCase()) : [...chosen, b];
         setWorking(withSetting(working, "brands", next.length ? next : undefined));
       };
       return (
@@ -357,9 +315,9 @@ function EditorBody({
                 key={b.name}
                 type="button"
                 role="checkbox"
-                aria-checked={chosen.includes(b.name)}
+                aria-checked={isChosen(b.name)}
                 onClick={() => toggle(b.name)}
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${chosen.includes(b.name) ? "bg-lime text-night" : "bg-chip text-mist hover:bg-lime-18"}`}
+                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${isChosen(b.name) ? "bg-lime text-night" : "bg-chip text-mist hover:bg-lime-18"}`}
               >
                 {b.name} <span className="font-normal opacity-80">· {b.count}</span>
               </button>

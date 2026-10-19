@@ -69,4 +69,16 @@ describe("flow insight (core rules 2, 4, 5)", () => {
     expect(Object.values(optionCounts(c, cups))).toEqual([1, 1, 1]);
     expect(questionMatters(c, cups)).toBe(true);
   });
+
+  it("price scale ignores a rare outlier, and the default sits around the typical price", () => {
+    const many = [
+      300, 320, 340, 350, 360, 380, 400, 420, 450, 480, 500, 520, 550, 600, 650, 700, 750, 800, 900, 4900,
+    ].map((eur, i) => fr(`P${i}`, eur, 176, "two", 300));
+    const s = priceStats({ products: many, sub: fridge, answers: {} })!;
+    expect(s.maxCents).toBe(490000);
+    expect(s.scaleMaxCents).toBeLessThan(100000); // the €4 900 outlier does not stretch the slider
+    expect(s.defaultMinCents).toBeGreaterThanOrEqual(38000);
+    expect(s.defaultMaxCents).toBeLessThanOrEqual(65000);
+    expect(s.stepCents).toBe(1000);
+  });
 });

@@ -4,6 +4,7 @@ import { offer, product } from "@/domain/testing/builders";
 import { limitsFridge } from "@/domain/testing/fixtures";
 import { evaluateQuestion, passesHardFilters, withinBudget, withinStretch } from "./filters";
 import { assignTiers, countMatches, pickThree, rank, tiersAreMeaningful, type RankInput } from "./rank";
+import { valueScore } from "./quality";
 import { relaxations } from "./relax";
 import { scoreProduct, whyItFits } from "./score";
 
@@ -198,11 +199,12 @@ describe("extras and refurbished", () => {
 
 describe("brands (§2.4)", () => {
   it("a preferred brand scores higher; 'only these' filters", () => {
-    const ps = [combi("Bosch A", 400, 176), combi("Beko B", 410, 176)];
-    const soft = rank({ ...ownerCase(ps), brands: ["Beko"] });
-    expect(soft.picks.find((p) => p.recommended)?.product.brand ?? soft.picks[0]!.product.brand).toBe("Beko");
-    const strict = rank({ ...ownerCase(ps), brands: ["Beko"], brandsOnly: true });
-    expect(strict.picks.map((p) => p.product.brand)).toEqual(["Beko"]);
+    // Two brands without reliability grades, so only the preference differs.
+    const ps = [combi("Acme A", 400, 176), combi("Zeta B", 410, 176)];
+    const soft = rank({ ...ownerCase(ps), brands: ["Zeta"] });
+    expect(soft.picks.find((p) => p.recommended)?.product.brand).toBe("Zeta");
+    const strict = rank({ ...ownerCase(ps), brands: ["Zeta"], brandsOnly: true });
+    expect(strict.picks.map((p) => p.product.brand)).toEqual(["Zeta"]);
     expect(strict.excludedBy.$brands).toBe(1);
   });
 });
@@ -236,6 +238,29 @@ describe("relax suggestions (§4.2)", () => {
   it("offers to raise a height limit", () => {
     const r = relaxations(withLimit([combi("A", 450, 176), combi("B", 450, 182)]));
     expect(r.find((x) => x.kind === "range_max")).toMatchObject({ questionId: "height", max: 183, gain: 1 });
+  });
+});
+
+describe("quality: the best quality for the money (owner, 19 Oct 2026)", () => {
+  it("at the same price, the better equipped and more reliable product wins", () => {
+    const plain = combi("Acme Plain", 450, 176, { energy_class: "E", noise_db: 42, no_frost: false });
+    const better = combi("Acme Full", 450, 176, { energy_class: "C", noise_db: 36, no_frost: true });
+    const r = rank(ownerCase([plain, better]));
+    const full = r.picks.find((p) => p.product.name === "Acme Full")!;
+    const bare = r.picks.find((p) => p.product.name === "Acme Plain")!;
+    expect(full.quality!.spec).toBeGreaterThan(bare.quality!.spec);
+    expect(full.recommended).toBe(true);
+  });
+
+  it("a graded brand counts: Miele outranks an ungraded brand with the same specs", () => {
+    const r = rank(ownerCase([combi("Acme X", 450, 176), combi("Miele X", 470, 176)]));
+    expect(r.picks.find((p) => p.recommended)?.product.brand).toBe("Miele");
+    expect(r.picks.find((p) => p.product.brand === "Acme")!.quality!.brand).toBeLessThan(0);
+  });
+
+  it("equal quality: the cheaper one is the better value; equal price: the better one", () => {
+    expect(valueScore(80, 38000, 38000, 48000)).toBeGreaterThan(valueScore(80, 48000, 38000, 48000));
+    expect(valueScore(90, 48000, 38000, 48000)).toBeGreaterThan(valueScore(80, 38000, 38000, 48000) - 1);
   });
 });
 

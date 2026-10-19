@@ -123,6 +123,8 @@ export const SubcategorySchema = z
     id: z.string().min(1),
     label: z.string().min(1),
     description: nullableString,
+    /** Drawing for the subcategory tile (src/ui/illustrations), one per subcategory. */
+    illustration: z.string().optional(),
     budget_steps_eur: z.array(z.number().int().positive()).min(1),
     /** Attribute keys shown in the compare table and used by the upgrade delta, in order. */
     compare: z.array(z.string()),

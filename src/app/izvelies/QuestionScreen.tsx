@@ -7,9 +7,11 @@ import { encodeState, withAnswer, type FlowState } from "@/domain/flow/state";
 import { formatEur } from "@/i18n/format";
 import { Button } from "@/ui/Button";
 import { Illustration } from "@/ui/illustrations/Illustration";
+import { PriceRange, priceScale, rangeAnswer } from "@/ui/PriceRange";
+import type { PriceStats } from "@/domain/flow/insight";
 import { InfoBox, PageTitle } from "@/ui/layout";
 import { OptionRow } from "@/ui/OptionRow";
-import { DualRange, Histogram, SingleRange } from "@/ui/RangeSlider";
+import { SingleRange } from "@/ui/RangeSlider";
 import { useLiveCount } from "@/ui/useLiveCount";
 
 // One question per screen (spec §2, core rules in docs/FILTERS_PLAN.md):
@@ -38,13 +40,7 @@ export type ScreenQuestion =
     })
   | (Common & {
       kind: "price";
-      stats: {
-        minCents: number;
-        maxCents: number;
-        buckets: number[];
-        defaultMinCents: number;
-        defaultMaxCents: number;
-      } | null;
+      stats: PriceStats | null;
       presetsCents: number[];
     });
 
@@ -395,90 +391,24 @@ function PriceBody({
 }) {
   const t = useTranslations("budget");
   const stats = q.stats;
-  const step = 1000;
-  const lo = stats ? Math.floor(stats.minCents / step) * step : 0;
-  const hi = stats ? Math.max(lo + step, Math.ceil(stats.maxCents / step) * step) : 100_000;
+  const { lo, top } = priceScale(stats);
   const b = state.trailing.budget;
   const initial =
     typeof b === "object" && b !== null
-      ? { min: b.min ?? lo, max: b.max ?? hi }
+      ? { min: b.min ?? lo, max: b.max ?? top }
       : typeof b === "number"
         ? { min: lo, max: b }
         : stats
           ? { min: stats.defaultMinCents, max: stats.defaultMaxCents }
-          : { min: lo, max: hi };
-  const [range, setRange] = useState({ min: Math.max(lo, initial.min), max: Math.min(hi, initial.max) });
-  const answer = { min: range.min > lo ? range.min : undefined, max: range.max < hi ? range.max : undefined };
+          : { min: lo, max: top };
+  const [range, setRange] = useState({ min: Math.max(lo, initial.min), max: Math.min(top, initial.max) });
+  const answer = rangeAnswer(range, stats);
   const encoded = encodeState(withAnswer(state, "budget", answer));
   const { count, suggestion } = useLiveCount(subId, encoded);
 
-  function setField(key: "min" | "max", text: string) {
-    const eur = Number(text.replace(/\s/g, "").replace(",", "."));
-    if (!Number.isFinite(eur)) return;
-    const cents = Math.round(eur) * 100;
-    setRange((r) =>
-      key === "min"
-        ? { min: Math.min(Math.max(lo, cents), r.max), max: r.max }
-        : { min: r.min, max: Math.max(Math.min(hi, cents), r.min) },
-    );
-  }
-
   return (
     <>
-      <div className="flex max-w-[620px] flex-col gap-3">
-        <p className="font-heading text-[clamp(28px,5vw,40px)] font-semibold text-mist" aria-hidden="true">
-          {t("range", { min: formatEur(range.min), max: formatEur(range.max) })}
-        </p>
-        {stats ? (
-          <Histogram
-            buckets={stats.buckets}
-            min={stats.minCents}
-            max={stats.maxCents}
-            value={range}
-            description={t("histogram", { min: formatEur(stats.minCents), max: formatEur(stats.maxCents) })}
-          />
-        ) : null}
-        <DualRange
-          labels={{ min: t("minLabel"), max: t("maxLabel") }}
-          min={lo}
-          max={hi}
-          step={step}
-          value={range}
-          onChange={setRange}
-          valueText={(v) => formatEur(v)}
-        />
-        <div className="flex gap-3">
-          {(["min", "max"] as const).map((key) => (
-            <label key={key} className="flex flex-1 flex-col gap-1 text-sm text-stone">
-              {key === "min" ? t("from") : t("to")}
-              <span className="flex items-center gap-2 rounded-control border-[1.5px] border-mist-32 px-3">
-                <input
-                  inputMode="numeric"
-                  aria-label={key === "min" ? t("minLabel") : t("maxLabel")}
-                  value={String(Math.round(range[key] / 100))}
-                  onChange={(e) => setField(key, e.target.value)}
-                  className="min-h-11 w-full bg-transparent text-lg font-semibold text-mist outline-none"
-                />
-                <span aria-hidden="true">€</span>
-              </span>
-            </label>
-          ))}
-        </div>
-        {q.presetsCents.length ? (
-          <div className="flex flex-wrap gap-2">
-            {q.presetsCents.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setRange({ min: lo, max: Math.min(hi, p) })}
-                className="min-h-11 rounded-full bg-chip px-4 text-sm font-semibold text-mist hover:bg-lime-18"
-              >
-                {t("upTo", { amount: formatEur(p) })}
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
+      <PriceRange stats={stats} value={range} onChange={setRange} />
       {count === 0 && suggestion?.kind === "price_max" && suggestion.maxCents ? (
         <InfoBox className="max-w-[620px]">
           <span className="flex flex-wrap items-center justify-between gap-3">

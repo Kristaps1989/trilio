@@ -442,7 +442,8 @@
             "energy_class",
             "noise_db",
             "no_frost"
-          ]
+          ],
+          "illustration": "fridge-two"
         },
         {
           "id": "freezer",
@@ -761,7 +762,8 @@
             "noise_db",
             "no_frost",
             "climate_class"
-          ]
+          ],
+          "illustration": "freezer-upright"
         }
       ]
     },
@@ -933,9 +935,9 @@
                 },
                 {
                   "value": "d55",
-                  "label": "~55–60 cm",
+                  "label": "55 cm un vairāk",
                   "sublabel": "standarta",
-                  "table_value": "~55–60 cm",
+                  "table_value": "55 cm+",
                   "match": [
                     {
                       "attr": "depth_cm",
@@ -1048,7 +1050,8 @@
             "energy_class",
             "noise_db",
             "steam"
-          ]
+          ],
+          "illustration": "washer-front"
         },
         {
           "id": "dryer",
@@ -1214,7 +1217,8 @@
             "energy_class",
             "noise_db",
             "stackable"
-          ]
+          ],
+          "illustration": "dryer"
         },
         {
           "id": "iron",
@@ -1303,7 +1307,8 @@
             "anti_calc",
             "weight_kg",
             "power_w"
-          ]
+          ],
+          "illustration": "iron-iron"
         },
         {
           "id": "steamer",
@@ -1357,7 +1362,8 @@
             "steam_gmin",
             "tank_l",
             "power_w"
-          ]
+          ],
+          "illustration": "steamer-stand"
         }
       ]
     },
@@ -1672,7 +1678,8 @@
             "energy_class",
             "noise_db",
             "third_basket"
-          ]
+          ],
+          "illustration": "dish-free"
         },
         {
           "id": "hob",
@@ -1844,7 +1851,8 @@
             "zones",
             "flexi_zone",
             "booster"
-          ]
+          ],
+          "illustration": "hob-induction"
         },
         {
           "id": "oven",
@@ -1958,7 +1966,8 @@
             "steam",
             "wifi",
             "energy_class"
-          ]
+          ],
+          "illustration": "oven-std"
         },
         {
           "id": "hood",
@@ -2122,7 +2131,8 @@
             "airflow_m3h",
             "noise_db",
             "recirculation"
-          ]
+          ],
+          "illustration": "hood-wall"
         },
         {
           "id": "micro",
@@ -2311,7 +2321,8 @@
             "micro_type",
             "volume_l",
             "power_w"
-          ]
+          ],
+          "illustration": "micro-free"
         }
       ]
     },
@@ -2533,7 +2544,8 @@
             "pet_brush",
             "hepa",
             "bagless"
-          ]
+          ],
+          "illustration": "vacuum-stick"
         },
         {
           "id": "steamclean",
@@ -2600,7 +2612,8 @@
             "steam_type",
             "tank_l",
             "power_w"
-          ]
+          ],
+          "illustration": "steamclean-mop"
         }
       ]
     },
@@ -2730,7 +2743,8 @@
             "milk_system",
             "pressure_bar",
             "tank_l"
-          ]
+          ],
+          "illustration": "coffee-auto"
         },
         {
           "id": "grinder",
@@ -2783,7 +2797,8 @@
           "compare": [
             "grinder_type",
             "power_w"
-          ]
+          ],
+          "illustration": "grinder-burr"
         }
       ]
     },
@@ -2855,7 +2870,8 @@
             "temp_control",
             "volume_l",
             "power_w"
-          ]
+          ],
+          "illustration": "kettle"
         },
         {
           "id": "blender",
@@ -2948,7 +2964,8 @@
             "power_w",
             "volume_l",
             "heating"
-          ]
+          ],
+          "illustration": "blender-jug"
         },
         {
           "id": "handblender",
@@ -2998,7 +3015,8 @@
           "compare": [
             "cordless",
             "power_w"
-          ]
+          ],
+          "illustration": "handblender"
         },
         {
           "id": "foodproc",
@@ -3051,7 +3069,8 @@
             "foodproc_type",
             "power_w",
             "volume_l"
-          ]
+          ],
+          "illustration": "foodproc-processor"
         },
         {
           "id": "mixer",
@@ -3103,7 +3122,8 @@
           "compare": [
             "mixer_type",
             "power_w"
-          ]
+          ],
+          "illustration": "mixer-hand"
         },
         {
           "id": "chopper",
@@ -3118,7 +3138,8 @@
           "compare": [
             "volume_l",
             "power_w"
-          ]
+          ],
+          "illustration": "chopper"
         },
         {
           "id": "mincer",
@@ -3132,7 +3153,8 @@
           "questions": [],
           "compare": [
             "power_w"
-          ]
+          ],
+          "illustration": "mincer"
         },
         {
           "id": "scale",
@@ -3183,7 +3205,8 @@
           "compare": [
             "precision_g",
             "max_kg"
-          ]
+          ],
+          "illustration": "scale"
         },
         {
           "id": "knife",
@@ -3231,7 +3254,8 @@
           "compare": [
             "cordless",
             "power_w"
-          ]
+          ],
+          "illustration": "knife"
         }
       ]
     },
@@ -3290,7 +3314,8 @@
           "compare": [
             "grill_type",
             "power_w"
-          ]
+          ],
+          "illustration": "grill-contact"
         },
         {
           "id": "toaster",
@@ -3342,7 +3367,8 @@
           "compare": [
             "slots",
             "power_w"
-          ]
+          ],
+          "illustration": "toaster-2"
         },
         {
           "id": "sandwich",
@@ -3386,7 +3412,8 @@
           "compare": [
             "interchangeable_plates",
             "power_w"
-          ]
+          ],
+          "illustration": "sandwich"
         },
         {
           "id": "airfryer",
@@ -3487,7 +3514,8 @@
             "fryer_type",
             "volume_l",
             "power_w"
-          ]
+          ],
+          "illustration": "airfryer-air"
         },
         {
           "id": "breadmaker",
@@ -3502,7 +3530,8 @@
           "compare": [
             "power_w",
             "programs"
-          ]
+          ],
+          "illustration": "breadmaker"
         },
         {
           "id": "minioven",
@@ -3590,7 +3619,8 @@
             "volume_l",
             "convection",
             "power_w"
-          ]
+          ],
+          "illustration": "minioven-plain"
         }
       ]
     },
@@ -3663,7 +3693,8 @@
           "compare": [
             "juicer_type",
             "power_w"
-          ]
+          ],
+          "illustration": "juicer-slow"
         },
         {
           "id": "dehydrator",
@@ -3714,7 +3745,8 @@
           "compare": [
             "trays",
             "power_w"
-          ]
+          ],
+          "illustration": "dehydrator-big"
         },
         {
           "id": "vacuumsealer",
@@ -3728,7 +3760,8 @@
           "questions": [],
           "compare": [
             "power_w"
-          ]
+          ],
+          "illustration": "vacuumsealer"
         }
       ]
     },
