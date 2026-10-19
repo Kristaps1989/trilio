@@ -68,10 +68,10 @@ for (const { group, sub } of all) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Trīs labākie varianti tev");
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
-    // The radar panel follows one named model, never an empty selection.
+    // The radar panel offers the picks to choose from, never an empty selection.
     await expect(page.getByRole("link", { name: /Ieslēgt cenu radaru/ })).toHaveAttribute(
       "href",
-      /product=[0-9a-f-]{36}/,
+      /choose=[0-9a-f-]{36}/,
     );
 
     // The chosen price range is a chip; every pick inside it, unless labelled over budget.
