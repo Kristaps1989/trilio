@@ -375,24 +375,6 @@ export function RadarCard({
               </Chip>
             ))}
           </ChipGroup>
-          <ChipGroup label={t("channels")} role="group">
-            {(["push", "email"] as const).map((c) => (
-              <Chip
-                key={c}
-                role="checkbox"
-                checked={form.channels.includes(c)}
-                onClick={() => {
-                  const next = form.channels.includes(c)
-                    ? form.channels.filter((x) => x !== c)
-                    : [...new Set([...form.channels, c])];
-                  if (next.length === 0) return;
-                  setForm({ ...form, channels: next });
-                }}
-              >
-                {c === "push" ? t("channelPush") : t("channelEmail")}
-              </Chip>
-            ))}
-          </ChipGroup>
           <div className="flex items-center justify-between gap-3">
             <span className="text-[15px]">
               <strong className="block font-bold">{t("includeRefurbished")}</strong>

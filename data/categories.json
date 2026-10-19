@@ -2383,10 +2383,10 @@
                 },
                 {
                   "value": "stick",
-                  "label": "Bezvadu",
-                  "sublabel": "vertikāls, ar akumulatoru",
+                  "label": "Vertikālais bezvadu",
+                  "sublabel": "ar akumulatoru, viegli pa rokai",
                   "card_reason": "Bezvadu — viegls un ātri pa rokai",
-                  "table_value": "Bezvadu",
+                  "table_value": "Vertikālais",
                   "match": [
                     {
                       "attr": "vacuum_type",
@@ -2408,6 +2408,20 @@
                     }
                   ],
                   "illustration": "vacuum-corded"
+                },
+                {
+                  "value": "handheld",
+                  "label": "Rokas",
+                  "sublabel": "mazs, auto un dīvānam",
+                  "card_reason": "Rokas — mazs un ērts",
+                  "table_value": "Rokas",
+                  "match": [
+                    {
+                      "attr": "vacuum_type",
+                      "eq": "handheld"
+                    }
+                  ],
+                  "illustration": "vacuum-hand"
                 }
               ]
             },
@@ -2422,7 +2436,8 @@
               "showIf": {
                 "q": "type",
                 "notIn": [
-                  "corded"
+                  "corded",
+                  "handheld"
                 ]
               },
               "options": [
@@ -2545,7 +2560,7 @@
             "hepa",
             "bagless"
           ],
-          "illustration": "vacuum-stick"
+          "illustration": "vacuum-corded"
         },
         {
           "id": "steamclean",
@@ -2613,7 +2628,7 @@
             "tank_l",
             "power_w"
           ],
-          "illustration": "steamclean-mop"
+          "illustration": "steamclean-hand"
         }
       ]
     },

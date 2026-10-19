@@ -1096,6 +1096,15 @@ export const DRAWINGS: Record<string, Drawing> = {
       <path d="M26 84Q26 80 30 80H52Q56 80 56 84V88H26Z" />
     </g>
   ),
+  "vacuum-hand": (
+    <g>
+      <path d="M30 40H62Q70 40 70 48V54Q70 60 62 60H30Z" />
+      <rect {...tint} x={36} y={44} width={18} height={12} rx={3} />
+      <path d="M30 44L14 48V54L30 56" />
+      <path d="M62 40Q62 26 74 26H80Q84 26 84 30V60Q84 64 80 64H70" />
+      <path {...fine} d="M74 32V56" />
+    </g>
+  ),
   "vacuum-robot": <g>{robotDisc()}</g>,
   "vacuum-robotmop": (
     <g>
