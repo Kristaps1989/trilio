@@ -4,7 +4,9 @@ import type { ChargeTokenResult, PaymentEvent, PaymentProvider } from "./types";
 // Mock provider for development and CI: the "hosted checkout" is our own
 // /maksajums/mock page, which immediately posts a captured notification to
 // the callback URL. Tokens starting with "fail-" decline renewals, so the
-// retry and suspension paths are testable. Never enabled in production
+// retry and suspension paths are testable. Like Paysera Checkout it is
+// prepaid by default (no token, no automatic renewal); `recurring: true`
+// mimics Recurring Billing. Never enabled in production
 // (see services/payments/index.ts).
 
 export type MockState = {
@@ -54,9 +56,11 @@ export function mockComplete(
   return notificationId;
 }
 
-export function createMockProvider(baseUrl: string): PaymentProvider {
+export function createMockProvider(baseUrl: string, opts: { recurring?: boolean } = {}): PaymentProvider {
+  const recurring = opts.recurring ?? false;
   return {
     name: "mock",
+    recurring,
     async createPayment(input) {
       const id = `mock-pr-${randomUUID()}`;
       mockState().requests.set(id, {
@@ -64,7 +68,7 @@ export function createMockProvider(baseUrl: string): PaymentProvider {
         amountCents: input.amountCents,
         currency: input.currency,
         callbackUrl: input.callbackUrl,
-        token: input.requestToken,
+        token: recurring && input.requestToken,
       });
       const redirect = new URL("/maksajums/mock", baseUrl);
       redirect.searchParams.set("request", id);
@@ -80,8 +84,8 @@ export function createMockProvider(baseUrl: string): PaymentProvider {
         return { ok: false, providerRequestId: id, reason: "token_expired", retryable: false };
       return { ok: true, providerRequestId: id, capturedAt: new Date(), paymentMethodLabel: "•••• 4242" };
     },
-    async fetchEvent(callbackBody) {
-      const id = callbackBody.get("notification_id");
+    async fetchEvent(callback) {
+      const id = new URLSearchParams(callback.body).get("notification_id");
       return (id && mockState().notifications.get(id)) || null;
     },
     async acknowledge(notificationId) {

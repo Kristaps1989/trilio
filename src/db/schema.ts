@@ -309,6 +309,8 @@ export const subscriptions = pgTable(
     cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
     canceledAt: timestamp("canceled_at", { withTimezone: true }),
     failedAttempts: integer("failed_attempts").notNull().default(0),
+    /** Prepaid periods (no token): when the "your radar ends soon" e-mail went out for the current period. */
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -329,6 +331,8 @@ export const payments = pgTable(
     orderId: text("order_id").notNull().unique(),
     providerRequestId: text("provider_request_id"),
     kind: paymentKindEnum("kind").notNull(),
+    /** The plan this payment buys; a prepaid extension may switch plans (null on rows from before it existed). */
+    planId: text("plan_id").references(() => plans.id),
     amountCents: integer("amount_cents").notNull(),
     currency: text("currency").notNull().default("EUR"),
     status: paymentStatusEnum("status").notNull().default("pending"),

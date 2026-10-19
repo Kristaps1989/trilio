@@ -43,6 +43,13 @@
       "when": 1792342963761,
       "tag": "0005_product_specs",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792391791796,
+      "tag": "0006_prepaid_periods",
+      "breakpoints": true
     }
   ]
 }
