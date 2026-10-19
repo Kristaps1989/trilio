@@ -2071,6 +2071,16 @@
               ]
             },
             {
+              "value": "handheld",
+              "text": [
+                "rokas putekļ",
+                "handheld",
+                "auto putekļ",
+                "automašīnas putekļ",
+                "mini putekļ"
+              ]
+            },
+            {
               "value": "stick",
               "text": [
                 "vertikāl",
@@ -2078,13 +2088,6 @@
                 "akumulator",
                 "stick",
                 "cordless"
-              ]
-            },
-            {
-              "value": "handheld",
-              "text": [
-                "rokas putekļ",
-                "handheld"
               ]
             },
             {

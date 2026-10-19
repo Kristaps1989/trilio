@@ -39,7 +39,7 @@ export function RadarSetup({
   description,
 }: {
   state: SetupState;
-  step: "when" | "scope" | "channel";
+  step: "when" | "scope";
   brand: string;
   modelCode: string;
   /** Product name and current price under the title. */
@@ -79,17 +79,6 @@ export function RadarSetup({
         { value: "any", label: t("scopeAny") },
       ],
       pick: (v: string) => go({ ...state, scope: v as SetupState["scope"] }),
-    },
-    channel: {
-      title: t("qChannel"),
-      why: null,
-      options: [
-        { value: "push", label: t("channelPush") },
-        { value: "email", label: t("channelEmail") },
-        { value: "both", label: t("channelBoth") },
-      ],
-      pick: (v: string) =>
-        go({ ...state, channels: v === "both" ? ["push", "email"] : [v as "push" | "email"] }),
     },
   }[step];
 

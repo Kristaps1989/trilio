@@ -12,10 +12,11 @@ import { paymentsEnabled } from "@/services/payments";
 import Link from "next/link";
 import { ButtonLink } from "@/ui/Button";
 import { Confirmation } from "@/ui/Confirmation";
-import { InfoBox, Kicker, PageTitle, Screen } from "@/ui/layout";
+import { Kicker, PageTitle, Screen } from "@/ui/layout";
 import { TopProgress } from "@/ui/shell/TopProgress";
 import { createRadarAction } from "../actions";
 import { PlanPicker } from "./PlanPicker";
+import { RadarWaitlist } from "./RadarWaitlist";
 import { RadarSetup, type SetupState } from "./RadarSetup";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ const Params = z.object({
   threshold: z.enum(["any", "5", "10"]).optional(),
   scope: z.enum(["only", "brand", "any"]).optional(),
   channels: z.string().optional(),
-  step: z.enum(["when", "scope", "channel", "plan", "create"]).optional(),
+  step: z.enum(["when", "scope", "plan", "create"]).optional(),
 });
 
 type Props = { searchParams: Promise<Record<string, string | undefined>> };
@@ -53,9 +54,8 @@ export default async function NewRadarPage({ searchParams }: Props) {
   const tf = await getTranslations("flow");
   const parsed = Params.safeParse(raw);
   const p = parsed.success ? parsed.data : {};
-  const channels = (p.channels ?? "")
-    .split(",")
-    .filter((c): c is "push" | "email" => c === "push" || c === "email");
+  // Notifications go by e-mail to the signed-in address; a web app cannot rely on push (owner, 19 Oct 2026).
+  const channels: ("push" | "email")[] = ["email"];
   const product = p.product ? await loadProduct(db, p.product) : null;
 
   const state: SetupState = {
@@ -78,17 +78,15 @@ export default async function NewRadarPage({ searchParams }: Props) {
           ? "when"
           : !state.scope
             ? "scope"
-            : channels.length === 0
-              ? "channel"
-              : "gate";
+            : "gate";
 
-  if (step === "when" || step === "scope" || step === "channel") {
-    const index = ["when", "scope", "channel"].indexOf(step);
+  if (step === "when" || step === "scope") {
+    const index = ["when", "scope"].indexOf(step);
     return (
       <Screen>
-        <TopProgress percent={((index + 1) / 5) * 100} />
+        <TopProgress percent={((index + 1) / 4) * 100} />
         <p className="text-[15px] font-bold text-lime">
-          {t("newTitle")} · {tf("stepOf", { n: index + 1, m: 3 })}
+          {t("newTitle")} · {tf("stepOf", { n: index + 1, m: 2 })}
         </p>
         <RadarSetup
           state={state}
@@ -104,6 +102,7 @@ export default async function NewRadarPage({ searchParams }: Props) {
   // Sign-in gate (spec §5.1 step 4): signed-in users skip it.
   const session = await auth();
   const userId = session?.user?.id;
+  const email = session?.user?.email ?? "";
   if (!userId) redirect(`/ienakt?callbackUrl=${encodeURIComponent(current)}`);
 
   // Plan + payment (step 5–6): subscribed users skip it.
@@ -128,7 +127,7 @@ export default async function NewRadarPage({ searchParams }: Props) {
             }}
             returnTo={`${current}&step=create`}
             payLabel={t("pay")}
-            note={t("payNote")}
+            note={`${t("payNote")} ${t("sendTo", { email })}`}
             features={[t("feature1"), t("feature2"), t("feature3")]}
             legal={t.rich("legalNote", {
               terms: (chunks) => (
@@ -139,14 +138,7 @@ export default async function NewRadarPage({ searchParams }: Props) {
             })}
           />
         ) : (
-          <div className="flex flex-col gap-3">
-            <InfoBox>{t("paymentsOff")}</InfoBox>
-            <div>
-              <ButtonLink href="/izvelies" variant="outline">
-                {t("backToResults")}
-              </ButtonLink>
-            </div>
-          </div>
+          <RadarWaitlist email={email} note={product ? `radar: ${product.name}` : "radar"} />
         )}
       </Screen>
     );
@@ -163,7 +155,7 @@ export default async function NewRadarPage({ searchParams }: Props) {
   });
   if (!created.ok) redirect("/radars");
   return (
-    <Confirmation title={t("confirmTitle")} body={t("confirmBody")}>
+    <Confirmation title={t("confirmTitle")} body={`${t("confirmBody")} ${t("sendTo", { email })}`}>
       <ButtonLink href="/radars">{t("toRadar")}</ButtonLink>
       <ButtonLink href="/izvelies" variant="outline">
         {t("backToResults")}

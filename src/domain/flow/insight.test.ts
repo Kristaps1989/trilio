@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { product } from "@/domain/testing/builders";
-import { defaultOption, optionCounts, priceStats, questionMatters, questionsThatMatter } from "./insight";
+import {
+  coverage,
+  defaultOption,
+  optionCounts,
+  priceStats,
+  questionMatters,
+  questionsThatMatter,
+} from "./insight";
 
 const fridge = getSubcategory("fridge")!;
 const q = (id: string) => fridge.questions.find((x) => x.id === id)!;
@@ -80,5 +87,15 @@ describe("flow insight (core rules 2, 4, 5)", () => {
     expect(s.defaultMinCents).toBeGreaterThanOrEqual(38000);
     expect(s.defaultMaxCents).toBeLessThanOrEqual(65000);
     expect(s.stepCents).toBe(1000);
+  });
+
+  it("coverage counts the attribute all options share, not one option's extra (vacuum mopping)", () => {
+    const vacuum = getSubcategory("vacuum")!;
+    const type = vacuum.questions.find((x) => x.id === "type")!;
+    const vacs = ["robot", "stick", "corded", "robot"].map((t, i) =>
+      product({ name: `V${i}`, price: 200, subcategoryId: "vacuum", attrs: { vacuum_type: t } }),
+    );
+    expect(coverage({ products: vacs, sub: vacuum, answers: {} }, type)).toBe(1);
+    expect(questionMatters({ products: vacs, sub: vacuum, answers: {} }, type)).toBe(true);
   });
 });

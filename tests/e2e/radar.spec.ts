@@ -52,18 +52,18 @@ test("radar: full journey from results to a working radar page", async ({ page }
   await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
   await page.getByRole("link", { name: "Sekot cenai" }).first().click();
 
-  // Three setup questions
+  // Two setup questions; notifications go by e-mail to the account address
+  await expect(page.getByText(/2\. solis no 2|1\. solis no 2/)).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kad tev paziņot?");
   await expectNoAxeViolations(page);
   await page.getByRole("radio", { name: /vismaz par 5 %/ }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/citiem modeļiem/);
   await page.getByRole("radio", { name: /Tikai par šo modeli/ }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kā tev paziņot?");
-  await page.getByRole("radio", { name: /^E-pasts/ }).click();
 
   // Signed in but not subscribed → plan screen → mock checkout
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cenu radars");
   await expect(page.getByText(/Kartes datus apstrādā Paysera/)).toBeVisible();
+  await expect(page.getByText(/Paziņojumus sūtīsim uz .+@/)).toBeVisible();
   await expect(page.getByRole("radio", { name: /12 € gadā/ })).toHaveAttribute("aria-checked", "true");
   await expectNoAxeViolations(page);
   await page.getByRole("button", { name: "Maksāt" }).click();
@@ -124,7 +124,6 @@ test("radar: full journey from results to a working radar page", async ({ page }
   await page.getByRole("link", { name: "Sekot cenai" }).first().click();
   await page.getByRole("radio", { name: /jebkuru kritumu/ }).click();
   await page.getByRole("radio", { name: /citiem Bosch modeļiem/ }).click();
-  await page.getByRole("radio", { name: /^Abi/ }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Radars ieslēgts!");
   await page.goto("/radars");
   await expect(page.getByRole("article")).toHaveCount(2);

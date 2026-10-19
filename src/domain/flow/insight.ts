@@ -51,9 +51,24 @@ export function defaultOption(q: Question, counts: Record<string, number>): stri
   return best;
 }
 
+/**
+ * The attributes every option of a choice depends on (vacuum type for robot /
+ * robot that mops / cordless / corded); an attribute only one option adds
+ * (mopping) does not decide whether the question can be answered.
+ */
+export function coreAttrs(q: Question): string[] {
+  if (q.type === "range" || q.type === "number") return questionAttrs(q);
+  const sets = q.options
+    .filter((o) => !o.passthrough && o.match?.length)
+    .map((o) => new Set(o.match!.map((m) => m.attr)));
+  if (sets.length === 0) return [];
+  const shared = [...sets[0]!].filter((a) => sets.every((s) => s.has(a)));
+  return shared.length ? shared : questionAttrs(q);
+}
+
 /** Share of the remaining products that state the attributes this question needs. */
 export function coverage(ctx: Ctx, q: Question): number {
-  const attrs = questionAttrs(q);
+  const attrs = coreAttrs(q);
   const before = remaining(ctx);
   if (attrs.length === 0 || before.length === 0) return 1;
   const known = before.filter((p) =>
