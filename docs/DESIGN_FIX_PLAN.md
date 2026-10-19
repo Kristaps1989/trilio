@@ -101,7 +101,7 @@ Four pull requests, each releasable on its own and each verified at 360,
 
 ### PR 3: Results and category pages
 
-1. Results header: kicker, 48 px title, lead, answer chips, the EAN line and the "Kā mēs izvēlamies un ranžējam?" toggle opening the bordered explanation panel.
+1. Results header: kicker, 48 px title, lead, answer chips, the EAN line and the "Kā mēs izvēlamies un prioritizējam?" toggle opening the bordered explanation panel.
 2. Result cards in a row of three (one column on phones). Each card has:
    - **Top row:** tier pill, the "Trilio ieteikums" pill and the score on the right.
    - **Product:** name at 20 px, ID line, specs.

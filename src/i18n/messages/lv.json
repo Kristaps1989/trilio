@@ -94,7 +94,7 @@
   "results": {
     "title": "Trīs labākie varianti tev",
     "eanNote": "Cenas salīdzinām pēc EAN svītrkoda, tāpēc viens un tas pats modelis dažādos veikalos ir viena prece.",
-    "howWeRank": "Kā mēs izvēlamies un ranžējam?",
+    "howWeRank": "Kā mēs izvēlamies un prioritizējam?",
     "tierBudget": "Budžeta variants",
     "tierMid": "Vidējā klase",
     "tierTop": "Augstākā klase",
@@ -159,7 +159,7 @@
     "view": "Skatīt — {shop}",
     "refurbBadge": "Atjaunota",
     "kicker": "Gatavs · {count, plural, =0 {nav atbilstošu preču} =1 {# atbilstoša prece} other {# atbilstošas preces}}",
-    "howTitle": "Kā Trilio izvēlas un ranžē",
+    "howTitle": "Kā Trilio izvēlas un prioritizē",
     "radarTitle": "Sekot šo variantu cenām",
     "empty": "Ar šādām prasībām pašlaik nekas nav pieejams. Pamēģini mainīt kādu atbildi vai budžetu.",
     "picksLabel": "Ieteiktie varianti",
@@ -540,7 +540,7 @@
     "noOffers": "Šobrīd šajā kategorijā nav piedāvājumu.",
     "faqTitle": "Biežākie jautājumi",
     "faq1q": "Kā Trilio izvēlas labākos {category}?",
-    "faq1a": "Atlasām preces, kas ir noliktavā partneru veikalos un iekļaujas budžetā, un ranžējam pēc Trilio vērtējuma un atbilstības prasībām. Trīs varianti: augstākais vērtējums, lētākais no pārējiem un labākais no atlikušajiem. Veikalu komisija ranžēšanu neietekmē.",
+    "faq1a": "Atlasām preces, kas ir noliktavā partneru veikalos un iekļaujas tavā cenu robežā, un prioritizējam pēc kvalitātes par savu cenu: zīmola uzticamība šajā kategorijā, preces parametri un atbilstība tavām atbildēm. Trīs varianti visā cenu robežā: labākā vērtība kopumā, labākā lētākajā daļā un labākā dārgākajā daļā. Veikalu komisija preču secību neietekmē.",
     "faq2q": "Vai cenas ir aktuālas?",
     "faq2a": "Cenas un pieejamību atjaunojam vairākas reizes dienā no veikalu datu plūsmām un salīdzinām pēc EAN svītrkoda. Atlaides norādām tikai pret zemāko cenu pēdējās 30 dienās.",
     "faq3q": "Kas ir atjaunota prece?",
@@ -588,7 +588,7 @@
           "h": "Mākslīgais intelekts",
           "p": [
             "Ja sadaļā “Kaut kas cits” apraksti, ko meklē, tekstu var nosūtīt Anthropic Claude modelim, lai noteiktu preces kategoriju. Žurnālā glabājam tikai pieprasījuma laiku un apjomu, nevis tekstu. Lūdzu, neraksti tur personas datus.",
-            "Preču ranžējumu un cenas aprēķina parasta programma, nevis mākslīgais intelekts."
+            "Preču secību un cenas aprēķina parasta programma, nevis mākslīgais intelekts."
           ]
         },
         {
@@ -682,7 +682,7 @@
           "h": "Kā mēs pelnām",
           "p": [
             "Daļa saišu uz veikaliem ir partneru saites. Ja pēc tām nopirksi preci, veikals var mums samaksāt komisiju. Tev tas neko nemaksā.",
-            "Komisija neietekmē ranžējumu. Secību nosaka tikai tavas atbildes, cena un preces īpašības, kā aprakstīts sadaļā “Kā mēs izvēlamies un ranžējam?”.",
+            "Komisija neietekmē preču secību. Secību nosaka tikai tavas atbildes, cena un preces īpašības, kā aprakstīts sadaļā “Kā mēs izvēlamies un prioritizējam?”.",
             "Otrs ienākumu avots ir Cenu radara abonements."
           ]
         },

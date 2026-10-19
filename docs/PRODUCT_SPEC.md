@@ -137,7 +137,7 @@ The results page is the second half of the conversation: it opens on a sensible 
   Tapping a chip opens a sheet: a modal dialog on mobile, centred on desktop, that keeps focus inside and closes with Esc. It holds the same control as the flow screen, with option counts, and a live "Rādīt N rezultātus" (show N results) button. Applying it changes the URL and the server re-ranks with the same rules. "Mainīt atbildes" (change answers) still reopens the full flow.
 - **Brands.** The chip is a multi-select with product counts and "Jebkurš zīmols" (any brand) as the default. Chosen brands are a soft preference worth +12 points. "Rādīt tikai šos zīmolus" (show only these brands) turns them into a filter.
 - **EAN note:** "Cenas salīdzinām pēc EAN svītrkoda…" (we compare prices by EAN barcode).
-- **"Kā mēs izvēlamies un ranžējam?"** (how we choose and rank) expandable panel. It contains:
+- **"Kā mēs izvēlamies un prioritizējam?"** (how we choose and rank) expandable panel. It contains:
   - the filters we apply, including that products missing fit data are left out of the main picks;
   - the ranking factors;
   - what "Trilio ieteikums" (Trilio's recommendation) means, and that it is not shown when no option is clearly better;

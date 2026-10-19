@@ -18,7 +18,7 @@ Trilio is a web app (mobile-first) that guides a shopper through a short one-que
 1. **New and refurbished items are never mixed.** Refurbished offers appear in their own block. Each shows condition grade, warranty and the saving versus new.
 2. **Budget is a hard filter.** Main picks are always within budget. If fewer than 3 fit, show at most 2 extras that cost no more than 25 % over budget, labelled "Virs budžeta par X €".
 3. **Same product = same EAN.** Match offers across shops by EAN (GTIN). Fall back to brand plus normalised model code.
-4. **Honest persuasion only.** No decoy products, fake scarcity, countdown timers, confirmshaming or hidden cancellation. Shop commission must never affect ranking, and the "Kā mēs izvēlamies un ranžējam?" (how we choose and rank) panel says so.
+4. **Honest persuasion only.** No decoy products, fake scarcity, countdown timers, confirmshaming or hidden cancellation. Shop commission must never affect ranking, and the "Kā mēs izvēlamies un prioritizējam?" (how we choose and rank) panel says so.
 5. **Discount claims use the lowest price of the previous 30 days** (EU Omnibus rule). Store price history from day one.
 6. **Delivery dates count working days only** and respect LV/LT/EE public holidays. Prefer the shop's own ETA when its feed provides one.
 7. **Shop names are configuration, not code.** The UI must not hard-code any retailer brand.
