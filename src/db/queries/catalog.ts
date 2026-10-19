@@ -124,20 +124,44 @@ export async function loadProducts(db: Db, ids: string[]): Promise<ProductView[]
  * Model-check lookup: by normalised model code, EAN, or name similarity.
  * Returns up to `limit` products best match first.
  */
+/**
+ * The words of a search, each matched on its own so word order does not
+ * matter ("Airfryer Philips" finds "Philips Airfryer XL"). LIKE wildcards are
+ * escaped; at most 8 words of 2+ characters.
+ */
+export function searchWords(query: string): string[] {
+  return query
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length >= 2)
+    .slice(0, 8)
+    .map((w) => w.replace(/[\\%_]/g, (c) => `\\${c}`));
+}
+
 export async function searchProducts(db: Db, query: string, limit = 5): Promise<ProductView[]> {
   const q = query.trim();
   if (!q) return [];
   const code = q.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const words = searchWords(q);
+  const allWords = words.length
+    ? sql.join(
+        words.map(
+          (w) =>
+            sql`(${products.name} ilike ${"%" + w + "%"} or ${products.brand} ilike ${"%" + w + "%"} or ${products.modelCode} ilike ${"%" + w + "%"})`,
+        ),
+        sql` and `,
+      )
+    : sql`false`;
   const productRows = await db
     .select()
     .from(products)
     .where(
       sql`${products.ean} = ${q}
         or (${code} <> '' and upper(regexp_replace(${products.modelCode}, '[^A-Za-z0-9]', '', 'g')) like ${"%" + code + "%"})
-        or ${products.name} ilike ${"%" + q + "%"}`,
+        or (${allWords})`,
     )
     .orderBy(
-      sql`case when ${products.ean} = ${q} then 0 when upper(regexp_replace(${products.modelCode}, '[^A-Za-z0-9]', '', 'g')) = ${code} then 1 else 2 end`,
+      sql`case when ${products.ean} = ${q} then 0 when upper(regexp_replace(${products.modelCode}, '[^A-Za-z0-9]', '', 'g')) = ${code} then 1 when ${products.name} ilike ${"%" + q + "%"} then 2 else 3 end`,
     )
     .limit(limit);
   if (productRows.length === 0) return [];

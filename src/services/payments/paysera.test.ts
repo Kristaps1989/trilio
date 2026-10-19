@@ -145,7 +145,10 @@ describe("Paysera provider", () => {
       },
     }));
     const p = createPayseraProvider({ ...config, fetchImpl });
-    const ev = await p.fetchEvent({ body: new URLSearchParams("notification_id=n1").toString(), headers: new Headers() });
+    const ev = await p.fetchEvent({
+      body: new URLSearchParams("notification_id=n1").toString(),
+      headers: new Headers(),
+    });
     expect(ev).toEqual({
       notificationId: "n1",
       event: "payment_request.captured",
@@ -158,8 +161,15 @@ describe("Paysera provider", () => {
       paymentMethodLabel: "•••• 5100",
     });
     expect(calls[0]!.url).toBe("https://checkout-eu-a.paysera.com/notification/rest/v1/notifications/n1");
-    expect(await p.fetchEvent({ body: new URLSearchParams("x=1").toString(), headers: new Headers() })).toBeNull();
-    expect(await p.fetchEvent({ body: new URLSearchParams("notification_id=../evil").toString(), headers: new Headers() })).toBeNull();
+    expect(
+      await p.fetchEvent({ body: new URLSearchParams("x=1").toString(), headers: new Headers() }),
+    ).toBeNull();
+    expect(
+      await p.fetchEvent({
+        body: new URLSearchParams("notification_id=../evil").toString(),
+        headers: new Headers(),
+      }),
+    ).toBeNull();
     await p.acknowledge("n1");
     expect(calls.at(-1)!.url).toBe(
       "https://checkout-eu-a.paysera.com/notification/rest/v1/notifications/n1/read",

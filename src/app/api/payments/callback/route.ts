@@ -18,7 +18,9 @@ export async function POST(request: Request) {
   const provider = paymentsProvider();
   if (!provider) return new NextResponse(null, { status: 404 });
   const raw = await request.text();
-  const event = await provider.fetchEvent({ body: raw.slice(0, 65_536), headers: request.headers }).catch(() => null);
+  const event = await provider
+    .fetchEvent({ body: raw.slice(0, 65_536), headers: request.headers })
+    .catch(() => null);
   if (!event) return new NextResponse("ignored", { status: 200 });
 
   const outcome = await processPaymentEvent(db, provider, event);

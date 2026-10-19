@@ -104,7 +104,8 @@ export function createPayseraCheckoutProvider(config: PayseraCheckoutConfig): Pa
       signal: AbortSignal.timeout(30_000),
     });
     const parsed = TokenResponse.safeParse(await readJson(res));
-    if (!res.ok || !parsed.success) throw new PayseraCheckoutError("Paysera authentication failed", res.status);
+    if (!res.ok || !parsed.success)
+      throw new PayseraCheckoutError("Paysera authentication failed", res.status);
     // Renew a minute early so a request never goes out with a token about to expire.
     const ttl = Math.max(60, (parsed.data.expires_in ?? 3600) - 60);
     tokens.set(config.clientId, { token: parsed.data.access_token, expiresAt: Date.now() + ttl * 1000 });
