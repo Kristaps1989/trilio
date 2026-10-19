@@ -44,9 +44,14 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: { card: "summary" },
     robots: { index: true, follow: true },
     // Google Search Console: set GOOGLE_SITE_VERIFICATION in the environment.
-    verification: process.env.GOOGLE_SITE_VERIFICATION
-      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
-      : undefined,
+    verification: {
+      ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+      // Paysera merchant site check (a public token, not a secret); PAYSERA_SITE_VERIFICATION overrides it.
+      other: {
+        "paysera-verify":
+          process.env.PAYSERA_SITE_VERIFICATION || "paysera-verify-18dc77756ea8bc89aa990d22e4d3af14",
+      },
+    },
   };
 }
 
