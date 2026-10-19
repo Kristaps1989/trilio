@@ -525,7 +525,10 @@
     "planKicker": "Cenu radars · apmaksa",
     "feature1": "Seko neierobežotam preču skaitam visās kategorijās",
     "feature2": "Cenas visos partneru veikalos pārbaudām vairākas reizes dienā",
-    "feature3": "Sekošanu vai abonementu vari atslēgt jebkurā brīdī"
+    "feature3": "Sekošanu vai abonementu vari atslēgt jebkurā brīdī",
+    "noProductTitle": "Izvēlies preci, kurai sekot",
+    "noProductBody": "Cenu radars seko konkrētam modelim. Atrodi preci un spied “Sekot cenai” tās kartītē.",
+    "noProductCta": "Izvēlēties preci"
   },
   "account": {
     "title": "Konts",

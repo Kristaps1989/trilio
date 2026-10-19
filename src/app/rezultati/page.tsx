@@ -759,13 +759,15 @@ export default async function ResultsPage({ searchParams }: Props) {
         </section>
       ) : null}
 
-      {cards.length || extraCards.length ? (
+      {top ? (
+        // A radar follows one model (plus, if chosen, others that meet these answers):
+        // the panel starts it for the recommended pick and says so by name.
         <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">
           <div className="min-w-0 flex-[1_1_320px]">
             <h2 className="font-heading text-[22px] font-semibold text-mist">{t("radarTitle")}</h2>
-            <p className="text-base text-stone">{t("radarCtaSub")}</p>
+            <p className="text-base text-stone">{t("radarCtaSub", { name: nameOf(top.product) })}</p>
           </div>
-          <ButtonLink href={`/radars/jauns?sub=${sub.id}&a=${encodeState(state)}&s=${sessionId ?? ""}`}>
+          <ButtonLink href={`/radars/jauns?product=${top.product.id}&s=${sessionId ?? ""}`}>
             {t("radarCta", { price: t("radarMonthly") })}
           </ButtonLink>
         </Panel>

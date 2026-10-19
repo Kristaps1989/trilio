@@ -80,6 +80,19 @@ export default async function NewRadarPage({ searchParams }: Props) {
             ? "scope"
             : "gate";
 
+  // A radar follows one model: without a product there is nothing to set up.
+  if ((step === "when" || step === "scope") && !product) {
+    return (
+      <Screen size="narrow">
+        <PageTitle>{t("noProductTitle")}</PageTitle>
+        <p className="text-[17px] text-stone">{t("noProductBody")}</p>
+        <div>
+          <ButtonLink href="/izvelies">{t("noProductCta")}</ButtonLink>
+        </div>
+      </Screen>
+    );
+  }
+
   if (step === "when" || step === "scope") {
     const index = ["when", "scope"].indexOf(step);
     return (

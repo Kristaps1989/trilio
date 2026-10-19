@@ -155,3 +155,9 @@ test("payment cancelled on the hosted page returns to the plan without charging"
   await page.goto("/radars");
   await expect(page.getByText("Nav aktīva abonementa.")).toBeVisible();
 });
+
+test("radar setup without a product asks to choose one instead of an empty setup", async ({ page }) => {
+  await page.goto("/radars/jauns?s=");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Izvēlies preci, kurai sekot");
+  await expect(page.getByRole("link", { name: "Izvēlēties preci" })).toHaveAttribute("href", "/izvelies");
+});
