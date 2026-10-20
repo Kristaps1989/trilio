@@ -467,6 +467,25 @@ export const notifySettings = pgTable("notify_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * One EPREL lookup per product (docs/ATTRIBUTES.md): what was found, so the
+ * job asks again only when a product is new or its lookup is old.
+ */
+export const eprelLookups = pgTable("eprel_lookups", {
+  productId: uuid("product_id")
+    .primaryKey()
+    .references(() => products.id, { onDelete: "cascade" }),
+  /** found, not_found (no published record for this EAN or model), or error (try again soon). */
+  status: text("status").notNull(),
+  /** How it was found: by EAN (free endpoint) or by brand and model (needs EPREL_API_KEY). */
+  method: text("method"),
+  productGroup: text("product_group"),
+  registrationNumber: text("registration_number"),
+  /** The EPREL record as received, for audit and later mappings. */
+  record: jsonb("record").$type<Record<string, unknown>>(),
+  checkedAt: timestamp("checked_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type SavedItem = typeof savedItems.$inferSelect;
 export type Radar = typeof radars.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;

@@ -1,4 +1,6 @@
 import type { Db } from "@/db/client";
+import { eprelClientFromEnv } from "@/services/eprel/client";
+import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
 import { runAllJobs } from "./all";
 
@@ -14,10 +16,12 @@ export function schedulerEnabled(env: Record<string, string | undefined> = proce
 
 const FIRST_CHECK_MS = 60_000;
 const CHECK_EVERY_MS = 15 * 60_000;
+/** EPREL lookups per tick: about 240 an hour, gentle on the EU service. */
+const EPREL_PER_TICK = 60;
 
 let busy = false;
 
-/** One tick: re-derive attributes after a catalogue change, ingest the shops that are due, then the follow-up jobs. Never throws. */
+/** One tick: re-derive attributes after a catalogue change, look up EPREL, ingest the shops that are due, then the follow-up jobs. Never throws. */
 export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console): Promise<boolean> {
   if (busy) return false;
   busy = true;
@@ -25,6 +29,9 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
     // Fast and local: new attribute rules reach stored products before any shop is re-read.
     const renormalised = await renormaliseProducts(db);
     if (renormalised) log.log("attributes: re-derived for", renormalised, "products");
+    // Energy-label facts for products in the label categories (docs/ATTRIBUTES.md).
+    const eprel = await runEprelJob(db, { client: eprelClientFromEnv(), limit: EPREL_PER_TICK });
+    if (eprel.checked) log.log("eprel:", eprel);
     const result = await runAllJobs(db);
     if (!result) return false;
     log.log(

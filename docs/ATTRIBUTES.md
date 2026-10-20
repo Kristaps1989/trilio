@@ -77,7 +77,7 @@ Every value carries its **source**, stored in `products.attribute_sources` (migr
 
 | Source | Priority | What it is | Status |
 |---|---|---|---|
-| `eprel` | 6 | EU energy-label database, looked up by EAN or model | **Not built.** Waiting for the owner's `EPREL_API_KEY`. |
+| `eprel` | 6 | EU energy-label database, looked up by EAN or model | Built (20 Oct 2026). See [EPREL](#eprel) below. |
 | `spec_table` | 5 | The shop's own specification table | Built: euronics.lv, tet.lv, m79.lv, plus generic `<th>/<td>` and `<dt>/<dd>` |
 | `feed` | 4 | Attributes a partner feed supplies directly | Built. It is the default when a row carries attributes without sources. |
 | `same_ean` | 3 | A value copied from the same product at another shop | Reserved label. In practice, cross-shop filling happens through the merge rule below, and the value keeps its original source. |
@@ -93,7 +93,7 @@ The same product (same EAN, or else brand + normalised model code) is listed by 
 - an **equal** source never overwrites, so values do not flip between shops on each run;
 - refurbished rows never change the product's descriptive data.
 
-Claude extraction goes through the same merge with source `claude`, so it can only fill gaps. A later spec table, or EPREL once built, replaces what it wrote.
+Claude extraction goes through the same merge with source `claude`, so it can only fill gaps. A later spec table, or EPREL, replaces what it wrote.
 
 ## Sanity rules
 
@@ -133,3 +133,14 @@ When `/api/status` coverage is low, or `select spec_table from products where �
 2. Add it to the matching attribute's `labels`. Labels are tried in order, so put a more specific label (for example "trokšņa līmenis mazgāšanas laikā") before a general one.
 3. If the shop renders its table with new markup, add a pattern to `PATTERNS` in `src/services/ingestion/specs/table.ts` and a saved page to `src/services/ingestion/specs/__fixtures__/pages.json`, with a test in `table.test.ts`.
 4. Re-read the shop (`npm run ingest -- <slug>`). Merged values only replace weaker sources, so nothing better is lost.
+
+## EPREL
+
+The EU energy-label database is the strongest source for what a label states, so its values replace shop spec tables and rules (`src/domain/catalog/eprel.ts`, `src/services/eprel/`).
+
+- **Which products:** in-stock products in the label categories: fridge and freezer (`refrigeratingappliances2019`), washer (`washingmachines2019`, `washerdriers2019`), dryer (`tumbledryers20232534`), dishwasher (`dishwashers2019`), oven (`ovens`) and hood (`rangehoods`), plus the older pre-2019 groups.
+- **How:** by EAN first (`GET /api/product/gtin/{ean}`, no key needed), then by model (`GET /api/products/{group}?modelIdentifier=…` with the `X-Api-Key: $EPREL_API_KEY` header). A record counts only when it is published and its brand and model match the product (`sameProduct`: case, spaces and an added article number are ignored).
+- **What it fills:** energy class, noise, height/width/depth (refrigerating appliances state mm, the other groups cm), kWh a year (fridges directly; washers and dishwashers from the label's kWh per 100 cycles × 2.2 or 2.8), net volumes, climate class (and `garage_ok` for SN), No Frost (every freezer compartment defrosts automatically), built-in or free-standing, capacity, place settings, spin speed, water use and the dryer technology. Only attributes the subcategory uses are written.
+- **When:** the web service's scheduler checks 60 products per 15-minute tick, never-checked first. A found record is refreshed after 90 days, a miss after 30, an error the next day. A refused key stops the run. `npm run ingest -- eprel [limit]` runs a larger batch by hand.
+- **Record:** `eprel_lookups` keeps the status, method, group, registration number and the record itself for each product.
+- **Limits:** EPREL does not return records of suppliers that have not finished its verification, and many products have no EAN registered there, so the model search (the key) matters.
