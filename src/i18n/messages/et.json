@@ -216,7 +216,11 @@
     "excludedItem": "{label} — {count}",
     "sheetShowPending": "Rādīt rezultātus",
     "filterPriceTitle": "Cik vēlies tērēt?",
-    "cheapestOption": "lētākais variants"
+    "cheapestOption": "lētākais variants",
+    "moreTitle": "Citi varianti šajā cenu robežā",
+    "moreLead": "Sakārtoti pēc tā paša principa — labākā kvalitāte par savu cenu. Visi atbilst tavām atbildēm.",
+    "moreShowFirst": "Rādīt vairāk variantus ({total})",
+    "moreShow": "{count, plural, one {Rādīt vēl # variantu} other {Rādīt vēl # variantus}} no {total}"
   },
   "waitlist": {
     "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",

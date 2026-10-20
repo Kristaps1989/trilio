@@ -67,7 +67,7 @@ Everything else (priorities, brands, urgency, refurbished) is refined on the res
   - A two-handle slider over the real prices of the products the earlier answers leave, with a small histogram.
   - It opens on the 20th–80th percentile of those prices, rounded outward to €10.
   - The subcategory's `budget_steps_eur` are quick presets under the slider. "Budžets nav noteikts" (no set budget) is always available.
-  - The button reads "Rādīt N preces" (show N products). If the range leaves nothing, the screen offers the one change that fixes it: "Šajā cenu robežā nav nevienas preces — paplašināt līdz X?" (nothing in this price range — widen to X?).
+  - The button reads "Rādīt labākos 3 no N" (show the best 3 of N) when more than three match, else "Rādīt N preces" (owner, 20 Oct 2026: "Rādīt 202 preces" promised more than the page shows). If the range leaves nothing, the screen offers the one change that fixes it: "Šajā cenu robežā nav nevienas preces — paplašināt līdz X?" (nothing in this price range — widen to X?).
   - The answer is stored as a min–max range in cents, or "none". The SEO landing pages `/kategorija/[sub]/[budget]` still work: the budget in the URL becomes the maximum.
 - Priorities ("Kas tev vēl ir svarīgi?", up to 2), brands, urgency and refurbished are **not** flow screens. They are results-page chips (§3).
 
@@ -212,6 +212,9 @@ Pure code in `src/domain/ranking/` (`filters.ts`, `score.ts`, `rank.ts`).
    - The lime **"Trilio ieteikums"** badge goes on the top-scoring pick only when it leads the next score by at least 5 points and its fit-critical attributes are known. With no clear winner there is no badge.
 5. **Extras:** if fewer than 3 are within the range, add at most 2 extras that cost up to 25 % over its upper limit. They get a dashed orange border and a "Virs budžeta par X €" (over budget by X €) pill.
 6. **None within budget or close:** say so, offer the relax suggestions, and suggest the radar.
+
+### 3.1a More options on request
+Under the three picks, "Rādīt vairāk variantus (N)" (show more options) lists the other products in the price range, ten per tap ("Rādīt vēl 10 variantus no N"), in the same best-value order as the picks (quality for the price, never commission). Owner, 20 Oct 2026.
 
 ### 3.2 Result card
 - Tier pill (when meaningful), optional "Trilio ieteikums", and the score ("Vērtējums 8,6/10", rating).

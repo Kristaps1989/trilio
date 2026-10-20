@@ -68,7 +68,7 @@
     "to": "Līdz",
     "minLabel": "Zemākā cena, eiro",
     "maxLabel": "Augstākā cena, eiro",
-    "show": "{count, plural, =0 {Šajā robežā nav preču} one {Rādīt # preci} other {Rādīt # preces}}",
+    "show": "{count, plural, =0 {Šajā robežā nav preču} =1 {Rādīt 1 preci} =2 {Rādīt 2 preces} =3 {Rādīt 3 preces} other {Rādīt labākos 3 no #}}",
     "showPending": "Rādīt preces",
     "widenBy": "Palielināt:",
     "widenByAria": "Palielināt augšējo robežu par {amount}",
@@ -181,7 +181,7 @@
     "rangeAny": "{label}: nav ierobežojuma",
     "rangeUpTo": "{label}: līdz {value} {unit}",
     "numberChip": "{label}: {value} {unit}",
-    "sheetShow": "{count, plural, =0 {Nav rezultātu} one {Rādīt # rezultātu} other {Rādīt # rezultātus}}",
+    "sheetShow": "{count, plural, =0 {Nav rezultātu} =1 {Rādīt 1 rezultātu} =2 {Rādīt 2 rezultātus} =3 {Rādīt 3 rezultātus} other {Rādīt labākos 3 no #}}",
     "sheetCancel": "Atcelt",
     "sheetClear": "Notīrīt",
     "relaxTitle": "Vairāk variantu",
@@ -215,7 +215,11 @@
     "excludedItem": "{label} — {count}",
     "sheetShowPending": "Rādīt rezultātus",
     "filterPriceTitle": "Cik vēlies tērēt?",
-    "cheapestOption": "lētākais variants"
+    "cheapestOption": "lētākais variants",
+    "moreTitle": "Citi varianti šajā cenu robežā",
+    "moreLead": "Sakārtoti pēc tā paša principa — labākā kvalitāte par savu cenu. Visi atbilst tavām atbildēm.",
+    "moreShowFirst": "Rādīt vairāk variantus ({total})",
+    "moreShow": "{count, plural, one {Rādīt vēl # variantu} other {Rādīt vēl # variantus}} no {total}"
   },
   "waitlist": {
     "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",

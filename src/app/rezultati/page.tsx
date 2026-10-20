@@ -45,7 +45,10 @@ import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCar
 
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<{ sub?: string; a?: string }> };
+type Props = { searchParams: Promise<{ sub?: string; a?: string; vairak?: string }> };
+
+/** "Rādīt vairāk variantus" adds this many cards per tap. */
+const MORE_STEP = 10;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("results");
@@ -67,7 +70,7 @@ function cardOffer(o: OfferView, now: Date): CardOffer {
 const href = (sub: Subcategory, state: FlowState) => `/rezultati?sub=${sub.id}&a=${encodeState(state)}`;
 
 export default async function ResultsPage({ searchParams }: Props) {
-  const { sub: subId, a } = await searchParams;
+  const { sub: subId, a, vairak } = await searchParams;
   const sub = subId ? getSubcategory(subId) : undefined;
   const group = sub ? getGroupOfSubcategory(sub.id) : undefined;
   if (!sub || !group) notFound();
@@ -223,6 +226,15 @@ export default async function ResultsPage({ searchParams }: Props) {
 
   const cards = result.picks.map(toCard);
   const extraCards = result.extras.map(toCard);
+  // Everything else in range, best value first, on request (the shopper decides how far to look).
+  const moreShown = Math.min(result.more.length, Math.max(0, Math.floor(Number(vairak) || 0)));
+  const moreCards = result.more
+    .slice(0, moreShown)
+    .map((c) => ({
+      ...toCard({ ...c, tier: null, recommended: false, overBudgetByCents: 0 }),
+      upgrade: null,
+    }));
+  const moreLeft = result.more.length - moreShown;
   const refurbCards = result.refurbished.map(toRefurbCard);
 
   // "Vērts zināt" (§2.7): about the recommended pick, or the first one.
@@ -726,6 +738,40 @@ export default async function ResultsPage({ searchParams }: Props) {
               <ResultCard key={c.productId} card={c} />
             ))}
           </CardRow>
+        </section>
+      ) : null}
+
+      {result.more.length ? (
+        <section className="flex flex-col gap-3" aria-labelledby="more-title">
+          {moreCards.length ? (
+            <>
+              <SectionTitle id="more-title">{t("moreTitle")}</SectionTitle>
+              <p className="text-base text-stone">{t("moreLead")}</p>
+              <CardRow>
+                {moreCards.map((c, i) => (
+                  <div key={c.productId} id={`v${i}`} className="contents">
+                    <ResultCard card={c} />
+                  </div>
+                ))}
+              </CardRow>
+            </>
+          ) : (
+            <h2 id="more-title" className="sr-only">
+              {t("moreTitle")}
+            </h2>
+          )}
+          {moreLeft > 0 ? (
+            <div>
+              <ButtonLink
+                href={`${href(sub, state)}&vairak=${moreShown + MORE_STEP}#v${moreShown}`}
+                variant="outline"
+              >
+                {moreShown === 0
+                  ? t("moreShowFirst", { count: Math.min(MORE_STEP, moreLeft), total: moreLeft })
+                  : t("moreShow", { count: Math.min(MORE_STEP, moreLeft), total: moreLeft })}
+              </ButtonLink>
+            </div>
+          ) : null}
         </section>
       ) : null}
 

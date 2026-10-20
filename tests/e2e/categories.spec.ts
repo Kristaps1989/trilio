@@ -48,7 +48,7 @@ for (const { group, sub } of all) {
 
       if (await page.getByRole("slider", { name: "Augstākā cena, eiro" }).count()) {
         // Price screen: the default range is the middle of what is in stock, so it has products.
-        const show = page.getByRole("button", { name: /^Rādīt \d+ prec/ });
+        const show = page.getByRole("button", { name: /^Rādīt (labākos 3 no \d+|\d+ prec)/ });
         await expect(show).toBeEnabled();
         await show.click();
       } else {

@@ -121,6 +121,13 @@ describe("rank: the owner's case", () => {
   it("countMatches agrees with the number of in-range products", () => {
     expect(countMatches(ownerCase(products))).toBe(rank(ownerCase(products)).matchingCount);
   });
+
+  it("offers every other in-range product, best value first, without repeating a pick", () => {
+    const r = rank(ownerCase(products));
+    const pickIds = new Set(r.picks.map((p) => p.product.id));
+    expect(r.more.some((c) => pickIds.has(c.product.id))).toBe(false);
+    expect(r.picks.length + r.more.length).toBe(r.matchingCount);
+  });
 });
 
 describe("picks spread over the range (§2.3)", () => {

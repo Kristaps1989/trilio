@@ -83,7 +83,7 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   await page.getByRole("textbox", { name: "Augstākā cena, eiro" }).fill("500");
   await page.getByRole("textbox", { name: "Augstākā cena, eiro" }).blur();
   await expectNoAxeViolations(page);
-  const show = page.getByRole("button", { name: /^Rādīt \d+ prec/ });
+  const show = page.getByRole("button", { name: /^Rādīt (labākos 3 no \d+|\d+ prec)/ });
   await expect(show).toBeEnabled();
   await show.click();
 
@@ -148,7 +148,7 @@ test("results: a chip opens a sheet that edits the filter in place", async ({ pa
   await expect(sheet).toBeVisible();
   await expectNoAxeViolations(page);
   await sheet.getByRole("radio", { name: /^181–205 cm/ }).click();
-  const apply = sheet.getByRole("button", { name: /^Rādīt \d+ rezultāt/ });
+  const apply = sheet.getByRole("button", { name: /^Rādīt (labākos 3 no \d+|\d+ rezultāt)/ });
   await expect(apply).toBeEnabled();
   await apply.click();
 
@@ -175,7 +175,7 @@ test("price screen: an empty range is never a dead end", async ({ page }) => {
   await max.fill("1");
   await max.blur();
   const empty = page.getByRole("button", { name: "Šajā robežā nav preču" });
-  const show = page.getByRole("button", { name: /^Rādīt \d+ prec/ });
+  const show = page.getByRole("button", { name: /^Rādīt (labākos 3 no \d+|\d+ prec)/ });
   await expect(empty.or(show)).toBeVisible();
   if (await empty.isVisible()) {
     await expect(empty).toBeDisabled();
@@ -228,4 +228,20 @@ test("model check finds a product by model code and suggests alternatives", asyn
   await expect(page.getByText(/Vai izmēri der\?/)).toBeVisible();
   await page.goto("/modelis?q=https://shop.example/p/nope-xyz-123");
   await expect(page.getByRole("status")).toContainText("neatradām");
+});
+
+test("results: more than three options on request, best value first", async ({ page }) => {
+  await page.goto("/izvelies/kitchensmall/kettle");
+  await page.getByRole("button", { name: "Tālāk", exact: true }).click();
+  await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
+  await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
+  await expect(page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article")).toHaveCount(3);
+
+  const more = page.getByRole("link", { name: /^Rādīt vairāk variantus \(\d+\)$/ });
+  const total = Number(((await more.textContent()) ?? "").match(/\((\d+)\)/)![1]);
+  expect(total).toBeGreaterThan(0);
+  await more.click();
+  const section = page.getByRole("region", { name: "Citi varianti šajā cenu robežā" });
+  await expect(section.getByRole("article")).toHaveCount(Math.min(10, total));
+  if (total <= 10) await expect(section.getByRole("link", { name: /^Rādīt vēl/ })).toHaveCount(0);
 });
