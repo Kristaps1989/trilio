@@ -228,12 +228,10 @@ export default async function ResultsPage({ searchParams }: Props) {
   const extraCards = result.extras.map(toCard);
   // Everything else in range, best value first, on request (the shopper decides how far to look).
   const moreShown = Math.min(result.more.length, Math.max(0, Math.floor(Number(vairak) || 0)));
-  const moreCards = result.more
-    .slice(0, moreShown)
-    .map((c) => ({
-      ...toCard({ ...c, tier: null, recommended: false, overBudgetByCents: 0 }),
-      upgrade: null,
-    }));
+  const moreCards = result.more.slice(0, moreShown).map((c) => ({
+    ...toCard({ ...c, tier: null, recommended: false, overBudgetByCents: 0 }),
+    upgrade: null,
+  }));
   const moreLeft = result.more.length - moreShown;
   const refurbCards = result.refurbished.map(toRefurbCard);
 
