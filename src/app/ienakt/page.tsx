@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 function safeCallback(url: string | undefined): string {
-  return url && url.startsWith("/") && !url.startsWith("//") ? url : "/radars";
+  return url && url.startsWith("/") && !url.startsWith("//") ? url : "/velmju-saraksts";
 }
 
 /** Google and email magic link (Apple deferred). Real <form>s so it works without JS. */

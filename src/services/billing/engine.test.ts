@@ -31,7 +31,7 @@ run("billing engine", () => {
   let db: Db;
   let end: () => Promise<void>;
   let userId: string;
-  const provider = createMockProvider("http://localhost:3000");
+  const provider = createMockProvider("http://localhost:3000", { recurring: true });
 
   beforeAll(async () => {
     process.env.PAYMENT_TOKEN_KEY = randomBytes(32).toString("hex");
@@ -70,7 +70,10 @@ run("billing engine", () => {
 
     const [pay] = await db.select().from(payments).where(eq(payments.subscriptionId, start.subscriptionId));
     const notificationId = mockComplete(pay!.providerRequestId!);
-    const event = await provider.fetchEvent(new URLSearchParams({ notification_id: notificationId! }));
+    const event = await provider.fetchEvent({
+      body: new URLSearchParams({ notification_id: notificationId! }).toString(),
+      headers: new Headers(),
+    });
     expect(await processPaymentEvent(db, provider, event!)).toBe("activated");
     expect(await processPaymentEvent(db, provider, event!)).toBe("duplicate");
 
@@ -145,7 +148,10 @@ run("billing engine", () => {
     await processPaymentEvent(
       db,
       provider,
-      (await provider.fetchEvent(new URLSearchParams({ notification_id: nid! })))!,
+      (await provider.fetchEvent({
+        body: new URLSearchParams({ notification_id: nid! }).toString(),
+        headers: new Headers(),
+      }))!,
     );
 
     expect(await cancelAtPeriodEnd(db, u2!.id)).toBe(true);

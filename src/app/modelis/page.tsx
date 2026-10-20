@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { loadCandidates, searchProducts } from "@/db/queries/catalog";
+import { savedKeys } from "@/db/queries/wishlist";
+import { productKey } from "@/domain/wishlist/wishlist";
+import { currentUserId } from "@/auth";
 import { numberAttr, stringAttr, type ProductView } from "@/domain/catalog/types";
 import { deliveryDate, workingDaysUntil } from "@/domain/delivery/delivery";
 import {
@@ -82,6 +85,12 @@ export default async function ModelPage({ searchParams }: Props) {
     }
   }
 
+  const saved = await savedKeys(
+    db,
+    await currentUserId(),
+    [chosen, ...alternatives.map((a) => a.product)].flatMap((p) => (p ? [productKey(p.id)] : [])),
+  );
+
   function card(p: ProductView, label: "yourChoice" | "betterValue" | "alternative"): CardModel | null {
     const best = bestOffer(eligibleOffers(p, "new", "no_rush"));
     if (!best) return null;
@@ -121,7 +130,7 @@ export default async function ModelPage({ searchParams }: Props) {
       upgrade: null,
       refurbished: null,
       sessionId: null,
-      trackHref: `/radars/jauns?product=${p.id}`,
+      saved: saved.has(productKey(p.id)),
     };
   }
 

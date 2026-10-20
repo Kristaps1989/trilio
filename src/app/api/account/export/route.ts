@@ -1,7 +1,18 @@
 import { eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { currentUserId } from "@/auth";
-import { accounts, db, payments, radarEvents, radars, searchSessions, subscriptions, users } from "@/db";
+import {
+  accounts,
+  db,
+  notifySettings,
+  payments,
+  radarEvents,
+  radars,
+  savedItems,
+  searchSessions,
+  subscriptions,
+  users,
+} from "@/db";
 
 // GDPR data portability: everything we hold about the user, as JSON.
 // Secrets (billing token) and provider ids are left out.
@@ -26,6 +37,9 @@ export async function GET() {
     .select({ provider: accounts.provider })
     .from(accounts)
     .where(eq(accounts.userId, userId));
+  const saved = await db.select().from(savedItems).where(eq(savedItems.userId, userId));
+  const notify = await db.select().from(notifySettings).where(eq(notifySettings.userId, userId));
+  // Radars from before the wishlist (19–20 Oct 2026), if any.
   const radarRows = await db.select().from(radars).where(eq(radars.userId, userId));
   const radarIds = radarRows.map((r) => r.id);
   const events = radarIds.length
@@ -68,6 +82,8 @@ export async function GET() {
       exportedAt: new Date().toISOString(),
       user,
       signInProviders: providers.map((p) => p.provider),
+      wishlist: saved,
+      notificationSettings: notify,
       radars: radarRows,
       radarEvents: events,
       savedAnswers: sessions,

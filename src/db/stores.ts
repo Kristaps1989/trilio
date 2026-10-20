@@ -60,6 +60,19 @@ const EURONICS_CATEGORY_MAP: Record<string, string> = {
   "virtuves-tehnika/veseligam-dzivesveidam/sulu-spiedes": "juicer",
   "virtuves-tehnika/veseligam-dzivesveidam/auglu-un-darzenu-zavetaji": "dehydrator",
   "virtuves-tehnika/veseligam-dzivesveidam/vakuuma-iepakotaji": "vacuumsealer",
+  // Personal care (measured 19 Oct 2026).
+  "skaistums-un-veseliba/sejas-kopsana/skuvekli": "shaver",
+  "skaistums-un-veseliba/sejas-kopsana/hibridie-bardas-veidotaji": "shaver",
+  "skaistums-un-veseliba/sejas-kopsana/trimmeri": "trimmer",
+  "skaistums-un-veseliba/matu-kopsana/matu-griezamas-masinas": "trimmer",
+  "skaistums-un-veseliba/matu-kopsana/feni": "hairdryer",
+  "skaistums-un-veseliba/matu-kopsana/matu-taisnotaji": "styler",
+  "skaistums-un-veseliba/matu-kopsana/matu-veidotaji": "styler",
+  "skaistums-un-veseliba/matu-kopsana/lokskeres": "styler",
+  "skaistums-un-veseliba/mutes-kopsana/elektriskas-zobu-birstes": "toothbrush",
+  "skaistums-un-veseliba/mutes-kopsana/zobu-birstes-berniem": "toothbrush",
+  "skaistums-un-veseliba/kermena-kopsana/epilatori": "epilator",
+  "skaistums-un-veseliba/kermena-kopsana/fotoepilatori": "epilator",
 };
 
 /** euronics.lv product sitemaps (?type=Product&cat=…) that contain the categories above. */
@@ -112,6 +125,23 @@ const EURONICS_SITEMAP_CATS = [
   "3416",
   "3421",
   "3707",
+  // Personal care
+  "2607",
+  "2782",
+  "2802",
+  "2803",
+  "2808",
+  "2813",
+  "2823",
+  "2824",
+  "2825",
+  "2827",
+  "2828",
+  "2849",
+  "2853",
+  "2890",
+  "2936",
+  "2938",
 ];
 
 const M79_CATEGORY_MAP: Record<string, string> = {
@@ -153,6 +183,19 @@ const M79_CATEGORY_MAP: Record<string, string> = {
   "sulu spiedes": "juicer",
   "elektriskas citrusauglu sulu spiedes": "juicer",
   "vakuuma aparati": "vacuumsealer",
+  // Personal care (measured 19 Oct 2026).
+  "viriesu skuvekli": "shaver",
+  "viriesu skuvekli 3185": "shaver",
+  "sieviesu skuvekli": "shaver",
+  "sieviesu skuvekli 3186": "shaver",
+  "skuvekli kermenim": "trimmer",
+  "bardas=matu trimmeri": "trimmer",
+  "bardas trimmeri": "trimmer",
+  "matu zavetaji": "hairdryer",
+  "matu ieveidotaji": "styler",
+  "elektriskas zobubirstes": "toothbrush",
+  epilatori: "epilator",
+  fotoepilatori: "epilator",
 };
 
 /** tet.lv shop URLs are /veikals/<category>/<product>.html. */
@@ -194,6 +237,16 @@ const TET_CATEGORY_MAP: Record<string, string> = {
   "sulu-spiedes": "juicer",
   "auglu-zavetaji": "dehydrator",
   "vakuuma-iepakotaji": "vacuumsealer",
+  skuvekli: "shaver",
+  "matu-un-bardas-trimmeri": "trimmer",
+  "matu-griezamas-masinas": "trimmer",
+  feni: "hairdryer",
+  "matu-taisnotaji": "styler",
+  "matu-veidotaji": "styler",
+  lokskeres: "styler",
+  "elektriskas-zobu-birstes": "toothbrush",
+  epilatori: "epilator",
+  fotoepilatori: "epilator",
 };
 
 export type StoreSeed = {
@@ -244,8 +297,9 @@ export const PARTNER_STORES: StoreSeed[] = [
       sitemaps: EURONICS_SITEMAP_CATS.map((c) => `https://www.euronics.lv/sitemap.xml?type=Product&cat=${c}`),
       // Latvian pages only (/en/ and /ru/ duplicates are skipped).
       include: [`^/(${Object.keys(EURONICS_CATEGORY_MAP).map(urlSegment).join("|")})/`],
-      categoryFromUrl: "^/((?:sadzives-tehnika|maza-sadzives-tehnika|virtuves-tehnika)/[^/]+/[^/]+)/",
-      // About 2 100 pages: a full pass in under an hour, so every run is complete.
+      categoryFromUrl:
+        "^/((?:sadzives-tehnika|maza-sadzives-tehnika|virtuves-tehnika|skaistums-un-veseliba)/[^/]+/[^/]+)/",
+      // About 2 600 pages: a full pass in about an hour, so every run is complete.
       maxPages: 3000,
       delayMs: 1500,
       maxRunMinutes: 100,
@@ -295,8 +349,8 @@ export const PARTNER_STORES: StoreSeed[] = [
       sitemaps: ["https://www.tet.lv/veikals/sitemap.default.xml"],
       include: [`^/veikals/(${Object.keys(TET_CATEGORY_MAP).map(urlSegment).join("|")})/[^/]+\\.html$`],
       categoryFromUrl: "^/veikals/([^/]+)/[^/]+\\.html$",
-      // About 2 500 pages: a full pass in a little over an hour. EAN comes from data-ean.
-      maxPages: 3000,
+      // About 2 900 pages: a full pass in about 75 minutes. EAN comes from data-ean.
+      maxPages: 3500,
       delayMs: 1500,
       maxRunMinutes: 100,
     },

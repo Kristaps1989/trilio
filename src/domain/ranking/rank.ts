@@ -69,6 +69,8 @@ export type RankResult = {
   excludedBy: Record<string, number>;
   /** False when the picks are within a few percent of each other: no tier pills, "three similar options". */
   tiersMeaningful: boolean;
+  /** Every other in-range product, best value first ("Rādīt vairāk variantus"). */
+  more: Candidate[];
 };
 
 export type Candidate = Scored & {
@@ -143,14 +145,20 @@ const byScoreThenPrice = (a: Candidate, b: Candidate) => b.score - a.score || a.
  * cheapest product is never picked just for being cheap, so a €89 mini fridge
  * cannot appear in a €350–500 search.
  */
-export function pickThree(candidates: Candidate[]): Candidate[] {
-  const prices = candidates.map((c) => c.price).sort((a, b) => a - b);
-  const lo = prices[0] ?? 0;
-  const hi = prices[prices.length - 1] ?? 0;
-  // Best value first: quality, discounted by where the price sits in the range.
+/** Best value first: quality, discounted by where the price sits in the range of these candidates. */
+export function byValue(candidates: Candidate[]): Candidate[] {
+  const prices = candidates.map((c) => c.price);
+  const lo = Math.min(...prices);
+  const hi = Math.max(...prices);
   const value = (c: Candidate) => valueScore(c.score, c.price, lo, hi);
-  const sorted = [...candidates].sort((a, b) => value(b) - value(a) || a.price - b.price);
+  return [...candidates].sort((a, b) => value(b) - value(a) || a.price - b.price);
+}
+
+export function pickThree(candidates: Candidate[]): Candidate[] {
+  const sorted = byValue(candidates);
   if (candidates.length <= 3) return sorted;
+  const lo = Math.min(...candidates.map((c) => c.price));
+  const hi = Math.max(...candidates.map((c) => c.price));
   const third = (hi - lo) / 3;
   const picks: Candidate[] = [sorted[0]!];
   const take = (pred: (c: Candidate) => boolean) => {
@@ -253,6 +261,7 @@ export function rank(input: RankInput): RankResult {
     hiddenUnknownCount,
     excludedBy: pool.excludedBy,
     tiersMeaningful: meaningful,
+    more: byValue(inBudget).filter((c) => !picks.some((p) => p.product.id === c.product.id)),
   };
 }
 

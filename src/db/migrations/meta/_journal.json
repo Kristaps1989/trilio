@@ -43,6 +43,27 @@
       "when": 1792342963761,
       "tag": "0005_product_specs",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792391791796,
+      "tag": "0006_prepaid_periods",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792473553651,
+      "tag": "0007_wishlist",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792495716201,
+      "tag": "0008_eprel_lookups",
+      "breakpoints": true
     }
   ]
 }

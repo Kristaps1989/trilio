@@ -3781,6 +3781,671 @@
       ]
     },
     {
+      "id": "personal",
+      "label": "Personīgā kopšana",
+      "icon_svg_path": "M9 3h6v5l-1 2v11h-4V10L9 8zM9 6h6",
+      "subcategories": [
+        {
+          "id": "shaver",
+          "label": "Skuvekļi",
+          "description": "rotējošie, sietiņa, OneBlade tipa, sieviešu",
+          "budget_steps_eur": [
+            50,
+            120,
+            250
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Kādu skuvekli meklē?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "help": "Rotējošās galviņas apļveida kustībās seko sejas kontūrām un labi tiek galā ar garākiem rugājiem. Sietiņa skuveklis skuj taisnās kustībās un parasti noskuj tuvāk ādai. Hibrīds (piemēram, OneBlade) neskuj tik gludi, bet arī apgriež bārdu un veido kontūras.",
+              "options": [
+                {
+                  "value": "rotary",
+                  "label": "Ar rotējošām galviņām",
+                  "sublabel": "seko sejas kontūrām, labs biezai bārdai",
+                  "table_value": "Rotējošs",
+                  "match": [
+                    {
+                      "attr": "shaver_type",
+                      "eq": "rotary"
+                    }
+                  ],
+                  "illustration": "shaver-rotary"
+                },
+                {
+                  "value": "foil",
+                  "label": "Ar sietiņu",
+                  "sublabel": "taisnas kustības, ļoti gluds rezultāts",
+                  "table_value": "Ar sietiņu",
+                  "match": [
+                    {
+                      "attr": "shaver_type",
+                      "eq": "foil"
+                    }
+                  ],
+                  "illustration": "shaver-foil"
+                },
+                {
+                  "value": "hybrid",
+                  "label": "Skuj un apgriež",
+                  "sublabel": "viens asmens skūšanai, rugājiem un kontūrām",
+                  "card_reason": "Skuj, apgriež un veido kontūras",
+                  "table_value": "Hibrīds",
+                  "match": [
+                    {
+                      "attr": "shaver_type",
+                      "eq": "hybrid"
+                    }
+                  ],
+                  "illustration": "shaver-hybrid"
+                },
+                {
+                  "value": "lady",
+                  "label": "Sieviešu",
+                  "sublabel": "kājām, padusēm un bikini zonai",
+                  "table_value": "Sieviešu",
+                  "match": [
+                    {
+                      "attr": "shaver_type",
+                      "eq": "lady"
+                    }
+                  ],
+                  "illustration": "shaver-lady"
+                }
+              ]
+            },
+            {
+              "id": "wet",
+              "title": "Vai skūsies arī ar putām vai dušā?",
+              "type": "single",
+              "hard_filter": false,
+              "stage": "flow",
+              "up_front_reason": "kind",
+              "showIf": {
+                "q": "type",
+                "in": [
+                  "rotary",
+                  "foil",
+                  "lady"
+                ]
+              },
+              "options": [
+                {
+                  "value": "yes",
+                  "label": "Jā",
+                  "sublabel": "vajag Wet & Dry",
+                  "card_reason": "Der arī mitrai skūšanai (Wet & Dry)",
+                  "table_value": "Wet & Dry",
+                  "match": [
+                    {
+                      "attr": "wet_dry",
+                      "eq": true
+                    }
+                  ]
+                },
+                {
+                  "value": "no",
+                  "label": "Nē, tikai sausi",
+                  "passthrough": true
+                }
+              ]
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev vēl ir svarīgi?",
+              "type": "multi",
+              "hard_filter": false,
+              "stage": "results",
+              "max_select": 2,
+              "options": [
+                {
+                  "value": "battery",
+                  "label": "Ilgi strādā",
+                  "sublabel": "60 min un vairāk",
+                  "card_reason": "Akumulators 60 min un vairāk",
+                  "match": [
+                    {
+                      "attr": "run_min",
+                      "gte": 60
+                    }
+                  ]
+                },
+                {
+                  "value": "station",
+                  "label": "Tīrīšanas stacija",
+                  "sublabel": "pats iztīra un uzlādē",
+                  "card_reason": "Ar tīrīšanas staciju",
+                  "match": [
+                    {
+                      "attr": "clean_station",
+                      "eq": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "compare": [
+            "shaver_type",
+            "wet_dry",
+            "run_min",
+            "clean_station"
+          ],
+          "illustration": "shaver-rotary"
+        },
+        {
+          "id": "trimmer",
+          "label": "Trimmeri un matu mašīnas",
+          "description": "bārdai, matiem, ķermenim",
+          "budget_steps_eur": [
+            30,
+            60,
+            120
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Kam tas vajadzīgs?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "options": [
+                {
+                  "value": "beard",
+                  "label": "Bārdai",
+                  "sublabel": "rugājiem un bārdas garumam",
+                  "table_value": "Bārdai",
+                  "match": [
+                    {
+                      "attr": "trimmer_type",
+                      "eq": "beard"
+                    }
+                  ],
+                  "illustration": "trimmer-beard"
+                },
+                {
+                  "value": "clipper",
+                  "label": "Matu griešanai",
+                  "sublabel": "matu griežamā mašīna",
+                  "table_value": "Matu griežamā mašīna",
+                  "match": [
+                    {
+                      "attr": "trimmer_type",
+                      "eq": "clipper"
+                    }
+                  ],
+                  "illustration": "trimmer-clipper"
+                },
+                {
+                  "value": "body",
+                  "label": "Ķermenim",
+                  "sublabel": "droši jutīgām vietām",
+                  "table_value": "Ķermenim",
+                  "match": [
+                    {
+                      "attr": "trimmer_type",
+                      "eq": "body"
+                    }
+                  ],
+                  "illustration": "trimmer-body"
+                },
+                {
+                  "value": "multi",
+                  "label": "Visam",
+                  "sublabel": "bārdai, matiem un ķermenim ar maināmiem uzgaļiem",
+                  "card_reason": "Universāls — viens visam",
+                  "table_value": "Universāls",
+                  "match": [
+                    {
+                      "attr": "trimmer_type",
+                      "eq": "multi"
+                    }
+                  ],
+                  "illustration": "trimmer-multi"
+                }
+              ]
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev vēl ir svarīgi?",
+              "type": "multi",
+              "hard_filter": false,
+              "stage": "results",
+              "max_select": 2,
+              "options": [
+                {
+                  "value": "battery",
+                  "label": "Ilgi strādā",
+                  "sublabel": "90 min un vairāk",
+                  "card_reason": "Akumulators 90 min un vairāk",
+                  "match": [
+                    {
+                      "attr": "run_min",
+                      "gte": 90
+                    }
+                  ]
+                },
+                {
+                  "value": "wet",
+                  "label": "Mazgājams zem ūdens",
+                  "sublabel": "vieglāk iztīrīt",
+                  "card_reason": "Ūdensizturīgs — mazgājams zem krāna",
+                  "match": [
+                    {
+                      "attr": "wet_dry",
+                      "eq": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "compare": [
+            "trimmer_type",
+            "run_min",
+            "wet_dry"
+          ],
+          "illustration": "trimmer-beard"
+        },
+        {
+          "id": "hairdryer",
+          "label": "Fēni",
+          "description": "jaudīgi, salokāmi, ar jonizāciju",
+          "budget_steps_eur": [
+            30,
+            70,
+            150
+          ],
+          "questions": [
+            {
+              "id": "hair",
+              "title": "Kādi ir tavi mati?",
+              "type": "single",
+              "hard_filter": false,
+              "stage": "flow",
+              "up_front_reason": "kind",
+              "why": "Gariem un bieziem matiem jaudīgs fēns ietaupa laiku un mazāk karsē matus.",
+              "options": [
+                {
+                  "value": "short",
+                  "label": "Īsi vai vidēji",
+                  "sublabel": "pietiek ar parastu jaudu",
+                  "passthrough": true
+                },
+                {
+                  "value": "long",
+                  "label": "Gari vai biezi",
+                  "sublabel": "vajag vismaz 2000 W",
+                  "card_reason": "Jaudīgs — 2000 W un vairāk",
+                  "match": [
+                    {
+                      "attr": "power_w",
+                      "gte": 2000
+                    }
+                  ]
+                },
+                {
+                  "value": "travel",
+                  "label": "Vajag ceļojumiem",
+                  "sublabel": "salokāms un viegls",
+                  "card_reason": "Salokāms — der ceļojumiem",
+                  "match": [
+                    {
+                      "attr": "foldable",
+                      "eq": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev vēl ir svarīgi?",
+              "type": "multi",
+              "hard_filter": false,
+              "stage": "results",
+              "max_select": 2,
+              "options": [
+                {
+                  "value": "ionic",
+                  "label": "Mazāk sprogainu matu",
+                  "sublabel": "jonizācija",
+                  "card_reason": "Ar jonizāciju — gludāki mati",
+                  "match": [
+                    {
+                      "attr": "ionic",
+                      "eq": true
+                    }
+                  ]
+                },
+                {
+                  "value": "light",
+                  "label": "Viegls",
+                  "sublabel": "līdz 500 g",
+                  "card_reason": "Viegls — līdz 500 g",
+                  "match": [
+                    {
+                      "attr": "weight_kg",
+                      "lte": 0.5
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "compare": [
+            "power_w",
+            "ionic",
+            "foldable",
+            "weight_kg"
+          ],
+          "illustration": "hairdryer"
+        },
+        {
+          "id": "styler",
+          "label": "Matu taisnotāji un veidotāji",
+          "description": "taisnotāji, lokšķēres, karstā gaisa sukas",
+          "budget_steps_eur": [
+            30,
+            70,
+            150
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Ko vēlies darīt ar matiem?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "options": [
+                {
+                  "value": "straight",
+                  "label": "Iztaisnot",
+                  "sublabel": "matu taisnotājs",
+                  "table_value": "Taisnotājs",
+                  "match": [
+                    {
+                      "attr": "styler_type",
+                      "eq": "straightener"
+                    }
+                  ],
+                  "illustration": "styler-straight"
+                },
+                {
+                  "value": "curl",
+                  "label": "Saloki",
+                  "sublabel": "lokšķēres",
+                  "table_value": "Lokšķēres",
+                  "match": [
+                    {
+                      "attr": "styler_type",
+                      "eq": "curler"
+                    }
+                  ],
+                  "illustration": "styler-curler"
+                },
+                {
+                  "value": "air",
+                  "label": "Žāvēt un veidot",
+                  "sublabel": "karstā gaisa suka vai veidotājs ar uzgaļiem",
+                  "card_reason": "Žāvē un veido vienlaikus",
+                  "table_value": "Karstā gaisa veidotājs",
+                  "match": [
+                    {
+                      "attr": "styler_type",
+                      "eq": "airstyler"
+                    }
+                  ],
+                  "illustration": "styler-air"
+                }
+              ]
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev vēl ir svarīgi?",
+              "type": "multi",
+              "hard_filter": false,
+              "stage": "results",
+              "max_select": 2,
+              "options": [
+                {
+                  "value": "temp",
+                  "label": "Temperatūras regulēšana",
+                  "sublabel": "saudzīgāk pret matiem",
+                  "card_reason": "Regulējama temperatūra",
+                  "match": [
+                    {
+                      "attr": "temp_control",
+                      "eq": true
+                    }
+                  ]
+                },
+                {
+                  "value": "ionic",
+                  "label": "Mazāk sprogainu matu",
+                  "sublabel": "jonizācija",
+                  "card_reason": "Ar jonizāciju — gludāki mati",
+                  "match": [
+                    {
+                      "attr": "ionic",
+                      "eq": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "compare": [
+            "styler_type",
+            "temp_control",
+            "ionic",
+            "power_w"
+          ],
+          "illustration": "styler-straight"
+        },
+        {
+          "id": "toothbrush",
+          "label": "Elektriskās zobu birstes",
+          "description": "soniskās, ar apaļu galviņu, bērnu",
+          "budget_steps_eur": [
+            30,
+            70,
+            150
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Kādu birsti meklē?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "help": "Abi pieaugušo veidi tīra labāk nekā parasta zobu birste. Apaļā galviņa tīra katru zobu atsevišķi, soniskā — ar ātrām vibrācijām pa vairākiem zobiem uzreiz. Izvēlies to, kas tev ērtāk.",
+              "options": [
+                {
+                  "value": "sonic",
+                  "label": "Soniskā",
+                  "sublabel": "iegarena galviņa, ļoti ātras vibrācijas",
+                  "table_value": "Soniskā",
+                  "match": [
+                    {
+                      "attr": "brush_type",
+                      "eq": "sonic"
+                    }
+                  ],
+                  "illustration": "brush-sonic"
+                },
+                {
+                  "value": "round",
+                  "label": "Ar apaļu galviņu",
+                  "sublabel": "rotē un notīra katru zobu atsevišķi",
+                  "table_value": "Rotējošā",
+                  "match": [
+                    {
+                      "attr": "brush_type",
+                      "eq": "rotating"
+                    }
+                  ],
+                  "illustration": "brush-round"
+                },
+                {
+                  "value": "kids",
+                  "label": "Bērnu",
+                  "sublabel": "maza galviņa, maigāks režīms",
+                  "table_value": "Bērnu",
+                  "match": [
+                    {
+                      "attr": "brush_type",
+                      "eq": "kids"
+                    }
+                  ],
+                  "illustration": "brush-kids"
+                }
+              ]
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev vēl ir svarīgi?",
+              "type": "multi",
+              "hard_filter": false,
+              "stage": "results",
+              "max_select": 2,
+              "options": [
+                {
+                  "value": "pressure",
+                  "label": "Spiediena sensors",
+                  "sublabel": "brīdina, ja spied par stipri",
+                  "card_reason": "Brīdina, ja spied par stipri",
+                  "match": [
+                    {
+                      "attr": "pressure_sensor",
+                      "eq": true
+                    }
+                  ]
+                },
+                {
+                  "value": "app",
+                  "label": "Ar lietotni",
+                  "sublabel": "rāda, kur notīrīts",
+                  "card_reason": "Savienojas ar lietotni",
+                  "match": [
+                    {
+                      "attr": "app",
+                      "eq": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "compare": [
+            "brush_type",
+            "pressure_sensor",
+            "app",
+            "programs"
+          ],
+          "illustration": "brush-sonic"
+        },
+        {
+          "id": "epilator",
+          "label": "Epilatori",
+          "description": "epilatori un IPL fotoepilatori",
+          "budget_steps_eur": [
+            50,
+            120,
+            300
+          ],
+          "questions": [
+            {
+              "id": "type",
+              "title": "Kā vēlies noņemt matiņus?",
+              "type": "single",
+              "hard_filter": true,
+              "stage": "flow",
+              "up_front_reason": "fit",
+              "help": "IPL der gaišai līdz vidēji tumšai ādai un tumšiem matiņiem. Ļoti gaišiem, sirmiem vai rudiem matiņiem tas nedarbojas. Epilators der visiem matiņiem, bet sākumā var būt nepatīkams.",
+              "options": [
+                {
+                  "value": "epil",
+                  "label": "Epilators",
+                  "sublabel": "izrauj ar sakni, gludi 3–4 nedēļas",
+                  "table_value": "Epilators",
+                  "match": [
+                    {
+                      "attr": "epilator_type",
+                      "eq": "epilator"
+                    }
+                  ],
+                  "illustration": "epilator-epil"
+                },
+                {
+                  "value": "ipl",
+                  "label": "Fotoepilators (IPL)",
+                  "sublabel": "gaismas impulsi, ar laiku mazāk matiņu",
+                  "card_reason": "IPL — ilgstoši mazāk matiņu",
+                  "table_value": "IPL",
+                  "match": [
+                    {
+                      "attr": "epilator_type",
+                      "eq": "ipl"
+                    }
+                  ],
+                  "illustration": "epilator-ipl"
+                }
+              ]
+            },
+            {
+              "id": "priorities",
+              "title": "Kas tev vēl ir svarīgi?",
+              "type": "multi",
+              "hard_filter": false,
+              "stage": "results",
+              "max_select": 2,
+              "options": [
+                {
+                  "value": "wet",
+                  "label": "Lietojams dušā",
+                  "sublabel": "siltā ūdenī mazāk sāp",
+                  "card_reason": "Lietojams arī dušā",
+                  "match": [
+                    {
+                      "attr": "wet_dry",
+                      "eq": true
+                    }
+                  ]
+                },
+                {
+                  "value": "cordless",
+                  "label": "Bezvadu",
+                  "sublabel": "ar akumulatoru",
+                  "card_reason": "Bezvadu",
+                  "match": [
+                    {
+                      "attr": "cordless",
+                      "eq": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "compare": [
+            "epilator_type",
+            "wet_dry",
+            "cordless"
+          ],
+          "illustration": "epilator-ipl"
+        }
+      ]
+    },
+    {
       "id": "other",
       "label": "Kaut kas cits — pastāstīšu saviem vārdiem",
       "icon_svg_path": "M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM21 21l-5-5",
@@ -3788,6 +4453,30 @@
     }
   ],
   "free_text_detection": [
+    {
+      "subcategory": "shaver",
+      "regex": "skuvek|skūšan|oneblade"
+    },
+    {
+      "subcategory": "epilator",
+      "regex": "epilat|\\bipl\\b"
+    },
+    {
+      "subcategory": "toothbrush",
+      "regex": "zobu birst|zobubirst|zobu suk"
+    },
+    {
+      "subcategory": "styler",
+      "regex": "taisnot|lokšķēr|matu veidot|matu ieveidot|karstā gaisa suk"
+    },
+    {
+      "subcategory": "hairdryer",
+      "regex": "fēn|matu žāvēt"
+    },
+    {
+      "subcategory": "trimmer",
+      "regex": "trimmer|trimer|bārd|matu griež|matu mašīn"
+    },
     {
       "subcategory": "handblender",
       "regex": "rokas blend"

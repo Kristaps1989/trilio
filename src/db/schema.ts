@@ -309,6 +309,8 @@ export const subscriptions = pgTable(
     cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
     canceledAt: timestamp("canceled_at", { withTimezone: true }),
     failedAttempts: integer("failed_attempts").notNull().default(0),
+    /** Prepaid periods (no token): when the "your radar ends soon" e-mail went out for the current period. */
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -329,6 +331,8 @@ export const payments = pgTable(
     orderId: text("order_id").notNull().unique(),
     providerRequestId: text("provider_request_id"),
     kind: paymentKindEnum("kind").notNull(),
+    /** The plan this payment buys; a prepaid extension may switch plans (null on rows from before it existed). */
+    planId: text("plan_id").references(() => plans.id),
     amountCents: integer("amount_cents").notNull(),
     currency: text("currency").notNull().default("EUR"),
     status: paymentStatusEnum("status").notNull().default("pending"),
@@ -422,6 +426,67 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Wishlist ("Vēlmju saraksts", owner 20 Oct 2026; replaces the radar UI):
+// a heart saves a product or a whole search (subcategory + answers). The
+// list is free; the paid service e-mails a daily digest of price drops.
+export const savedItemKindEnum = pgEnum("saved_item_kind", ["product", "search"]);
+
+export const savedItems = pgTable(
+  "saved_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: savedItemKindEnum("kind").notNull(),
+    /** "p:<productId>" or "s:<subcategory>:<answers>": one save per thing per user. */
+    key: text("key").notNull(),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+    subcategoryId: text("subcategory_id").notNull(),
+    /** Search only: the flow's URL encoding of the answers, so the search reopens as saved. */
+    answersParam: text("answers_param"),
+    /** Search only: what was asked, e.g. "Ledusskapji · 181–205 cm · Divas durvis". */
+    label: text("label"),
+    /** Price a drop is measured against: at saving, then the last notified price. */
+    baselinePriceCents: integer("baseline_price_cents"),
+    lastNotifiedAt: timestamp("last_notified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("saved_items_user_key_idx").on(t.userId, t.key),
+    index("saved_items_user_idx").on(t.userId),
+  ],
+);
+
+/** Per-user setting for the paid e-mail digest: which drops count. */
+export const notifySettings = pgTable("notify_settings", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  threshold: radarThresholdEnum("threshold").notNull().default("5"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * One EPREL lookup per product (docs/ATTRIBUTES.md): what was found, so the
+ * job asks again only when a product is new or its lookup is old.
+ */
+export const eprelLookups = pgTable("eprel_lookups", {
+  productId: uuid("product_id")
+    .primaryKey()
+    .references(() => products.id, { onDelete: "cascade" }),
+  /** found, not_found (no published record for this EAN or model), or error (try again soon). */
+  status: text("status").notNull(),
+  /** How it was found: by EAN (free endpoint) or by brand and model (needs EPREL_API_KEY). */
+  method: text("method"),
+  productGroup: text("product_group"),
+  registrationNumber: text("registration_number"),
+  /** The EPREL record as received, for audit and later mappings. */
+  record: jsonb("record").$type<Record<string, unknown>>(),
+  checkedAt: timestamp("checked_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type SavedItem = typeof savedItems.$inferSelect;
 export type Radar = typeof radars.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Plan = typeof plans.$inferSelect;

@@ -31,7 +31,7 @@ for (const path of [
   "/izvelies/cool/fridge",
   "/kategorija/fridge",
   "/ienakt",
-  "/radars",
+  "/velmju-saraksts",
   "/privatums",
 ]) {
   test(`no horizontal scroll and content stays in its column: ${path}`, async ({ page }) => {
@@ -110,5 +110,5 @@ test("header stays pinned to the top while the page scrolls", async ({ page }) =
   const header = await box(page, "body > header");
   expect(header.y).toBeGreaterThanOrEqual(0);
   expect(header.y).toBeLessThanOrEqual(4);
-  await expect(page.getByRole("banner").getByRole("link", { name: /radars/i })).toBeInViewport();
+  await expect(page.getByRole("banner").getByRole("link", { name: /Vēlmju saraksts/i })).toBeInViewport();
 });

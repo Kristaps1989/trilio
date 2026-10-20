@@ -3,6 +3,17 @@
   "reviewed": true,
   "researchedAt": "2026-10-18",
   "method": "Grades use only independent owner-survey or service-rate evidence that could be read without a login. Main sources: Euroconsumers (Altroconsumo/OCU/Test-Achats/Deco Proteste) brand rankings 2023-2026, which publish a per-brand reliability index (0-100) for small appliances; OCU 2025 durability/reliability survey (~40,000 consumers, 11 countries); 60 Millions de consommateurs April 2025 reliability survey (5,000 people), read through secondary press articles; Consumer Reports 2026 kitchen and laundry brand reliability (US, CR reprint PDFs); CHOICE (AU) 2025 and Consumer NZ 2026; Yale Appliance first-year service rates (US retailer, 33,190 calls); Stiftung Warentest 2018 reader survey (old, used only as a secondary signal). Which? 2025 brand reliability tables (washing machines, fridge freezers, dishwashers, air fryers, coffee machines) exist but every brand score is behind the paywall, so NO Which? figures are used. Consumentenbond and Test-Achats brand results were also members-only and are not used. Scale: 5 = top in two or more independent sources and never weak; 4 = above average in most sources; 3 = average or sources conflict; 2 = below average in two or more sources; 1 = consistently poor (no brand reached 1). Altroconsumo 'global scores' combine lab tests (45%), reliability (25%), satisfaction (20%) and the share of excellent models (10%), so they were used only as a weak reliability signal; where a separate reliability index was printed, that index was used. US/AU/NZ results were down-weighted because product lines differ (US 'Hotpoint' is a GE brand and is ignored for the EU Hotpoint brand). A brand grade backed by one source has confidence 'low'. serviceLv is true only where a manufacturer page in Latvian, or an explicit authorised-service listing, was seen; null means not verified, not 'no service'. warrantyYears is the manufacturer's standard warranty where a page was seen, otherwise null. The Latvian statutory 2-year seller liability applies regardless. Extended warranties usually need registration, vary by country and were rarely confirmed for Latvia.",
+  "ungradedSubcategories": {
+    "subcategories": [
+      "shaver",
+      "trimmer",
+      "hairdryer",
+      "styler",
+      "toothbrush",
+      "epilator"
+    ],
+    "reason": "No independent reliability survey covers personal-care devices in the sources used for this table, and a brand's appliance grade is not evidence for its shavers or hair dryers. Every brand scores the same here until sources are found (19 Oct 2026)."
+  },
   "brands": {
     "Miele": {
       "grade": 5,

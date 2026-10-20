@@ -1,5 +1,5 @@
 {
- "note": "PARAUGA DATI — izdomātas cenas, krājumi, vērtējumi un atribūti visām 33 apakškategorijām; EAN ir ģenerēti (izņemot Bosch KGN39VLCT). Lieto tikai testiem un dizaina demonstrācijai.",
+ "note": "PARAUGA DATI — izdomātas cenas, krājumi, vērtējumi un atribūti visām 39 apakškategorijām; EAN ir ģenerēti (izņemot Bosch KGN39VLCT). Lieto tikai testiem un dizaina demonstrācijai.",
  "products": [
   {
    "id": "n1",
@@ -8240,6 +8240,1341 @@
      "store": "store_c",
      "price_eur": 35,
      "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "shaver-253",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Remington skuveklis",
+   "m": "SHA253",
+   "ean": "2000000002538",
+   "s": 9.0,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "rotary",
+    "wet_dry": false,
+    "run_min": 40,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 107,
+     "stock": "soon"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 112,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-254",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Philips skuveklis",
+   "m": "SHA254",
+   "ean": "2000000002545",
+   "s": 8.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "rotary",
+    "wet_dry": true,
+    "run_min": 40,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 320,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 329,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "shaver-255",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Remington skuveklis",
+   "m": "SHA255",
+   "ean": "2000000002552",
+   "s": 8.3,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "rotary",
+    "wet_dry": true,
+    "run_min": 50,
+    "clean_station": true
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 169,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-256",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Panasonic skuveklis",
+   "m": "SHA256",
+   "ean": "2000000002569",
+   "s": 7.7,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "foil",
+    "wet_dry": true,
+    "run_min": 60,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 102,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 104,
+     "stock": "soon"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 108,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-257",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Philips skuveklis",
+   "m": "SHA257",
+   "ean": "2000000002576",
+   "s": 6.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "foil",
+    "wet_dry": false,
+    "run_min": 90,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 190,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 200,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-258",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Remington skuveklis",
+   "m": "SHA258",
+   "ean": "2000000002583",
+   "s": 7.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "foil",
+    "wet_dry": false,
+    "run_min": 50,
+    "clean_station": true
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 45,
+     "stock": "soon"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 48,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 46,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-259",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Panasonic skuveklis",
+   "m": "SHA259",
+   "ean": "2000000002590",
+   "s": 8.0,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "lady",
+    "wet_dry": true,
+    "run_min": 40,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 172,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-260",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Philips OneBlade skuveklis/trimmeris QP2520/20",
+   "m": "QP2520/20",
+   "ean": "2000000002606",
+   "s": 9.2,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "hybrid",
+    "wet_dry": true,
+    "run_min": 45,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 39,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 41,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 41,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "shaver-261",
+   "c": "new",
+   "sub": "shaver",
+   "gen": true,
+   "name": "Philips OneBlade 360 skuveklis/trimmeris",
+   "m": "SHA261",
+   "ean": "2000000002613",
+   "s": 8.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "shaver_type": "hybrid",
+    "wet_dry": true,
+    "run_min": 60,
+    "clean_station": false
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 59,
+     "stock": "soon"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 62,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 61,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-262",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Remington trimmeris",
+   "m": "TRI262",
+   "ean": "2000000002620",
+   "s": 8.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "beard",
+    "run_min": 45,
+    "wet_dry": false
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 44,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 45,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 46,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-263",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Braun trimmeris",
+   "m": "TRI263",
+   "ean": "2000000002637",
+   "s": 8.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "beard",
+    "run_min": 90,
+    "wet_dry": true
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 31,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 33,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-264",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Braun trimmeris",
+   "m": "TRI264",
+   "ean": "2000000002644",
+   "s": 8.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "clipper",
+    "run_min": 60,
+    "wet_dry": true
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 67,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 68,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-265",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Wahl trimmeris",
+   "m": "TRI265",
+   "ean": "2000000002651",
+   "s": 6.9,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "clipper",
+    "run_min": 120,
+    "wet_dry": true
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 116,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 120,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 122,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-266",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Wahl trimmeris",
+   "m": "TRI266",
+   "ean": "2000000002668",
+   "s": 8.3,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "body",
+    "run_min": 45,
+    "wet_dry": true
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 45,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 47,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-267",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Braun trimmeris",
+   "m": "TRI267",
+   "ean": "2000000002675",
+   "s": 7.3,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "multi",
+    "run_min": 90,
+    "wet_dry": false
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 54,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 58,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "trimmer-268",
+   "c": "new",
+   "sub": "trimmer",
+   "gen": true,
+   "name": "Braun trimmeris",
+   "m": "TRI268",
+   "ean": "2000000002682",
+   "s": 7.0,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "trimmer_type": "multi",
+    "run_min": 45,
+    "wet_dry": true
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 54,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 56,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 56,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "hairdryer-269",
+   "c": "new",
+   "sub": "hairdryer",
+   "gen": true,
+   "name": "Philips matu fēns",
+   "m": "HAI269",
+   "ean": "2000000002699",
+   "s": 6.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "power_w": 1600,
+    "ionic": true,
+    "foldable": false,
+    "weight_kg": 0.7
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 292,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 301,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "hairdryer-270",
+   "c": "new",
+   "sub": "hairdryer",
+   "gen": true,
+   "name": "Philips matu fēns",
+   "m": "HAI270",
+   "ean": "2000000002705",
+   "s": 8.7,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "power_w": 1600,
+    "ionic": true,
+    "foldable": false,
+    "weight_kg": 0.45
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 167,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 176,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "hairdryer-271",
+   "c": "new",
+   "sub": "hairdryer",
+   "gen": true,
+   "name": "Rowenta matu fēns",
+   "m": "HAI271",
+   "ean": "2000000002712",
+   "s": 8.2,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "power_w": 2000,
+    "ionic": false,
+    "foldable": false,
+    "weight_kg": 0.35
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 200,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 209,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "hairdryer-272",
+   "c": "new",
+   "sub": "hairdryer",
+   "gen": true,
+   "name": "Rowenta matu fēns",
+   "m": "HAI272",
+   "ean": "2000000002729",
+   "s": 8.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "power_w": 2400,
+    "ionic": false,
+    "foldable": false,
+    "weight_kg": 0.55
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 142,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 145,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 153,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "hairdryer-273",
+   "c": "new",
+   "sub": "hairdryer",
+   "gen": true,
+   "name": "Remington matu fēns",
+   "m": "HAI273",
+   "ean": "2000000002736",
+   "s": 7.5,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "power_w": 1200,
+    "ionic": false,
+    "foldable": false,
+    "weight_kg": 0.7
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 235,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 241,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "hairdryer-274",
+   "c": "new",
+   "sub": "hairdryer",
+   "gen": true,
+   "name": "Dyson matu fēns",
+   "m": "HAI274",
+   "ean": "2000000002743",
+   "s": 7.0,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "power_w": 2200,
+    "ionic": true,
+    "foldable": true,
+    "weight_kg": 0.55
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 337,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 356,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 342,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "styler-275",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "Remington matu veidotājs",
+   "m": "STY275",
+   "ean": "2000000002750",
+   "s": 8.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "straightener",
+    "temp_control": false,
+    "ionic": false,
+    "power_w": 60
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 182,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 189,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "styler-276",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "Remington matu veidotājs",
+   "m": "STY276",
+   "ean": "2000000002767",
+   "s": 8.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "straightener",
+    "temp_control": true,
+    "ionic": true,
+    "power_w": 1000
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 234,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 243,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "styler-277",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "Rowenta matu veidotājs",
+   "m": "STY277",
+   "ean": "2000000002774",
+   "s": 8.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "straightener",
+    "temp_control": true,
+    "ionic": true,
+    "power_w": 800
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 254,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 258,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 273,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "styler-278",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "Philips matu veidotājs",
+   "m": "STY278",
+   "ean": "2000000002781",
+   "s": 6.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "curler",
+    "temp_control": false,
+    "ionic": true,
+    "power_w": 800
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 65,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "styler-279",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "Rowenta matu veidotājs",
+   "m": "STY279",
+   "ean": "2000000002798",
+   "s": 7.9,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "curler",
+    "temp_control": true,
+    "ionic": false,
+    "power_w": 800
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 175,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 183,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "styler-280",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "BaByliss matu veidotājs",
+   "m": "STY280",
+   "ean": "2000000002804",
+   "s": 8.2,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "airstyler",
+    "temp_control": true,
+    "ionic": true,
+    "power_w": 1000
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 29,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "styler-281",
+   "c": "new",
+   "sub": "styler",
+   "gen": true,
+   "name": "Rowenta matu veidotājs",
+   "m": "STY281",
+   "ean": "2000000002811",
+   "s": 9.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "styler_type": "airstyler",
+    "temp_control": true,
+    "ionic": false,
+    "power_w": 800
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 199,
+     "stock": "soon"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 209,
+     "stock": "soon"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 210,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-282",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Philips elektriskā zobu birste",
+   "m": "TOO282",
+   "ean": "2000000002828",
+   "s": 7.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "sonic",
+    "pressure_sensor": true,
+    "app": false,
+    "programs": 5
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 67,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-283",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Oral-B elektriskā zobu birste",
+   "m": "TOO283",
+   "ean": "2000000002835",
+   "s": 9.0,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "sonic",
+    "pressure_sensor": false,
+    "app": false,
+    "programs": 3
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 138,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 146,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-284",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Xiaomi elektriskā zobu birste",
+   "m": "TOO284",
+   "ean": "2000000002842",
+   "s": 9.3,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "sonic",
+    "pressure_sensor": true,
+    "app": false,
+    "programs": 3
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 160,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 165,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-285",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Philips elektriskā zobu birste",
+   "m": "TOO285",
+   "ean": "2000000002859",
+   "s": 8.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "rotating",
+    "pressure_sensor": true,
+    "app": false,
+    "programs": 5
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 129,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 138,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-286",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Philips elektriskā zobu birste",
+   "m": "TOO286",
+   "ean": "2000000002866",
+   "s": 8.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "rotating",
+    "pressure_sensor": true,
+    "app": false,
+    "programs": 2
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 124,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 131,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-287",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Xiaomi elektriskā zobu birste",
+   "m": "TOO287",
+   "ean": "2000000002873",
+   "s": 8.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "rotating",
+    "pressure_sensor": true,
+    "app": true,
+    "programs": 2
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 191,
+     "stock": "in"
+    },
+    {
+     "store": "store_b",
+     "price_eur": 206,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-288",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Oral-B elektriskā zobu birste",
+   "m": "TOO288",
+   "ean": "2000000002880",
+   "s": 7.2,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "kids",
+    "pressure_sensor": false,
+    "app": true,
+    "programs": 3
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 128,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 133,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "toothbrush-289",
+   "c": "new",
+   "sub": "toothbrush",
+   "gen": true,
+   "name": "Oral-B elektriskā zobu birste",
+   "m": "TOO289",
+   "ean": "2000000002897",
+   "s": 7.6,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "brush_type": "kids",
+    "pressure_sensor": false,
+    "app": false,
+    "programs": 3
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 100,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 107,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "epilator-290",
+   "c": "new",
+   "sub": "epilator",
+   "gen": true,
+   "name": "Braun epilators",
+   "m": "EPI290",
+   "ean": "2000000002903",
+   "s": 7.8,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "epilator_type": "epilator",
+    "wet_dry": true,
+    "cordless": true
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 404,
+     "stock": "in"
+    },
+    {
+     "store": "store_a",
+     "price_eur": 415,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "epilator-291",
+   "c": "new",
+   "sub": "epilator",
+   "gen": true,
+   "name": "Braun epilators",
+   "m": "EPI291",
+   "ean": "2000000002910",
+   "s": 9.3,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "epilator_type": "epilator",
+    "wet_dry": true,
+    "cordless": true
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 74,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "epilator-292",
+   "c": "new",
+   "sub": "epilator",
+   "gen": true,
+   "name": "Philips epilators",
+   "m": "EPI292",
+   "ean": "2000000002927",
+   "s": 7.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "epilator_type": "epilator",
+    "wet_dry": true,
+    "cordless": true
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 422,
+     "stock": "soon"
+    }
+   ]
+  },
+  {
+   "id": "epilator-293",
+   "c": "new",
+   "sub": "epilator",
+   "gen": true,
+   "name": "Remington epilators",
+   "m": "EPI293",
+   "ean": "2000000002934",
+   "s": 8.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "epilator_type": "ipl",
+    "wet_dry": false,
+    "cordless": true
+   },
+   "offers": [
+    {
+     "store": "store_c",
+     "price_eur": 202,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "epilator-294",
+   "c": "new",
+   "sub": "epilator",
+   "gen": true,
+   "name": "Braun epilators",
+   "m": "EPI294",
+   "ean": "2000000002941",
+   "s": 8.5,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "epilator_type": "ipl",
+    "wet_dry": false,
+    "cordless": false
+   },
+   "offers": [
+    {
+     "store": "store_b",
+     "price_eur": 188,
+     "stock": "soon"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 195,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "epilator-295",
+   "c": "new",
+   "sub": "epilator",
+   "gen": true,
+   "name": "Braun epilators",
+   "m": "EPI295",
+   "ean": "2000000002958",
+   "s": 8.1,
+   "kwh_year": null,
+   "specs": "",
+   "tags": [],
+   "attrs": {
+    "epilator_type": "ipl",
+    "wet_dry": false,
+    "cordless": false
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 323,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 342,
+     "stock": "in"
     }
    ]
   }

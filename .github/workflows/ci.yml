@@ -33,7 +33,7 @@ jobs:
       AUTH_URL: http://localhost:3000
       AUTH_SECRET: ci-only-auth-secret-not-for-production
       AUTH_DEV_LOGIN: "1"
-      PAYMENTS_PROVIDER: mock
+      PAYMENTS_PROVIDER: mock-recurring
       ALLOW_INSECURE_TEST_FEATURES: "1"
       # A fake GA4 id so the e2e suite exercises the consent banner and events (requests are stubbed).
       GA_MEASUREMENT_ID: G-TEST12345

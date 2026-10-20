@@ -6,11 +6,11 @@ import { ingestStore, isIngestible, type RunResult } from "@/services/ingestion/
 import { createCaller, extractionEnabled } from "@/services/llm/client";
 import { runExtractionJob } from "@/services/llm/extract-job";
 import { appBaseUrl } from "@/services/payments";
-import { runRadarJob } from "@/services/radar/job";
-import { radarTexts } from "@/services/texts";
+import { runWishlistJob } from "@/services/wishlist/job";
+import { wishlistTexts } from "@/services/texts";
 
 // The scheduled job: every shop that is due, then attribute extraction, the
-// price radar and data retention. Run by the web service's own scheduler
+// wishlist digest and data retention. Run by the web service's own scheduler
 // (scheduler.ts) or by the optional Railway cron service (`npm run ingest -- all`).
 // Each shop is scheduled on its own, so one shop's crash or slow run never
 // holds the others back.
@@ -74,7 +74,7 @@ export async function dueStores(db: Db, now = new Date()): Promise<Store[]> {
 export type AllJobsResult = {
   stores: RunResult[];
   extraction: unknown;
-  radar: unknown;
+  wishlist: unknown;
   waitlistPurged: number;
 };
 
@@ -93,8 +93,8 @@ export async function runAllJobs(db: Db, opts: { force?: boolean } = {}): Promis
   for (const store of targets) results.push(await ingestStore(db, store));
   // New products get attributes when extraction is on (docs/LLM.md).
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
-  const radar = await runRadarJob(db, { baseUrl: appBaseUrl(), texts: radarTexts() });
+  const wishlist = await runWishlistJob(db, { baseUrl: appBaseUrl(), texts: wishlistTexts() });
   // Privacy policy retention: waitlist entries older than 12 months.
   const waitlistPurged = await purgeOldWaitlistLeads(db);
-  return { stores: results, extraction, radar, waitlistPurged };
+  return { stores: results, extraction, wishlist, waitlistPurged };
 }

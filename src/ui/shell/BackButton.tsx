@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 // history is the flow's history. Screens without a step to go back to keep
 // an empty square, so the footer never changes height or alignment.
 
-const NO_BACK = new Set(["/", "/radars/apstiprinats", "/maksajums/mock"]);
+const NO_BACK = new Set(["/", "/velmju-saraksts/apmaksats", "/maksajums/mock"]);
 
 export function BackButton({ label }: { label: string }) {
   const router = useRouter();

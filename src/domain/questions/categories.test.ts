@@ -13,9 +13,9 @@ describe("data/categories.json", () => {
     expect(result.success, result.success ? "" : JSON.stringify(result.error.issues, null, 2)).toBe(true);
   });
 
-  it("has 8 groups plus 'other', and 33 subcategories", () => {
-    expect(catalog.groups).toHaveLength(9);
-    expect(allSubcategories()).toHaveLength(33);
+  it("has 9 groups plus 'other', and 39 subcategories", () => {
+    expect(catalog.groups).toHaveLength(10);
+    expect(allSubcategories()).toHaveLength(39);
   });
 
   it("core rule 1: every flow question says why it is asked up front", () => {

@@ -29,6 +29,8 @@ const TableSchema = z.object({
   researchedAt: z.string().optional(),
   method: z.string().optional(),
   reviewed: z.boolean(),
+  /** Subcategories without brand evidence: no brand gets points or a grade there. */
+  ungradedSubcategories: z.object({ subcategories: z.array(z.string()), reason: z.string() }).optional(),
   brands: z.record(z.string(), BrandSchema),
 });
 
@@ -36,8 +38,14 @@ export type BrandTable = z.infer<typeof TableSchema>;
 
 export const brandTable: BrandTable = TableSchema.parse(raw);
 
-/** The brand's grade for this subcategory, else its overall grade; null when not in the table. */
+/** True when brands are not graded for this subcategory (no evidence; see data/brands.json). */
+export function ungradedSubcategory(table: BrandTable, subcategoryId: string | undefined): boolean {
+  return !!subcategoryId && !!table.ungradedSubcategories?.subcategories.includes(subcategoryId);
+}
+
+/** The brand's grade for this subcategory, else its overall grade; null when not in the table or not graded there. */
 export function gradeOf(table: BrandTable, brand: string, subcategoryId?: string): number | null {
+  if (ungradedSubcategory(table, subcategoryId)) return null;
   const hit = Object.entries(table.brands).find(([b]) => sameBrand(b, brand));
   if (!hit) return null;
   return (subcategoryId && hit[1].categories?.[subcategoryId]) || hit[1].grade;

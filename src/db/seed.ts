@@ -58,8 +58,8 @@ export async function seedSampleProducts(db: Db, body: string) {
 /** Launch plans (owner decision): 1,99 €/month and 12 €/year. */
 export async function upsertPlans(db: Db) {
   const rows = [
-    { id: "monthly", name: "Cenu radars — mēnesī", priceCents: 199, interval: "month" as const },
-    { id: "annual", name: "Cenu radars — gadā", priceCents: 1200, interval: "year" as const },
+    { id: "monthly", name: "Cenu paziņojumi — mēnesī", priceCents: 199, interval: "month" as const },
+    { id: "annual", name: "Cenu paziņojumi — gadā", priceCents: 1200, interval: "year" as const },
   ];
   for (const r of rows) {
     await db

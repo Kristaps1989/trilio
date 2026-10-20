@@ -45,7 +45,7 @@ export function GET() {
     "",
     "## Not for indexing",
     "",
-    "/rezultati (personal results), /radars and /konts (accounts), /go/ (affiliate redirects), /api/.",
+    "/rezultati (personal results), /velmju-saraksts and /konts (accounts), /go/ (affiliate redirects), /api/.",
     "",
   );
   return new NextResponse(lines.join("\n"), {

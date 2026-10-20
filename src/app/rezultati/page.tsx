@@ -36,6 +36,10 @@ import { formatDateDative, formatEur, formatInt, formatNumber, formatRating } fr
 import { currentMarket } from "@/i18n/market";
 import { ButtonLink } from "@/ui/Button";
 import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
+import { SaveButton } from "@/ui/SaveButton";
+import { savedKeys } from "@/db/queries/wishlist";
+import { productKey, searchKey } from "@/domain/wishlist/wishlist";
+import { currentUserId } from "@/auth";
 import { betterDirection, enumLabels, formatAttr } from "./attr-format";
 import { CompareTable, type CompareColumn, type CompareRow } from "./CompareTable";
 import { deltaLines } from "./delta-text";
@@ -45,7 +49,10 @@ import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCar
 
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<{ sub?: string; a?: string }> };
+type Props = { searchParams: Promise<{ sub?: string; a?: string; vairak?: string }> };
+
+/** "Rādīt vairāk variantus" adds this many cards per tap. */
+const MORE_STEP = 10;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("results");
@@ -67,7 +74,7 @@ function cardOffer(o: OfferView, now: Date): CardOffer {
 const href = (sub: Subcategory, state: FlowState) => `/rezultati?sub=${sub.id}&a=${encodeState(state)}`;
 
 export default async function ResultsPage({ searchParams }: Props) {
-  const { sub: subId, a } = await searchParams;
+  const { sub: subId, a, vairak } = await searchParams;
   const sub = subId ? getSubcategory(subId) : undefined;
   const group = sub ? getGroupOfSubcategory(sub.id) : undefined;
   if (!sub || !group) notFound();
@@ -113,6 +120,13 @@ export default async function ResultsPage({ searchParams }: Props) {
     .returning({ id: searchSessions.id })
     .catch(() => [] as { id: string }[]);
   const sessionId = session?.id ?? null;
+
+  // Hearts: which of these products, and whether this very search, are in the wishlist.
+  const answersParam = encodeState(state);
+  const saved = await savedKeys(db, await currentUserId(), [
+    searchKey(sub.id, answersParam),
+    ...products.map((p) => productKey(p.id)),
+  ]);
 
   const tierLabel = (tier: NonNullable<Pick["tier"]>) =>
     t(`tier${tier[0]!.toUpperCase()}${tier.slice(1)}` as "tierBudget");
@@ -201,7 +215,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       upgrade,
       refurbished: null,
       sessionId,
-      trackHref: `/radars/jauns?product=${pick.product.id}&s=${sessionId ?? ""}`,
+      saved: saved.has(productKey(pick.product.id)),
     };
   }
 
@@ -223,6 +237,13 @@ export default async function ResultsPage({ searchParams }: Props) {
 
   const cards = result.picks.map(toCard);
   const extraCards = result.extras.map(toCard);
+  // Everything else in range, best value first, on request (the shopper decides how far to look).
+  const moreShown = Math.min(result.more.length, Math.max(0, Math.floor(Number(vairak) || 0)));
+  const moreCards = result.more.slice(0, moreShown).map((c) => ({
+    ...toCard({ ...c, tier: null, recommended: false, overBudgetByCents: 0 }),
+    upgrade: null,
+  }));
+  const moreLeft = result.more.length - moreShown;
   const refurbCards = result.refurbished.map(toRefurbCard);
 
   // "Vērts zināt" (§2.7): about the recommended pick, or the first one.
@@ -604,6 +625,21 @@ export default async function ResultsPage({ searchParams }: Props) {
         ? t("leadNoBudget")
         : t("lead", { count: result.matchingCount });
 
+  // What a saved search is called in the wishlist: the subcategory and the answers that narrow it.
+  const flowIds = new Set(sub.questions.filter((q) => q.stage === "flow").map((q) => q.id));
+  const searchLabel = [
+    sub.label,
+    ...chips.filter((c) => c.active && (flowIds.has(c.id) || c.id === "budget")).map((c) => c.label),
+  ].join(" · ");
+  const saveSearch = (variant: "inline" | "card") => (
+    <SaveButton
+      target={{ kind: "search", subcategoryId: sub.id, answersParam, label: searchLabel }}
+      saved={saved.has(searchKey(sub.id, answersParam))}
+      name={searchLabel}
+      variant={variant}
+    />
+  );
+
   return (
     <Page size="wide" gap="gap-[22px]">
       <div className="flex flex-col gap-[10px]">
@@ -615,6 +651,7 @@ export default async function ResultsPage({ searchParams }: Props) {
           {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
         </p>
         <FilterBar chips={chips} state={state} subId={sub.id} />
+        <div>{saveSearch("inline")}</div>
         <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
       </div>
 
@@ -729,6 +766,40 @@ export default async function ResultsPage({ searchParams }: Props) {
         </section>
       ) : null}
 
+      {result.more.length ? (
+        <section className="flex flex-col gap-3" aria-labelledby="more-title">
+          {moreCards.length ? (
+            <>
+              <SectionTitle id="more-title">{t("moreTitle")}</SectionTitle>
+              <p className="text-base text-stone">{t("moreLead")}</p>
+              <CardRow>
+                {moreCards.map((c, i) => (
+                  <div key={c.productId} id={`v${i}`} className="contents">
+                    <ResultCard card={c} />
+                  </div>
+                ))}
+              </CardRow>
+            </>
+          ) : (
+            <h2 id="more-title" className="sr-only">
+              {t("moreTitle")}
+            </h2>
+          )}
+          {moreLeft > 0 ? (
+            <div>
+              <ButtonLink
+                href={`${href(sub, state)}&vairak=${moreShown + MORE_STEP}#v${moreShown}`}
+                variant="outline"
+              >
+                {moreShown === 0
+                  ? t("moreShowFirst", { count: Math.min(MORE_STEP, moreLeft), total: moreLeft })
+                  : t("moreShow", { count: Math.min(MORE_STEP, moreLeft), total: moreLeft })}
+              </ButtonLink>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {compared.length > 1 ? <CompareTable columns={columns} rows={rows} /> : null}
 
       {refurbCards.length ? (
@@ -759,15 +830,14 @@ export default async function ResultsPage({ searchParams }: Props) {
         </section>
       ) : null}
 
-      {cards.length || extraCards.length ? (
+      {result.picks.length ? (
+        // The wishlist pitch (owner, 20 Oct 2026): saving is free; e-mails are the paid extra.
         <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">
           <div className="min-w-0 flex-[1_1_320px]">
-            <h2 className="font-heading text-[22px] font-semibold text-mist">{t("radarTitle")}</h2>
-            <p className="text-base text-stone">{t("radarCtaSub")}</p>
+            <h2 className="font-heading text-[22px] font-semibold text-mist">{t("saveTitle")}</h2>
+            <p className="text-base text-stone">{t("saveSub", { price: t("radarMonthly") })}</p>
           </div>
-          <ButtonLink href={`/radars/jauns?sub=${sub.id}&a=${encodeState(state)}&s=${sessionId ?? ""}`}>
-            {t("radarCta", { price: t("radarMonthly") })}
-          </ButtonLink>
+          {saveSearch("inline")}
         </Panel>
       ) : null}
 

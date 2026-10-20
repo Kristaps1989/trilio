@@ -15,7 +15,7 @@ describe("pageInfo", () => {
       section: "results",
       subcategory: "dish",
     });
-    expect(pageInfo("/radars/jauns", "?sub=kettle").section).toBe("radar");
+    expect(pageInfo("/velmju-saraksts").section).toBe("wishlist");
     expect(pageInfo("/privatums").section).toBe("legal");
     expect(pageInfo("/something/else").section).toBe("other");
   });

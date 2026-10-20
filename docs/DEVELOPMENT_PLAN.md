@@ -10,7 +10,7 @@ Written after reviewing the handoff package (`CLAUDE.md`, `docs/*`, `data/*`, `r
 
 **Solid and usable as-is**
 - `docs/PRODUCT_SPEC.md` is complete enough to build Phase 1 without guessing: flows, ranking rules, card content, copy.
-- `data/categories.json` is valid: 8 groups + "Kaut kas cits", 33 subcategories, each generic one with 1–3 questions, `hard_filter` flags, `card_reason` and `table_value` strings, budget steps and compare-row labels. It can drive the UI directly.
+- `data/categories.json` is valid: 9 groups + "Kaut kas cits", 39 subcategories (personal care added 19 Oct 2026), each generic one with 1–3 questions, `hard_filter` flags, `card_reason` and `table_value` strings, budget steps and compare-row labels. It can drive the UI directly.
 - `data/sample-products.json` is valid: 253 products (239 new, 14 refurbished), 732 offers across 5 placeholder stores, every product has `ean`, `m` (model code), `s` (rating) and `kwh_year`.
 - `reference/prototype-logic.js` parses and the ranking constants are explicit: score = rating × 10, +12 per matched soft answer, −40 when over budget, extras up to 1,25 × budget, electricity at 0,25 €/kWh, auto-advance after 260 ms.
 

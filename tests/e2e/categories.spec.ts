@@ -30,7 +30,7 @@ export function euros(text: string): number {
 }
 
 test("all categories are in the test list", () => {
-  expect(all.length).toBeGreaterThanOrEqual(33);
+  expect(all.length).toBeGreaterThanOrEqual(39);
 });
 
 for (const { group, sub } of all) {
@@ -48,7 +48,7 @@ for (const { group, sub } of all) {
 
       if (await page.getByRole("slider", { name: "Augstākā cena, eiro" }).count()) {
         // Price screen: the default range is the middle of what is in stock, so it has products.
-        const show = page.getByRole("button", { name: /^Rādīt \d+ prec/ });
+        const show = page.getByRole("button", { name: /^Rādīt (labākos 3 no \d+|\d+ prec)/ });
         await expect(show).toBeEnabled();
         await show.click();
       } else {
@@ -68,6 +68,9 @@ for (const { group, sub } of all) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Trīs labākie varianti tev");
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
+    // The wishlist: the search and every pick can be saved with one tap.
+    await expect(page.getByRole("button", { name: "Saglabāt meklējumu" }).first()).toBeVisible();
+    await expect(picks.first().getByRole("button", { name: "Saglabāt", exact: true })).toBeVisible();
 
     // The chosen price range is a chip; every pick inside it, unless labelled over budget.
     const chips = page.getByRole("navigation", { name: "Tavas izvēles" }).getByRole("button");

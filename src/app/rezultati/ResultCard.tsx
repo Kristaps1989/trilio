@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { PriceLine } from "@/domain/pricing/omnibus";
 import { formatEur, formatEurDelta, formatRating } from "@/i18n/format";
 import { buttonClass } from "@/ui/Button";
+import { SaveButton } from "@/ui/SaveButton";
 
 // Spec §3.2 result card and §3.3 refurbished card. Server component: all
 // numbers arrive formatted, all copy comes from messages.
@@ -43,7 +43,8 @@ export type CardModel = {
     savingVsNewCents: number | null;
   } | null;
   sessionId: string | null;
-  trackHref: string;
+  /** In the signed-in user's wishlist (the heart is filled). */
+  saved: boolean;
 };
 
 function goHref(card: CardModel): string {
@@ -248,9 +249,11 @@ export async function ResultCard({ card }: { card: CardModel }) {
         >
           {t("buy", { shop: card.best.storeName })}
         </a>
-        <Link href={card.trackHref} className={buttonClass({ variant: "card", size: "sm", block: true })}>
-          {t("track")}
-        </Link>
+        <SaveButton
+          target={{ kind: "product", productId: card.productId }}
+          saved={card.saved}
+          name={card.name}
+        />
       </div>
     </article>
   );
@@ -300,12 +303,12 @@ export async function RefurbishedCard({ card }: { card: CardModel }) {
         >
           {t("view", { shop: card.best.storeName })}
         </a>
-        <Link
-          href={card.trackHref}
-          className="inline-flex min-h-12 items-center rounded-control border-[1.5px] border-refurb-line px-4 font-semibold text-refurb-ink"
-        >
-          {t("track")}
-        </Link>
+        <SaveButton
+          target={{ kind: "product", productId: card.productId }}
+          saved={card.saved}
+          name={card.name}
+          variant="icon"
+        />
       </div>
     </article>
   );

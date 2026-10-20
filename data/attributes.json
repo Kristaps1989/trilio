@@ -333,7 +333,10 @@
       "type": "number",
       "unit": "pcs",
       "labels": [
-        "programmu skaits"
+        "programmu skaits",
+        "režīmu skaits",
+        "tīrīšanas režīmu skaits",
+        "tīrīšanas režīmi"
       ]
     },
     "no_frost": {
@@ -993,6 +996,213 @@
         "2 vienā",
         "divi vienā"
       ]
+    },
+    "wet_dry": {
+      "type": "boolean",
+      "labels": [
+        "wet & dry",
+        "mitrā un sausā skūšana",
+        "mitrā skūšana",
+        "lietošana dušā",
+        "lietojams dušā",
+        "ūdensizturīgs",
+        "ūdensizturība",
+        "ūdensnecaurlaidīgs",
+        "mazgājams"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b",
+        "wet",
+        "mitr",
+        "ūdensizturīg",
+        "ūdensnecaurlaid",
+        "ipx[4-8]"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "wet ?(&|and|un|/) ?dry",
+        "mitrai un sausai",
+        "mitrā un sausā",
+        "aquatec",
+        "ūdensizturīg",
+        "ūdensnecaurlaidīg",
+        "lietojams dušā",
+        "lietošanai dušā"
+      ]
+    },
+    "clean_station": {
+      "type": "boolean",
+      "labels": [
+        "tīrīšanas stacija",
+        "tīrīšanas un uzlādes stacija",
+        "uzlādes un tīrīšanas stacija",
+        "tīrīšanas sistēma"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b",
+        "stacij"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "tīrīšanas stacij",
+        "tīrīšanas un uzlādes stacij",
+        "clean ?& ?(charge|renew)",
+        "smartclean",
+        "quick ?clean pod",
+        "cleaning station"
+      ]
+    },
+    "ionic": {
+      "type": "boolean",
+      "labels": [
+        "jonizācija",
+        "jonizācijas funkcija",
+        "jonu funkcija",
+        "jonu tehnoloģija",
+        "jonu ģenerators"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "jonizāc",
+        "jonu (tehnolo|funkc|ģener)",
+        "\\bionic\\b",
+        "ion ?care"
+      ]
+    },
+    "foldable": {
+      "type": "boolean",
+      "labels": [
+        "salokāms rokturis",
+        "salokāms"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "salokām",
+        "ceļojumu fēn",
+        "travel",
+        "foldable"
+      ]
+    },
+    "pressure_sensor": {
+      "type": "boolean",
+      "labels": [
+        "spiediena sensors",
+        "spiediena kontrole",
+        "spiediena indikators",
+        "spiediena kontroles sensors"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "spiediena (sensor|kontrol|indikator)",
+        "pressure (sensor|control)"
+      ]
+    },
+    "app": {
+      "type": "boolean",
+      "labels": [
+        "bluetooth",
+        "lietotne",
+        "savienojamība ar lietotni",
+        "mobilā lietotne",
+        "bezvadu savienojums"
+      ],
+      "true": [
+        "^ir$",
+        "^jā$",
+        "^ja$",
+        "^yes$",
+        "^true$",
+        "^ir\\b",
+        "^jā\\b",
+        "bluetooth"
+      ],
+      "false": [
+        "^nav$",
+        "^nē$",
+        "^ne$",
+        "^no$",
+        "^false$",
+        "^nav\\b"
+      ],
+      "text": [
+        "bluetooth",
+        "lietotn",
+        "\\bapp\\b"
+      ]
     }
   },
   "accessory": [
@@ -1008,7 +1218,12 @@
     "kapsulu turētāj",
     "\\bplaukts\\b",
     "\\bpaplāte\\b",
-    "\\bkomplekts\\b.*\\b(filtr|maisiņ)"
+    "\\bkomplekts\\b.*\\b(filtr|maisiņ)",
+    "nomaināmi?(s|e|ie|as)? (asmen|galviņ|uzgaļ)",
+    "rezerves (asmen|galviņ)",
+    "(birstes|zobu birstes|birstīšu) (uzgaļ|galviņ)",
+    "skūšanas galviņ",
+    "tīrīšanas (kasetn|šķidrum)"
   ],
   "subcategories": {
     "fridge": {
@@ -2871,6 +3086,399 @@
           "vacuum seal",
           "iepakot",
           "izsūkš"
+        ],
+        "priceEur": [
+          15,
+          800
+        ]
+      }
+    },
+    "shaver": {
+      "key": [
+        "shaver_type",
+        "wet_dry",
+        "run_min",
+        "clean_station"
+      ],
+      "fit": [
+        "shaver_type"
+      ],
+      "enums": {
+        "shaver_type": {
+          "values": [
+            "lady",
+            "hybrid",
+            "rotary",
+            "foil"
+          ],
+          "rules": [
+            {
+              "value": "lady",
+              "text": [
+                "sieviešu",
+                "\\blady",
+                "dāmu",
+                "sievietēm",
+                "sieviesu"
+              ]
+            },
+            {
+              "value": "hybrid",
+              "text": [
+                "oneblade",
+                "hibrīd",
+                "hibrid",
+                "hybrid",
+                "bārdas veidotāj",
+                "series x\\b",
+                "\\bxt\\d{4}"
+              ]
+            },
+            {
+              "value": "rotary",
+              "spec": {
+                "skūšanas sistēma": "rotē|rotāc|rotac",
+                "skuvekļa veids": "rotē|rotāc|rotac",
+                "skūšanas galviņu veids": "rotē|rotāc|rotac"
+              }
+            },
+            {
+              "value": "foil",
+              "spec": {
+                "skūšanas sistēma": "sietiņ|foil|folij",
+                "skuvekļa veids": "sietiņ|foil|folij",
+                "skūšanas galviņu veids": "sietiņ|foil|folij"
+              }
+            },
+            {
+              "value": "rotary",
+              "text": [
+                "rotējoš",
+                "rotācijas",
+                "rotary",
+                "rotatīv"
+              ]
+            },
+            {
+              "value": "foil",
+              "text": [
+                "sietiņ",
+                "\\bfoil",
+                "folijas",
+                "braun",
+                "panasonic"
+              ]
+            },
+            {
+              "value": "rotary",
+              "text": [
+                "philips"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [
+        "clean_station"
+      ],
+      "sanity": {
+        "stems": [
+          "skuvek",
+          "skūšan",
+          "shaver",
+          "oneblade",
+          "bārdas veidotāj",
+          "skustuv"
+        ],
+        "priceEur": [
+          15,
+          900
+        ]
+      }
+    },
+    "trimmer": {
+      "key": [
+        "trimmer_type",
+        "run_min",
+        "wet_dry"
+      ],
+      "fit": [],
+      "enums": {
+        "trimmer_type": {
+          "values": [
+            "multi",
+            "body",
+            "clipper",
+            "beard"
+          ],
+          "rules": [
+            {
+              "value": "multi",
+              "text": [
+                "multigroom",
+                "universāl",
+                "all.?in.?one",
+                "\\d+ ?(vienā|in ?1)\\b",
+                "\\d+-in-1"
+              ]
+            },
+            {
+              "value": "body",
+              "text": [
+                "ķermeņ",
+                "kermen",
+                "\\bbody",
+                "bikini"
+              ]
+            },
+            {
+              "value": "clipper",
+              "text": [
+                "matu griež",
+                "griežamā mašīn",
+                "matu-griezam",
+                "clipper",
+                "hair ?clip",
+                "hair ?cut"
+              ]
+            },
+            {
+              "value": "beard",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "trimmer",
+          "trimer",
+          "griežam",
+          "clipper",
+          "multigroom",
+          "bārd",
+          "matu griez"
+        ],
+        "priceEur": [
+          8,
+          500
+        ]
+      }
+    },
+    "hairdryer": {
+      "key": [
+        "power_w",
+        "ionic",
+        "foldable",
+        "weight_kg"
+      ],
+      "fit": [],
+      "enums": {},
+      "defaultFalse": [
+        "foldable"
+      ],
+      "sanity": {
+        "stems": [
+          "fēn",
+          "\\bfeni\\b",
+          "matu žāvētāj",
+          "matu zavetaj",
+          "hair ?dryer"
+        ],
+        "priceEur": [
+          8,
+          700
+        ]
+      }
+    },
+    "styler": {
+      "key": [
+        "styler_type",
+        "temp_control",
+        "ionic",
+        "power_w"
+      ],
+      "fit": [
+        "styler_type"
+      ],
+      "enums": {
+        "styler_type": {
+          "values": [
+            "airstyler",
+            "curler",
+            "straightener"
+          ],
+          "rules": [
+            {
+              "value": "airstyler",
+              "text": [
+                "karstā gaisa (suka|ķemm|veidotāj)",
+                "airwrap",
+                "air ?styl",
+                "multi ?styl",
+                "gaisa veidotāj",
+                "fēna suka",
+                "fēnsuka",
+                "rotējoš",
+                "matu žāvēšanas suka",
+                "hot ?brush",
+                "brush activ",
+                "\\bsuka\\b"
+              ]
+            },
+            {
+              "value": "curler",
+              "text": [
+                "lokšķēr",
+                "lokskeres",
+                "loku veidotāj",
+                "lokšu",
+                "curl",
+                "konusveid",
+                "viļņ"
+              ]
+            },
+            {
+              "value": "straightener",
+              "text": [
+                "taisnot",
+                "straight",
+                "matu gludin"
+              ]
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "taisnot",
+          "lokšķēr",
+          "lokskeres",
+          "veidotāj",
+          "ieveidot",
+          "airwrap",
+          "styler",
+          "matu suka",
+          "straightener",
+          "curl"
+        ],
+        "priceEur": [
+          8,
+          800
+        ]
+      }
+    },
+    "toothbrush": {
+      "key": [
+        "brush_type",
+        "pressure_sensor",
+        "app",
+        "programs"
+      ],
+      "fit": [],
+      "enums": {
+        "brush_type": {
+          "values": [
+            "kids",
+            "sonic",
+            "rotating"
+          ],
+          "rules": [
+            {
+              "value": "kids",
+              "text": [
+                "bērn",
+                "bernu",
+                "\\bkids?\\b",
+                "junior"
+              ]
+            },
+            {
+              "value": "sonic",
+              "text": [
+                "sonisk",
+                "sonic",
+                "skaņas viļņ"
+              ]
+            },
+            {
+              "value": "rotating",
+              "text": [
+                "oral-?b",
+                "rotējoš",
+                "oscil"
+              ]
+            },
+            {
+              "value": "sonic",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "zobu birst",
+          "zobubirst",
+          "zobu suk",
+          "toothbrush",
+          "sonicare",
+          "oral-?b",
+          "zobu tīr"
+        ],
+        "priceEur": [
+          8,
+          450
+        ]
+      }
+    },
+    "epilator": {
+      "key": [
+        "epilator_type",
+        "wet_dry",
+        "cordless"
+      ],
+      "fit": [],
+      "enums": {
+        "epilator_type": {
+          "values": [
+            "ipl",
+            "shaver",
+            "epilator"
+          ],
+          "rules": [
+            {
+              "value": "ipl",
+              "text": [
+                "\\bipl\\b",
+                "fotoepil",
+                "gaismas impuls",
+                "lāzer"
+              ]
+            },
+            {
+              "value": "shaver",
+              "text": [
+                "skuvek",
+                "\\bshaver"
+              ]
+            },
+            {
+              "value": "epilator",
+              "always": true
+            }
+          ]
+        }
+      },
+      "defaultFalse": [],
+      "sanity": {
+        "stems": [
+          "epilat",
+          "\\bipl\\b",
+          "matu noņemšan"
         ],
         "priceEur": [
           15,

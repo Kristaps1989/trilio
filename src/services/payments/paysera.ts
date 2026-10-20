@@ -2,7 +2,9 @@ import { z } from "zod";
 import { authorizationHeader, type MacCredentials } from "./mac";
 import type { CreatePaymentInput, PaymentProvider } from "./types";
 
-// Paysera Recurring Billing (developers.paysera.com/api/recurring-billing):
+// Paysera Recurring Billing (developers.paysera.com/api/recurring-billing),
+// MAC credentials from Paysera support. Most merchants get Paysera Checkout
+// (OAuth client id + secret, one-off payments) instead: paysera-checkout.ts.
 //   POST /checkout/rest/v1/payment-requests            → { id, status, authorization_url, … }
 //   PUT  /checkout/rest/v1/payment-requests/{id}/authorize { token } → { status: "captured", captured_at, … }
 //   callback: POST form "notification_id=…" to callback_url
@@ -130,6 +132,7 @@ export function createPayseraProvider(config: PayseraConfig): PaymentProvider {
 
   return {
     name: "paysera",
+    recurring: true,
 
     async createPayment(input) {
       const r = await call(
@@ -181,8 +184,8 @@ export function createPayseraProvider(config: PayseraConfig): PaymentProvider {
       }
     },
 
-    async fetchEvent(callbackBody) {
-      const id = callbackBody.get("notification_id");
+    async fetchEvent(callback) {
+      const id = new URLSearchParams(callback.body.slice(0, 4096)).get("notification_id");
       if (!id || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) return null;
       const n = await call("GET", `${notification}/notifications/${id}`, undefined, NotificationResponse);
       const pr = n.data.payment_request;

@@ -18,7 +18,7 @@ const SECTION_BY_FIRST_SEGMENT: Record<string, string> = {
   rezultati: "results",
   modelis: "model_check",
   kategorija: "landing",
-  radars: "radar",
+  "velmju-saraksts": "wishlist",
   ienakt: "sign_in",
   konts: "account",
   maksajums: "payment",
@@ -37,8 +37,7 @@ export function pageInfo(pathname: string, search = ""): PageInfo {
   let subcategory: string | undefined;
   if (first === "izvelies") subcategory = segments[2];
   else if (first === "kategorija") subcategory = segments[1];
-  else if (first === "rezultati" || first === "radars")
-    subcategory = new URLSearchParams(search).get("sub") ?? undefined;
+  else if (first === "rezultati") subcategory = new URLSearchParams(search).get("sub") ?? undefined;
   const path = "/" + segments.join("/");
   return { path, section, subcategory: subcategory && ID.test(subcategory) ? subcategory : undefined };
 }
