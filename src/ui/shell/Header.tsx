@@ -17,7 +17,7 @@ function initialOf(session: Session): string | null {
   return source ? source.trim().charAt(0).toUpperCase() : null;
 }
 
-export function RadarIcon({ className = "" }: { className?: string }) {
+export function HeartIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       width="16"
@@ -26,14 +26,11 @@ export function RadarIcon({ className = "" }: { className?: string }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
       className={className}
     >
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 12l6-6" />
+      <path d="M12 20.5s-7.5-4.6-9.3-9.4C1.5 7.8 3.7 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.3 0 5.5 3.3 4.3 6.6C19.5 15.9 12 20.5 12 20.5z" />
     </svg>
   );
 }
@@ -65,12 +62,12 @@ export function Header() {
       </Link>
       <nav aria-label={t("nav")} className="flex items-center gap-2">
         <Link
-          href="/radars"
-          aria-current={pathname.startsWith("/radars") ? "page" : undefined}
+          href="/velmju-saraksts"
+          aria-current={pathname.startsWith("/velmju-saraksts") ? "page" : undefined}
           className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line-30 px-[14px] text-sm font-semibold text-mist"
         >
-          <RadarIcon className="text-lime" />
-          <span className="max-[379px]:sr-only">{t("radar")}</span>
+          <HeartIcon className="text-lime" />
+          <span className="max-[379px]:sr-only">{t("wishlist")}</span>
         </Link>
         {initial ? (
           <Link

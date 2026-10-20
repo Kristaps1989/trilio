@@ -173,7 +173,7 @@ export async function chargeDueRenewals(
   provider: PaymentProvider,
   urls: BillingUrls,
   now = new Date(),
-  description = "Trilio Cenu radars",
+  description = "Trilio cenu paziņojumi",
 ): Promise<RenewalResult[]> {
   const due = await db
     .select()

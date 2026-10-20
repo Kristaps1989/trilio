@@ -34,6 +34,13 @@ const nextConfig: NextConfig = {
     // Partner CDNs are added here as stores are connected; nothing else is proxied.
     remotePatterns: [],
   },
+  // The radar became the wishlist (owner, 20 Oct 2026): old links land there.
+  async redirects() {
+    return [
+      { source: "/radars", destination: "/velmju-saraksts", permanent: false },
+      { source: "/radars/:path*", destination: "/velmju-saraksts", permanent: false },
+    ];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

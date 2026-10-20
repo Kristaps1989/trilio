@@ -72,7 +72,8 @@ function toCard(pick: Pick, sub: Subcategory, now: Date, energyPrice: number): C
     upgrade: null,
     refurbished: null,
     sessionId: null,
-    trackHref: `/radars/jauns?product=${pick.product.id}`,
+    // Landing pages are cached for everyone: the heart starts empty and fills on tap.
+    saved: false,
   };
 }
 

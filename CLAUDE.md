@@ -3,14 +3,14 @@
 Read `docs/PRODUCT_SPEC.md` before building any feature. It records decisions the product owner already made; don't re-decide them silently. If something there seems wrong or missing, ask.
 
 ## Product in one paragraph
-Trilio is a web app (mobile-first) that guides a shopper through a short one-question-per-screen flow for a chosen appliance type. It then returns up to three options from partner shops' live inventory, in three price tiers, plus a separate refurbished option. Users can track prices with a paid "Cenu radars" (€1/month). Launch market: Latvia, with Lithuania and Estonia later.
+Trilio is a web app (mobile-first) that guides a shopper through a short one-question-per-screen flow for a chosen appliance type. It then returns up to three options from partner shops' live inventory, in three price tiers, plus a separate refurbished option. Users save products and searches to a free wishlist ("Vēlmju saraksts", heart icon) and can buy e-mail notifications about price drops. Launch market: Latvia, with Lithuania and Estonia later.
 
 ## Recommended stack (confirm with the owner before scaffolding)
 - **Next.js (App Router) + TypeScript + Tailwind CSS.** SSR matters for SEO of category landing pages.
 - **PostgreSQL** (Supabase or Neon) **+ Prisma or Drizzle.**
 - **Auth:** Sign in with Google and email magic link (Auth.js). Sign in with Apple is deferred (owner decision, 18 Oct 2026).
 - **Payments:** a PSP with hosted card fields plus Apple Pay and Google Pay (Stripe, or Montonio for the Baltics). Card data must never touch our servers.
-- **Background jobs** for partner feed ingestion and price-history snapshots, plus a radar evaluator: cron or a queue worker.
+- **Background jobs** for partner feed ingestion and price-history snapshots, plus the wishlist e-mail digest: cron or a queue worker.
 - **Notifications:** transactional email (Resend or Postmark) and web push.
 - **LLM (Claude API)**, used only where it adds value: parsing free-text requests into a subcategory and pre-filled answers, and drafting question sets for new categories (a human reviews them). Rankings and prices must be deterministic code, never LLM output.
 

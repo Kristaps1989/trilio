@@ -8,24 +8,21 @@ import { Confirmation } from "@/ui/Confirmation";
 
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<{ next?: string }> };
-
 /**
  * accept_url after the hosted checkout. The provider's callback may arrive a
- * moment after the redirect, so this page continues to the radar creation
- * step only once the subscription is active; otherwise it offers a refresh.
+ * moment after the redirect, so this page continues to the wishlist only once
+ * the subscription is active; otherwise it offers a refresh.
  */
-export default async function PaymentAcceptedPage({ searchParams }: Props) {
-  const { next } = await searchParams;
-  const t = await getTranslations("radar");
+export default async function PaymentAcceptedPage() {
+  const t = await getTranslations("wishlist");
   const session = await auth();
-  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/radars";
+  const target = "/velmju-saraksts?apmaksats=1";
   const userId = session?.user?.id;
   if (userId && hasAccess(await currentSubscription(db, userId))) redirect(target);
 
   return (
     <Confirmation title={t("confirmTitle")} body={t("confirmBody")}>
-      <ButtonLink href={`/radars/apstiprinats?next=${encodeURIComponent(target)}`}>{t("toRadar")}</ButtonLink>
+      <ButtonLink href="/velmju-saraksts/apmaksats">{t("toList")}</ButtonLink>
     </Confirmation>
   );
 }

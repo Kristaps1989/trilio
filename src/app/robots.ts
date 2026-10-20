@@ -6,7 +6,16 @@ import { appBaseUrl } from "@/services/payments";
 // can cite Trilio's category pages). Private, transactional and tracking
 // paths carry no public content and are closed to everyone.
 
-const PRIVATE = ["/api/", "/go/", "/radars", "/konts", "/ienakt", "/maksajums/", "/rezultati", "/cits"];
+const PRIVATE = [
+  "/api/",
+  "/go/",
+  "/velmju-saraksts",
+  "/konts",
+  "/ienakt",
+  "/maksajums/",
+  "/rezultati",
+  "/cits",
+];
 
 const AI_CRAWLERS = [
   "GPTBot",

@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AccountPage() {
   const t = await getTranslations("account");
   const ta = await getTranslations("auth");
-  const tr = await getTranslations("radar");
+  const tr = await getTranslations("wishlist");
   const session = await auth();
   if (!session?.user?.id) redirect("/ienakt?callbackUrl=/konts");
 
@@ -33,7 +33,7 @@ export default async function AccountPage() {
         <h2 className="font-heading text-xl font-semibold text-mist">{tr("title")}</h2>
         <p className="text-[15px] text-stone">{t("radarHint")}</p>
         <div>
-          <ButtonLink href="/radars" size="sm">
+          <ButtonLink href="/velmju-saraksts" size="sm">
             {t("openRadar")}
           </ButtonLink>
         </div>

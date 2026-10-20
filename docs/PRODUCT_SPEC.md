@@ -263,49 +263,28 @@ Under the three picks, "Rādīt vairāk variantus (N)" (show more options) lists
    - Rank them by **total cost of ownership** (price + 10-year electricity).
 4. The lead text explains the trade-off. A refurbished copy of the same model appears in its own block.
 
-## 5. Price radar ("Cenu radars", €1/month)
+## 5. Wishlist ("Vēlmju saraksts") and price e-mails
 
-### 5.1 Setup (from any card's "Sekot cenai", or the "Sekot cenām" panel under the results)
-0. **"Kurai precei sekot?"** (which product to follow?), only from the results panel: one option per pick with its current price, plus "Visām trim precēm" (all three), which creates one radar per product (owner, 19 Oct 2026). A card's own "Sekot cenai" skips this step.
-1. **"Kad tev paziņot?"** (when should we notify you?):
-   - any drop
-   - at least −5 %
-   - at least −10 %
+Owner decision, 20 Oct 2026: the wishlist replaces the price radar. Saving is one tap and free; e-mails about price drops are the paid extra (the plans in `src/db/seed.ts`). Old `/radars` links redirect to `/velmju-saraksts`; the radar tables stay in the database, unused.
 
-   **No target price**: the owner decided a target price may never be reached.
-2. **"Vai ziņot arī par citiem modeļiem ar labu cenu?"** (notify about other good-value models too?):
-   - only this model (the code is shown)
-   - other models from the same brand
-   - any brand
+Why (evaluated from the shopper's side): the radar asked three questions and showed a payment screen on the first tap. A heart is one tap that everyone knows, shoppers see the value (today's best offer and the price history) before paying, and a saved search fits how appliances are bought: "fridge, ~186 cm, one door" rather than one model.
 
-   Alternatives must satisfy the user's saved requirements.
-3. **"Kā tev paziņot?"** (how should we notify you?): push, email, or both.
-4. **Sign in**, if the user isn't signed in yet: Google or an email magic link (Apple deferred by the owner on 18 Oct 2026). The text explains why an account is needed: to manage filters from any device.
-5. **Plan screen:** €1/month, unlimited tracked products, prices checked several times a day, cancel anytime.
-6. **Payment:** Apple Pay and Google Pay buttons, then a card form.
-   - Card number grouped in fours, MM/GG expiry auto-formatted, CVC, name.
-   - Validation messages are in Latvian.
-   - Note: "Kartes datus apstrādā [PSP] — Trilio tos neredz un neglabā" (card data is handled by the payment provider; Trilio never sees or stores it).
-7. **Confirmation**, with links to the radar page and back to results.
+### 5.1 Saving (the heart)
+- **A product:** "Saglabāt" on every result card (picks, extras, "more options", "Vērts apsvērt", refurbished), on the model-check page and on the category landing pages. A second tap removes it ("Saglabāts").
+- **A search:** "Saglabāt meklējumu" under the results heading and in the panel below the picks. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
+- **Signed out:** the tap goes through sign-in (Google or e-mail) and saves on the way back to the same page (`/velmju-saraksts/pievienot`).
+- One save per product or search per user. The price at saving is the baseline for "cheaper than when saved".
 
-Users who are already subscribed skip the plan and payment steps. Users who are signed in skip the sign-in step.
+### 5.2 The wishlist page (`/velmju-saraksts`, header heart)
+- **Saved searches:** the name, today's recommended pick for those answers (ranked exactly like the results page) with price and shop, how many products match, the change since saving, "Skatīt rezultātus" (reopens the saved results) and a heart to remove.
+- **Saved products:** today's best new in-stock offer and shop, the change since saving, a link to the shop, a 90-day price history (lowest price per day, with the lowest and highest written out) and a heart to remove. "Pašlaik nav pieejams" when no shop has it.
+- **E-mail notifications panel:** without the service, what it does and "Ieslēgt paziņojumus · 1,99 €/mēn." (plan screen and hosted checkout at `/velmju-saraksts/pazinojumi`). With it, the address and "Par kādiem kritumiem ziņot?" (any drop, at least 5 % (default), at least 10 %).
+- Subscription block (cancel in two taps, resume), account line and sign-out, as before.
 
-### 5.2 Radar page
-- **Per tracked item:** a pause/resume switch, the price, its change, a 30-day sparkline, and model/EAN.
-- **"Filtri — Mainīt"** (filters — change) panel:
-  - threshold;
-  - shops to watch (at least one);
-  - scope (only this model / same brand / any brand);
-  - include refurbished (new items only).
-- The panel's summary line looks like "kritums vismaz 5 % · visi veikali · + citi Bosch modeļi" (drop of at least 5 % · all shops · + other Bosch models).
-- A comparable-model suggestion box appears according to the scope setting.
-- "Pārtraukt sekot" (stop tracking) with an undo toast.
-- Notification channels.
-- **Subscription and payment:**
-  - Current method ("Karte •••• 4242, derīga līdz 08/28", card ending 4242, valid until 08/28, or Apple Pay / Google Pay), with "Mainīt" (change) to update it inline.
-  - "Atteikties no abonementa" (cancel subscription) asks for confirmation, then shows "Atjaunot abonementu" (resume subscription).
-- Account line ("Ienācis kā… · Google", signed in as… via Google) and "Iziet" (sign out).
-- When signed out, the page shows only the sign-in options (Google and email; Apple deferred).
+### 5.3 E-mails (paid)
+- After each ingestion, one digest per subscriber at most, listing the saved items whose price dropped by the threshold: a product's best offer, or a saved search's recommended pick. Each item at most once a day; the reported price becomes the new baseline.
+- E-mail only: a web app cannot rely on push (owner, 19 Oct 2026).
+- No marketing, no countdowns; the e-mail links to the wishlist.
 
 ## 6. Identity of products
 - The card shows the manufacturer model code and EAN, so the same name never hides different products.

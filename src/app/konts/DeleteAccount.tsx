@@ -7,7 +7,7 @@ import { deleteAccountAction } from "./actions";
 
 export function DeleteAccount() {
   const t = useTranslations("account");
-  const tr = useTranslations("radar");
+  const tr = useTranslations("wishlist");
   const [confirming, setConfirming] = useState(false);
   const [pending, start] = useTransition();
 

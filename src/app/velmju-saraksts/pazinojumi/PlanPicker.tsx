@@ -12,7 +12,6 @@ type PlanOption = { id: string; label: string; sublabel?: string };
 export function PlanPicker({
   monthly,
   annual,
-  returnTo,
   payLabel,
   note,
   legal,
@@ -20,7 +19,6 @@ export function PlanPicker({
 }: {
   monthly: PlanOption;
   annual: PlanOption;
-  returnTo: string;
   payLabel: string;
   note: string;
   /** Auto-renewal, cancellation, withdrawal and terms: shown next to the pay button (EU consumer law). */
@@ -81,7 +79,7 @@ export function PlanPicker({
         disabled={pending}
         onClick={() =>
           start(async () => {
-            const r = await startCheckoutAction(plan, returnTo);
+            const r = await startCheckoutAction(plan);
             if (r && "ok" in r && !r.ok) setError(r.reason);
           })
         }

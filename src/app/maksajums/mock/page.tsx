@@ -19,8 +19,8 @@ export default async function MockCheckout({ searchParams }: Props) {
   const provider = paymentsProvider();
   const { request, accept, cancel } = await searchParams;
   if (!provider || provider.name !== "mock" || !request) redirect("/");
-  const acceptUrl = Local.safeParse(accept).success ? accept! : "/radars";
-  const cancelUrl = Local.safeParse(cancel).success ? cancel! : "/radars";
+  const acceptUrl = Local.safeParse(accept).success ? accept! : "/velmju-saraksts";
+  const cancelUrl = Local.safeParse(cancel).success ? cancel! : "/velmju-saraksts";
 
   async function complete(formData: FormData) {
     "use server";

@@ -7,7 +7,7 @@ import { formatDateNominative } from "@/i18n/format";
 import { Button, ButtonLink } from "@/ui/Button";
 import { cancelSubscriptionAction, resumeSubscriptionAction } from "./actions";
 
-// Spec §5.2 subscription block: current method, cancel with confirmation
+// Spec §5 subscription block: current method, cancel with confirmation
 // (two taps, no dark patterns), resume.
 
 export type SubscriptionModel = {
@@ -20,7 +20,7 @@ export type SubscriptionModel = {
 };
 
 export function SubscriptionPanel({ subscription }: { subscription: SubscriptionModel | null }) {
-  const t = useTranslations("radar");
+  const t = useTranslations("wishlist");
   const router = useRouter();
   const [pending, start] = useTransition();
   const [confirming, setConfirming] = useState(false);
@@ -31,7 +31,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
         <p className="text-base text-stone">
           {subscription?.status === "expired" ? t("expired") : t("noSubscription")}
         </p>
-        <ButtonLink href="/radars/jauns?step=plan" size="sm">
+        <ButtonLink href="/velmju-saraksts/pazinojumi" size="sm">
           {t("subscribe")}
         </ButtonLink>
       </div>

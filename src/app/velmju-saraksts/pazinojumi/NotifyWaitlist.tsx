@@ -5,11 +5,11 @@ import { useTranslations } from "next-intl";
 import { ButtonLink, Button } from "@/ui/Button";
 import { InfoBox } from "@/ui/layout";
 
-// Payments not switched on yet: the radar cannot start, so the shopper leaves
-// an e-mail (pre-filled from the account) and hears when it can.
+// Payments not switched on yet: e-mail notifications cannot start, so the
+// shopper leaves an e-mail (pre-filled from the account) and hears when they can.
 
-export function RadarWaitlist({ email, note }: { email: string; note: string }) {
-  const t = useTranslations("radar");
+export function NotifyWaitlist({ email, note }: { email: string; note: string }) {
+  const t = useTranslations("wishlist");
   const id = useId();
   const [value, setValue] = useState(email);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -32,8 +32,8 @@ export function RadarWaitlist({ email, note }: { email: string; note: string }) 
           <span role="status">{t("waitlistDone", { email: value })}</span>
         </InfoBox>
         <div>
-          <ButtonLink href="/izvelies" variant="outline">
-            {t("backToResults")}
+          <ButtonLink href="/velmju-saraksts" variant="outline">
+            {t("toList")}
           </ButtonLink>
         </div>
       </div>
@@ -64,8 +64,8 @@ export function RadarWaitlist({ email, note }: { email: string; note: string }) 
         <Button type="submit" disabled={state === "sending"}>
           {t("waitlistJoin")}
         </Button>
-        <ButtonLink href="/izvelies" variant="outline">
-          {t("backToResults")}
+        <ButtonLink href="/velmju-saraksts" variant="outline">
+          {t("toList")}
         </ButtonLink>
       </div>
     </form>
