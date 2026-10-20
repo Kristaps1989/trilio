@@ -68,11 +68,9 @@ for (const { group, sub } of all) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Trīs labākie varianti tev");
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
-    // The radar panel offers the picks to choose from, never an empty selection.
-    await expect(page.getByRole("link", { name: /Ieslēgt cenu radaru/ })).toHaveAttribute(
-      "href",
-      /choose=[0-9a-f-]{36}/,
-    );
+    // The wishlist: the search and every pick can be saved with one tap.
+    await expect(page.getByRole("button", { name: "Saglabāt meklējumu" }).first()).toBeVisible();
+    await expect(picks.first().getByRole("button", { name: "Saglabāt", exact: true })).toBeVisible();
 
     // The chosen price range is a chip; every pick inside it, unless labelled over budget.
     const chips = page.getByRole("navigation", { name: "Tavas izvēles" }).getByRole("button");
