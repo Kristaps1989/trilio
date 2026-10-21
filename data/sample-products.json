@@ -1,5 +1,5 @@
 {
- "note": "PARAUGA DATI — izdomātas cenas, krājumi, vērtējumi un atribūti visām 39 apakškategorijām; EAN ir ģenerēti (izņemot Bosch KGN39VLCT). Lieto tikai testiem un dizaina demonstrācijai.",
+ "note": "PARAUGA DATI — izdomātas cenas, krājumi, vērtējumi un atribūti visām 39 apakškategorijām; EAN ir ģenerēti (izņemot Bosch KGN39VLCT). Bosch KIN86VFE0 atribūti ņemti no EPREL (reģ. nr. 380048); attēli public/sample ir zīmēti paraugi. Lieto tikai testiem un dizaina demonstrācijai.",
  "products": [
   {
    "id": "n1",
@@ -5555,7 +5555,8 @@
      "price_eur": 91,
      "stock": "soon"
     }
-   ]
+   ],
+   "img": "/sample/kettle-steel.png"
   },
   {
    "id": "kettle-162",
@@ -5581,7 +5582,8 @@
      "price_eur": 41,
      "stock": "in"
     }
-   ]
+   ],
+   "img": "/sample/kettle-white.png"
   },
   {
    "id": "kettle-163",
@@ -5612,7 +5614,8 @@
      "price_eur": 105,
      "stock": "in"
     }
-   ]
+   ],
+   "img": "/sample/kettle-black.png"
   },
   {
    "id": "kettle-164",
@@ -5648,7 +5651,8 @@
      "price_eur": 100,
      "stock": "in"
     }
-   ]
+   ],
+   "img": "/sample/kettle-steel.png"
   },
   {
    "id": "kettle-165",
@@ -5684,7 +5688,8 @@
      "price_eur": 34,
      "stock": "in"
     }
-   ]
+   ],
+   "img": "/sample/kettle-white.png"
   },
   {
    "id": "kettle-166",
@@ -5720,7 +5725,8 @@
      "price_eur": 68,
      "stock": "soon"
     }
-   ]
+   ],
+   "img": "/sample/kettle-black.png"
   },
   {
    "id": "kettle-167",
@@ -5746,7 +5752,8 @@
      "price_eur": 88,
      "stock": "in"
     }
-   ]
+   ],
+   "img": "/sample/kettle-steel.png"
   },
   {
    "id": "blender-168",
@@ -9574,6 +9581,47 @@
     {
      "store": "store_c",
      "price_eur": 342,
+     "stock": "in"
+    }
+   ]
+  },
+  {
+   "id": "fridge-eprel",
+   "c": "new",
+   "sub": "fridge",
+   "name": "Bosch iebūvējams ledusskapis ar saldētavu 177 cm",
+   "m": "KIN86VFE0",
+   "ean": "2000000003009",
+   "s": 8.2,
+   "kwh_year": 234,
+   "specs": "",
+   "tags": [],
+   "img": "/sample/fridge-builtin.png",
+   "eprel": "refrigeratingappliances2019/380048",
+   "attrs": {
+    "form": "combi",
+    "install": "builtin",
+    "doors": "two",
+    "energy_class": "E",
+    "noise_db": 35,
+    "height_cm": 177.2,
+    "width_cm": 54.1,
+    "depth_cm": 54.8,
+    "kwh_year": 234,
+    "fridge_volume_l": 184,
+    "freezer_volume_l": 76,
+    "volume_l": 260,
+    "no_frost": true
+   },
+   "offers": [
+    {
+     "store": "store_a",
+     "price_eur": 899,
+     "stock": "in"
+    },
+    {
+     "store": "store_c",
+     "price_eur": 929,
      "stock": "in"
     }
    ]

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SAMPLE_PATH } from "@/domain/catalog/media";
 
 // What every feed adapter produces. One row per offer; product identity is
 // carried on each row and resolved to a product by EAN or brand+model key in
@@ -24,7 +25,17 @@ export const NormalisedOfferSchema = z.object({
   specs: z.string().nullable().default(null),
   kwhYear: z.number().int().nonnegative().nullable().default(null),
   rating: z.number().int().min(0).max(100).nullable().default(null),
-  imageUrl: z.string().url().nullable().default(null),
+  /** A shop photo (https), or a local /sample/ file in the design sample data. */
+  imageUrl: z
+    .union([z.string().url(), z.string().regex(SAMPLE_PATH)])
+    .nullable()
+    .default(null),
+  /** EPREL product "<group>/<registration>": only sample data states it; the EPREL job sets it for shop products. */
+  eprelId: z
+    .string()
+    .regex(/^[a-z0-9]+\/\d+$/)
+    .nullable()
+    .default(null),
   condition: z.enum(["new", "refurbished"]).default("new"),
   grade: z.string().nullable().default(null),
   warrantyMonths: z.number().int().nonnegative().nullable().default(null),
@@ -37,8 +48,8 @@ export const NormalisedOfferSchema = z.object({
 export type NormalisedOffer = z.infer<typeof NormalisedOfferSchema>;
 
 /** What upsertOffers accepts: provenance and the spec table are optional (sample data, tests). */
-export type UpsertRow = Omit<NormalisedOffer, "attributeSources" | "specTable"> &
-  Partial<Pick<NormalisedOffer, "attributeSources" | "specTable">>;
+export type UpsertRow = Omit<NormalisedOffer, "attributeSources" | "specTable" | "eprelId"> &
+  Partial<Pick<NormalisedOffer, "attributeSources" | "specTable" | "eprelId">>;
 
 export type Rejected = { reason: string; raw: unknown };
 

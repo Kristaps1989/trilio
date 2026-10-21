@@ -19,6 +19,7 @@ import { currentMarket } from "@/i18n/market";
 import { appBaseUrl } from "@/services/payments";
 import { ButtonLink } from "@/ui/Button";
 import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
+import { cardMedia } from "../rezultati/card-media";
 import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 
 // Phase 3 SEO landing pages: "Labākie ledusskapji līdz 800 €". Server-rendered
@@ -74,6 +75,7 @@ function toCard(pick: Pick, sub: Subcategory, now: Date, energyPrice: number): C
     sessionId: null,
     // Landing pages are cached for everyone: the heart starts empty and fills on tap.
     saved: false,
+    ...cardMedia(pick.product),
   };
 }
 

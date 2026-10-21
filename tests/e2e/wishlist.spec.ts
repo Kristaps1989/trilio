@@ -142,6 +142,8 @@ test("wishlist: save a search and a product, see today's offer, remove, buy noti
   await expect(page.getByText(`Paziņojumi ieslēgti. Sūtām uz ${email}.`)).toBeVisible();
   await expect(page.getByRole("radio", { name: "Vismaz par 5 %" })).toBeChecked();
   await page.getByRole("radio", { name: "Par jebkuru kritumu" }).check();
+  // The choice shows at once; wait until it is saved before reloading.
+  await expect(page.getByRole("group", { name: "Par kādiem kritumiem ziņot?" })).toBeEnabled();
   await page.reload();
   await expect(page.getByRole("radio", { name: "Par jebkuru kritumu" })).toBeChecked();
   await expectNoAxeViolations(page);

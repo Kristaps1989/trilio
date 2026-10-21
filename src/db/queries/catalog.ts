@@ -88,6 +88,7 @@ function toProduct(p: ProductRow, productOffers: OfferView[]): ProductView {
     kwhYear: p.kwhYear,
     rating: p.rating,
     imageUrl: p.imageUrl,
+    eprelId: p.eprelId,
     extractionConfidence: p.extractionConfidence,
     offers: productOffers,
   };

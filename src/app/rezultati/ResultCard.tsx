@@ -1,8 +1,12 @@
 import { getTranslations } from "next-intl/server";
+import type { EnergyLabel } from "@/domain/catalog/media";
 import type { PriceLine } from "@/domain/pricing/omnibus";
 import { formatEur, formatEurDelta, formatRating } from "@/i18n/format";
 import { buttonClass } from "@/ui/Button";
+import { EnergyBadge } from "@/ui/EnergyBadge";
+import { ProductImage } from "@/ui/ProductImage";
 import { SaveButton } from "@/ui/SaveButton";
+import type { CardImage } from "./card-media";
 
 // Spec §3.2 result card and §3.3 refurbished card. Server component: all
 // numbers arrive formatted, all copy comes from messages.
@@ -45,6 +49,10 @@ export type CardModel = {
   sessionId: string | null;
   /** In the signed-in user's wishlist (the heart is filled). */
   saved: boolean;
+  /** The shop's photo, or the subcategory drawing (card-media.ts). */
+  image: CardImage;
+  /** EPREL's class, label and sheet when the product was matched in EPREL. */
+  energyLabel: EnergyLabel | null;
 };
 
 function goHref(card: CardModel): string {
@@ -138,6 +146,8 @@ export async function ResultCard({ card }: { card: CardModel }) {
         ) : null}
       </div>
 
+      <ProductImage src={card.image.src} alt={card.name} fallback={card.image.fallback} size="card" />
+
       <div>
         <h3 className="font-body text-xl leading-tight font-bold tracking-normal">{card.name}</h3>
         <p className="mt-1 font-heading text-[13px] font-semibold tracking-[0.01em]">
@@ -185,6 +195,8 @@ export async function ResultCard({ card }: { card: CardModel }) {
           </span>
         </div>
       ) : null}
+
+      {card.energyLabel ? <EnergyBadge label={card.energyLabel} /> : null}
 
       {card.energy ? (
         <p className="flex items-start gap-2 text-sm">
@@ -268,7 +280,8 @@ export async function RefurbishedCard({ card }: { card: CardModel }) {
       className="flex flex-wrap items-center gap-x-6 gap-y-[14px] rounded-card bg-refurb-bg px-[22px] py-5 text-night"
       aria-label={card.name}
     >
-      <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-1.5">
+      <ProductImage src={card.image.src} alt={card.name} fallback={card.image.fallback} size="thumb" />
+      <div className="flex min-w-0 flex-[1_1_200px] flex-col gap-1.5">
         <div className="flex flex-wrap gap-1.5">
           <span className="inline-flex rounded-full bg-refurb px-[10px] py-1 text-xs font-bold text-white">
             {t("refurbBadge")}

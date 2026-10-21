@@ -60,7 +60,14 @@ export function validateExtraction(out: ExtractionOutput, sub: Subcategory): Ext
   return { attributes, confidence };
 }
 
-export function extractionUserPrompt(input: ExtractionInput): string {
+/** Extractable keys the product does not have yet: the only ones worth a call. */
+export function missingKeys(subcategoryId: string, attributes: Record<string, unknown>): string[] {
+  return Object.keys(extractableAttributes(subcategoryId)).filter(
+    (k) => attributes[k] === undefined || attributes[k] === null,
+  );
+}
+
+export function extractionUserPrompt(input: ExtractionInput, missing?: string[]): string {
   const table = input.specTable
     ? Object.entries(input.specTable)
         .map(([k, v]) => `${k}: ${v}`)
@@ -75,18 +82,21 @@ export function extractionUserPrompt(input: ExtractionInput): string {
     .filter(Boolean)
     .join("\n")
     .slice(0, MAX_EXTRACTION_INPUT);
-  return `Extract attributes from this product text:\n${wrapUntrusted("product_text", text)}`;
+  // Asking only for what is missing keeps the answer short; the system prompt stays the same per subcategory (cached).
+  const ask = missing?.length ? `Report only these keys: ${missing.join(", ")}.\n` : "";
+  return `${ask}Extract attributes from this product text:\n${wrapUntrusted("product_text", text)}`;
 }
 
 export async function extractProduct(
   input: ExtractionInput,
   sub: Subcategory,
   caller: StructuredCaller,
+  missing?: string[],
 ): Promise<Extracted | null> {
   const result = await caller({
     purpose: "attribute_extraction",
     system: extractionSystem(sub),
-    user: extractionUserPrompt(input),
+    user: extractionUserPrompt(input, missing),
     schema: ExtractionOutputSchema,
     maxTokens: 1024,
     effort: "low",

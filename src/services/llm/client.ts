@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { and, count, eq, gte } from "drizzle-orm";
+import { and, count, eq, gte, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { Db } from "@/db/client";
 import { llmCalls } from "@/db/schema";
@@ -14,7 +14,8 @@ import { llmCalls } from "@/db/schema";
 
 export type LlmPurpose = "free_text_routing" | "attribute_extraction";
 
-export const DEFAULT_MODEL = "claude-opus-5-5";
+/** Small, fast and cheap: reading spec tables and routing short text needs no more (LLM_MODEL overrides). */
+export const DEFAULT_MODEL = "claude-haiku-5-5";
 
 export function llmModel(): string {
   return process.env.LLM_MODEL || DEFAULT_MODEL;
@@ -28,9 +29,11 @@ export function extractionEnabled(): boolean {
   return process.env.FEATURE_LLM_EXTRACT === "1" && !!process.env.ANTHROPIC_API_KEY;
 }
 
+export const DEFAULT_DAILY_CAP = 300;
+
 export function dailyCallCap(): number {
-  const n = Number(process.env.LLM_DAILY_CALL_CAP ?? 2000);
-  return Number.isFinite(n) && n > 0 ? n : 2000;
+  const n = Number(process.env.LLM_DAILY_CALL_CAP ?? DEFAULT_DAILY_CAP);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_DAILY_CAP;
 }
 
 export type StructuredRequest<T> = {
@@ -131,4 +134,59 @@ export function createCaller(
         .catch(() => undefined);
     }
   };
+}
+
+/**
+ * USD per million tokens (input, output), from Anthropic's price list of
+ * October 2026 for prompts up to 100K tokens. Cache reads cost 0.1x input and
+ * 5-minute cache writes 1.25x. Only for the estimate in the log line; the
+ * Claude Console shows the billed amount.
+ */
+const PRICES: Record<string, { input: number; output: number }> = {
+  "claude-haiku-5-5": { input: 0.1, output: 0.5 },
+  "claude-sonnet-5-5": { input: 2, output: 10 },
+  "claude-opus-5-5": { input: 4, output: 20 },
+};
+
+export type UsageRow = {
+  model: string;
+  calls: number;
+  failed: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+};
+
+/** Estimated USD for one model's tokens; null for a model without a known price. */
+export function estimateUsd(u: Omit<UsageRow, "calls" | "failed">): number | null {
+  const price = PRICES[u.model];
+  if (!price) return null;
+  const usd =
+    (u.inputTokens * price.input +
+      u.cacheReadTokens * price.input * 0.1 +
+      u.cacheWriteTokens * price.input * 1.25 +
+      u.outputTokens * price.output) /
+    1_000_000;
+  return Math.round(usd * 100) / 100;
+}
+
+/** Today's (UTC) Claude API usage per model, for the log line after each job run. */
+export async function usageToday(db: Db, now = new Date()) {
+  const start = new Date(now);
+  start.setUTCHours(0, 0, 0, 0);
+  const rows: UsageRow[] = await db
+    .select({
+      model: llmCalls.model,
+      calls: count(),
+      failed: sql<number>`count(*) filter (where not ${llmCalls.ok})`.mapWith(Number),
+      inputTokens: sql<number>`coalesce(sum(${llmCalls.inputTokens}), 0)`.mapWith(Number),
+      outputTokens: sql<number>`coalesce(sum(${llmCalls.outputTokens}), 0)`.mapWith(Number),
+      cacheReadTokens: sql<number>`coalesce(sum(${llmCalls.cacheReadTokens}), 0)`.mapWith(Number),
+      cacheWriteTokens: sql<number>`coalesce(sum(${llmCalls.cacheWriteTokens}), 0)`.mapWith(Number),
+    })
+    .from(llmCalls)
+    .where(gte(llmCalls.createdAt, start))
+    .groupBy(llmCalls.model);
+  return rows.map((r) => ({ ...r, estimatedUsd: estimateUsd(r) }));
 }

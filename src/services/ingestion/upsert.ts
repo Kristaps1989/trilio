@@ -71,6 +71,7 @@ export async function upsertOffers(
             kwhYear: row.kwhYear,
             rating: row.rating,
             imageUrl: row.imageUrl,
+            eprelId: row.eprelId ?? null,
           })
           .returning({ id: products.id });
         id = created!.id;
@@ -104,6 +105,7 @@ export async function upsertOffers(
               sql`${products.kwhYear}`,
             rating: row.rating ?? sql`${products.rating}`,
             imageUrl: row.imageUrl ?? sql`${products.imageUrl}`,
+            eprelId: row.eprelId ?? sql`${products.eprelId}`,
             ean: row.ean ?? sql`${products.ean}`,
             updatedAt: capturedAt,
           })

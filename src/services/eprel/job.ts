@@ -8,6 +8,7 @@ import {
   sameProduct,
   type EprelRecord,
 } from "@/domain/catalog/eprel";
+import { eprelId } from "@/domain/catalog/media";
 import { mergeAttributes } from "@/domain/catalog/normalise";
 import { EprelError, type EprelClient } from "./client";
 
@@ -125,12 +126,15 @@ export async function runEprelJob(
         sources: Object.fromEntries(Object.keys(attrs).map((k) => [k, "eprel"])),
       });
       const kwh = merged.sources.kwh_year === "eprel" ? merged.attributes.kwh_year : undefined;
+      const reg = registrationNumber(found.record);
       await db
         .update(products)
         .set({
           attributes: merged.attributes,
           attributeSources: merged.sources,
           ...(typeof kwh === "number" ? { kwhYear: Math.round(kwh) } : {}),
+          // For the energy-label badge (src/domain/catalog/media.ts).
+          ...(reg ? { eprelId: eprelId(found.group, reg) } : {}),
         })
         .where(eq(products.id, p.id));
     } else if (status === "not_found") {

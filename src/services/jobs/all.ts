@@ -3,7 +3,7 @@ import type { Db } from "@/db/client";
 import { purgeOldWaitlistLeads } from "@/db/queries/waitlist";
 import { ingestionRuns, stores, type Store } from "@/db/schema";
 import { ingestStore, isIngestible, type RunResult } from "@/services/ingestion/run";
-import { createCaller, extractionEnabled } from "@/services/llm/client";
+import { createCaller, extractionEnabled, usageToday } from "@/services/llm/client";
 import { runExtractionJob } from "@/services/llm/extract-job";
 import { appBaseUrl } from "@/services/payments";
 import { runWishlistJob } from "@/services/wishlist/job";
@@ -93,6 +93,8 @@ export async function runAllJobs(db: Db, opts: { force?: boolean } = {}): Promis
   for (const store of targets) results.push(await ingestStore(db, store));
   // New products get attributes when extraction is on (docs/LLM.md).
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
+  // The day's Claude API spend so far, in the log of whichever service ran the job.
+  if (extraction) console.log("llm today:", JSON.stringify(await usageToday(db)));
   const wishlist = await runWishlistJob(db, { baseUrl: appBaseUrl(), texts: wishlistTexts() });
   // Privacy policy retention: waitlist entries older than 12 months.
   const waitlistPurged = await purgeOldWaitlistLeads(db);

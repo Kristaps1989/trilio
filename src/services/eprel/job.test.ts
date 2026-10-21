@@ -131,6 +131,7 @@ run("runEprelJob", () => {
     });
     expect(p!.attributeSources).toMatchObject({ noise_db: "eprel", energy_class: "eprel" });
     expect(p!.kwhYear).toBe(Math.round(64 * 2.8));
+    expect(p!.eprelId).toBe("dishwashers2019/1273558");
     const [hit] = await db.select().from(eprelLookups).where(eq(eprelLookups.productId, foundId));
     expect(hit).toMatchObject({ status: "found", method: "model", registrationNumber: "1273558" });
     const [miss] = await db.select().from(eprelLookups).where(eq(eprelLookups.productId, missingId));

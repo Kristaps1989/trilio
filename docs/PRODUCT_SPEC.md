@@ -20,6 +20,8 @@ UI strings are in Latvian, as they appear in the prototype. The explanations are
 
 **Owner decision (18 Oct 2026, later the same day): pictures used wisely.** No illustrative people in the drawings. Pictures appear only where the shape or the size is what the shopper decides by, and they show the appliance (and the furniture it fits into) drawn to one scale within a question. Sizes are cards with numbers people know (fridges: ~54 cm, ~85 cm, 125–160 cm, 166–180 cm, 181–205 cm; built-in niches 82–88 / 102–123 / 140–158 / 177–178 / 194 cm), asked after freestanding vs built-in, followed by the number of doors. A few extra steps are fine when each one is meaningful. Choices that are not visual (heat pump vs condenser, cups a day, household size) are plain text cards.
 
+**Owner decision (21 Oct 2026): product photos on products, drawings in questions.** Result cards, the model check and saved products show the shop's photo of that exact product (on a white tile, through our own image optimiser, from the stores' configured image hosts only); without a usable photo the subcategory drawing is shown. Question cards keep the to-scale drawings. Energy-label products matched in EPREL show the EU class arrow with links to the official label and product information sheet (`docs/PICTURES_AND_LLM_PLAN.md`).
+
 Everything else (priorities, brands, urgency, refurbished) is refined on the results page. The rules and their reasons are in `docs/FILTERS_PLAN.md` ("Core: the Jobs rules").
 
 - One question per screen, large type, and a progress bar. The counter reads "Jautājums N no M" (question N of M). M counts the flow questions that matter right now, plus the price screen. It changes when a conditional question appears or one is skipped.

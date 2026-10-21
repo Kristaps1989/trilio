@@ -38,6 +38,8 @@ export type ProductView = {
   /** 0–100; 86 renders as "8,6/10". */
   rating: number | null;
   imageUrl: string | null;
+  /** EPREL product "<group>/<registration>" when the product was matched in EPREL. */
+  eprelId?: string | null;
   /** Null when attributes came from the feed or no extraction ran; < 60 means "nav apstiprināts". */
   extractionConfidence: number | null;
   offers: OfferView[];
