@@ -39,7 +39,7 @@ Shops are rows in `stores`. Nothing about a shop is in code except the slug used
    npm run ingest -- euronics path/to/their-sample.xml
    ```
 4. Run for real: `npm run ingest -- euronics` (uses `feed_url`), or `npm run ingest -- all`.
-5. Add the image hosts to `images.remotePatterns` in `next.config.ts` (the only code change per store; it is a security allow-list).
+5. Add the image hosts to the store's `imageHosts` in `src/db/stores.ts`. `next.config.ts` builds `images.remotePatterns` from that list, so product photos from the new shop show after the next deploy (it is a security allow-list: photos from any other host are replaced by the line drawing).
 
 ### Shops without a feed
 

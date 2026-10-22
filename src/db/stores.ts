@@ -373,3 +373,9 @@ export const PARTNER_STORES: StoreSeed[] = [
     active: false,
   },
 ];
+
+/**
+ * Hosts product photos may come from: next/image remotePatterns (next.config.ts)
+ * and the card builders' check (src/domain/catalog/media.ts) both use this list.
+ */
+export const IMAGE_HOSTS: string[] = [...new Set(PARTNER_STORES.flatMap((s) => s.imageHosts ?? []))];

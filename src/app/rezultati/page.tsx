@@ -45,6 +45,7 @@ import { CompareTable, type CompareColumn, type CompareRow } from "./CompareTabl
 import { deltaLines } from "./delta-text";
 import { FilterBar, type Chip } from "./FilterBar";
 import { HowWeRank } from "./HowWeRank";
+import { cardMedia } from "./card-media";
 import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCard";
 
 export const dynamic = "force-dynamic";
@@ -216,6 +217,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       refurbished: null,
       sessionId,
       saved: saved.has(productKey(pick.product.id)),
+      ...cardMedia(pick.product),
     };
   }
 

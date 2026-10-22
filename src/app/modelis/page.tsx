@@ -18,6 +18,7 @@ import { bestOffer, eligibleOffers } from "@/domain/ranking/filters";
 import { formatCm, formatDateDative, formatEur } from "@/i18n/format";
 import { Button } from "@/ui/Button";
 import { InfoBox, Kicker, Lead, Page, PageTitle, Panel, Screen, SectionTitle } from "@/ui/layout";
+import { cardMedia } from "../rezultati/card-media";
 import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 
 export const dynamic = "force-dynamic";
@@ -131,6 +132,7 @@ export default async function ModelPage({ searchParams }: Props) {
       refurbished: null,
       sessionId: null,
       saved: saved.has(productKey(p.id)),
+      ...cardMedia(p),
     };
   }
 

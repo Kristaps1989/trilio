@@ -14,7 +14,9 @@ import { formatEur } from "@/i18n/format";
 import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { Button, ButtonLink, buttonClass } from "@/ui/Button";
 import { InfoBox, Kicker, Page, PageTitle, Panel, Screen } from "@/ui/layout";
+import { ProductImage } from "@/ui/ProductImage";
 import { SaveButton } from "@/ui/SaveButton";
+import { cardMedia } from "../rezultati/card-media";
 import { PriceHistory } from "./PriceHistory";
 import { SubscriptionPanel, type SubscriptionModel } from "./SubscriptionPanel";
 import { ThresholdPicker } from "./ThresholdPicker";
@@ -209,6 +211,7 @@ export default async function WishlistPage({ searchParams }: Props) {
           <ul className="flex flex-col gap-3">
             {productCards.map(({ item, product, offer, history }) => {
               const diff = change(item.baselinePriceCents, offer?.priceCents ?? null);
+              const { image } = cardMedia(product);
               return (
                 <li key={item.id}>
                   <article
@@ -216,7 +219,13 @@ export default async function WishlistPage({ searchParams }: Props) {
                     className="flex flex-col gap-3 rounded-card border-[1.5px] border-line-40 p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
+                      <ProductImage
+                        src={image.src}
+                        alt={product.name}
+                        fallback={image.fallback}
+                        size="thumb"
+                      />
+                      <div className="min-w-0 flex-1">
                         <h3 className="font-body text-lg leading-snug font-bold text-mist">{product.name}</h3>
                         <p className="text-sm text-stone">
                           {tr("model", { code: product.modelCode, ean: product.ean ?? "—" })}

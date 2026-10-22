@@ -25,6 +25,10 @@ const Base = z.object({
   g: z.string().optional(),
   wr: z.string().optional(),
   nw: z.number().optional(),
+  /** Local photo in public/sample. */
+  img: z.string().optional(),
+  /** Real EPREL product "<group>/<registration>" for products copied from EPREL. */
+  eprel: z.string().optional(),
   offers: z.array(OfferSchema),
 });
 
@@ -86,7 +90,8 @@ export const sampleAdapter: FeedAdapter = {
             specs: product.specs,
             kwhYear: base.kwh_year ?? null,
             rating: Math.round(base.s * 10),
-            imageUrl: null,
+            imageUrl: base.img ?? null,
+            eprelId: base.eprel ?? null,
             condition,
             grade: base.g ?? null,
             warrantyMonths: warrantyMonths(base.wr),

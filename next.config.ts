@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { IMAGE_HOSTS } from "./src/db/stores";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -31,8 +32,10 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    // Partner CDNs are added here as stores are connected; nothing else is proxied.
-    remotePatterns: [],
+    // Product photos from the stores' image hosts only (src/db/stores.ts); nothing else is proxied.
+    remotePatterns: IMAGE_HOSTS.map((hostname) => ({ protocol: "https", hostname })),
+    // Shop photos rarely change; a day keeps the optimiser from re-fetching them on every view.
+    minimumCacheTTL: 86_400,
   },
   // The radar became the wishlist (owner, 20 Oct 2026): old links land there.
   async redirects() {

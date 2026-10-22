@@ -1,35 +1,57 @@
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, lt, notInArray, or, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { products } from "@/db/schema";
+import { eprelLookups, products } from "@/db/schema";
+import { EPREL_GROUPS } from "@/domain/catalog/eprel";
 import { mergeAttributes } from "@/domain/catalog/normalise";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { type StructuredCaller, llmModel } from "./client";
-import { extractProduct } from "./extract";
+import { extractProduct, missingKeys } from "./extract";
 
 // Background job: fill attribute gaps that the spec table, feed and rules left.
 // Extracted values carry the source "claude", the weakest, so a later spec
 // table or EPREL record replaces them and they never overwrite better data.
 // Runs after ingestion (cron) or from the CLI. Each product is extracted
 // once; re-extraction happens only when `extracted_at` is cleared by hand.
+// Costs (docs/PICTURES_AND_LLM_PLAN.md §3): a product with no gaps gets no
+// call, the call asks only for the missing keys, energy-label products wait
+// for their EPREL lookup first, and products go in subcategory order so the
+// per-subcategory system prompt stays cached between calls.
 
 export type ExtractJobResult = {
   scanned: number;
   extracted: number;
   skipped: number;
+  /** Already complete from the spec table, feed, rules or EPREL: no call made. */
+  notNeeded: number;
   failed: number;
   lowConfidence: number;
 };
 
 export const LOW_CONFIDENCE = 60;
+/** How long an energy-label product waits for its EPREL lookup before extraction runs anyway. */
+export const EPREL_WAIT_MS = 3 * 24 * 3600_000;
 
 export async function runExtractionJob(
   db: Db,
   caller: StructuredCaller,
-  opts: { limit?: number; concurrency?: number; subcategoryId?: string } = {},
+  opts: { limit?: number; concurrency?: number; subcategoryId?: string; now?: Date } = {},
 ): Promise<ExtractJobResult> {
   const limit = opts.limit ?? 200;
   const concurrency = Math.max(1, Math.min(opts.concurrency ?? 4, 8));
-  const result: ExtractJobResult = { scanned: 0, extracted: 0, skipped: 0, failed: 0, lowConfidence: 0 };
+  const result: ExtractJobResult = {
+    scanned: 0,
+    extracted: 0,
+    skipped: 0,
+    notNeeded: 0,
+    failed: 0,
+    lowConfidence: 0,
+  };
+  const waitedSince = new Date((opts.now ?? new Date()).getTime() - EPREL_WAIT_MS);
+  const ready = or(
+    notInArray(products.subcategoryId, Object.keys(EPREL_GROUPS)),
+    sql`exists (select 1 from ${eprelLookups} where ${eprelLookups.productId} = ${products.id})`,
+    lt(products.createdAt, waitedSince),
+  );
 
   const pending = await db
     .select({
@@ -44,11 +66,13 @@ export async function runExtractionJob(
     })
     .from(products)
     .where(
-      opts.subcategoryId
-        ? and(isNull(products.extractedAt), eq(products.subcategoryId, opts.subcategoryId))
-        : isNull(products.extractedAt),
+      and(
+        isNull(products.extractedAt),
+        ready,
+        opts.subcategoryId ? eq(products.subcategoryId, opts.subcategoryId) : undefined,
+      ),
     )
-    .orderBy(asc(products.createdAt))
+    .orderBy(asc(products.subcategoryId), asc(products.createdAt))
     .limit(limit);
   result.scanned = pending.length;
 
@@ -65,10 +89,20 @@ export async function runExtractionJob(
         result.skipped++;
         continue;
       }
+      const missing = missingKeys(sub.id, p.attributes);
+      if (missing.length === 0) {
+        await db
+          .update(products)
+          .set({ extractedAt: new Date(), extractionModel: "not-needed" })
+          .where(eq(products.id, p.id));
+        result.notNeeded++;
+        continue;
+      }
       const extracted = await extractProduct(
         { name: p.name, specs: p.specs, description: p.description, specTable: p.specTable },
         sub,
         caller,
+        missing,
       );
       if (!extracted) {
         result.failed++;

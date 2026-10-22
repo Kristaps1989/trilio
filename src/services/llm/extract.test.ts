@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { extractableAttributes, extractionSystem } from "./catalog-prompt";
 import type { StructuredCaller } from "./client";
-import { extractProduct, extractionUserPrompt, validateExtraction } from "./extract";
+import { extractProduct, extractionUserPrompt, missingKeys, validateExtraction } from "./extract";
 
 const fridge = getSubcategory("fridge")!;
 
@@ -86,5 +86,24 @@ describe("extractProduct", () => {
       attributes: { volume_l: 363 },
       confidence: 90,
     });
+  });
+});
+
+describe("missingKeys", () => {
+  it("lists the extractable keys the product does not have; false and 0 count as known", () => {
+    expect(missingKeys("kettle", {})).toEqual(["material", "temp_control", "volume_l", "power_w"]);
+    expect(missingKeys("kettle", { material: "glass", temp_control: false, volume_l: null })).toEqual([
+      "volume_l",
+      "power_w",
+    ]);
+    expect(
+      missingKeys("kettle", { material: "glass", temp_control: true, volume_l: 1.7, power_w: 2200 }),
+    ).toEqual([]);
+  });
+
+  it("asks only for the missing keys, and for everything when none are given", () => {
+    const input = { name: "Tējkanna", specs: null, description: "1,7 l" };
+    expect(extractionUserPrompt(input, ["power_w"])).toMatch(/^Report only these keys: power_w\.\n/);
+    expect(extractionUserPrompt(input)).toMatch(/^Extract attributes/);
   });
 });

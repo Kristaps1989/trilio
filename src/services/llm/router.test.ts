@@ -1,7 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { StructuredCaller, StructuredRequest } from "./client";
 import { ROUTER_SYSTEM } from "./catalog-prompt";
-import { normalizeFreeText, routeFreeText, routerOutputSchema, validateRouterOutput } from "./router";
+import {
+  NO_MATCH_DEADLINE_MS,
+  REGEX_HIT_DEADLINE_MS,
+  normalizeFreeText,
+  routeFreeText,
+  routerOutputSchema,
+  validateRouterOutput,
+} from "./router";
 
 function fakeCaller(answer: unknown): { caller: StructuredCaller; calls: StructuredRequest<unknown>[] } {
   const calls: StructuredRequest<unknown>[] = [];
@@ -75,6 +82,36 @@ describe("routeFreeText", () => {
     const failing = fakeCaller({ broken: true });
     const f = await routeFreeText("kluss ledusskapis", { caller: failing.caller, llmEnabled: true });
     expect(f).toMatchObject({ subcategoryId: "fridge", source: "regex" });
+  });
+
+  describe("a shopper never waits long for the model", () => {
+    afterEach(() => vi.useRealTimers());
+    const never: StructuredCaller = () => new Promise(() => undefined);
+
+    it("a regex hit stands after the short deadline; the call gets no retries", async () => {
+      vi.useFakeTimers();
+      const seen: StructuredRequest<unknown>[] = [];
+      const slow: StructuredCaller = (req) => {
+        seen.push(req as StructuredRequest<unknown>);
+        return never(req);
+      };
+      const pending = routeFreeText("vajag rokas blenderi zupām", { caller: slow, llmEnabled: true });
+      await vi.advanceTimersByTimeAsync(REGEX_HIT_DEADLINE_MS);
+      await expect(pending).resolves.toMatchObject({ subcategoryId: "handblender", source: "regex" });
+      expect(seen[0]).toMatchObject({ timeoutMs: REGEX_HIT_DEADLINE_MS, maxRetries: 0 });
+    });
+
+    it("without a regex hit it waits longer, then answers nothing", async () => {
+      vi.useFakeTimers();
+      const pending = routeFreeText("kaut kas kluss un lēts virtuvei", { caller: never, llmEnabled: true });
+      await vi.advanceTimersByTimeAsync(REGEX_HIT_DEADLINE_MS);
+      let done = false;
+      void pending.then(() => (done = true));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(done).toBe(false);
+      await vi.advanceTimersByTimeAsync(NO_MATCH_DEADLINE_MS - REGEX_HIT_DEADLINE_MS);
+      await expect(pending).resolves.toMatchObject({ subcategoryId: null, source: "none" });
+    });
   });
 
   it("marks out-of-scope requests", async () => {
