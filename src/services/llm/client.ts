@@ -45,6 +45,9 @@ export type StructuredRequest<T> = {
   schema: z.ZodType<T>;
   maxTokens?: number;
   effort?: "low" | "medium" | "high";
+  /** Per-call limit when someone is waiting for the answer (default 30 s with 2 retries). */
+  timeoutMs?: number;
+  maxRetries?: number;
 };
 
 export type StructuredResult<T> =
@@ -96,13 +99,19 @@ export function createCaller(
       error: null as string | null,
     };
     try {
-      const response = await client.messages.parse({
-        model,
-        max_tokens: req.maxTokens ?? 2048,
-        system: [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }],
-        messages: [{ role: "user", content: req.user }],
-        output_config: { effort: req.effort ?? "low", format: zodOutputFormat(req.schema) },
-      });
+      const response = await client.messages.parse(
+        {
+          model,
+          max_tokens: req.maxTokens ?? 2048,
+          system: [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }],
+          messages: [{ role: "user", content: req.user }],
+          output_config: { effort: req.effort ?? "low", format: zodOutputFormat(req.schema) },
+        },
+        {
+          ...(req.timeoutMs ? { timeout: req.timeoutMs } : {}),
+          ...(req.maxRetries !== undefined ? { maxRetries: req.maxRetries } : {}),
+        },
+      );
       log.inputTokens = response.usage.input_tokens;
       log.outputTokens = response.usage.output_tokens;
       log.cacheReadTokens = response.usage.cache_read_input_tokens ?? 0;

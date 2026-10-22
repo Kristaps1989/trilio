@@ -3,7 +3,7 @@ import { allSubcategories, detectSubcategory, getSubcategory } from "@/domain/qu
 import { sanitizeAnswers } from "@/domain/questions/engine";
 import type { Answers } from "@/domain/questions/schema";
 import { ROUTER_SYSTEM } from "./catalog-prompt";
-import { type StructuredCaller, wrapUntrusted } from "./client";
+import { type StructuredCaller, type StructuredResult, wrapUntrusted } from "./client";
 
 // Free-text → subcategory + pre-filled answers. Regex table first (free,
 // deterministic); the model only when that finds nothing and the feature is
@@ -63,6 +63,19 @@ export function normalizeFreeText(text: string): string {
   return text.replace(/\s+/g, " ").trim().slice(0, MAX_FREE_TEXT_LENGTH);
 }
 
+/** How long the model may take when the regex table already answered / found nothing. */
+export const REGEX_HIT_DEADLINE_MS = 3_000;
+export const NO_MATCH_DEADLINE_MS = 8_000;
+
+/** The caller's result, or a failure once `ms` have passed (also covers a slow cap check). */
+function withDeadline<T>(call: Promise<StructuredResult<T>>, ms: number): Promise<StructuredResult<T>> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<StructuredResult<T>>((resolve) => {
+    timer = setTimeout(() => resolve({ ok: false, reason: "error", detail: "deadline" }), ms);
+  });
+  return Promise.race([call, late]).finally(() => clearTimeout(timer));
+}
+
 export async function routeFreeText(
   text: string,
   opts: { caller?: StructuredCaller; llmEnabled: boolean },
@@ -85,14 +98,23 @@ export async function routeFreeText(
   // Without the model the regex table is the whole answer (no pre-fills).
   if (!opts.llmEnabled || !opts.caller) return regexResult ?? none;
 
-  const result = await opts.caller({
-    purpose: "free_text_routing",
-    system: ROUTER_SYSTEM,
-    user: `Classify this request:\n${wrapUntrusted("shopper_text", clean)}`,
-    schema: routerOutputSchema(),
-    maxTokens: 512,
-    effort: "low",
-  });
+  // A shopper is waiting: with a regex answer in hand the model only adds
+  // pre-fills, so it gets a short deadline; without one, a little longer.
+  // Either way no retries, and on timeout the regex answer (or none) stands.
+  const deadlineMs = regexResult ? REGEX_HIT_DEADLINE_MS : NO_MATCH_DEADLINE_MS;
+  const result = await withDeadline(
+    opts.caller({
+      purpose: "free_text_routing",
+      system: ROUTER_SYSTEM,
+      user: `Classify this request:\n${wrapUntrusted("shopper_text", clean)}`,
+      schema: routerOutputSchema(),
+      maxTokens: 512,
+      effort: "low",
+      timeoutMs: deadlineMs,
+      maxRetries: 0,
+    }),
+    deadlineMs,
+  );
   if (!result.ok) return regexResult ?? none;
 
   const llm = { ...validateRouterOutput(result.value), source: "llm" as const };
