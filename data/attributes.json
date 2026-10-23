@@ -1228,6 +1228,8 @@
     "\\bplāksnes? (kontakttosterim|grilam|vafeļu pannai|sendviču tosterim)",
     "\\b(waffle|sandwich|grill) plates\\b",
     "(cepšanas|gatavošanas) komplekt",
+    "\\bpapildu (\\S+ )?(plāksn|tvertn|grozs|grozi|birst|uzgal|siet)",
+    " - [^-]*\\bplāksnes?\\b",
     "starpgredzen",
     "\\bloksne\\b",
     "žāvētājam\\b",

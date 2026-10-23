@@ -48,7 +48,7 @@ test("guided flow: home → category → every question → results → shop", a
   await page.getByRole("link", { name: /^Tējkannas/ }).click();
   // Take the pre-selected answer on every screen ("Tālāk"); on the price
   // screen choose "no budget" so a sparse catalogue still has results.
-  const results = page.getByRole("heading", { level: 1, name: "Trīs labākie varianti tev" });
+  const results = page.getByRole("heading", { level: 1, name: /^(Trīs l|L)abākie varianti tev$/ });
   for (let step = 0; step < 15; step++) {
     await expect(page.getByText(/Jautājums \d+ no \d+/).or(results)).toBeVisible();
     if (await results.isVisible()) break;
@@ -61,7 +61,7 @@ test("guided flow: home → category → every question → results → shop", a
   }
   await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
   expect(await page.locator("body").innerText()).not.toMatch(ERROR_SCREEN);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Trīs labākie varianti tev");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^(Trīs l|L)abākie varianti tev$/);
 
   const buy = page.getByRole("link", { name: /^Pirkt — / }).first();
   if ((await buy.count()) === 0) {

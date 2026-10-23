@@ -232,6 +232,7 @@ describe("excludedByName", () => {
   it("keeps the other accessories and look-alikes seen on trilio.lv out", () => {
     for (const [sub, name] of [
       ["airfryer", "Philips HD9925/01 Cepšanas komplekts"],
+      ["sandwich", "Tefal Snack Collection - Papildu grila plāksnes/panini sendvičiem"],
       ["airfryer", "Philips HD9953/00 Picas gatavošanas komplekts"],
       ["dehydrator", "Ezidri Snackmaker FD500, 2 gab. - Starpgredzens augļu žāvētājam"],
       ["dehydrator", "Ezidri Snackmaker FD500, 4 gab. - Cietā loksne augļu žāvētājam"],

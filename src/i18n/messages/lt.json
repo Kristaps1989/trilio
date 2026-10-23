@@ -95,7 +95,7 @@
     "noRushSub": "ieslēgsim cenu radaru, lai nokertu labāko cenu"
   },
   "results": {
-    "title": "Trīs labākie varianti tev",
+    "title": "Labākie varianti tev",
     "eanNote": "Cenas salīdzinām pēc EAN svītrkoda, tāpēc viens un tas pats modelis dažādos veikalos ir viena prece.",
     "howWeRank": "Kā mēs izvēlamies un prioritizējam?",
     "tierBudget": "Budžeta variants",
@@ -120,6 +120,7 @@
     "startOver": "Sākt no jauna",
     "lead": "{count, plural, =0 {Neviena prece neatbilst tavām atbildēm un budžetam.} =1 {Viena prece atbilst tavām atbildēm un budžetam.} other {# preces atbilst tavām atbildēm un budžetam.}}",
     "leadExtras": "Rādām arī {count, plural, =1 {vienu variantu} other {# variantus}} nedaudz virs budžeta.",
+    "leadDominated": "Iesakām {count, plural, =1 {vienu} other {#}}: pārējās preces šajā cenu robežā ir dārgākas, bet ne labākas.",
     "leadNone": "Pamēģini palielināt budžetu vai ieslēdz cenu radaru — paziņosim, kad kāda prece iekļausies.",
     "leadNoBudget": "Budžets nav noteikts, tāpēc rādām labākos no visām cenām.",
     "answers": "Tavas atbildes",
@@ -141,6 +142,10 @@
     "unconfirmed": "Nav apstiprināts: {items}",
     "whyFits": "Kāpēc der",
     "upgrade": "Par {amount} vairāk nekā {tier} tu iegūsti:",
+    "upgradeGains": "Iegūsti: {items}",
+    "upgradeOther": "Atšķiras: {items}",
+    "upgradeTradeoffs": "Bet: {items}",
+    "upgradeNoGain": "Kopvērtējumā nedaudz augstāks, bet nevienā parametrā būtiski labāks.",
     "onlyBrand": "atšķirība galvenokārt zīmolā un dizainā",
     "noHistory": "Cenu vēsture vēl krājas — radars paziņos par kritumu",
     "refurbGrade": "Stāvoklis: {grade}",
@@ -302,6 +307,11 @@
     "steam_gmin": "{delta} g/min tvaika",
     "weight_kg_better": "par {delta} kg vieglāks",
     "weight_kg_worse": "par {delta} kg smagāks",
+    "rating_better": "augstāks Trilio vērtējums ({to}/10)",
+    "rating_worse": "zemāks Trilio vērtējums ({to}/10)",
+    "brand_better": "uzticamāks zīmols šajā kategorijā ({to}/5)",
+    "brand_proven": "zīmols ar pierādītu uzticamību šajā kategorijā ({to}/5)",
+    "brand_worse": "mazāk uzticams zīmols šajā kategorijā ({to}/5)",
     "enum": "{label}: {to}"
   },
   "attr": {

@@ -1,5 +1,5 @@
 import type { DeltaItem } from "@/domain/delta/delta";
-import { formatEur, formatInt, formatNumber } from "@/i18n/format";
+import { formatEur, formatInt, formatNumber, formatRating } from "@/i18n/format";
 
 // Turns structured delta items into Latvian lines through the translator.
 // Kept out of the domain so no copy lives in business logic.
@@ -36,6 +36,14 @@ export function deltaLines(
         return t(i.better ? "energy_cost_better" : "energy_cost_worse", {
           amount: formatEur(Math.abs(i.deltaCents)),
         });
+      case "rating":
+        return t(i.better ? "rating_better" : "rating_worse", { to: formatRating(i.to / 10) });
+      case "brand":
+        return t(i.better ? (i.from === null ? "brand_proven" : "brand_better") : "brand_worse", {
+          to: i.to,
+        });
+      case "fit":
+        return i.text;
     }
   });
 }

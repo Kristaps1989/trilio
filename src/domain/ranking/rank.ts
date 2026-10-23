@@ -139,12 +139,6 @@ function candidatesFor(input: RankInput, condition: OfferView["condition"]): Poo
 
 const byScoreThenPrice = (a: Candidate, b: Candidate) => b.score - a.score || a.price - b.price;
 
-/**
- * Three picks that span the range (§2.3): the best overall, the best in the
- * lower third of the prices on offer and the best in the upper third. The
- * cheapest product is never picked just for being cheap, so a €89 mini fridge
- * cannot appear in a €350–500 search.
- */
 /** Best value first: quality, discounted by where the price sits in the range of these candidates. */
 export function byValue(candidates: Candidate[]): Candidate[] {
   const prices = candidates.map((c) => c.price);
@@ -154,20 +148,39 @@ export function byValue(candidates: Candidate[]): Candidate[] {
   return [...candidates].sort((a, b) => value(b) - value(a) || a.price - b.price);
 }
 
+/** `a` makes `b` pointless: it costs no more and is at least as good (owner, 23 Oct 2026). */
+export function dominates(a: Candidate, b: Candidate): boolean {
+  return a !== b && a.price <= b.price && a.score >= b.score;
+}
+
+/**
+ * Three picks that span the range (§2.3): the best overall, the best in the
+ * lower third of the prices on offer and the best in the upper third. The
+ * cheapest product is never picked just for being cheap, so a €89 mini fridge
+ * cannot appear in a €350–500 search.
+ * No pick is dominated by another (docs/UPGRADE_REASONS_PLAN.md): when no
+ * product in a third is better than the cheaper picks, fewer picks are shown.
+ */
 export function pickThree(candidates: Candidate[]): Candidate[] {
   const sorted = byValue(candidates);
-  if (candidates.length <= 3) return sorted;
+  if (sorted.length === 0) return [];
   const lo = Math.min(...candidates.map((c) => c.price));
   const hi = Math.max(...candidates.map((c) => c.price));
   const third = (hi - lo) / 3;
-  const picks: Candidate[] = [sorted[0]!];
+  const picks: Candidate[] = [];
+  // A pricier pick must be better than every cheaper one, so the shopper can see why to pay more.
+  const fits = (c: Candidate) =>
+    !picks.includes(c) && picks.every((p) => !dominates(p, c) && !dominates(c, p));
   const take = (pred: (c: Candidate) => boolean) => {
-    const c = sorted.find((x) => !picks.includes(x) && pred(x));
+    const c = sorted.find((x) => fits(x) && pred(x));
     if (c) picks.push(c);
     return !!c;
   };
-  take((c) => c.price <= lo + third);
-  take((c) => c.price >= hi - third);
+  take(() => true);
+  if (sorted.length > 3) {
+    take((c) => c.price <= lo + third);
+    take((c) => c.price >= hi - third);
+  }
   while (picks.length < 3 && take(() => true));
   return picks;
 }
