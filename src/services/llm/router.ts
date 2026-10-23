@@ -97,6 +97,10 @@ export async function routeFreeText(
 
   // Without the model the regex table is the whole answer (no pre-fills).
   if (!opts.llmEnabled || !opts.caller) return regexResult ?? none;
+  // The category is known: a model call would only add pre-fills, and the ones worth a call
+  // are numbers (a budget, a size). Otherwise it costs a cache write of the whole catalogue
+  // prompt for nothing (docs/PROMPT_CACHING_PLAN.md).
+  if (regexResult && !/\d/.test(clean)) return regexResult;
 
   // A shopper is waiting: with a regex answer in hand the model only adds
   // pre-fills, so it gets a short deadline; without one, a little longer.

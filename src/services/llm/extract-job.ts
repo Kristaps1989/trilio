@@ -14,8 +14,8 @@ import { extractProduct, missingKeys } from "./extract";
 // once; re-extraction happens only when `extracted_at` is cleared by hand.
 // Costs (docs/PICTURES_AND_LLM_PLAN.md §3): a product with no gaps gets no
 // call, the call asks only for the missing keys, energy-label products wait
-// for their EPREL lookup first, and products go in subcategory order so the
-// per-subcategory system prompt stays cached between calls.
+// for their EPREL lookup first. (The per-subcategory prompts are too short for
+// prompt caching; see docs/PROMPT_CACHING_PLAN.md.)
 
 export type ExtractJobResult = {
   scanned: number;

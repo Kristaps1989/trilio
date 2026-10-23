@@ -100,6 +100,8 @@ export async function extractProduct(
     schema: ExtractionOutputSchema,
     maxTokens: 1024,
     effort: "low",
+    // 200–360 tokens per subcategory: below the 512-token minimum, so a marker could never cache.
+    cache: false,
   });
   if (!result.ok) return null;
   return validateExtraction(result.value, sub);
