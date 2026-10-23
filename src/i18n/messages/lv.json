@@ -466,6 +466,7 @@
     "metaTitle": "{gender, select, f {Labākās} other {Labākie}} {category} {year}: cenas un salīdzinājums",
     "metaTitleBudget": "{gender, select, f {Labākās} other {Labākie}} {category} līdz {budget} ({year})",
     "related": "Citas kategorijas",
+    "productDescription": "{name}: cenas {shops, plural, =1 {# partneru veikalā} other {# partneru veikalos}}, salīdzinātas pēc EAN svītrkoda.",
     "description": "Trīs {gender, select, f {labākās} other {labākie}} {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "descriptionBudget": "Trīs {gender, select, f {labākās} other {labākie}} {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "lead": "Atlasīts no {count, plural, =1 {# preces} other {# precēm}} partneru veikalos, atjaunots {date}.",

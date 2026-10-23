@@ -467,6 +467,7 @@
     "metaTitle": "Labākie {category} {year}: cenas un salīdzinājums",
     "metaTitleBudget": "Labākie {category} līdz {budget} ({year})",
     "related": "Citas kategorijas",
+    "productDescription": "{name}: cenas {shops, plural, =1 {# partneru veikalā} other {# partneru veikalos}}, salīdzinātas pēc EAN svītrkoda.",
     "description": "Trīs labākie {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "descriptionBudget": "Trīs labākie {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "lead": "Atlasīts no {count, plural, =1 {# preces} other {# precēm}} partneru veikalos, atjaunots {date}.",

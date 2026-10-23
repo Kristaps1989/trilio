@@ -22,7 +22,11 @@ test("category landing page renders three ranked cards with structured data and 
     "SearchAction",
   );
   expect(data.itemListElement).toHaveLength(3);
-  expect(data.itemListElement[0].item.offers.priceCurrency).toBe("EUR");
+  const first = data.itemListElement[0].item;
+  expect(first.offers).toMatchObject({ "@type": "AggregateOffer", priceCurrency: "EUR" });
+  expect(Number(first.offers.lowPrice)).toBeLessThanOrEqual(Number(first.offers.highPrice));
+  expect(first.offers.offerCount).toBeGreaterThan(0);
+  expect(first.description).toBeTruthy();
   expect(data.itemListElement[0].item.gtin13).toMatch(/^\d{13}$/);
   await expect(page.getByText("Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev")).toBeVisible();
   await expect(page.getByRole("link", { name: "Sākt izvēli" })).toHaveAttribute(

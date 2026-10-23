@@ -114,6 +114,11 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
     const src = cardMedia(p.product).image.src;
     return src ? { image: new URL(src, base).toString() } : {};
   };
+  // The product's new offers that can be bought now (the pick's own offer is always one of them).
+  const shopsOf = (p: Pick) => {
+    const list = p.product.offers.filter((o) => o.condition === "new" && o.stock !== "out");
+    return list.length ? list : [p.offer];
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -129,13 +134,17 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
         ...(p.product.ean ? { gtin13: p.product.ean } : {}),
         brand: { "@type": "Brand", name: p.product.brand },
         ...photo(p),
+        description:
+          p.product.specs || t("productDescription", { name: p.product.name, shops: shopsOf(p).length }),
+        // Trilio compares shops and sells nothing itself: an AggregateOffer (Google's
+        // product snippets for comparison pages), not a merchant Offer that would need
+        // our own return policy and shipping details.
         offers: {
-          "@type": "Offer",
+          "@type": "AggregateOffer",
           priceCurrency: "EUR",
-          price: (p.offer.priceCents / 100).toFixed(2),
-          availability: p.offer.stock === "in" ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
-          url: `${base}/go/${p.offer.id}`,
-          seller: { "@type": "Organization", name: p.offer.storeName },
+          lowPrice: (Math.min(...shopsOf(p).map((o) => o.priceCents)) / 100).toFixed(2),
+          highPrice: (Math.max(...shopsOf(p).map((o) => o.priceCents)) / 100).toFixed(2),
+          offerCount: shopsOf(p).length,
         },
       },
     })),
