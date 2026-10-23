@@ -10,6 +10,7 @@ import { getGroup, getSubcategory } from "@/domain/questions/catalog";
 import type { Answers, Question } from "@/domain/questions/schema";
 import { Screen } from "@/ui/layout";
 import { TopProgress } from "@/ui/shell/TopProgress";
+import { NOINDEX } from "../../../seo";
 import { QuestionScreen, type ScreenQuestion } from "../../QuestionScreen";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,8 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sub } = await params;
-  return { title: getSubcategory(sub)?.label ?? "" };
+  // A question screen per answer combination: /kategorija/<sub> is the page meant for search.
+  return { title: getSubcategory(sub)?.label ?? "", robots: NOINDEX };
 }
 
 /** Answers to the flow questions before `q`, so counts show what each option would leave. */

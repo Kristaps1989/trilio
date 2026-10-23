@@ -8,6 +8,7 @@ import { appBaseUrl } from "@/services/payments";
 import { Analytics } from "@/ui/analytics/Analytics";
 import { Footer } from "@/ui/shell/Footer";
 import { Header } from "@/ui/shell/Header";
+import { OG_IMAGE, OPEN_GRAPH } from "./seo";
 import "./globals.css";
 
 // Latin Extended covers Latvian, Lithuanian and Estonian diacritics.
@@ -34,14 +35,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("description"),
     applicationName: "Trilio",
     icons: { icon: "/icon.svg" },
-    openGraph: {
-      siteName: "Trilio",
-      type: "website",
-      locale: "lv_LV",
-      title: t("title"),
-      description: t("description"),
-    },
-    twitter: { card: "summary" },
+    // No canonical here: it would be inherited by every page. Pages set their own (src/app/seo.ts).
+    openGraph: { ...OPEN_GRAPH, title: t("title"), description: t("description") },
+    twitter: { card: "summary_large_image", images: [OG_IMAGE.url] },
     robots: { index: true, follow: true },
     // Google Search Console: set GOOGLE_SITE_VERIFICATION in the environment.
     verification: {

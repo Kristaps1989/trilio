@@ -172,6 +172,21 @@ export function pickThree(candidates: Candidate[]): Candidate[] {
   return picks;
 }
 
+/**
+ * The upper end of the usual price range: the 75th percentile of the
+ * products' prices, rounded up to whole euros. A page with no budget picks
+ * within it, so a few premium models do not stretch the "budget" third into
+ * premium prices (owner, 23 Oct 2026). Null with too few prices to tell.
+ */
+export const MAINSTREAM_PERCENTILE = 0.75;
+
+export function mainstreamCeilingCents(prices: number[]): number | null {
+  if (prices.length < 6) return null;
+  const sorted = [...prices].sort((a, b) => a - b);
+  const at = sorted[Math.ceil(sorted.length * MAINSTREAM_PERCENTILE) - 1]!;
+  return Math.ceil(at / 100) * 100;
+}
+
 /** Neighbouring picks must differ by at least 10 % (and €5) for budget/mid/top labels to mean anything. */
 export const TIER_MIN_GAP = 0.1;
 

@@ -109,3 +109,14 @@ export function formatLitres(value: number): string {
 export function formatDb(value: number): string {
   return `${formatInt(value)}${NBSP}dB`;
 }
+
+/**
+ * Grammatical gender of a plural category label, for agreeing adjectives
+ * ("Labākie ledusskapji", "Labākās tējkannas"). The head noun is the last
+ * word before any " un "; Latvian feminine plurals end in -as, -es or -is,
+ * masculine ones in -i.
+ */
+export function categoryGender(label: string): "f" | "m" {
+  const head = label.toLowerCase().split(" un ")[0]!.trim().split(/\s+/).pop() ?? "";
+  return /(as|es|is)$/.test(head) ? "f" : "m";
+}

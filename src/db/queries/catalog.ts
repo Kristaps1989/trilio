@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { offers, products, stores } from "@/db/schema";
+import { excludedByName } from "@/domain/catalog/normalise";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { currentMarket } from "@/i18n/market";
 
@@ -96,7 +97,10 @@ function toProduct(p: ProductRow, productOffers: OfferView[]): ProductView {
 
 /** All products of a subcategory with their offers from active stores. */
 export async function loadCandidates(db: Db, subcategoryId: string): Promise<ProductView[]> {
-  const productRows = await db.select().from(products).where(eq(products.subcategoryId, subcategoryId));
+  // Accessories and mis-filed appliances stored before their name pattern existed stay out too.
+  const productRows = (
+    await db.select().from(products).where(eq(products.subcategoryId, subcategoryId))
+  ).filter((p) => !excludedByName(subcategoryId, p.name));
   if (productRows.length === 0) return [];
   const rows = await offerRows(db, eq(products.subcategoryId, subcategoryId));
   return assemble(productRows, rows);

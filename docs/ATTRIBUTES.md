@@ -45,7 +45,7 @@ The catalogue is validated by the Zod schema in `src/domain/catalog/attributes.t
 - `fit`: the fit-critical attributes. A product missing one is not shown as a pick, and the `recommended` badge needs all of them known. Today the list is set for fridge, freezer, washer, dryer, dish, hob, oven, hood, micro and vacuum. Small appliances have none.
 - `enums`: derived values (form, type) with ordered rules, described below.
 - `defaultFalse`: feature flags that are false unless a source says otherwise, for example a kettle's `temp_control`.
-- `sanity`: the word stems that name the category, and a plausible price range in euros.
+- `sanity`: the word stems that name the category, a plausible price range in euros, and optionally `exclude`: name patterns of a different appliance that shops file here (hand blenders under blenders, pizza ovens under grills).
 
 ## How a product's attributes are built
 
@@ -97,12 +97,13 @@ Claude extraction goes through the same merge with source `claude`, so it can on
 
 ## Sanity rules
 
-`sanityCheck` runs on every row before it is saved. A rejected row is counted in the run's `rowsRejected` with one of these reasons:
+`sanityCheck` runs on every row before it is saved. The name checks (`excludedByName`) also run when products are loaded for ranking, so rows saved before a pattern was added drop out at once. A rejected row is counted in the run's `rowsRejected` with one of these reasons:
 
 | Reason | Rule |
 |---|---|
-| `accessory` | The **name** matches an `accessory` pattern (filters, bags, shelves, spare parts, adapters …). |
+| `accessory` | The **name** matches an `accessory` pattern (filters, bags, shelves, spare parts, adapters, replacement plates …). |
 | `category_mismatch` | The product does not show it belongs to the subcategory. **The shop's category label alone is not trusted**, because shops mis-file products (m79.lv lists toys under coffee machines). It passes only when either: the name, description or spec table contains one of the subcategory's `sanity.stems`; or the spec table states a category-specific key attribute (any `key` attribute other than height, width, depth and weight, from source `spec_table`). The second route keeps tet.lv products whose names are only a model code. |
+| `category_mismatch` (exclude) | The **name** matches one of the subcategory's `sanity.exclude` patterns. |
 | `implausible_price` | The price is outside `sanity.priceEur` (for example, a €40 "oven" is a mini oven or an accessory). |
 
 ## Coverage

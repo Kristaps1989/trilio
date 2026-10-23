@@ -7,14 +7,16 @@ export const dynamic = "force-dynamic";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = appBaseUrl();
-  const now = new Date();
+  // Landing pages change with the daily prices; the others only when the site is deployed,
+  // so they carry no date (a lastmod that changes on every request is ignored by search engines).
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
   const entries: MetadataRoute.Sitemap = [
-    { url: `${base}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${base}/izvelies`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${base}/modelis`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/izvelies`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/modelis`, changeFrequency: "monthly", priority: 0.5 },
     ...["/noteikumi", "/privatums", "/sikdatnes", "/kontakti"].map((path) => ({
       url: `${base}${path}`,
-      lastModified: now,
       changeFrequency: "yearly" as const,
       priority: 0.2,
     })),
@@ -23,7 +25,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     if (g.id !== "other")
       entries.push({
         url: `${base}/izvelies/${g.id}`,
-        lastModified: now,
         changeFrequency: "weekly",
         priority: 0.6,
       });
@@ -31,14 +32,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   for (const s of allSubcategories()) {
     entries.push({
       url: `${base}/kategorija/${s.id}`,
-      lastModified: now,
+      lastModified: today,
       changeFrequency: "daily",
       priority: 0.9,
     });
     for (const eur of s.budget_steps_eur) {
       entries.push({
         url: `${base}/kategorija/${s.id}/lidz-${eur}`,
-        lastModified: now,
+        lastModified: today,
         changeFrequency: "daily",
         priority: 0.7,
       });

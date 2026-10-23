@@ -287,6 +287,22 @@ const GENERIC_ATTRS = new Set(["height_cm", "width_cm", "depth_cm", "weight_kg"]
  * code, but a dehydrator's spec table lists its trays and power). Its price
  * must also be plausible for the category.
  */
+/**
+ * Why a product with this name is not one of the subcategory's appliances:
+ * a spare part or accessory, or a different appliance the shop files here.
+ * Checked at ingestion and again when products are loaded for ranking, so
+ * rows stored before a pattern was added drop out too.
+ */
+export function excludedByName(
+  subcategoryId: string,
+  name: string,
+): "accessory" | "category_mismatch" | null {
+  if (attributeCatalog.accessory.some((p) => new RegExp(p, "i").test(name))) return "accessory";
+  const exclude = subcategoryAttrs(subcategoryId)?.sanity.exclude ?? [];
+  if (exclude.some((p) => new RegExp(p, "i").test(name))) return "category_mismatch";
+  return null;
+}
+
 export function sanityCheck(
   subcategoryId: string,
   t: ProductText,
@@ -296,8 +312,8 @@ export function sanityCheck(
   const sub = subcategoryAttrs(subcategoryId);
   if (!sub) return { ok: true };
   const text = haystack(t, false);
-  if (attributeCatalog.accessory.some((p) => new RegExp(p, "i").test(t.name)))
-    return { ok: false, reason: "accessory" };
+  const excluded = excludedByName(subcategoryId, t.name);
+  if (excluded) return { ok: false, reason: excluded };
   const named = sub.sanity.stems.some((s) => new RegExp(s, "i").test(text));
   const specific = Object.entries(normalised?.sources ?? {}).some(
     ([key, source]) => source === "spec_table" && sub.key.includes(key) && !GENERIC_ATTRS.has(key),

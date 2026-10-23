@@ -3,10 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { catalog } from "@/domain/questions/catalog";
 import { Kicker, Lead, PageTitle, Screen } from "@/ui/layout";
 import { Tile, TileGrid, TileIcon } from "@/ui/Tile";
+import { pageMetadata } from "../seo";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("flow");
-  return { title: t("chooseGroup") };
+  const t = await getTranslations();
+  return pageMetadata("/izvelies", t("flow.chooseGroup"), t("meta.description"));
 }
 
 /** Spec §2.1 step 1: group tiles with icons; "Kaut kas cits" spans the full width. */

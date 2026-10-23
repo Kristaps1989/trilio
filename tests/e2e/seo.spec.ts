@@ -22,7 +22,11 @@ test("category landing page renders three ranked cards with structured data and 
     "SearchAction",
   );
   expect(data.itemListElement).toHaveLength(3);
-  expect(data.itemListElement[0].item.offers.priceCurrency).toBe("EUR");
+  const first = data.itemListElement[0].item;
+  expect(first.offers).toMatchObject({ "@type": "AggregateOffer", priceCurrency: "EUR" });
+  expect(Number(first.offers.lowPrice)).toBeLessThanOrEqual(Number(first.offers.highPrice));
+  expect(first.offers.offerCount).toBeGreaterThan(0);
+  expect(first.description).toBeTruthy();
   expect(data.itemListElement[0].item.gtin13).toMatch(/^\d{13}$/);
   await expect(page.getByText("Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev")).toBeVisible();
   await expect(page.getByRole("link", { name: "Sākt izvēli" })).toHaveAttribute(
@@ -77,4 +81,39 @@ test("sitemap and robots are served", async ({ request }) => {
   expect(txt).toContain("User-Agent: GPTBot");
   expect(txt).toContain("User-Agent: ClaudeBot");
   expect(txt).toContain("User-Agent: Google-Extended");
+});
+
+test("no-budget landing stays in the usual price range, agrees in gender and links its group", async ({
+  page,
+}) => {
+  await page.goto("/kategorija/freezer");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākās saldētavas");
+  await expect(page).toHaveTitle(/^Labākās saldētavas \d{4}: cenas un salīdzinājums · Trilio$/);
+  const lead = await page.getByText(/biežākajā cenu robežā līdz/).textContent();
+  const max = Number(/līdz ([\d\s ]+)\s€/.exec(lead ?? "")![1]!.replace(/\D/g, "")) * 100;
+  const prices = await page
+    .getByRole("article")
+    .locator("[data-price-cents]")
+    .evaluateAll((els) => els.map((e) => Number(e.getAttribute("data-price-cents"))));
+  expect(prices.length).toBeGreaterThan(0);
+  for (const cents of prices) expect(cents).toBeLessThanOrEqual(max);
+  await expect(page.getByRole("link", { name: "Labākie ledusskapji" })).toHaveAttribute(
+    "href",
+    "/kategorija/fridge",
+  );
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/og\.png$/);
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", /\/kategorija\/freezer$/);
+});
+
+test("search and question pages stay out of the index; entry pages carry a canonical", async ({ page }) => {
+  await page.goto("/modelis?q=bosch");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await page.goto("/izvelies/cool/fridge");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  for (const path of ["/izvelies", "/izvelies/cool", "/modelis"]) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /^index/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${path}$`));
+  }
+  expect((await page.request.get("/og.png")).headers()["content-type"]).toBe("image/png");
 });

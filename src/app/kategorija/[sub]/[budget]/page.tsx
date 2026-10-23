@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSubcategory } from "@/domain/questions/catalog";
-import { formatEur } from "@/i18n/format";
-import { appBaseUrl } from "@/services/payments";
+import { categoryGender, formatEur } from "@/i18n/format";
+import { pageMetadata } from "../../../seo";
 import { LandingPage } from "../../LandingPage";
 
 export const revalidate = 3600;
@@ -32,16 +32,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const r = resolve(sub, budget);
   if (!r) return {};
   const t = await getTranslations("landing");
-  const title = t("titleBudget", { category: r.sub.label.toLowerCase(), budget: formatEur(r.budgetCents) });
-  return {
+  const category = r.sub.label.toLowerCase();
+  const gender = categoryGender(r.sub.label);
+  const title = t("metaTitleBudget", {
+    category,
+    gender,
+    budget: formatEur(r.budgetCents),
+    year: new Date().getFullYear(),
+  });
+  return pageMetadata(
+    `/kategorija/${r.sub.id}/${budget}`,
     title,
-    description: t("descriptionBudget", {
-      category: r.sub.label.toLowerCase(),
-      budget: formatEur(r.budgetCents),
-    }),
-    alternates: { canonical: `${appBaseUrl()}/kategorija/${r.sub.id}/${budget}` },
-    openGraph: { title, type: "website" },
-  };
+    t("descriptionBudget", { category, gender, budget: formatEur(r.budgetCents) }),
+  );
 }
 
 export default async function CategoryBudgetLanding({ params }: Props) {
