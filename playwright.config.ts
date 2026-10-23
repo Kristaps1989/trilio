@@ -47,10 +47,25 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
   ],
-  webServer: {
-    command: "npm run build && npm run start",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      // A local stand-in for the Claude Messages API (tests/e2e/mock-anthropic.mjs).
+      command: "node tests/e2e/mock-anthropic.mjs",
+      url: "http://127.0.0.1:4010/health",
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: "npm run build && npm run start",
+      url: "http://localhost:3000",
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      // Free-text routing talks to the mock, so the prompt-caching wiring is tested end to end.
+      env: {
+        ...(process.env as Record<string, string>),
+        FEATURE_FREE_TEXT_LLM: "1",
+        ANTHROPIC_API_KEY: "e2e-mock-key",
+        ANTHROPIC_BASE_URL: "http://127.0.0.1:4010",
+      },
+    },
+  ],
 });

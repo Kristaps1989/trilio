@@ -48,7 +48,17 @@ export type StructuredRequest<T> = {
   /** Per-call limit when someone is waiting for the answer (default 30 s with 2 retries). */
   timeoutMs?: number;
   maxRetries?: number;
+  /**
+   * Mark the system prompt for prompt caching (default true). Off for prompts below the
+   * model's minimum cacheable length (512 tokens on the 5.5 models): they never cache.
+   */
+  cache?: boolean;
 };
+
+/** Prompt-cache lifetime: "5m" (default, cheaper writes) or "1h" for traffic 5–60 min apart. */
+export function cacheTtl(): "5m" | "1h" {
+  return process.env.LLM_CACHE_TTL === "1h" ? "1h" : "5m";
+}
 
 export type StructuredResult<T> =
   | { ok: true; value: T; usage: { inputTokens: number; outputTokens: number } }
@@ -103,7 +113,18 @@ export function createCaller(
         {
           model,
           max_tokens: req.maxTokens ?? 2048,
-          system: [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }],
+          // One explicit breakpoint at the end of the frozen system prompt; the per-request
+          // text goes in the user message after it (docs/PROMPT_CACHING_PLAN.md).
+          system: [
+            req.cache === false
+              ? { type: "text", text: req.system }
+              : {
+                  type: "text",
+                  text: req.system,
+                  cache_control:
+                    cacheTtl() === "1h" ? { type: "ephemeral", ttl: "1h" } : { type: "ephemeral" },
+                },
+          ],
           messages: [{ role: "user", content: req.user }],
           output_config: { effort: req.effort ?? "low", format: zodOutputFormat(req.schema) },
         },
@@ -158,6 +179,7 @@ const PRICES: Record<string, { input: number; output: number }> = {
 };
 
 export type UsageRow = {
+  purpose: string;
   model: string;
   calls: number;
   failed: number;
@@ -168,7 +190,7 @@ export type UsageRow = {
 };
 
 /** Estimated USD for one model's tokens; null for a model without a known price. */
-export function estimateUsd(u: Omit<UsageRow, "calls" | "failed">): number | null {
+export function estimateUsd(u: Omit<UsageRow, "calls" | "failed" | "purpose">): number | null {
   const price = PRICES[u.model];
   if (!price) return null;
   const usd =
@@ -180,12 +202,21 @@ export function estimateUsd(u: Omit<UsageRow, "calls" | "failed">): number | nul
   return Math.round(usd * 100) / 100;
 }
 
-/** Today's (UTC) Claude API usage per model, for the log line after each job run. */
+/** Share of prompt tokens served from the cache (0–1); null with no prompt tokens. */
+export function cacheHitRate(
+  u: Pick<UsageRow, "inputTokens" | "cacheReadTokens" | "cacheWriteTokens">,
+): number | null {
+  const total = u.inputTokens + u.cacheReadTokens + u.cacheWriteTokens;
+  return total > 0 ? Math.round((u.cacheReadTokens / total) * 100) / 100 : null;
+}
+
+/** Today's (UTC) Claude API usage per purpose and model, for the log line after each job run. */
 export async function usageToday(db: Db, now = new Date()) {
   const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
   const rows: UsageRow[] = await db
     .select({
+      purpose: llmCalls.purpose,
       model: llmCalls.model,
       calls: count(),
       failed: sql<number>`count(*) filter (where not ${llmCalls.ok})`.mapWith(Number),
@@ -196,6 +227,6 @@ export async function usageToday(db: Db, now = new Date()) {
     })
     .from(llmCalls)
     .where(gte(llmCalls.createdAt, start))
-    .groupBy(llmCalls.model);
-  return rows.map((r) => ({ ...r, estimatedUsd: estimateUsd(r) }));
+    .groupBy(llmCalls.purpose, llmCalls.model);
+  return rows.map((r) => ({ ...r, cacheHitRate: cacheHitRate(r), estimatedUsd: estimateUsd(r) }));
 }

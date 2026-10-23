@@ -33,7 +33,7 @@ The model is told to report only facts stated in the text, never to infer from b
 5. **Rate limit** on `/api/free-text`: 10 requests per minute per client address.
 6. **Usage log without content.** `llm_calls` stores purpose, model, token counts, duration and outcome. Prompt text and user text are never stored there. Out-of-scope requests are stored in `waitlist_leads` as demand data, as the product spec asks.
 7. **Every other source wins.** Extracted values are stored with source `claude`, the lowest priority in `SOURCE_PRIORITY` (`docs/ATTRIBUTES.md`), and go through `mergeAttributes`. They fill gaps only: a value from the spec table, a feed or a rule is never overwritten, and a later spec table (or EPREL, once built) replaces what Claude wrote. Confidence (0–100) is stored in `extraction_confidence` for review; the job counts results below 60. Ranking does not read it.
-8. **Prompt caching.** The system prompts are byte-stable (built from the catalog, no timestamps) and marked `cache_control: ephemeral`, so repeated calls pay ~10 % for the catalog portion.
+8. **Prompt caching** (`docs/PROMPT_CACHING_PLAN.md`). The routing system prompt (~4 700 tokens: catalogue and questions) is byte-stable and carries the only `cache_control` breakpoint; the shopper's text comes after it in the user message, so repeated calls read the prefix at ~10 %. Routing skips the model when the regex table already knows the category and the text has no number to pre-fill, so no cache write is wasted. Extraction prompts (200–360 tokens per subcategory) are below the 512-token minimum and carry no marker. TTL: `LLM_CACHE_TTL` (5m default, 1h). The `llm today` log line shows each purpose's `cacheHitRate`; the e2e suite runs against a mock Messages API that caches by prefix and fails if the prefix stops being stable.
 9. **Low effort, bounded output.** `output_config.effort: "low"`, `max_tokens` 512 (routing) / 1024 (extraction), client timeout 30 s, 2 retries.
 
 ## Configuration
@@ -42,6 +42,7 @@ The model is told to report only facts stated in the text, never to infer from b
 ANTHROPIC_API_KEY=...        # server-only
 LLM_MODEL=claude-haiku-5-5   # default; set the same on every service with the key
 LLM_DAILY_CALL_CAP=300
+LLM_CACHE_TTL=5m            # 1h only for free-text traffic 5–60 min apart
 FEATURE_FREE_TEXT_LLM=1      # routing via Claude when regex finds nothing
 FEATURE_LLM_EXTRACT=1        # extraction after each ingestion run
 ```
@@ -53,7 +54,7 @@ Both features ship dark. Turn them on in Railway variables once the key is set.
 - `npm run extract -- [limit] [subcategoryId]` runs extraction by hand; `npm run ingest -- all` runs it automatically after ingestion when enabled.
 - Review what the model decided: `select name, attributes, attribute_sources, extraction_confidence from products where extracted_at > now() - interval '1 day' order by extraction_confidence;`. Keys whose source is `claude` came from the model.
 - Re-extract a product: `update products set extracted_at = null where id = '…';`
-- Spend: after each run with extraction the log shows `llm today: [{model, calls, failed, inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens, estimatedUsd}]` (an estimate from the price list in `client.ts`; the Claude Console has the billed amount). By day: `select purpose, date_trunc('day', created_at) d, count(*), sum(input_tokens) in_tok, sum(output_tokens) out_tok, sum(cache_read_tokens) cached from llm_calls group by 1,2 order by 2 desc;`
+- Spend: after each run with extraction the log shows `llm today: [{purpose, model, calls, failed, inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens, cacheHitRate, estimatedUsd}]` (an estimate from the price list in `client.ts`; the Claude Console has the billed amount). By day: `select purpose, date_trunc('day', created_at) d, count(*), sum(input_tokens) in_tok, sum(output_tokens) out_tok, sum(cache_read_tokens) cached from llm_calls group by 1,2 order by 2 desc;`
 - Model choice: `claude-haiku-5-5` by default since 21 Oct 2026 (Opus cost about 40 times more per product, and the output is validated against the catalogue either way). To compare models, set `LLM_MODEL`, clear `extracted_at` on a sample of 50 products, run `npm run extract -- 50`, and compare against attributes whose source is `spec_table` where both exist.
 
 ## Other data sources

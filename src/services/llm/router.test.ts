@@ -47,7 +47,10 @@ describe("routeFreeText", () => {
         { question_id: "evil", value: "x" }, // unknown question → dropped
       ],
     });
-    const r = await routeFreeText("Mazs kluss ledusskapis studentam, lēts", { caller, llmEnabled: true });
+    const r = await routeFreeText("Mazs kluss ledusskapis studentam līdz 300 eiro", {
+      caller,
+      llmEnabled: true,
+    });
     expect(r).toEqual({
       subcategoryId: "fridge",
       prefilled: { install: "free", size: "h85", priorities: ["quiet", "energy"] },
@@ -58,6 +61,19 @@ describe("routeFreeText", () => {
     expect(calls[0]!.purpose).toBe("free_text_routing");
     expect(calls[0]!.system).toBe(ROUTER_SYSTEM);
     expect(calls[0]!.user).toContain("Mazs kluss ledusskapis");
+    expect(calls[0]!.cache).not.toBe(false);
+  });
+
+  it("a regex hit without a number makes no model call (docs/PROMPT_CACHING_PLAN.md)", async () => {
+    const { caller, calls } = fakeCaller({
+      subcategory: "handblender",
+      out_of_scope: false,
+      confidence: 90,
+      prefilled: [],
+    });
+    const r = await routeFreeText("vajag rokas blenderi zupām", { caller, llmEnabled: true });
+    expect(r).toMatchObject({ subcategoryId: "handblender", source: "regex" });
+    expect(calls).toHaveLength(0);
   });
 
   it("regex hit plus model: model adds pre-fills but cannot change the subcategory", async () => {
@@ -67,7 +83,10 @@ describe("routeFreeText", () => {
       confidence: 80,
       prefilled: [{ question_id: "priorities", value: ["quiet"] }],
     });
-    const a = await routeFreeText("kluss ledusskapis", { caller: agree.caller, llmEnabled: true });
+    const a = await routeFreeText("kluss ledusskapis līdz 500 eiro", {
+      caller: agree.caller,
+      llmEnabled: true,
+    });
     expect(a).toMatchObject({ subcategoryId: "fridge", prefilled: { priorities: ["quiet"] }, source: "llm" });
 
     const disagree = fakeCaller({
@@ -76,11 +95,17 @@ describe("routeFreeText", () => {
       confidence: 80,
       prefilled: [{ question_id: "g2", value: "big" }],
     });
-    const d = await routeFreeText("kluss ledusskapis", { caller: disagree.caller, llmEnabled: true });
+    const d = await routeFreeText("kluss ledusskapis līdz 500 eiro", {
+      caller: disagree.caller,
+      llmEnabled: true,
+    });
     expect(d).toMatchObject({ subcategoryId: "fridge", prefilled: {}, source: "regex" });
 
     const failing = fakeCaller({ broken: true });
-    const f = await routeFreeText("kluss ledusskapis", { caller: failing.caller, llmEnabled: true });
+    const f = await routeFreeText("kluss ledusskapis līdz 500 eiro", {
+      caller: failing.caller,
+      llmEnabled: true,
+    });
     expect(f).toMatchObject({ subcategoryId: "fridge", source: "regex" });
   });
 
@@ -95,7 +120,7 @@ describe("routeFreeText", () => {
         seen.push(req as StructuredRequest<unknown>);
         return never(req);
       };
-      const pending = routeFreeText("vajag rokas blenderi zupām", { caller: slow, llmEnabled: true });
+      const pending = routeFreeText("rokas blenderis līdz 60 eiro", { caller: slow, llmEnabled: true });
       await vi.advanceTimersByTimeAsync(REGEX_HIT_DEADLINE_MS);
       await expect(pending).resolves.toMatchObject({ subcategoryId: "handblender", source: "regex" });
       expect(seen[0]).toMatchObject({ timeoutMs: REGEX_HIT_DEADLINE_MS, maxRetries: 0 });
