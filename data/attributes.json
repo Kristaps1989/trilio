@@ -1224,9 +1224,15 @@
     "(birstes|zobu birstes|birstīšu) (uzgaļ|galviņ)",
     "skūšanas galviņ",
     "tīrīšanas (kasetn|šķidrum)",
-    "mainām\\S*( \\S+)? plāksnes",
-    "\\bplāksnes (kontakttosterim|grilam|vafeļu pannai|sendviču tosterim)",
-    "\\b(waffle|sandwich|grill) plates\\b"
+    "mainām\\S*( \\S+){0,3} plāksnes?\\b",
+    "\\bplāksnes? (kontakttosterim|grilam|vafeļu pannai|sendviču tosterim)",
+    "\\b(waffle|sandwich|grill) plates\\b",
+    "(cepšanas|gatavošanas) komplekt",
+    "starpgredzen",
+    "\\bloksne\\b",
+    "žāvētājam\\b",
+    "blīvēšanas ruļļ",
+    "\\bruļļi\\b"
   ],
   "subcategories": {
     "fridge": {
@@ -1798,6 +1804,10 @@
         "priceEur": [
           150,
           4000
+        ],
+        "exclude": [
+          "dvieļu žāvētāj",
+          "towel"
         ]
       }
     },

@@ -206,6 +206,13 @@ describe("excludedByName", () => {
     expect(
       excludedByName("sandwich", "Tefal Snack Colletion, 700 W, melna - Kontakttosteris/vafeļu panna"),
     ).toBeNull();
+    expect(excludedByName("sandwich", "Tefal Snack Collection - Maināmā vafeļu plāksne")).toBe("accessory");
+    expect(excludedByName("sandwich", "Tefal Snack Collection - Maināmās plāno vafeļu plāksnes")).toBe(
+      "accessory",
+    );
+    expect(
+      excludedByName("sandwich", "Stollar the Morning Press, 800 W - Kontakttosteris trīs vienā"),
+    ).toBeNull();
     expect(excludedByName("grill", "Kontaktgrils ar maināmām plāksnēm")).toBeNull();
   });
 
@@ -220,5 +227,24 @@ describe("excludedByName", () => {
       "category_mismatch",
     );
     expect(excludedByName("grill", "Bosch TCG4104 kontakta grils")).toBeNull();
+  });
+
+  it("keeps the other accessories and look-alikes seen on trilio.lv out", () => {
+    for (const [sub, name] of [
+      ["airfryer", "Philips HD9925/01 Cepšanas komplekts"],
+      ["airfryer", "Philips HD9953/00 Picas gatavošanas komplekts"],
+      ["dehydrator", "Ezidri Snackmaker FD500, 2 gab. - Starpgredzens augļu žāvētājam"],
+      ["dehydrator", "Ezidri Snackmaker FD500, 4 gab. - Cietā loksne augļu žāvētājam"],
+      ["vacuumsealer", "Vakuuma blīvēšanas ruļļi, standarta, 3 gab., 20x300"],
+      ["dryer", "Elektriskais dvieļu žāvētājs Navin Stugna 480*800 Sensors kreisais balts"],
+    ])
+      expect(excludedByName(sub!, name!), name).not.toBeNull();
+    for (const [sub, name] of [
+      ["airfryer", "Bosch Serie 4 MAF462B1 taukvāres katls 6,1 L 2050 W Karstā gaisa fritētājs"],
+      ["dehydrator", "Sencor SFD 6500WH"],
+      ["vacuumsealer", "Gorenje VS120ES vakuuma aparāts 800 milibāri Pelēks"],
+      ["dryer", "LG, siltumsūkņa tehnoloģija, 9 kg, dziļums 66 cm - Veļas žāvētājs"],
+    ])
+      expect(excludedByName(sub!, name!), name).toBeNull();
   });
 });
