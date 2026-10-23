@@ -75,3 +75,76 @@ describe("upgradeDelta (§2.8: card text that is always true)", () => {
     expect(d.items.at(-1)).toMatchObject({ kind: "energy_cost", better: false, deltaCents: 25000 });
   });
 });
+
+describe("why paying more makes sense (docs/UPGRADE_REASONS_PLAN.md)", () => {
+  const vacuum = getSubcategory("vacuum")!;
+  const robot = (name: string, attrs: Record<string, unknown>, rating = 80) =>
+    product({ name, subcategoryId: "vacuum", rating, attrs: { vacuum_type: "robot", ...attrs } });
+
+  it("gains and trade-offs are separate: the owner's robot case", () => {
+    const a = robot("Acme R1", { run_min: 120, noise_db: 55, mop: false });
+    const b = robot("Zaco M1s", { run_min: 180, noise_db: 72, mop: true });
+    const d = upgradeDelta(at(a, 350), at(b, 400), 25, vacuum.compare, "vacuum");
+    expect(d.gains.map((i) => i.kind)).toEqual(expect.arrayContaining(["number", "boolean"]));
+    expect(d.gains).toContainEqual({ kind: "boolean", key: "mop", gained: true });
+    expect(d.tradeoffs).toEqual([{ kind: "number", key: "noise_db", delta: 17, better: false }]);
+  });
+
+  it("a higher Trilio rating and a more reliable brand are reasons too", () => {
+    const a = robot("Acme R1", { run_min: 120, noise_db: 60 }, 74);
+    const b = product({
+      name: "Miele Scout RX3",
+      brand: "Miele",
+      subcategoryId: "vacuum",
+      rating: 86,
+      attrs: { vacuum_type: "robot", run_min: 120, noise_db: 60 },
+    });
+    const d = upgradeDelta(at(a, 350), at(b, 450), 25, vacuum.compare, "vacuum");
+    expect(d.gains).toContainEqual({ kind: "rating", to: 86, better: true });
+    expect(d.gains).toContainEqual({ kind: "brand", from: null, to: 5, better: true });
+    expect(d.tradeoffs).toEqual([]);
+  });
+
+  it("wishes the pricier one meets and the cheaper does not come first", () => {
+    const opt = (card_reason: string) => ({ value: "x", label: "x", card_reason });
+    const a = robot("Acme R1", { noise_db: 60 });
+    const b = robot("Acme R2", { noise_db: 60 });
+    const d = upgradeDelta(
+      {
+        ...at(a, 350),
+        reasons: [{ questionId: "pets", option: opt("Birste dzīvnieku spalvām"), points: 12 }],
+      },
+      {
+        ...at(b, 380),
+        reasons: [
+          { questionId: "pets", option: opt("Birste dzīvnieku spalvām"), points: 12 },
+          { questionId: "priorities", option: opt("Kluss"), points: 15 },
+        ],
+      },
+      25,
+      vacuum.compare,
+      "vacuum",
+    );
+    expect(d.gains[0]).toEqual({ kind: "fit", text: "Kluss" });
+    expect(d.gains).not.toContainEqual({ kind: "fit", text: "Birste dzīvnieku spalvām" });
+  });
+
+  it("a wish met is not repeated as the same feature", () => {
+    const pets = {
+      value: "yes",
+      label: "Jā",
+      card_reason: "Birste dzīvnieku spalvām",
+      match: [{ attr: "pet_brush", eq: true }],
+    };
+    const a = robot("Acme R1", { pet_brush: false, noise_db: 60 });
+    const b = robot("Acme R2", { pet_brush: true, noise_db: 60 });
+    const d = upgradeDelta(
+      { ...at(a, 350), reasons: [] },
+      { ...at(b, 360), reasons: [{ questionId: "pets", option: pets, points: 12 }] },
+      25,
+      vacuum.compare,
+      "vacuum",
+    );
+    expect(d.gains).toEqual([{ kind: "fit", text: "Birste dzīvnieku spalvām" }]);
+  });
+});

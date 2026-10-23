@@ -65,7 +65,7 @@ for (const { group, sub } of all) {
     }
 
     await expect(page).toHaveURL(new RegExp(`/rezultati\\?sub=${sub.id}`));
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Trīs labākie varianti tev");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākie varianti tev");
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
     // The wishlist: the search and every pick can be saved with one tap.
@@ -88,6 +88,36 @@ for (const { group, sub } of all) {
         Number(await card.locator("[data-price-cents]").first().getAttribute("data-price-cents")) / 100;
       expect(price, `${sub.id}: ${text.slice(0, 60)}`).toBeGreaterThanOrEqual(lo);
       expect(price, `${sub.id}: ${text.slice(0, 60)}`).toBeLessThanOrEqual(hi);
+    }
+
+    // A pricier pick is always better overall, and its box says why it is worth more
+    // (owner, 23 Oct 2026; docs/UPGRADE_REASONS_PLAN.md).
+    const rows = (
+      await picks.evaluateAll((els) =>
+        els
+          .filter((e) => !/Virs budžeta par/.test(e.textContent ?? ""))
+          .map((e) => ({
+            price: Number(e.querySelector("[data-price-cents]")?.getAttribute("data-price-cents")),
+            score: Number(e.getAttribute("data-score")),
+            box: e.querySelector("[data-upgrade-gains]")?.textContent ?? null,
+            gains: Number(e.querySelector("[data-upgrade-gains]")?.getAttribute("data-upgrade-gains") ?? 0),
+          })),
+      )
+    ).sort((a, b) => a.price - b.price);
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i]!.price > rows[i - 1]!.price)
+        expect(rows[i]!.score, `${sub.id}: a pricier pick must score higher`).toBeGreaterThan(
+          rows[i - 1]!.score,
+        );
+    }
+    for (const r of rows) {
+      if (r.box === null) continue;
+      expect(r.box, `${sub.id}: the box names the price difference`).toMatch(/^Par \+/);
+      if (/Bet:/.test(r.box))
+        expect(
+          r.gains > 0 || /nevienā parametrā būtiski labāks/.test(r.box),
+          `${sub.id}: downsides never stand alone: ${r.box}`,
+        ).toBe(true);
     }
 
     // New and refurbished never mix (product rule 1).

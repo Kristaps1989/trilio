@@ -180,18 +180,29 @@ export default async function ResultsPage({ searchParams }: Props) {
     let upgrade: CardModel["upgrade"] = null;
     if (cheapest && pick.product.id !== cheapest.product.id) {
       const d = upgradeDelta(
-        { product: cheapest.product, priceCents: cheapest.offer.priceCents },
-        { product: pick.product, priceCents: pick.offer.priceCents },
+        { product: cheapest.product, priceCents: cheapest.offer.priceCents, reasons: cheapest.reasons },
+        { product: pick.product, priceCents: pick.offer.priceCents, reasons: pick.reasons },
         energyPrice,
         sub!.compare,
+        sub!.id,
       );
       // §2.8: say nothing rather than guess when the specs are not known on both sides.
       if (d.status !== "unknown") {
+        const lines = (items: typeof d.items) => deltaLines(items, td, attrLabel, enumLabel);
         upgrade = {
           priceDeltaCents: d.priceDeltaCents,
           tierLabel: cheapest.tier ? tierLabel(cheapest.tier) : t("cheapestOption"),
-          lines: d.status === "differs" ? deltaLines(d.items, td, attrLabel, enumLabel) : [],
-          note: d.status === "same" ? (d.brandsDiffer ? t("onlyBrand") : t("sameSpecs")) : null,
+          gains: lines(d.gains),
+          other: lines(d.other),
+          tradeoffs: lines(d.tradeoffs),
+          note:
+            d.status === "same"
+              ? d.brandsDiffer
+                ? t("onlyBrand")
+                : t("sameSpecs")
+              : d.gains.length === 0
+                ? t("upgradeNoGain")
+                : null,
         };
       }
     }
@@ -217,6 +228,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       refurbished: null,
       sessionId,
       saved: saved.has(productKey(pick.product.id)),
+      score: pick.score,
       ...cardMedia(pick.product),
     };
   }
@@ -331,8 +343,9 @@ export default async function ResultsPage({ searchParams }: Props) {
     state.trailing.brands ?? [],
   );
 
-  // Relax suggestions (§4.2) when fewer than three fit.
-  const relax: Relaxation[] = result.picks.length < 3 ? relaxations(input) : [];
+  // Relax suggestions (§4.2) when fewer than three fit. Fewer picks because the rest are
+  // pricier but not better (docs/UPGRADE_REASONS_PLAN.md) is not a reason to loosen anything.
+  const relax: Relaxation[] = result.matchingCount < 3 ? relaxations(input) : [];
   const relaxLink = (r: Relaxation): { href: string; text: string } => {
     switch (r.kind) {
       case "price_max":
@@ -650,6 +663,9 @@ export default async function ResultsPage({ searchParams }: Props) {
         <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
           {lead}
           {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
+          {result.picks.length > 0 && result.picks.length < 3 && result.matchingCount > result.picks.length
+            ? ` ${t("leadDominated", { count: result.picks.length })}`
+            : ""}
           {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
         </p>
         <FilterBar chips={chips} state={state} subId={sub.id} />

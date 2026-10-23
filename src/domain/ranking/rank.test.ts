@@ -149,8 +149,31 @@ describe("picks spread over the range (§2.3)", () => {
       fitUnknown: false,
       price: eur * 100,
     }));
+    // P5 (500 €, 85) costs more than P2 (300 €, 90) and is not better: never offered.
     const picks = pickThree(cands).map((c) => c.product.name);
-    expect(picks).toEqual(["P2", "P0", "P5"]);
+    expect(picks).toEqual(["P2", "P0"]);
+    // When the upper third has something better, it is the third pick.
+    cands[5]!.score = 95;
+    expect(pickThree(cands).map((c) => c.product.name)).toEqual(["P2", "P0", "P5"]);
+  });
+
+  it("every pricier pick scores higher than every cheaper pick (owner, 23 Oct 2026)", () => {
+    const prices = [349, 360, 399, 420, 450, 520, 610, 640];
+    const scores = [88, 70, 84, 91, 79, 95, 90, 97];
+    const cands = prices.map((eur, i) => ({
+      product: product({ name: `R${i}`, price: eur }),
+      score: scores[i]!,
+      reasons: [],
+      offer: offer({ priceCents: eur * 100 }),
+      unconfirmed: [],
+      fitUnknown: false,
+      price: eur * 100,
+    }));
+    const picks = pickThree(cands).sort((a, b) => a.price - b.price);
+    expect(picks.length).toBeGreaterThan(1);
+    for (let i = 1; i < picks.length; i++) expect(picks[i]!.score).toBeGreaterThan(picks[i - 1]!.score);
+    // The 399 € robot that is worse than the 349 € one is never among them.
+    expect(picks.map((p) => p.product.name)).not.toContain("R2");
   });
 });
 
@@ -262,9 +285,10 @@ describe("quality: the best quality for the money (owner, 19 Oct 2026)", () => {
     const better = combi("Acme Full", 450, 176, { energy_class: "C", noise_db: 36, no_frost: true });
     const r = rank(ownerCase([plain, better]));
     const full = r.picks.find((p) => p.product.name === "Acme Full")!;
-    const bare = r.picks.find((p) => p.product.name === "Acme Plain")!;
+    // Same price and worse: the plain one is not offered at all, only listed further down.
+    expect(r.picks.map((p) => p.product.name)).toEqual(["Acme Full"]);
+    const bare = r.more.find((c) => c.product.name === "Acme Plain")!;
     expect(full.quality!.spec).toBeGreaterThan(bare.quality!.spec);
-    expect(full.recommended).toBe(true);
   });
 
   it("a graded brand counts: Miele outranks an ungraded brand with the same specs", () => {

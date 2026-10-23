@@ -88,7 +88,7 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   await show.click();
 
   await expect(page).toHaveURL(/\/rezultati\?sub=fridge/);
-  await expect(h1(page)).toHaveText("Trīs labākie varianti tev");
+  await expect(h1(page)).toHaveText("Labākie varianti tev");
   await expect(picks(page).first()).toBeVisible();
   for (const card of await picks(page).all()) {
     expect(await heightOf(card)).toBeGreaterThanOrEqual(150);
@@ -101,8 +101,10 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   const chips = page.getByRole("navigation", { name: "Tavas izvēles" });
   await expect(chips.getByRole("button", { name: /166–180 cm/ })).toBeVisible();
   await expect(chips.getByRole("button", { name: /Divas durvis/ })).toBeVisible();
-  // Fewer than three would offer the smallest changes ("+ N varianti, ja …") instead of a dead end.
-  if ((await picks(page).count()) < 3) await expect(page.getByText(/\+ \d+ variant/).first()).toBeVisible();
+  // Fewer than three: either the smallest changes ("+ N varianti, ja …") instead of a dead end,
+  // or the note that the others cost more without being better (docs/UPGRADE_REASONS_PLAN.md).
+  if ((await picks(page).count()) < 3)
+    await expect(page.getByText(/\+ \d+ variant|dārgākas, bet ne labākas/).first()).toBeVisible();
   await expectNoAxeViolations(page);
 });
 
@@ -235,7 +237,11 @@ test("results: more than three options on request, best value first", async ({ p
   await page.getByRole("button", { name: "Tālāk", exact: true }).click();
   await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
   await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
-  await expect(page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article")).toHaveCount(3);
+  // Up to three: a pricier product is only offered when it is better (docs/UPGRADE_REASONS_PLAN.md).
+  const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
+  await expect(picks.first()).toBeVisible();
+  expect(await picks.count()).toBeLessThanOrEqual(3);
+  if ((await picks.count()) < 3) await expect(page.getByText(/dārgākas, bet ne labākas/)).toBeVisible();
 
   const more = page.getByRole("link", { name: /^Rādīt vairāk variantus \(\d+\)$/ });
   const total = Number(((await more.textContent()) ?? "").match(/\((\d+)\)/)![1]);

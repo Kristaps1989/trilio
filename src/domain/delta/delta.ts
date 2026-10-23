@@ -1,7 +1,8 @@
 import { attributeType } from "@/domain/catalog/attributes";
 import { boolAttr, numberAttr, stringAttr, type ProductView } from "@/domain/catalog/types";
 import { energyCost10yCents } from "@/domain/energy/energy";
-import { sameBrand } from "@/domain/ranking/score";
+import { brandTable, gradeOf, ungradedSubcategory } from "@/domain/ranking/consider";
+import { sameBrand, whyItFits, type ScoreReason } from "@/domain/ranking/score";
 
 // Spec §3.2 upgrade delta, made truthful (docs/FILTERS_PLAN.md §2.8): "Par
 // +180 € vairāk … tu iegūsti: +48 L tilpums · par 4 dB klusāks · labāka
@@ -16,7 +17,16 @@ export type DeltaItem =
   | { kind: "energy_class"; from: string; to: string; better: boolean }
   | { kind: "boolean"; key: string; gained: boolean }
   | { kind: "enum"; key: string; from: string; to: string }
-  | { kind: "energy_cost"; deltaCents: number; better: boolean };
+  | { kind: "energy_cost"; deltaCents: number; better: boolean }
+  /** Trilio rating, 0–100. */
+  | { kind: "rating"; to: number; better: boolean }
+  /** Brand reliability grade for the category; `from` null = the cheaper brand has no grade. */
+  | { kind: "brand"; from: number | null; to: number; better: boolean }
+  /** One of the shopper's wishes the pricier product meets and the cheaper one does not. */
+  | { kind: "fit"; text: string };
+
+/** The rating must differ by this much (0,3 of 10) to be worth a line. */
+const RATING_MIN_DELTA = 3;
 
 /** For numeric keys: is a higher value better (null: neither), and the smallest difference worth mentioning. */
 const NUMBER_RULES: Record<string, { higherIsBetter: boolean | null; minDelta: number }> = {
@@ -60,7 +70,53 @@ export type UpgradeDelta = {
    */
   status: "differs" | "same" | "unknown";
   brandsDiffer: boolean;
+  /** Why paying more makes sense (docs/UPGRADE_REASONS_PLAN.md). */
+  gains: DeltaItem[];
+  /** Differences that are neither better nor worse (a different type). */
+  other: DeltaItem[];
+  /** What the pricier one does worse. */
+  tradeoffs: DeltaItem[];
 };
+
+/** Better (true), worse (false) or neither (null). */
+export function goodness(i: DeltaItem): boolean | null {
+  switch (i.kind) {
+    case "boolean":
+      return i.gained;
+    case "enum":
+      return null;
+    case "fit":
+      return true;
+    default:
+      return i.better;
+  }
+}
+
+/** The reasons beyond specs that the quality score counts: rating, brand reliability, answers met. */
+function scoreItems(
+  a: { product: ProductView; reasons?: ScoreReason[] },
+  b: { product: ProductView; reasons?: ScoreReason[] },
+  subcategoryId: string | undefined,
+): DeltaItem[] {
+  const out: DeltaItem[] = [];
+  const ra = a.product.rating;
+  const rb = b.product.rating;
+  if (ra !== null && rb !== null && Math.abs(rb - ra) >= RATING_MIN_DELTA)
+    out.push({ kind: "rating", to: rb, better: rb > ra });
+  if (subcategoryId && brandTable.reviewed && !ungradedSubcategory(brandTable, subcategoryId)) {
+    const ga = gradeOf(brandTable, a.product.brand, subcategoryId);
+    const gb = gradeOf(brandTable, b.product.brand, subcategoryId);
+    if (gb !== null && ga !== gb && (ga !== null || gb >= 4))
+      out.push({ kind: "brand", from: ga, to: gb, better: ga === null || gb > ga });
+    else if (ga !== null && gb !== null && gb < ga)
+      out.push({ kind: "brand", from: ga, to: gb, better: false });
+  }
+  if (a.reasons && b.reasons) {
+    const had = new Set(whyItFits(a.reasons, 99));
+    for (const text of whyItFits(b.reasons, 99)) if (!had.has(text)) out.push({ kind: "fit", text });
+  }
+  return out;
+}
 
 function known(p: ProductView, key: string): boolean {
   const v = p.attributes[key];
@@ -69,10 +125,11 @@ function known(p: ProductView, key: string): boolean {
 
 /** What the pricier product gives (and costs) compared with the cheaper one, over `keys`. */
 export function upgradeDelta(
-  cheaper: { product: ProductView; priceCents: number },
-  pricier: { product: ProductView; priceCents: number },
+  cheaper: { product: ProductView; priceCents: number; reasons?: ScoreReason[] },
+  pricier: { product: ProductView; priceCents: number; reasons?: ScoreReason[] },
   energyPriceCentsPerKwh: number,
   keys: string[],
+  subcategoryId?: string,
 ): UpgradeDelta {
   const a = cheaper.product;
   const b = pricier.product;
@@ -123,9 +180,25 @@ export function upgradeDelta(
     items.push({ kind: "energy_cost", deltaCents: cb - ca, better: cb < ca });
   }
 
+  // What the shopper asked for first, then specs, then rating and brand.
+  const extra = scoreItems(cheaper, pricier, subcategoryId);
+  // A wish met says it in the shopper's words ("Birste dzīvnieku spalvām"): drop the same feature as a spec line.
+  const fitTexts = new Set(extra.flatMap((i) => (i.kind === "fit" ? [i.text] : [])));
+  const saidByFit = new Set(
+    (pricier.reasons ?? [])
+      .filter((r) => r.option.card_reason && fitTexts.has(r.option.card_reason))
+      .flatMap((r) => (r.option.match ?? []).filter((m) => m.eq === true).map((m) => m.attr)),
+  );
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i]!;
+    if (item.kind === "boolean" && saidByFit.has(item.key)) items.splice(i, 1);
+  }
+  items.unshift(...extra.filter((i) => i.kind === "fit"));
+  items.push(...extra.filter((i) => i.kind !== "fit"));
+
   // Better things first, then neutral, then the downsides.
   const rank = (i: DeltaItem) => {
-    const good = i.kind === "boolean" ? i.gained : i.kind === "enum" ? null : i.better;
+    const good = goodness(i);
     return good === true ? 0 : good === null ? 1 : 2;
   };
   items.sort((x, y) => rank(x) - rank(y));
@@ -135,5 +208,8 @@ export function upgradeDelta(
     items,
     status: items.length ? "differs" : allKnown ? "same" : "unknown",
     brandsDiffer: !sameBrand(a.brand, b.brand),
+    gains: items.filter((i) => goodness(i) === true),
+    other: items.filter((i) => goodness(i) === null),
+    tradeoffs: items.filter((i) => goodness(i) === false),
   };
 }

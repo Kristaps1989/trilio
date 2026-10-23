@@ -40,7 +40,18 @@ export type CardModel = {
   otherOffers: { storeName: string; priceCents: number }[];
   savingVsMaxCents: number | null;
   /** Truthful upgrade box (§2.8): what differs, or a note when the specs are known and equal. */
-  upgrade: { priceDeltaCents: number; tierLabel: string; lines: string[]; note: string | null } | null;
+  upgrade: {
+    priceDeltaCents: number;
+    tierLabel: string;
+    /** Why the extra money buys something (docs/UPGRADE_REASONS_PLAN.md). */
+    gains: string[];
+    other: string[];
+    /** What it does worse, shown apart from the gains. */
+    tradeoffs: string[];
+    note: string | null;
+  } | null;
+  /** Quality-for-the-answers score (rank.ts); a pricier pick always has a higher one. */
+  score?: number;
   refurbished: {
     grade: string | null;
     warrantyMonths: number | null;
@@ -127,6 +138,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
       } ${card.recommended ? "shadow-[0_0_0_3px_var(--color-lime)]" : ""}`}
       aria-label={card.name}
       id={`p-${card.productId}`}
+      data-score={card.score}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap gap-1.5">
@@ -183,16 +195,28 @@ export async function ResultCard({ card }: { card: CardModel }) {
       </div>
 
       {card.upgrade ? (
-        <div className="flex flex-col gap-0.5 rounded-control bg-best px-3 py-[10px]">
-          <strong className="text-sm font-bold">
+        <div
+          className="flex flex-col gap-1 rounded-control bg-best px-3 py-[10px] text-sm leading-[1.45]"
+          data-upgrade-gains={card.upgrade.gains.length}
+        >
+          <strong className="font-bold">
             {t("upgrade", {
               amount: formatEurDelta(card.upgrade.priceDeltaCents),
               tier: card.upgrade.tierLabel,
             })}
           </strong>
-          <span className="text-sm leading-[1.45]">
-            {card.upgrade.note ?? card.upgrade.lines.join(" · ")}
-          </span>
+          {card.upgrade.gains.length ? (
+            <span>{t("upgradeGains", { items: card.upgrade.gains.join(" · ") })}</span>
+          ) : null}
+          {card.upgrade.note ? <span>{card.upgrade.note}</span> : null}
+          {card.upgrade.other.length ? (
+            <span>{t("upgradeOther", { items: card.upgrade.other.join(" · ") })}</span>
+          ) : null}
+          {card.upgrade.tradeoffs.length ? (
+            <span className="text-muted">
+              {t("upgradeTradeoffs", { items: card.upgrade.tradeoffs.join(" · ") })}
+            </span>
+          ) : null}
         </div>
       ) : null}
 
