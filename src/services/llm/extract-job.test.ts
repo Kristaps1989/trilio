@@ -53,7 +53,9 @@ run("runExtractionJob", () => {
       grade: null,
       warrantyMonths: null,
       priceCents: 3000,
-      stock: "in" as const,
+      // Out of stock for the fridge that must wait: the EPREL job only looks up products
+      // in stock, so its test (sharing this database, in parallel) cannot mark it as checked.
+      stock: model === "XJFRIDGENEW" ? ("out" as const) : ("in" as const),
       deliveryEtaDays: null,
       url: `https://example.invalid/xj-${n}`,
     });
