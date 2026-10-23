@@ -42,7 +42,12 @@ const SubcategoryAttrsSchema = z
     ),
     defaultFalse: z.array(z.string()),
     sanity: z
-      .object({ stems: z.array(z.string()).min(1), priceEur: z.tuple([z.number(), z.number()]) })
+      .object({
+        stems: z.array(z.string()).min(1),
+        priceEur: z.tuple([z.number(), z.number()]),
+        /** Name patterns of a different appliance that shops file here (hand blenders under blenders). */
+        exclude: z.array(z.string()).optional(),
+      })
       .strict(),
   })
   .strict();

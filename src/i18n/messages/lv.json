@@ -2,7 +2,9 @@
   "meta": {
     "title": "Trilio — trīs labākie. Bez meklēšanas.",
     "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
-    "tagline": "Trīs labākie. Bez meklēšanas."
+    "tagline": "Trīs labākie. Bez meklēšanas.",
+    "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
+    "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },
   "header": {
     "signIn": "Ienākt",
@@ -459,22 +461,26 @@
     "wishlistView": "Skatīt vēlmju sarakstu"
   },
   "landing": {
-    "title": "Labākie {category}",
-    "titleBudget": "Labākie {category} līdz {budget}",
-    "description": "Trīs labākie {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
-    "descriptionBudget": "Trīs labākie {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
+    "title": "{gender, select, f {Labākās} other {Labākie}} {category}",
+    "titleBudget": "{gender, select, f {Labākās} other {Labākie}} {category} līdz {budget}",
+    "metaTitle": "{gender, select, f {Labākās} other {Labākie}} {category} {year}: cenas un salīdzinājums",
+    "metaTitleBudget": "{gender, select, f {Labākās} other {Labākie}} {category} līdz {budget} ({year})",
+    "related": "Citas kategorijas",
+    "description": "Trīs {gender, select, f {labākās} other {labākie}} {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
+    "descriptionBudget": "Trīs {gender, select, f {labākās} other {labākie}} {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "lead": "Atlasīts no {count, plural, =1 {# preces} other {# precēm}} partneru veikalos, atjaunots {date}.",
+    "leadMainstream": "Trīs varianti biežākajā cenu robežā līdz {max}; premium modeļus redzēsi, norādot lielāku budžetu.",
     "budgets": "Pēc budžeta",
     "upTo": "līdz {budget}",
     "allCategories": "Visas kategorijas",
     "noOffers": "Šobrīd šajā kategorijā nav piedāvājumu.",
     "faqTitle": "Biežākie jautājumi",
-    "faq1q": "Kā Trilio izvēlas labākos {category}?",
+    "faq1q": "Kā Trilio izvēlas {gender, select, f {labākās} other {labākos}} {category}?",
     "faq1a": "Atlasām preces, kas ir noliktavā partneru veikalos un iekļaujas tavā cenu robežā, un prioritizējam pēc kvalitātes par savu cenu: zīmola uzticamība šajā kategorijā, preces parametri un atbilstība tavām atbildēm. Trīs varianti visā cenu robežā: labākā vērtība kopumā, labākā lētākajā daļā un labākā dārgākajā daļā. Veikalu komisija preču secību neietekmē.",
     "faq2q": "Vai cenas ir aktuālas?",
     "faq2a": "Cenas un pieejamību atjaunojam vairākas reizes dienā no veikalu datu plūsmām un salīdzinām pēc EAN svītrkoda. Atlaides norādām tikai pret zemāko cenu pēdējās 30 dienās.",
     "faq3q": "Kas ir atjaunota prece?",
-    "faq3a": "Prece ar to pašu EAN, ko veikals pārdod kā atjaunotu, ar norādītu stāvokļa pakāpi un garantiju. Tās vienmēr rādām atsevišķi, nekad kopā ar jaunām.",
+    "faq3a": "Atjaunota prece ir tas pats modelis ar to pašu EAN, kas pēc atgriešanas, demonstrācijas vai remonta ir pārbaudīts un tiek pārdots vēlreiz, parasti ievērojami lētāk nekā jauns. Pie katras rādām veikala norādīto stāvokļa pakāpi, garantijas ilgumu un cik ietaupi pret to pašu modeli jaunā stāvoklī. Internetā pirktu preci, arī atjaunotu, parasti vari atteikt 14 dienu laikā. Atjaunotās preces vienmēr rādām atsevišķā blokā, nekad starp jaunajām, un atlasām pēc tiem pašiem tavas izvēles kritērijiem.",
     "breadcrumbHome": "Sākums",
     "ctaTitle": "Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev",
     "ctaButton": "Sākt izvēli"

@@ -3,7 +3,15 @@ import { getSubcategory } from "@/domain/questions/catalog";
 import { offer, product } from "@/domain/testing/builders";
 import { limitsFridge } from "@/domain/testing/fixtures";
 import { evaluateQuestion, passesHardFilters, withinBudget, withinStretch } from "./filters";
-import { assignTiers, countMatches, pickThree, rank, tiersAreMeaningful, type RankInput } from "./rank";
+import {
+  assignTiers,
+  countMatches,
+  mainstreamCeilingCents,
+  pickThree,
+  rank,
+  tiersAreMeaningful,
+  type RankInput,
+} from "./rank";
 import { valueScore } from "./quality";
 import { relaxations } from "./relax";
 import { scoreProduct, whyItFits } from "./score";
@@ -277,5 +285,18 @@ describe("score", () => {
     const s = scoreProduct(p, fridge, { install: "free", priorities: ["nofrost", "quiet"] });
     expect(s.score).toBe(80 + 15 + 12);
     expect(whyItFits(s.reasons)).toEqual(["No Frost — nav jāatkausē", "Kluss — 38 dB vai mazāk"]);
+  });
+});
+
+describe("mainstreamCeilingCents", () => {
+  it("is the 75th percentile, rounded up to whole euros, so premium outliers do not stretch the range", () => {
+    // Eight fridges from 300 € to 900 € and two premium ones at 5 299 € and 9 999 €.
+    const prices = [30000, 35000, 42000, 49900, 55000, 61000, 72000, 89950, 529900, 999900];
+    expect(mainstreamCeilingCents(prices)).toBe(90000);
+  });
+
+  it("needs at least six prices to tell what is usual", () => {
+    expect(mainstreamCeilingCents([10000, 20000, 30000, 40000, 500000])).toBeNull();
+    expect(mainstreamCeilingCents([])).toBeNull();
   });
 });

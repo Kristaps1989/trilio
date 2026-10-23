@@ -12,9 +12,10 @@ import {
 import { priceLine } from "@/domain/pricing/omnibus";
 import { getGroupOfSubcategory } from "@/domain/questions/catalog";
 import type { Subcategory } from "@/domain/questions/schema";
-import { rank, type Pick } from "@/domain/ranking/rank";
+import { bestOffer, eligibleOffers } from "@/domain/ranking/filters";
+import { mainstreamCeilingCents, rank, type Pick } from "@/domain/ranking/rank";
 import { whyItFits } from "@/domain/ranking/score";
-import { formatDateDative, formatDateNominative, formatEur } from "@/i18n/format";
+import { categoryGender, formatDateDative, formatDateNominative, formatEur } from "@/i18n/format";
 import { currentMarket } from "@/i18n/market";
 import { appBaseUrl } from "@/services/payments";
 import { ButtonLink } from "@/ui/Button";
@@ -28,15 +29,25 @@ import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 
 export async function landingCards(sub: Subcategory, budgetCents: number | null) {
   const products = await loadCandidates(db, sub.id);
+  // Without a budget: the usual price range, not the whole market up to the most expensive model.
+  const ceilingCents =
+    budgetCents === null
+      ? mainstreamCeilingCents(
+          products.flatMap((p) => {
+            const best = bestOffer(eligibleOffers(p, "new", "two_weeks"));
+            return best ? [best.priceCents] : [];
+          }),
+        )
+      : null;
   const result = rank({
     products,
     sub,
     answers: {},
-    budget: budgetCents,
+    budget: budgetCents ?? ceilingCents,
     urgency: "two_weeks",
     includeRefurbished: false,
   });
-  return { result, products };
+  return { result, products, ceilingCents };
 }
 
 function toCard(pick: Pick, sub: Subcategory, now: Date, energyPrice: number): CardModel {
@@ -84,17 +95,25 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
   const group = getGroupOfSubcategory(sub.id);
   const now = new Date();
   const energyPrice = energyPriceFromEnv();
-  const { result, products } = await landingCards(sub, budgetCents);
+  const { result, products, ceilingCents } = await landingCards(sub, budgetCents);
   const cards = result.picks.map((p) => toCard(p, sub, now, energyPrice));
   const label = sub.label.toLowerCase();
+  const gender = categoryGender(sub.label);
+  // Crawlable links between the landing pages of one group (fridges ↔ freezers).
+  const related = (group?.subcategories ?? []).filter((s) => s.id !== sub.id);
   const title =
     budgetCents === null
-      ? t("title", { category: label })
-      : t("titleBudget", { category: label, budget: formatEur(budgetCents) });
+      ? t("title", { category: label, gender })
+      : t("titleBudget", { category: label, gender, budget: formatEur(budgetCents) });
   const base = appBaseUrl();
   const path =
     budgetCents === null ? `/kategorija/${sub.id}` : `/kategorija/${sub.id}/lidz-${budgetCents / 100}`;
 
+  // Product photo for search results (Google's Product snippets want one), as an absolute URL.
+  const photo = (p: Pick) => {
+    const src = cardMedia(p.product).image.src;
+    return src ? { image: new URL(src, base).toString() } : {};
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -109,6 +128,7 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
         sku: p.product.modelCode,
         ...(p.product.ean ? { gtin13: p.product.ean } : {}),
         brand: { "@type": "Brand", name: p.product.brand },
+        ...photo(p),
         offers: {
           "@type": "Offer",
           priceCurrency: "EUR",
@@ -122,7 +142,7 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
   };
 
   const faq = [
-    { q: t("faq1q", { category: label }), a: t("faq1a") },
+    { q: t("faq1q", { category: label, gender }), a: t("faq1a") },
     { q: t("faq2q"), a: t("faq2a") },
     { q: t("faq3q"), a: t("faq3a") },
   ];
@@ -156,6 +176,7 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
         <PageTitle scale="results">{title}</PageTitle>
         <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
           {t("lead", { count: products.length, date: formatDateNominative(now) })}
+          {ceilingCents !== null ? ` ${t("leadMainstream", { max: formatEur(ceilingCents) })}` : ""}
         </p>
       </div>
 
@@ -212,6 +233,25 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
               </li>
             ))}
           </ul>
+          {related.length ? (
+            <>
+              <h2 id="related-title" className="mt-2 font-heading text-lg font-semibold text-mist">
+                {t("related")}
+              </h2>
+              <ul aria-labelledby="related-title" className="flex flex-col">
+                {related.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      href={`/kategorija/${s.id}`}
+                      className="inline-flex min-h-11 items-center text-base text-mist underline underline-offset-2"
+                    >
+                      {t("title", { category: s.label.toLowerCase(), gender: categoryGender(s.label) })}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
           <Link
             href="/izvelies"
             className="inline-flex min-h-11 items-center text-base font-semibold text-lime underline underline-offset-2"

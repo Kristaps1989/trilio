@@ -1223,7 +1223,10 @@
     "rezerves (asmen|galviņ)",
     "(birstes|zobu birstes|birstīšu) (uzgaļ|galviņ)",
     "skūšanas galviņ",
-    "tīrīšanas (kasetn|šķidrum)"
+    "tīrīšanas (kasetn|šķidrum)",
+    "mainām\\S*( \\S+)? plāksnes",
+    "\\bplāksnes (kontakttosterim|grilam|vafeļu pannai|sendviču tosterim)",
+    "\\b(waffle|sandwich|grill) plates\\b"
   ],
   "subcategories": {
     "fridge": {
@@ -2624,6 +2627,16 @@
         "priceEur": [
           15,
           1500
+        ],
+        "exclude": [
+          "iegremdējam",
+          "rokas blender",
+          "rokas mikser",
+          "hand ?blender",
+          "stick blender",
+          "clevermixx",
+          "\\bmsm\\d",
+          "\\bmq ?\\d"
         ]
       }
     },
@@ -2860,6 +2873,10 @@
         "priceEur": [
           15,
           1500
+        ],
+        "exclude": [
+          "picas krāsn",
+          "pizza oven"
         ]
       }
     },

@@ -3,7 +3,9 @@
   "meta": {
     "title": "Trilio — trīs labākie. Bez meklēšanas.",
     "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
-    "tagline": "Trīs labākie. Bez meklēšanas."
+    "tagline": "Trīs labākie. Bez meklēšanas.",
+    "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
+    "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },
   "header": {
     "signIn": "Ienākt",
@@ -462,9 +464,13 @@
   "landing": {
     "title": "Labākie {category}",
     "titleBudget": "Labākie {category} līdz {budget}",
+    "metaTitle": "Labākie {category} {year}: cenas un salīdzinājums",
+    "metaTitleBudget": "Labākie {category} līdz {budget} ({year})",
+    "related": "Citas kategorijas",
     "description": "Trīs labākie {category} partneru veikalos pēc cenas, kvalitātes un elektrības izmaksām. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "descriptionBudget": "Trīs labākie {category} līdz {budget} partneru veikalos. Salīdzinām pēc EAN, bez slēptas reklāmas.",
     "lead": "Atlasīts no {count, plural, =1 {# preces} other {# precēm}} partneru veikalos, atjaunots {date}.",
+    "leadMainstream": "Trīs varianti biežākajā cenu robežā līdz {max}; premium modeļus redzēsi, norādot lielāku budžetu.",
     "budgets": "Pēc budžeta",
     "upTo": "līdz {budget}",
     "allCategories": "Visas kategorijas",

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import fixtures from "@/services/ingestion/specs/__fixtures__/pages.json";
-import { mergeAttributes, normaliseProduct, parseEnergyClass, parseQuantity, sanityCheck } from "./normalise";
+import {
+  excludedByName,
+  mergeAttributes,
+  normaliseProduct,
+  parseEnergyClass,
+  parseQuantity,
+  sanityCheck,
+} from "./normalise";
 
 type Page = {
   id: string;
@@ -186,5 +193,32 @@ describe("mergeAttributes", () => {
     );
     expect(merged.attributes).toEqual({ height_cm: 185, volume_l: 310, noise_db: 35 });
     expect(merged.sources).toEqual({ height_cm: "spec_table", volume_l: "eprel", noise_db: "spec_table" });
+  });
+});
+
+describe("excludedByName", () => {
+  // Names as shown on trilio.lv on 23 Oct 2026.
+  it("keeps replacement plates out of sandwich toasters, but not the toaster itself", () => {
+    expect(excludedByName("sandwich", "Tefal Snack Collection - Maināmās vafeļu plāksnes")).toBe("accessory");
+    expect(
+      excludedByName("sandwich", "Tefal Snack Collection - Maināmās sendviču plāksnes kontakttosterim"),
+    ).toBe("accessory");
+    expect(
+      excludedByName("sandwich", "Tefal Snack Colletion, 700 W, melna - Kontakttosteris/vafeļu panna"),
+    ).toBeNull();
+    expect(excludedByName("grill", "Kontaktgrils ar maināmām plāksnēm")).toBeNull();
+  });
+
+  it("keeps hand blenders and pizza ovens out of the categories shops file them under", () => {
+    expect(excludedByName("blender", "Bosch CleverMixx MSM14100")).toBe("category_mismatch");
+    expect(
+      excludedByName("blender", "Bosch MSM6B100 blenderis 0 L iegremdējamais blenderis 280 W balts"),
+    ).toBe("category_mismatch");
+    expect(excludedByName("blender", "Blendtec Designer 725, 1800 W, 2.7 L - Blenderis")).toBeNull();
+    expect(excludedByName("handblender", "Bosch CleverMixx MSM14100")).toBeNull();
+    expect(excludedByName("grill", "Ninja Woodfire, sarkana - Elektriskā āra picas krāsns")).toBe(
+      "category_mismatch",
+    );
+    expect(excludedByName("grill", "Bosch TCG4104 kontakta grils")).toBeNull();
   });
 });

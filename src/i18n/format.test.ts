@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  categoryGender,
   formatCm,
   formatDateDative,
   formatEur,
@@ -58,5 +59,25 @@ describe("formatDateDative", () => {
     // 2026-10-21 is a Wednesday.
     expect(formatDateDative(new Date(2026, 9, 21))).toBe("trešdienai, 21. oktobrim");
     expect(formatDateDative(new Date(2026, 0, 5))).toBe("pirmdienai, 5. janvārim");
+  });
+});
+
+describe("categoryGender", () => {
+  it("agrees with the head noun of the category label", () => {
+    for (const l of [
+      "Ledusskapji",
+      "Sendviču tosteri",
+      "Taukvāres katli un karstā gaisa friteri",
+      "Trimmeri un matu mašīnas",
+    ])
+      expect(categoryGender(l)).toBe("m");
+    for (const l of [
+      "Saldētavas",
+      "Tējkannas",
+      "Plītis un plīts virsmas",
+      "Mikroviļņu krāsnis",
+      "Elektriskās zobu birstes",
+    ])
+      expect(categoryGender(l)).toBe("f");
   });
 });

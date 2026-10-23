@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { catalog } from "@/domain/questions/catalog";
 import { ButtonLink } from "@/ui/Button";
 import { Container, Kicker, Lead, PageTitle, SectionTitle } from "@/ui/layout";
 import { TileIcon } from "@/ui/Tile";
+import { pageMetadata } from "./seo";
 
 // Welcome screen (spec §1, prototype "welcome") plus crawlable entry points
 // below the fold: search engines and AI assistants need real links to the
@@ -11,6 +13,11 @@ import { TileIcon } from "@/ui/Tile";
 
 // Rendered per request so the site URL in metadata and JSON-LD comes from APP_URL at runtime.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  return { ...pageMetadata("/", t("title"), t("description")), title: { absolute: t("title") } };
+}
 
 export default async function WelcomePage() {
   const t = await getTranslations();

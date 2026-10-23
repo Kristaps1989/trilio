@@ -5,12 +5,16 @@ import { getGroup } from "@/domain/questions/catalog";
 import { Kicker, PageTitle, Screen } from "@/ui/layout";
 import { Illustration } from "@/ui/illustrations/Illustration";
 import { Tile, TileGrid, TileIcon } from "@/ui/Tile";
+import { pageMetadata } from "../../seo";
 
 type Params = { params: Promise<{ group: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { group } = await params;
-  return { title: getGroup(group)?.label ?? "" };
+  const g = getGroup(group);
+  if (!g) return {};
+  const t = await getTranslations("meta");
+  return pageMetadata(`/izvelies/${g.id}`, g.label, t("groupDescription", { group: g.label }));
 }
 
 /** Spec §2.1 step 2: subcategory list of a group. */

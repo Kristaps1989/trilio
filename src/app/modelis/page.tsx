@@ -20,14 +20,18 @@ import { Button } from "@/ui/Button";
 import { InfoBox, Kicker, Lead, Page, PageTitle, Panel, Screen, SectionTitle } from "@/ui/layout";
 import { cardMedia } from "../rezultati/card-media";
 import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
+import { NOINDEX, pageMetadata } from "../seo";
 
 export const dynamic = "force-dynamic";
 
 type Props = { searchParams: Promise<{ q?: string }> };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("model");
-  return { title: t("title") };
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { q } = await searchParams;
+  const t = await getTranslations();
+  const meta = pageMetadata("/modelis", t("model.title"), t("meta.modelDescription"));
+  // Every search would be its own URL: only the empty form is indexed.
+  return q ? { ...meta, robots: NOINDEX } : meta;
 }
 
 /** Accepts a shop URL and reduces it to the last path segment, else returns the text. */
