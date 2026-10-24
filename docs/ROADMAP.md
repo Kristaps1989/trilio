@@ -24,7 +24,7 @@
 ## Open questions for the owner
 1. **Partners:** which shops, which feed formats and which affiliate network or terms?
 2. **Pricing:** card fees take a large share of a €1 charge. Consider an annual plan (e.g. 9–10 €/year) or charging only once the user tracks something.
-3. **"Trilio vērtējums" (Trilio rating) method:** which inputs count (specs, warranty, return rates, reviews)? It must be explainable on the ranking panel.
+3. ~~**"Trilio vērtējums" (Trilio rating) method.**~~ Decided 24 Oct 2026 (docs/CONFIDENCE_PLAN.md B5): no composite number is published; cards show its parts with sources (brand reliability, shop reviews with counts, specs, warranty).
 4. **Domains and trademark:** register trilio.lv and trilio.eu, and check the trademark against Trilio (trilio.io, a US backup-software company).
 5. **Electricity price:** a fixed 0,25 €/kWh, or regional and periodically updated?
 6. **Hosting and region:** run in the EU for GDPR.

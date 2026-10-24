@@ -18,15 +18,10 @@ export type DeltaItem =
   | { kind: "boolean"; key: string; gained: boolean }
   | { kind: "enum"; key: string; from: string; to: string }
   | { kind: "energy_cost"; deltaCents: number; better: boolean }
-  /** Trilio rating, 0–100. */
-  | { kind: "rating"; to: number; better: boolean }
   /** Brand reliability grade for the category; `from` null = the cheaper brand has no grade. */
   | { kind: "brand"; from: number | null; to: number; better: boolean }
   /** One of the shopper's wishes the pricier product meets and the cheaper one does not. */
   | { kind: "fit"; text: string };
-
-/** The rating must differ by this much (0,3 of 10) to be worth a line. */
-const RATING_MIN_DELTA = 3;
 
 /** For numeric keys: is a higher value better (null: neither), and the smallest difference worth mentioning. */
 const NUMBER_RULES: Record<string, { higherIsBetter: boolean | null; minDelta: number }> = {
@@ -45,7 +40,20 @@ const NUMBER_RULES: Record<string, { higherIsBetter: boolean | null; minDelta: n
   pressure_bar: { higherIsBetter: null, minDelta: 3 },
   steam_gmin: { higherIsBetter: true, minDelta: 10 },
   weight_kg: { higherIsBetter: false, minDelta: 0.3 },
+  programme_min: { higherIsBetter: false, minDelta: 15 },
+  quick_wash_min: { higherIsBetter: false, minDelta: 5 },
+  water_l_cycle: { higherIsBetter: false, minDelta: 2 },
+  moisture_pct: { higherIsBetter: false, minDelta: 3 },
+  bin_l: { higherIsBetter: true, minDelta: 0.1 },
+  suction_pa: { higherIsBetter: true, minDelta: 500 },
+  cup_height_cm: { higherIsBetter: true, minDelta: 2 },
+  warranty_months: { higherIsBetter: true, minDelta: 12 },
 };
+
+/** For numeric keys: is a higher value better (null: neither), and the smallest difference worth mentioning. */
+export function numberRule(key: string): { higherIsBetter: boolean | null; minDelta: number } | undefined {
+  return NUMBER_RULES[key];
+}
 
 /** Size differences matter for fit, not as an upgrade; they are compared in the table instead. */
 const NOT_AN_UPGRADE = new Set([
@@ -92,17 +100,16 @@ export function goodness(i: DeltaItem): boolean | null {
   }
 }
 
-/** The reasons beyond specs that the quality score counts: rating, brand reliability, answers met. */
+/**
+ * The reasons beyond specs that the quality score counts: brand reliability
+ * and answers met. No composite rating is published (docs/CONFIDENCE_PLAN.md B5).
+ */
 function scoreItems(
   a: { product: ProductView; reasons?: ScoreReason[] },
   b: { product: ProductView; reasons?: ScoreReason[] },
   subcategoryId: string | undefined,
 ): DeltaItem[] {
   const out: DeltaItem[] = [];
-  const ra = a.product.rating;
-  const rb = b.product.rating;
-  if (ra !== null && rb !== null && Math.abs(rb - ra) >= RATING_MIN_DELTA)
-    out.push({ kind: "rating", to: rb, better: rb > ra });
   if (subcategoryId && brandTable.reviewed && !ungradedSubcategory(brandTable, subcategoryId)) {
     const ga = gradeOf(brandTable, a.product.brand, subcategoryId);
     const gb = gradeOf(brandTable, b.product.brand, subcategoryId);

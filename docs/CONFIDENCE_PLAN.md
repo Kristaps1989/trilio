@@ -1,5 +1,12 @@
 # Three options the shopper can trust: selection and argumentation
 
+> **Status (24 Oct 2026): implemented** (all recommendations agreed by the owner). Code: `src/domain/confidence/confidence.ts` (roles, verdicts, catch, why-not, reviews, price confidence, coverage), `src/domain/knowledge/` + `data/knowledge.json`, `src/app/[locale]/rezultati/confidence-text.ts`; e2e in `tests/e2e/confidence.spec.ts` and the every-category honesty checks in `categories.spec.ts`. Differences from the plan:
+> - All PRs were delivered as one change; step 7 (review the numbers) waits for four weeks of traffic.
+> - The spare-parts line (B4) is **not shown**: EUR-Lex could not be read to verify the years per part, so per the plan it stays off until verified.
+> - Noise words ("ļoti kluss") are not used; claims are relative to the products actually on offer ("klusākais šajā budžetā"), which needs no external threshold.
+> - "Kāpēc ne šie?" lines name the product, price and reason; they do not link to a card.
+> - Measured: results views ending in a shop click and the confidence question's answers (admin "Statistika" → "Pārliecība"). Time to click and repeat searches within 7 days are not measured yet (they need a visitor identity we do not keep).
+
 Owner, 24 Oct 2026: "When three products are provided, the user needs to feel safe that they do not need to search for alternatives. Currently only electricity and noise levels are compared; we need a deeper connection. Think as Steve Jobs."
 
 The test this plan has to pass: a shopper reads the three cards on a phone, understands why each one is there and what its catch is, and buys, without opening another tab. Today the page is honest and well-filtered, but it argues like a spec sheet. This plan makes it argue like a knowledgeable friend who has already done the shopping.

@@ -27,6 +27,10 @@ export type FeedRecord = {
   warranty_months?: string;
   grade?: string;
   energy_kwh_year?: string;
+  /** The shop's review score and count (schema.org aggregateRating), as text. */
+  rating_value?: string;
+  rating_best?: string;
+  rating_count?: string;
   /** Label → value pairs from the product page's spec table (scraped shops). */
   spec_table?: Record<string, string>;
 };
@@ -158,6 +162,7 @@ export function recordToOffer(
       condition,
       grade: record.grade?.trim() || null,
       warrantyMonths: intOrNull(record.warranty_months),
+      ...reviewScore(record),
       priceCents,
       stock,
       deliveryEtaDays: intOrNull(record.shipping_days),
@@ -165,4 +170,21 @@ export function recordToOffer(
     },
     raw,
   );
+}
+
+/**
+ * The shop's review score on a 5-star scale in tenths (4,6 ★ → 46) and its
+ * count. A score without a count, or out of range, is dropped: a star line is
+ * only shown with the number of reviews behind it (docs/CONFIDENCE_PLAN.md B1).
+ */
+export function reviewScore(record: Pick<FeedRecord, "rating_value" | "rating_best" | "rating_count">): {
+  ratingX10: number | null;
+  ratingCount: number | null;
+} {
+  const value = Number(String(record.rating_value ?? "").replace(",", "."));
+  const best = Number(String(record.rating_best ?? "5").replace(",", ".")) || 5;
+  const count = Number.parseInt(String(record.rating_count ?? ""), 10);
+  if (!Number.isFinite(value) || value <= 0 || value > best || !Number.isFinite(count) || count < 1)
+    return { ratingX10: null, ratingCount: null };
+  return { ratingX10: Math.round((value / best) * 50), ratingCount: count };
 }

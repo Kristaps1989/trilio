@@ -71,6 +71,13 @@ The catalogue is validated by the Zod schema in `src/domain/catalog/attributes.t
 
 Every value carries its **source**, stored in `products.attribute_sources` (migration `0005_product_specs.sql`, which also adds `products.spec_table` for the raw label → value table).
 
+## Facts for the confidence cards (docs/CONFIDENCE_PLAN.md B2, B3, C2)
+
+- **From EPREL, every label group:** `model_year` (first on-market date), `discontinued` (an on-market end date), `noise_class`, `warranty_months` (the supplier's guarantee; the 2023 dryer records spell it `guranteeDuration`), `repairability`. **Washers:** `programme_min`, `moisture_pct`. **Dryers:** `programme_min`, `condensation_cls`. **Dishwashers:** `programme_min`.
+- **From spec tables and Claude extraction:** `inverter`, `door_reversible`, `fast_freeze`, `water_dispenser`, `auto_dose`, `delay_start`, `child_lock`, `half_load`, `quick_wash_min`, `suction_pa`, `bin_l`, `self_empty`, the vacuum `mapping` enum (lidar, camera, gyro), `cleaning_program`, `cup_height_cm`, `auto_off`, and `warranty_months` from a "Garantija" row.
+- **New units:** `year` (2005–2035), `pct`, `months` ("2 gadi" → 24) and `pa`.
+- These facts appear in the compare table and the card's evidence lines. They are **not** in the subcategories' `compare` lists, so a fact a shop rarely states never hides the upgrade box.
+
 ## Sources and priority
 
 `SOURCE_PRIORITY` in `normalise.ts`; higher wins:

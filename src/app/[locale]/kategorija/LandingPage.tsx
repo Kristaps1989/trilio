@@ -12,8 +12,8 @@ import {
 import { priceLine } from "@/domain/pricing/omnibus";
 import { getGroupOfSubcategory } from "@/domain/questions/catalog";
 import type { Subcategory } from "@/domain/questions/schema";
-import { bestOffer, eligibleOffers } from "@/domain/ranking/filters";
-import { mainstreamCeilingCents, rank, type Pick } from "@/domain/ranking/rank";
+import { bestOffer, eligibleOffers, withinBudget } from "@/domain/ranking/filters";
+import { candidatePool, mainstreamCeilingCents, rank, type Pick } from "@/domain/ranking/rank";
 import { whyItFits } from "@/domain/ranking/score";
 import { categoryGender, formatDateDative, formatDateNominative, formatEur } from "@/i18n/format";
 import { currentMarket } from "@/i18n/market";
@@ -22,6 +22,9 @@ import { ButtonLink } from "@/ui/Button";
 import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
 import { cardMedia } from "../rezultati/card-media";
 import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
+import { factLines, roleLabel } from "../rezultati/confidence-text";
+import { argumentTargets, assignRoles, reviewSummary, type Role } from "@/domain/confidence/confidence";
+import { decidingAttrs } from "@/domain/knowledge/knowledge";
 import { activeLocale } from "@/i18n/active";
 
 // Phase 3 SEO landing pages: "Labākie ledusskapji līdz 800 €". Server-rendered
@@ -40,18 +43,35 @@ export async function landingCards(sub: Subcategory, budgetCents: number | null)
           }),
         )
       : null;
-  const result = rank({
+  const input = {
     products,
     sub,
     answers: {},
     budget: budgetCents ?? ceilingCents,
-    urgency: "two_weeks",
-    includeRefurbished: false,
-  });
-  return { result, products, ceilingCents };
+    urgency: "two_weeks" as const,
+  };
+  const result = rank({ ...input, includeRefurbished: false });
+  // The same earned roles as the results page (docs/CONFIDENCE_PLAN.md A2).
+  const pool = candidatePool(input).filter((c) => withinBudget(c.price, input.budget));
+  const decides = decidingAttrs(sub.id);
+  const target = argumentTargets(sub, {}, decides)[0] ?? null;
+  const roles = assignRoles(
+    result.picks.map((p) => ({ ...p, price: p.offer.priceCents })),
+    pool,
+    sub,
+    target,
+    decides,
+  );
+  return { result, products, ceilingCents, roles, target };
 }
 
-function toCard(pick: Pick, sub: Subcategory, now: Date, energyPrice: number): CardModel {
+function toCard(
+  pick: Pick,
+  sub: Subcategory,
+  now: Date,
+  energyPrice: number,
+  story: { roles: Role[]; label: (r: Role) => string; facts: string[] },
+): CardModel {
   const date = deliveryDate(pick.offer, now, currentMarket().country);
   const cost = ENERGY_SUBCATEGORIES.has(sub.id)
     ? energyCost10yCents(pick.product.kwhYear, energyPrice)
@@ -65,7 +85,12 @@ function toCard(pick: Pick, sub: Subcategory, now: Date, energyPrice: number): C
     specs: pick.product.specs,
     tier: pick.tier,
     recommended: pick.recommended,
-    rating: pick.product.rating,
+    roles: story.roles.map(story.label),
+    roleIds: story.roles,
+    verdict: null,
+    catchText: null,
+    priceNote: null,
+    facts: story.facts,
     best: {
       id: pick.offer.id,
       storeName: pick.offer.storeName,
@@ -96,8 +121,20 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
   const group = getGroupOfSubcategory(sub.id, activeLocale());
   const now = new Date();
   const energyPrice = energyPriceFromEnv();
-  const { result, products, ceilingCents } = await landingCards(sub, budgetCents);
-  const cards = result.picks.map((p) => toCard(p, sub, now, energyPrice));
+  const { result, products, ceilingCents, roles, target } = await landingCards(sub, budgetCents);
+  const tr = await getTranslations("results");
+  const ta = await getTranslations("attr");
+  const targetLabel =
+    target && ta.has(target.attr as "width_cm") ? ta(target.attr as "width_cm").toLowerCase() : "";
+  const tt = (k: string, v?: Record<string, string | number>) =>
+    tr(k as "title", v as Record<string, string>);
+  const cards = result.picks.map((p) =>
+    toCard(p, sub, now, energyPrice, {
+      roles: roles.get(p.product.id) ?? [],
+      label: (r) => roleLabel(r, targetLabel, tt),
+      facts: factLines(p.product, reviewSummary(p.product), tt, { ungraded: false }),
+    }),
+  );
   const label = sub.label.toLowerCase();
   const gender = categoryGender(sub.label);
   // Crawlable links between the landing pages of one group (fridges ↔ freezers).

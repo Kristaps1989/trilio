@@ -20,6 +20,8 @@ import { Button } from "@/ui/Button";
 import { InfoBox, Kicker, Lead, Page, PageTitle, Panel, Screen, SectionTitle } from "@/ui/layout";
 import { cardMedia } from "../rezultati/card-media";
 import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
+import { factLines } from "../rezultati/confidence-text";
+import { reviewSummary } from "@/domain/confidence/confidence";
 import { NOINDEX, pageMetadata } from "../seo";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +62,7 @@ function dims(p: ProductView): string | null {
 export default async function ModelPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const t = await getTranslations("model");
+  const tr = await getTranslations("results");
   const query = q ? queryFromInput(q) : "";
   const energyPrice = energyPriceFromEnv();
   const now = new Date();
@@ -113,7 +116,14 @@ export default async function ModelPage({ searchParams }: Props) {
       specs: [p.specs, d ? t("dimensions", { dims: d }) : null].filter(Boolean).join(" · ") || null,
       tier: null,
       recommended: label === "betterValue",
-      rating: p.rating,
+      roles: [],
+      roleIds: [],
+      verdict: null,
+      catchText: null,
+      priceNote: null,
+      facts: factLines(p, reviewSummary(p), (k, v) => tr(k as "title", v as Record<string, string>), {
+        ungraded: false,
+      }),
       best: {
         id: best.id,
         storeName: best.storeName,

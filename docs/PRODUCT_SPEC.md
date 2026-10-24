@@ -167,7 +167,13 @@ The results page is the second half of the conversation: it opens on a sensible 
   - "…, ja rādīt arī preces ar nepilniem datiem" (… if products with incomplete data are shown too) comes last, because the user does not control data quality.
 
   Every number comes from `countMatches`, the same rules as the results, so a suggestion is always true when tapped.
-- **The three picks** (§3.1, §3.2).
+- **The story of the three** (docs/CONFIDENCE_PLAN.md, owner 24 Oct 2026):
+  - a coverage line under the title: "Izskatījām 39 preces 3 veikalos (atjaunots šodien 17:06). 31 der tavām atbildēm un budžetam. Šie ir labākie — un lūk, kāpēc.";
+  - "Kas tev svarīgāk?": the `priorities` options as one row of pills plus "Vienalga", one tap re-ranks;
+  - the panel opens with this search's numbers (searched, met the answers, in budget, then how roles are earned) and says stars are shop reviews, shown only with 10 or more.
+- **The three picks** (§3.1, §3.2). Pills say the **role** a pick earned against every product in budget, not its price position: "Saprātīgā izvēle" (best value), "Ja {prioritāte} ir galvenais" (best available on the priority and clearly ahead of the other picks), "Kalpos ilgāk" (best-graded brand, then warranty and model year), "Lētākais, ko paši pirktu" (the cheapest pick, past the quality floor). A pick may have no role. Price tiers remain only as the sort order and the `tier` data attribute.
+- **"Kāpēc ne šie?"**: up to four products a shopper may meet elsewhere (the cheapest in range, the best-graded brand, the one most shops sell, the best reviewed) with one factual reason each: fails an answer (with the shopper's own limit), data the shop does not state, over budget, discontinued, a pick is no dearer and no worse, or a pick is better for a stated extra.
+- **"Vai šie varianti deva pārliecību izvēlēties?"**: one anonymous tap; "Nē" asks what was missing. Numbers in the admin statistics.
 - **Hidden-unknown line.** Products that pass every filter and the price range, but whose shop does not state a fit-critical value (size, form, installation), are not picks. One quiet line says so: "Vēl 6 precēm veikals nenorāda visus vajadzīgos datus. Rādīt arī tās" (6 more products are missing data from the shop. Show them too). Showing them marks each card with what is not known.
 - **"Vērts zināt" (worth knowing)** (`src/domain/advice/advice.ts`). At most two notes about the recommended pick, or the first pick. Each note looks one step beyond the user's choices and states the trade-off with real numbers, with a link to the product:
   - an energy upgrade with yearly saving and payback. With the "Zems patēriņš" (low energy use) priority it is always considered; without it, only when payback is within 3 years;
@@ -221,6 +227,9 @@ Pure code in `src/domain/ranking/` (`filters.ts`, `score.ts`, `rank.ts`).
 Under the three picks, "Rādīt vairāk variantus (N)" (show more options) lists the other products in the price range, ten per tap ("Rādīt vēl 10 variantus no N"), in the same best-value order as the picks (quality for the price, never commission). Owner, 20 Oct 2026.
 
 ### 3.2 Result card
+
+Since 24 Oct 2026 (docs/CONFIDENCE_PLAN.md) a pick opens with its role pills and a **verdict**: one or two sentences built from the shopper's answer ("3–4 cilvēkiem 300 L ir īstais izmērs"), a lead on the priority or a deciding attribute ("Klusākais šajā budžetā: 35 dB"), reliability with its grade, ten-year cost, or shop reviews; with thin data it says so. A **catch** line follows the upgrade box ("Bet: trokšņa līmenis 39 dB; labākais pieejamais (34 dB) maksā +170 €"). Under the price, a **price confidence** line when the history shows it (stable 30 days, the lowest we have seen, all shops within a few euros). Evidence lines join "why it fits": shop reviews with count, warranty (the statutory 2 years when nothing more is stated), model year or "vairs netiek ražots". **No "Vērtējums x/10" is shown** (decision B5); the score stays internal to ranking.
+
 - Tier pill (when meaningful), optional "Trilio ieteikums", and the score ("Vērtējums 8,6/10", rating).
 - Product name and **"Modelis {code} · EAN {ean}"** (model code and EAN). When the shop's name does not say what the product is, the type is added after the brand: "Indesit veļas žāvētājs C YSD 83D WW EE" (`src/domain/catalog/naming.ts`).
 - Spec line: the shop's, or the first known compare attributes.

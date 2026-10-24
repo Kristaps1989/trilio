@@ -2,6 +2,7 @@ import { and, count, desc, eq, gte, ilike, inArray, isNull, lt, or, sql } from "
 import type { Db } from "@/db/client";
 import {
   affiliateClicks,
+  confidenceAnswers,
   eprelLookups,
   ingestionRuns,
   offerEvents,
@@ -480,4 +481,51 @@ export async function ordersNeedingDelivery(db: Db) {
     .select({ order: offerOrders })
     .from(offerOrders)
     .where(and(eq(offerOrders.status, "shipped"), isNull(offerOrders.deliveredAt)));
+}
+
+/**
+ * "Pārliecība" (docs/CONFIDENCE_PLAN.md §3 E): of the results views in the
+ * period, how many ended in a click to a shop, and what shoppers answered to
+ * "Vai šie varianti deva pārliecību izvēlēties?", with the latest notes.
+ */
+export async function confidenceStats(db: Db, from: string, to: string) {
+  const inRange = (col: typeof searchSessions.createdAt | typeof confidenceAnswers.createdAt) =>
+    sql`${col} >= ${rigaStart(from)} and ${col} < ${rigaEnd(to)}`;
+  const [views] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(searchSessions)
+    .where(inRange(searchSessions.createdAt));
+  const [clicked] = await db
+    .select({ n: sql<number>`count(distinct ${affiliateClicks.searchSessionId})::int` })
+    .from(affiliateClicks)
+    .innerJoin(searchSessions, eq(searchSessions.id, affiliateClicks.searchSessionId))
+    .where(inRange(searchSessions.createdAt));
+  const answers = await db
+    .select({ confident: confidenceAnswers.confident, n: sql<number>`count(*)::int` })
+    .from(confidenceAnswers)
+    .where(inRange(confidenceAnswers.createdAt))
+    .groupBy(confidenceAnswers.confident);
+  const notes = await db
+    .select({
+      subcategoryId: confidenceAnswers.subcategoryId,
+      note: confidenceAnswers.note,
+      at: confidenceAnswers.createdAt,
+    })
+    .from(confidenceAnswers)
+    .where(and(inRange(confidenceAnswers.createdAt), sql`${confidenceAnswers.note} is not null`))
+    .orderBy(desc(confidenceAnswers.createdAt))
+    .limit(10);
+  const yes = answers.find((a) => a.confident)?.n ?? 0;
+  const no = answers.find((a) => !a.confident)?.n ?? 0;
+  const v = views?.n ?? 0;
+  const c = clicked?.n ?? 0;
+  return {
+    views: v,
+    clicked: c,
+    clickShare: v ? c / v : null,
+    yes,
+    no,
+    yesShare: yes + no ? yes / (yes + no) : null,
+    notes,
+  };
 }

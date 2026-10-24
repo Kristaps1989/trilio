@@ -8,6 +8,29 @@ import { eprelAttributes, normaliseModel, registrationNumber, sameProduct, type 
 const rec = (id: string) => (fixtures.records as Record<string, EprelRecord>)[id]!;
 
 describe("eprelAttributes", () => {
+  it("reads the market dates, noise class, guarantee and programme facts (docs/CONFIDENCE_PLAN.md B2)", () => {
+    expect(
+      eprelAttributes("fridge", "refrigeratingappliances2019", rec("refrigeratingappliances2019-380048")),
+    ).toEqual(expect.objectContaining({ model_year: 2021, noise_class: "B", warranty_months: 24 }));
+    const washer = eprelAttributes("washer", "washingmachines2019", rec("washingmachines2019-1232090"));
+    expect(washer).toEqual(
+      expect.objectContaining({ programme_min: 205, moisture_pct: 53, model_year: 2022 }),
+    );
+    expect(washer.discontinued).toBeUndefined();
+    const dryer = eprelAttributes("dryer", "tumbledryers20232534", rec("tumbledryers20232534-2187031"));
+    // The record ends its market in 2026 and spells the guarantee field "guranteeDuration".
+    expect(dryer).toEqual(
+      expect.objectContaining({
+        discontinued: true,
+        programme_min: 165,
+        condensation_cls: "A",
+        warranty_months: 24,
+      }),
+    );
+    const dish = eprelAttributes("dish", "dishwashers2019", rec("dishwashers2019-1063221"));
+    expect(dish).toEqual(expect.objectContaining({ programme_min: 239, noise_class: "C" }));
+  });
+
   it("reads a built-in two-door fridge (dimensions in mm)", () => {
     expect(
       eprelAttributes("fridge", "refrigeratingappliances2019", rec("refrigeratingappliances2019-380048")),

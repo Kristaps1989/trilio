@@ -77,10 +77,25 @@ export type ExtractableAttr = {
  * (form, type), the allowed values. Keys outside this list are dropped so
  * the model cannot invent schema.
  */
+/**
+ * Facts only a label record or a shop table states reliably (docs/CONFIDENCE_PLAN.md B2–B3):
+ * never asked from the model, so a guess can never become a warranty or a model year.
+ */
+const NOT_EXTRACTED = new Set([
+  "warranty_months",
+  "model_year",
+  "discontinued",
+  "noise_class",
+  "condensation_cls",
+  "repairability",
+  "moisture_pct",
+]);
+
 export function extractableAttributes(subcategoryId: string): Record<string, ExtractableAttr> {
   const sub = subcategoryAttrs(subcategoryId);
   const out: Record<string, ExtractableAttr> = {};
   for (const key of sub?.key ?? []) {
+    if (NOT_EXTRACTED.has(key)) continue;
     const e = sub!.enums[key];
     if (e) {
       out[key] = { type: "enum", hint: "one of the listed values", values: e.values };

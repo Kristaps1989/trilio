@@ -85,6 +85,12 @@ const DRYER_TYPE: Record<string, string> = {
   GAS_FIRED_AIR_VENTED: "vented",
 };
 
+/** The year of an EPREL date ([2021, 9, 1] or "2021-09-01"), or null. */
+function marketYear(v: unknown): number | null {
+  const y = Array.isArray(v) ? num(v[0]) : typeof v === "string" ? Number(v.slice(0, 4)) : null;
+  return y !== null && Number.isInteger(y) && y >= 2005 && y <= 2035 ? y : null;
+}
+
 /**
  * What the record says, as our attributes for this subcategory. Only
  * attributes the subcategory uses are returned, and only stated values: a
@@ -106,6 +112,16 @@ export function eprelAttributes(
   put("height_cm", cm(r.dimensionHeight, group));
   put("width_cm", cm(r.dimensionWidth, group));
   put("depth_cm", cm(r.dimensionDepth, group));
+  // Every label group: the model's market dates, the noise class and the supplier's guarantee.
+  put("model_year", marketYear(r.onMarketFirstStartDate) ?? marketYear(r.onMarketStartDate));
+  if (marketYear(r.onMarketEndDate) !== null) put("discontinued", true);
+  const nc = str(r.noiseClass);
+  if (nc && /^[A-D]$/.test(nc)) put("noise_class", nc);
+  // Months; the 2023 dryer regulation's records spell the field "guranteeDuration".
+  const guarantee = first(r.guaranteeDuration, r.guranteeDuration);
+  if (guarantee !== null && guarantee >= 6 && guarantee <= 360) put("warranty_months", guarantee);
+  const repair = str(r.repairabilityClass);
+  if (repair && /^[A-E]$/.test(repair)) put("repairability", repair);
   const builtIn = r.designType === "BUILT_IN" || r.type === "BUILT_IN";
   const freeStanding = r.designType === "FREESTANDING" || r.type === "FREE_STANDING";
 
@@ -127,6 +143,8 @@ export function eprelAttributes(
     put("spin_rpm", first(r.spinSpeedRated, r.maxSpinSpeed));
     put("energy_kwh_100", first(r.energyConsPer100Cycle, r.energyConsPer100CycleWash));
     put("water_l_cycle", num(r.waterCons) ?? num(r.waterConsWash));
+    put("programme_min", num(r.programmeDurationRated));
+    put("moisture_pct", first(r.moistureRated, r.moisture));
     put("washer_dryer", group.startsWith("washerdriers"));
     if (builtIn) put("install", "builtin");
     else if (freeStanding) put("install", "free");
@@ -134,10 +152,14 @@ export function eprelAttributes(
     put("capacity_kg", num(r.ratedCapacity));
     const tech = str(r.technology);
     if (tech && DRYER_TYPE[tech]) put("dryer_type", DRYER_TYPE[tech]);
+    put("programme_min", first(r.programDurationRated, r.programmeDurationRated));
+    const cond = str(r.condensationEfficiencyClass);
+    if (cond && /^[A-D]$/.test(cond)) put("condensation_cls", cond);
   } else if (group.startsWith("dishwashers")) {
     put("place_settings", num(r.ratedCapacity));
     put("energy_kwh_100", first(r.energyCons100, r.energyConsPer100Cycle));
     put("water_l_cycle", num(r.waterCons));
+    put("programme_min", first(r.programmeDuration, r.programmeDurationRated));
     const h = cm(r.dimensionHeight, group);
     if (builtIn) put("install", "builtin");
     else if (h !== null && h <= 60) put("install", "tabletop");

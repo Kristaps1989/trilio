@@ -28,12 +28,19 @@ export function betterDirection(key: string): "min" | "max" | null {
     case "steam_gmin":
     case "programs":
     case "max_kg":
+    case "bin_l":
+    case "suction_pa":
+    case "cup_height_cm":
+    case "warranty_months":
       return "max";
     case "noise_db":
     case "weight_kg":
     case "kwh_year":
     case "water_l_cycle":
     case "precision_g":
+    case "programme_min":
+    case "quick_wash_min":
+    case "moisture_pct":
       return "min";
     default:
       return null;
@@ -63,6 +70,16 @@ export const FEATURES = new Set([
   "clean_station",
   "ionic",
   "pressure_sensor",
+  "inverter",
+  "door_reversible",
+  "fast_freeze",
+  "auto_dose",
+  "delay_start",
+  "child_lock",
+  "half_load",
+  "self_empty",
+  "cleaning_program",
+  "auto_off",
 ]);
 
 const ENERGY_ORDER = ["A", "B", "C", "D", "E", "F", "G"];

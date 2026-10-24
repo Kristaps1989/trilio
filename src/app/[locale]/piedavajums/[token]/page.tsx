@@ -7,7 +7,7 @@ import { isAdminEmail, offerSignature } from "@/config/admin";
 import { db } from "@/db";
 import { loadProduct } from "@/db/queries/catalog";
 import { deliveryBy, offerPhase, savingClaim } from "@/domain/offers/offers";
-import { formatDateDative, formatEur, formatRating } from "@/i18n/format";
+import { formatDateDative, formatEur } from "@/i18n/format";
 import { markOpened, offerByToken } from "@/services/offers/offers";
 import { orderOfOffer } from "@/services/offers/orders";
 import { Button, ButtonLink } from "@/ui/Button";
@@ -153,11 +153,6 @@ export default async function OfferPage({ params }: Props) {
             {tr("model", { code: product.modelCode, ean: product.ean ?? "—" })}
           </p>
           {product.specs ? <p className="text-[15px] text-mist">{product.specs}</p> : null}
-          {product.rating !== null ? (
-            <p className="text-[15px] text-mist">
-              {tr("rating", { score: formatRating(product.rating / 10) })}
-            </p>
-          ) : null}
           {media.energyLabel ? (
             <div className="rounded-control bg-white p-3 text-night">
               <EnergyBadge label={media.energyLabel} />

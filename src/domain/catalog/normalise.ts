@@ -45,6 +45,10 @@ const PLAUSIBLE: Record<string, [number, number]> = {
   bar: [1, 25],
   pcs: [0, 200],
   g: [0.001, 100],
+  year: [2005, 2035],
+  pct: [1, 100],
+  months: [6, 360],
+  pa: [500, 30000],
 };
 
 /** "185,5 cm" → 185.5; "1 855 mm" → 185.5 (unit cm); "1,2 kW" → 1200 (unit w). Null when no number or implausible. */
@@ -81,6 +85,11 @@ export function parseQuantity(value: string, unit: string | undefined, pick?: "m
       break;
     case "min":
       if (u === "h" || u.startsWith("st")) n *= 60;
+      break;
+    case "months":
+      // "2 gadi", "5 g.", "2 years": the label says years more often than months.
+      if (u.startsWith("g") || u.startsWith("y")) n *= 12;
+      else if (!u && n <= 10) n *= 12;
       break;
   }
   const range = unit ? PLAUSIBLE[unit] : undefined;

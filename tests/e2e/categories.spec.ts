@@ -120,6 +120,35 @@ for (const { group, sub } of all) {
         ).toBe(true);
     }
 
+    // Three options a shopper can trust (docs/CONFIDENCE_PLAN.md): every pick argues for itself,
+    // every role pill is one the page's own data says it earned, and no composite score is shown.
+    await expect(page.locator("[data-coverage]")).toContainText(/Izskatījām \d+/);
+    const story = await picks.evaluateAll((els) =>
+      els.map((e) => ({
+        price: Number(e.querySelector("[data-price-cents]")?.getAttribute("data-price-cents")),
+        verdict: e.querySelector("[data-verdict]")?.textContent?.trim() ?? "",
+        proofs: e.querySelectorAll("[data-proofs] li").length,
+        roles: (e.getAttribute("data-roles") ?? "").split(" ").filter(Boolean),
+        pills: e.querySelectorAll("[data-role-pill]").length,
+      })),
+    );
+    for (const c of story) {
+      expect(c.verdict.length, `${sub.id}: every pick has a verdict`).toBeGreaterThan(10);
+      expect(c.proofs, `${sub.id}: every pick has proof`).toBeGreaterThan(0);
+      expect(c.pills, `${sub.id}: one pill per earned role`).toBe(c.roles.length);
+    }
+    for (const role of ["sensible", "priority", "lasting", "cheapest_good"])
+      expect(
+        story.filter((c) => c.roles.includes(role)).length,
+        `${sub.id}: ${role} once`,
+      ).toBeLessThanOrEqual(1);
+    const cheapestRole = story.find((c) => c.roles.includes("cheapest_good"));
+    if (cheapestRole)
+      expect(cheapestRole.price, `${sub.id}: the cheapest-we-would-buy is the cheapest pick`).toBe(
+        Math.min(...story.map((c) => c.price)),
+      );
+    await expect(page.getByText(/Vērtējums \d+,\d\/10/)).toHaveCount(0);
+
     // New and refurbished never mix (product rule 1).
     await expect(picks.filter({ hasText: /Atjaunota/ })).toHaveCount(0);
     if (AXE.has(sub.id)) await expectNoAxeViolations(page);

@@ -71,6 +71,13 @@
       "when": 1792823451581,
       "tag": "0009_admin_offers",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792849170003,
+      "tag": "0010_confidence",
+      "breakpoints": true
     }
   ]
 }

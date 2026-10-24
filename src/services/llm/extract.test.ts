@@ -91,13 +91,28 @@ describe("extractProduct", () => {
 
 describe("missingKeys", () => {
   it("lists the extractable keys the product does not have; false and 0 count as known", () => {
-    expect(missingKeys("kettle", {})).toEqual(["material", "temp_control", "volume_l", "power_w"]);
+    expect(missingKeys("kettle", {})).toEqual([
+      "material",
+      "temp_control",
+      "volume_l",
+      "power_w",
+      "auto_off",
+    ]);
+    // Label-only facts (warranty, model year) are never asked from the model.
+    expect(missingKeys("washer", {})).not.toContain("warranty_months");
     expect(missingKeys("kettle", { material: "glass", temp_control: false, volume_l: null })).toEqual([
       "volume_l",
       "power_w",
+      "auto_off",
     ]);
     expect(
-      missingKeys("kettle", { material: "glass", temp_control: true, volume_l: 1.7, power_w: 2200 }),
+      missingKeys("kettle", {
+        material: "glass",
+        temp_control: true,
+        volume_l: 1.7,
+        power_w: 2200,
+        auto_off: false,
+      }),
     ).toEqual([]);
   });
 

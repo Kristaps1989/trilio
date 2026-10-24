@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { change, parseRange, rangeDays, RANGES } from "@/domain/admin/stats";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur, formatInt } from "@/i18n/format";
-import { searchStats, shopStats, visitStats } from "@/services/admin/stats";
+import { confidenceStats, searchStats, shopStats, visitStats } from "@/services/admin/stats";
 import { buttonClass } from "@/ui/Button";
 import { requireAdmin } from "../guard";
 import { AdminTitle, DayBars, FilterLinks, Section, Stat, Stats, Table } from "../ui";
@@ -23,13 +23,15 @@ export default async function AdminStats({ searchParams }: Props) {
   const t = await getTranslations("admin.stats");
   const range = parseRange((await searchParams).periods);
   const r = rangeDays(range, new Date());
-  const [visits, prevVisits, searches, prevSearches, shops] = await Promise.all([
+  const [visits, prevVisits, searches, prevSearches, shops, confidence] = await Promise.all([
     visitStats(db, r.from, r.to),
     visitStats(db, r.prevFrom, r.prevTo),
     searchStats(db, r.from, r.to),
     searchStats(db, r.prevFrom, r.prevTo),
     shopStats(db, r.from, r.to),
+    confidenceStats(db, r.from, r.to),
   ]);
+  const pct = (x: number | null) => (x === null ? "—" : `${formatInt(Math.round(x * 100))} %`);
   const label = (sub: string) => getSubcategory(sub)?.label ?? sub;
   const csv = (table: string) => `/admin/statistika/csv?table=${table}&periods=${range}`;
   const csvLink = (table: string) => (
@@ -85,6 +87,23 @@ export default async function AdminStats({ searchParams }: Props) {
           />
         </div>
       ) : null}
+
+      {/* docs/CONFIDENCE_PLAN.md §3 E: did the three options end the search? */}
+      <Section title={t("confidence")} id="confidence">
+        <Stats>
+          <Stat label={t("resultViews")} value={formatInt(confidence.views)} />
+          <Stat label={t("clickShare")} value={pct(confidence.clickShare)} />
+          <Stat label={t("confidentShare")} value={pct(confidence.yesShare)} />
+          <Stat label={t("confidenceAnswers")} value={formatInt(confidence.yes + confidence.no)} />
+        </Stats>
+        <p className="text-sm text-stone">{t("confidenceMethod")}</p>
+        <Table
+          caption={t("confidenceNotes")}
+          head={[t("category"), t("confidenceNote")]}
+          empty={t("empty")}
+          rows={confidence.notes.map((n) => [label(n.subcategoryId), n.note ?? ""])}
+        />
+      </Section>
 
       <Section title={t("sections")} id="sections" action={csvLink("sections")}>
         <Table

@@ -128,6 +128,8 @@ export async function upsertOffers(
           stock: row.stock,
           deliveryEtaDays: row.deliveryEtaDays,
           url: row.url,
+          ratingX10: row.ratingX10 ?? null,
+          ratingCount: row.ratingCount ?? null,
           lastSeenAt: capturedAt,
         })
         .onConflictDoUpdate({
@@ -141,6 +143,9 @@ export async function upsertOffers(
             stock: row.stock,
             deliveryEtaDays: row.deliveryEtaDays,
             url: row.url,
+            // A page that stops showing reviews keeps the last ones seen.
+            ratingX10: row.ratingX10 ?? sql`${offers.ratingX10}`,
+            ratingCount: row.ratingCount ?? sql`${offers.ratingCount}`,
             lastSeenAt: capturedAt,
           },
         })

@@ -70,6 +70,9 @@ Data appears in reports about a day after registering.
 | `page_view` | Every page, also client-side navigation | `section`, `subcategory`, path only (no query string) |
 | `ui_click` | Any button, link, option or checkbox | `label`, `element`, `link`, `section`, `subcategory` |
 | `answer_question` | An answer option in the question flow | `question`, `option`, `section`, `subcategory` |
+| `priority_tapped` | A pill in "Kas tev svarīgāk?" on the results page | `priority` (option value or `any`), `section`, `subcategory` |
+| `why_not_opened` | Opening "Kāpēc ne šie?" | `section`, `subcategory` |
+| `confidence_answer` | "Jā" / "Nē, kaut kā pietrūka" under the results | `answer`, `section`, `subcategory` |
 | `select_offer` | "Pirkt …" on a result card (leaves to the shop) | `store`, `tier`, `recommended`, `refurbished`, `price_eur`, `section`, `subcategory` |
 
 Never sent: query strings (answers, free text, search), typed text, email
