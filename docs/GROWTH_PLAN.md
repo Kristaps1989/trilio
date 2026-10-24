@@ -68,7 +68,7 @@ At those guesses a visit is worth about 7 cents, and Latvian CPCs for generic ap
 1. **Consent Mode v2 (basic mode).** The existing banner gains the `ad_storage`, `ad_user_data` and `ad_personalization` signals. Google requires v2 for EEA conversion measurement; basic mode (nothing loads before consent) matches the current GA4 setup and the privacy policy. The policy gains a paragraph on Google Ads conversion measurement.
 2. **First-party attribution that needs no consent.** When a visit lands with `gclid` (or `utm_*`), store it on the search session (hashed visitor id, as the statistics already do) and copy it to `affiliate_clicks` and `saved_items`. This is Trilio's own count, so the optimiser never depends on consent rates.
 3. **Google Ads conversions.** Two key events imported from GA4 (`affiliate_click`, `save`) for Google's bidding; the first-party join is the source of truth in the admin.
-4. **Accounts.** A Google Ads manager account (MCC) owned by the company, the trilio.lv account under it, billing in euro, a Google Cloud project with the Google Ads API enabled, OAuth client plus refresh token for the company account, and the **Basic access** application for the developer token (15 000 operations/day, far more than needed; Google quotes about five business days). Search Console property verified with the existing token.
+4. **Accounts.** The trilio.lv Google Ads account (billing in euro) and the existing Google Cloud project of the sign-in, with the Google Ads API enabled and **Explorer** access (usually automatic). The project's service account is added as a user in Google Ads. Developer tokens and the API Center were retired by Google on 9 Sep 2026, and no manager account is needed. Steps: `docs/ADS_SETUP.md`. Search Console property verified with the existing token.
 5. **Keyword Planner export** for the 39 subcategories in Latvian: volumes and CPC ranges, saved as `data/keywords.lv.json`. Claude drafts the seed list from `categories.json` + `knowledge.json`; the owner reads it.
 
 ### Phase 1 — Search campaigns (weeks 2–4)
@@ -141,7 +141,7 @@ Every automated change is written to the admin audit log with the proposal id, s
 - Services: `src/services/ads/google.ts` (API client via `google-ads-api`, the Opteo Node library, or REST; mutations in one place), `src/services/ads/report.ts` (pull and store), `src/services/ads/optimiser.ts` (prompt, structured schema, guardrails), `src/services/ads/creatives.ts` (templates, Playwright render, ffmpeg), `src/services/seo/search-console.ts`.
 - Domain, pure and unit-tested: `src/domain/ads/guardrails.ts` (every limit in §5.2.3), `src/domain/ads/honesty.ts` (banned phrases, number-in-data check), `src/domain/ads/budget.ts` (split and bounds).
 - Claude call: `createCaller` with purpose `ads_optimiser`, model `claude-opus-5-5`, `output_config.format` JSON schema for proposals, the stable part of the prompt cached.
-- Env: `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_CLIENT_ID/SECRET`, `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_LOGIN_CUSTOMER_ID`, `GOOGLE_ADS_CUSTOMER_ID`, `FEATURE_ADS=0/1`. Never in the repo; `.env.example` documents them.
+- Env: `GOOGLE_SERVICE_ACCOUNT_KEY` (or the OAuth alternative `GOOGLE_ADS_CLIENT_ID/SECRET` plus `GOOGLE_ADS_REFRESH_TOKEN`), `GOOGLE_ADS_CUSTOMER_ID`, optional `GOOGLE_ADS_LOGIN_CUSTOMER_ID`, `FEATURE_ADS=0/1`. Never in the repo; `.env.example` documents them.
 
 ## 8. Compliance
 
@@ -149,7 +149,7 @@ Every automated change is written to the admin audit log with the proposal id, s
 - Ads follow the same honesty rules as the site (CLAUDE.md rule 4) and Google's misrepresentation policy; discount claims in ads use the 30-day low like the site.
 - Commission never affects ranking; ads only bring visitors to the same deterministic results.
 - No bidding on partner retailers' brand names (D4) and no competitor names in ad text.
-- The automation uses the official API under Basic access for Trilio's own account; Google's Required Minimum Functionality rules apply only to tools sold to third parties.
+- The automation uses the official API under the Cloud project's Explorer access for Trilio's own account; Google's Required Minimum Functionality rules apply only to tools sold to third parties.
 
 ## 9. Risks
 
@@ -157,7 +157,7 @@ Every automated change is written to the admin audit log with the proposal id, s
 |---|---|
 | Clicks that never earn back (likeliest) | Economics gate (§3); start small; the optimiser lowers the budget to the floor when cost per conversion is over target for 7 days |
 | Google overdelivery (2× daily) | Month-to-date cap in the admin; pause-all |
-| Developer token approval delays | Apply in week 1; build against a test account meanwhile |
+| API access approval delays | Explorer is usually automatic; Basic needs brand verification, so apply only if quota runs short |
 | Consent refusals hide conversions from Google | First-party `gclid` join is the admin's truth; Google gets GA4 imports as a second signal |
 | Claude proposes a wrong keyword or claim | Closed action set, guardrails and honesty lint in code, Approve mode first, full log |
 | Latvian keyword data is thin | Phrase match plus search-term mining; Claude expands from real queries |
