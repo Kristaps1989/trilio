@@ -28,8 +28,8 @@ Open the web service → **Variables** → add:
 | `COMPANY_NAME`, `COMPANY_REG_NO`, `COMPANY_ADDRESS`, `COMPANY_EMAIL` | your company's registry details | Shown on the legal pages and on Trilio's invoices; required by Latvian law. `COMPANY_VAT_NO` only once VAT-registered: invoices then show 21 % VAT automatically. `COMPANY_EMAIL` also receives order notes (new order, withdrawal, problem). |
 | `GA_MEASUREMENT_ID` | `G-…` from Google Analytics | Optional. Turns on the consent banner and opt-in analytics (`docs/ANALYTICS.md`). |
 | `FEATURE_ADS` | `0` | `1` turns on the admin section "Reklāma" and the daily ads optimiser (`docs/GROWTH_PLAN.md`). Needs `ANTHROPIC_API_KEY` for the Claude parts. |
-| `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_CUSTOMER_ID`, `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | from the Google Ads manager account and Google Cloud | The refresh token needs the `adwords` and `webmasters.readonly` scopes. Customer ids without dashes. |
-| `GOOGLE_ADS_API_VERSION` | `v25` | Optional; change only after checking Google's sunset dates. |
+| `GOOGLE_SERVICE_ACCOUNT_KEY`, `GOOGLE_ADS_CUSTOMER_ID` | the JSON key of the sign-in Cloud project's service account; the 10-digit ads account id | Steps in `docs/ADS_SETUP.md`. No developer token or manager account is needed since Google's change of 9 Sep 2026. `GOOGLE_ADS_LOGIN_CUSTOMER_ID` only when a manager account is used. |
+| `GOOGLE_ADS_API_VERSION` | empty (default `v26`) | Optional; change only after checking Google's sunset dates. |
 | `SEARCH_CONSOLE_SITE` | `sc-domain:trilio.lv` | Optional; fills the SEO page from Search Console. |
 | `ADMIN_EMAILS` | the e-mail you sign in with | Who may open `/admin` (comma-separated). Empty = nobody (`docs/ADMIN_AND_OFFERS_PLAN.md`). |
 | `OFFERS_SENDER_NAME` | `Kristaps` | Optional; personal-offer e-mails are signed "Kristaps no Trilio". Default "Trilio". |

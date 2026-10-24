@@ -1,71 +1,147 @@
+import { createSign } from "node:crypto";
 import type { AdsChange, AdsProvider, ApplyResult, StatRow, TermRow } from "./provider";
 
-// Google Ads API over REST (docs/GROWTH_PLAN.md §7): OAuth refresh token for
-// the company account, the developer token, and the manager (login) account.
+// Google Ads API over REST (docs/GROWTH_PLAN.md §7). Since 9 Sep 2026 access
+// belongs to the Google Cloud project (Test → Explorer → Basic → Standard on
+// the project's "Google Ads API" page); developer tokens are retired and the
+// header is only sent when one is still configured. Credentials, in Google's
+// order of preference: a service account of that project (its e-mail is
+// added as a user in Google Ads and as an owner in Search Console), or an
+// OAuth refresh token of a person with access.
 // New campaigns are created PAUSED; the owner switches them on in the admin.
 // Money: Google counts micros (1 € = 1 000 000), Trilio cents.
 
+export const DEFAULT_ADS_API_VERSION = "v26";
+
+/** The JSON key of a service account (IAM & Admin → Service accounts → Keys). */
+export type ServiceAccountKey = { client_email: string; private_key: string; token_uri?: string };
+
+export type OAuthClient = { clientId: string; clientSecret: string; refreshToken: string };
+
+export type GoogleCredentials =
+  { kind: "service_account"; key: ServiceAccountKey } | ({ kind: "oauth" } & OAuthClient);
+
 export type GoogleAdsConfig = {
-  developerToken: string;
-  clientId: string;
-  clientSecret: string;
-  refreshToken: string;
+  credentials: GoogleCredentials;
+  /** Retired by Google on 9 Sep 2026; sent only when set, and ignored by the API. */
+  developerToken?: string;
   /** The account the ads run in, digits only. */
   customerId: string;
-  /** The manager account, digits only; optional when the account is accessed directly. */
+  /** The manager account, digits only; only when the account is reached through a manager. */
   loginCustomerId?: string;
-  /** API version path segment, e.g. "v25". */
+  /** API version path segment, e.g. "v26". */
   version: string;
   siteUrl: string;
 };
+
+/** The service account key from GOOGLE_SERVICE_ACCOUNT_KEY: the JSON itself or base64 of it. */
+export function serviceAccountFromEnv(raw: string | undefined): ServiceAccountKey | null {
+  const text = raw?.trim();
+  if (!text) return null;
+  try {
+    const json = text.startsWith("{") ? text : Buffer.from(text, "base64").toString("utf8");
+    const key = JSON.parse(json) as Partial<ServiceAccountKey>;
+    if (!key.client_email || !key.private_key) return null;
+    return { client_email: key.client_email, private_key: key.private_key, token_uri: key.token_uri };
+  } catch {
+    return null;
+  }
+}
+
+/** The service account when set, else the OAuth client with a refresh token, else null. */
+export function googleCredentialsFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): GoogleCredentials | null {
+  const key = serviceAccountFromEnv(env.GOOGLE_SERVICE_ACCOUNT_KEY);
+  if (key) return { kind: "service_account", key };
+  const { GOOGLE_ADS_CLIENT_ID: clientId, GOOGLE_ADS_CLIENT_SECRET: clientSecret } = env;
+  const refreshToken = env.GOOGLE_ADS_REFRESH_TOKEN;
+  if (clientId && clientSecret && refreshToken)
+    return { kind: "oauth", clientId, clientSecret, refreshToken };
+  return null;
+}
 
 export function googleAdsConfigFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): GoogleAdsConfig | null {
   const digits = (v?: string) => v?.replace(/\D/g, "") || undefined;
-  const developerToken = env.GOOGLE_ADS_DEVELOPER_TOKEN;
-  const clientId = env.GOOGLE_ADS_CLIENT_ID;
-  const clientSecret = env.GOOGLE_ADS_CLIENT_SECRET;
-  const refreshToken = env.GOOGLE_ADS_REFRESH_TOKEN;
+  const credentials = googleCredentialsFromEnv(env);
   const customerId = digits(env.GOOGLE_ADS_CUSTOMER_ID);
-  if (!developerToken || !clientId || !clientSecret || !refreshToken || !customerId) return null;
+  if (!credentials || !customerId) return null;
   return {
-    developerToken,
-    clientId,
-    clientSecret,
-    refreshToken,
+    credentials,
+    developerToken: env.GOOGLE_ADS_DEVELOPER_TOKEN || undefined,
     customerId,
     loginCustomerId: digits(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID),
-    version: env.GOOGLE_ADS_API_VERSION || "v25",
+    version: env.GOOGLE_ADS_API_VERSION || DEFAULT_ADS_API_VERSION,
     siteUrl: (env.APP_URL || "https://trilio.lv").replace(/\/$/, ""),
   };
 }
 
 type Fetch = typeof fetch;
 
-/** An OAuth access token from the refresh token, cached until a minute before it expires. */
-export function googleTokenSource(
-  cfg: { clientId: string; clientSecret: string; refreshToken: string },
-  fetchImpl: Fetch = fetch,
-) {
+export const ADWORDS_SCOPE = "https://www.googleapis.com/auth/adwords";
+export const SEARCH_CONSOLE_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
+
+const b64url = (v: string | Buffer) => Buffer.from(v).toString("base64url");
+
+/** A signed JWT assertion for the service-account token exchange (RFC 7523). */
+export function serviceAccountAssertion(key: ServiceAccountKey, scope: string, now = Date.now()): string {
+  const iat = Math.floor(now / 1000);
+  const head = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claims = b64url(
+    JSON.stringify({
+      iss: key.client_email,
+      scope,
+      aud: key.token_uri ?? "https://oauth2.googleapis.com/token",
+      iat,
+      exp: iat + 3600,
+    }),
+  );
+  const signature = createSign("RSA-SHA256").update(`${head}.${claims}`).sign(key.private_key);
+  return `${head}.${claims}.${b64url(signature)}`;
+}
+
+/** An OAuth access token for the credentials, cached until a minute before it expires. */
+export function googleTokenSource(credentials: GoogleCredentials, scope: string, fetchImpl: Fetch = fetch) {
   let cached: { token: string; until: number } | null = null;
   return async (): Promise<string> => {
     if (cached && cached.until > Date.now()) return cached.token;
-    const res = await fetchImpl("https://oauth2.googleapis.com/token", {
+    const body =
+      credentials.kind === "service_account"
+        ? new URLSearchParams({
+            grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            assertion: serviceAccountAssertion(credentials.key, scope),
+          })
+        : new URLSearchParams({
+            client_id: credentials.clientId,
+            client_secret: credentials.clientSecret,
+            refresh_token: credentials.refreshToken,
+            grant_type: "refresh_token",
+          });
+    const url =
+      credentials.kind === "service_account"
+        ? (credentials.key.token_uri ?? "https://oauth2.googleapis.com/token")
+        : "https://oauth2.googleapis.com/token";
+    const res = await fetchImpl(url, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: cfg.clientId,
-        client_secret: cfg.clientSecret,
-        refresh_token: cfg.refreshToken,
-        grant_type: "refresh_token",
-      }),
+      body,
     });
-    if (!res.ok) throw new Error(`oauth ${res.status}`);
-    const body = (await res.json()) as { access_token: string; expires_in: number };
-    cached = { token: body.access_token, until: Date.now() + (body.expires_in - 60) * 1000 };
-    return body.access_token;
+    if (!res.ok) throw new Error(`google sign-in ${res.status}`);
+    const json = (await res.json()) as { access_token: string; expires_in: number };
+    cached = { token: json.access_token, until: Date.now() + (json.expires_in - 60) * 1000 };
+    return json.access_token;
   };
+}
+
+/** Google's error text, with a plain explanation for the access-level refusal. */
+export function explainAdsError(status: number, text: string): string {
+  if (text.includes("CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION"))
+    return 'Google Cloud projektam ir tikai Test piekļuve: Google Cloud konsolē, lapā "Google Ads API", piesakies Explorer piekļuvei.';
+  if (text.includes("USER_PERMISSION_DENIED"))
+    return "Servisa kontam vai lietotājam nav piekļuves šim Google Ads kontam: pievieno tā e-pastu Google Ads sadaļā Admin → Access and security.";
+  return `google ads ${status}: ${text.slice(0, 500)}`;
 }
 
 const micros = (cents: number) => String(cents * 10_000);
@@ -75,7 +151,7 @@ const STATUS = { enabled: "ENABLED", paused: "PAUSED" } as const;
 type Row = Record<string, Record<string, unknown> | undefined>;
 
 export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch): AdsProvider {
-  const token = googleTokenSource(cfg, fetchImpl);
+  const token = googleTokenSource(cfg.credentials, ADWORDS_SCOPE, fetchImpl);
   const base = `https://googleads.googleapis.com/${cfg.version}/customers/${cfg.customerId}`;
 
   async function call(path: string, body: unknown): Promise<Record<string, unknown>> {
@@ -83,14 +159,14 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
       method: "POST",
       headers: {
         authorization: `Bearer ${await token()}`,
-        "developer-token": cfg.developerToken,
+        ...(cfg.developerToken ? { "developer-token": cfg.developerToken } : {}),
         ...(cfg.loginCustomerId ? { "login-customer-id": cfg.loginCustomerId } : {}),
         "content-type": "application/json",
       },
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    if (!res.ok) throw new Error(`google ads ${res.status}: ${text.slice(0, 500)}`);
+    if (!res.ok) throw new Error(explainAdsError(res.status, text));
     return text ? (JSON.parse(text) as Record<string, unknown>) : {};
   }
 

@@ -1,5 +1,13 @@
+import { createVerify, generateKeyPairSync } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { googleAdsConfigFromEnv, googleAdsProvider } from "./google";
+import { googleSearchConsole } from "@/services/seo/search-console";
+import {
+  ADWORDS_SCOPE,
+  explainAdsError,
+  googleAdsConfigFromEnv,
+  googleAdsProvider,
+  serviceAccountFromEnv,
+} from "./google";
 
 // The Google Ads REST client against a recorded fake: the right headers,
 // micros, paused campaigns with the EU political-ads declaration, and
@@ -122,5 +130,101 @@ describe("Google Ads client", () => {
     );
     const r = await failing.apply({ op: "set_cpc", adGroup: "customers/1/adGroups/3", cents: 40 });
     expect(r.ok).toBe(false);
+  });
+
+  it("signs in as the Cloud project's service account, with no developer token", async () => {
+    const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    const key = {
+      type: "service_account",
+      client_email: "trilio-ads@trilio.iam.gserviceaccount.com",
+      private_key: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+    };
+    const json = JSON.stringify(key);
+    expect(serviceAccountFromEnv(Buffer.from(json).toString("base64"))?.client_email).toBe(key.client_email);
+    expect(serviceAccountFromEnv("{not json")).toBeNull();
+    expect(serviceAccountFromEnv(JSON.stringify({ client_email: "x" }))).toBeNull();
+
+    const sa = googleAdsConfigFromEnv({
+      GOOGLE_SERVICE_ACCOUNT_KEY: json,
+      GOOGLE_ADS_CUSTOMER_ID: "123-456-7890",
+    })!;
+    expect(sa.credentials.kind).toBe("service_account");
+    expect(sa.version).toBe("v26");
+    expect(sa.developerToken).toBeUndefined();
+
+    const { calls, fetchImpl } = fake();
+    await googleAdsProvider(sa, fetchImpl).apply({
+      op: "set_cpc",
+      adGroup: "customers/1/adGroups/3",
+      cents: 40,
+    });
+    const signIn = calls.find((c) => c.url.includes("oauth2"))!;
+    const form = new URLSearchParams(signIn.body as string);
+    expect(form.get("grant_type")).toBe("urn:ietf:params:oauth:grant-type:jwt-bearer");
+    const [head, claims, sig] = form.get("assertion")!.split(".") as [string, string, string];
+    expect(
+      createVerify("RSA-SHA256").update(`${head}.${claims}`).verify(publicKey, Buffer.from(sig, "base64url")),
+    ).toBe(true);
+    expect(JSON.parse(Buffer.from(claims, "base64url").toString())).toMatchObject({
+      iss: key.client_email,
+      scope: ADWORDS_SCOPE,
+      aud: "https://oauth2.googleapis.com/token",
+    });
+    const mutate = calls.find((c) => c.url.includes("adGroups:mutate"))!;
+    expect(mutate.init.headers).not.toHaveProperty("developer-token");
+    expect(mutate.init.headers).not.toHaveProperty("login-customer-id");
+
+    // Search Console reads with the same service account, its own scope.
+    const sc = fake();
+    const scFetch = (async (url: string, init: RequestInit) =>
+      url.includes("searchAnalytics")
+        ? new Response(
+            JSON.stringify({
+              rows: [
+                {
+                  keys: ["2026-10-20", "ledusskapis", "https://trilio.lv/kategorija/fridge"],
+                  clicks: 1,
+                  impressions: 9,
+                  position: 7.5,
+                },
+              ],
+            }),
+          )
+        : sc.fetchImpl(url, init)) as unknown as typeof fetch;
+    const rows = await googleSearchConsole("sc-domain:trilio.lv", sa.credentials, scFetch).rows(
+      "2026-10-20",
+      "2026-10-20",
+    );
+    expect(rows).toEqual([
+      {
+        day: "2026-10-20",
+        query: "ledusskapis",
+        page: "/kategorija/fridge",
+        clicks: 1,
+        impressions: 9,
+        position: 7.5,
+      },
+    ]);
+    const scClaims = new URLSearchParams(sc.calls[0]!.body as string).get("assertion")!.split(".")[1]!;
+    expect(JSON.parse(Buffer.from(scClaims, "base64url").toString()).scope).toContain("webmasters.readonly");
+  });
+
+  it("explains the refusals the owner can fix in the Google consoles", async () => {
+    expect(explainAdsError(403, '{"errorCode":"CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION"}')).toMatch(
+      /Explorer/,
+    );
+    expect(explainAdsError(403, "USER_PERMISSION_DENIED")).toMatch(/Access and security/);
+    expect(explainAdsError(500, "boom")).toBe("google ads 500: boom");
+    const refused = googleAdsProvider(cfg, (async (url: string) =>
+      url.includes("oauth2")
+        ? new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+        : new Response(
+            '{"error":{"details":[{"errors":[{"errorCode":{"authorizationError":"CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION"}}]}]}}',
+            {
+              status: 403,
+            },
+          )) as unknown as typeof fetch);
+    const r = await refused.apply({ op: "set_cpc", adGroup: "customers/1/adGroups/3", cents: 40 });
+    expect(r).toMatchObject({ ok: false, error: expect.stringMatching(/Explorer/) });
   });
 });

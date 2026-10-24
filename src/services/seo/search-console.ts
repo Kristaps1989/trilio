@@ -2,11 +2,16 @@ import { createHash } from "node:crypto";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { seoQueries } from "@/db/schema";
-import { googleTokenSource } from "@/services/ads/google";
+import {
+  googleCredentialsFromEnv,
+  googleTokenSource,
+  SEARCH_CONSOLE_SCOPE,
+  type GoogleCredentials,
+} from "@/services/ads/google";
 
 // Search Console queries and pages (docs/GROWTH_PLAN.md, SEO track), read
-// with the same Google OAuth client as the ads account (scope
-// webmasters.readonly). The SEO page lists queries where Trilio ranks 5–20:
+// with the same Google credentials as the ads account (scope
+// webmasters.readonly; a service account must be an owner of the property). The SEO page lists queries where Trilio ranks 5–20:
 // the ones content can lift.
 
 export type SeoRow = {
@@ -28,21 +33,17 @@ export function searchConsoleFromEnv(
   if (env.FEATURE_ADS !== "1") return null;
   if (env.ADS_PROVIDER === "mock") return mockSearchConsole();
   const site = env.SEARCH_CONSOLE_SITE;
-  const {
-    GOOGLE_ADS_CLIENT_ID: clientId,
-    GOOGLE_ADS_CLIENT_SECRET: clientSecret,
-    GOOGLE_ADS_REFRESH_TOKEN: refreshToken,
-  } = env;
-  if (!site || !clientId || !clientSecret || !refreshToken) return null;
-  return googleSearchConsole(site, { clientId, clientSecret, refreshToken });
+  const credentials = googleCredentialsFromEnv(env);
+  if (!site || !credentials) return null;
+  return googleSearchConsole(site, credentials);
 }
 
 export function googleSearchConsole(
   site: string,
-  oauth: { clientId: string; clientSecret: string; refreshToken: string },
+  credentials: GoogleCredentials,
   fetchImpl: typeof fetch = fetch,
 ): SearchConsole {
-  const token = googleTokenSource(oauth, fetchImpl);
+  const token = googleTokenSource(credentials, SEARCH_CONSOLE_SCOPE, fetchImpl);
   return {
     async rows(from, to) {
       const res = await fetchImpl(
