@@ -122,9 +122,7 @@ export default async function ModelPage({ searchParams }: Props) {
       verdict: null,
       catchText: null,
       priceNote: null,
-      facts: factLines(p, reviewSummary(p), (k, v) => tr(k as "title", v as Record<string, string>), {
-        ungraded: false,
-      }),
+      facts: factLines(p, reviewSummary(p), (k, v) => tr(k as "title", v as Record<string, string>)),
       best: {
         id: best.id,
         storeName: best.storeName,

@@ -133,7 +133,7 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
     toCard(p, sub, now, energyPrice, {
       roles: roles.get(p.product.id) ?? [],
       label: (r) => roleLabel(r, targetLabel, tt),
-      facts: factLines(p.product, reviewSummary(p.product), tt, { ungraded: false }),
+      facts: factLines(p.product, reviewSummary(p.product), tt),
     }),
   );
   const label = sub.label.toLowerCase();

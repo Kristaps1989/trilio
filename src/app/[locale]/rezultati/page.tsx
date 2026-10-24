@@ -24,7 +24,8 @@ import {
   priceConfidence,
   priorityTarget,
   reviewSummary,
-  verdictFor,
+  bucketOption,
+  verdictsFor,
   whyNot,
 } from "@/domain/confidence/confidence";
 import { decidingAttrs, glossaryLine, knowledgeOf, watchOutFor } from "@/domain/knowledge/knowledge";
@@ -70,6 +71,7 @@ import { ConfidenceQuestion } from "./ConfidenceQuestion";
 import {
   catchText,
   factLines,
+  sharedLines,
   priceNoteText,
   roleLabel,
   verdictText,
@@ -239,6 +241,28 @@ export default async function ResultsPage({ searchParams }: Props) {
       return p ? shortName(p.name, p.brand, p.modelCode) : id;
     },
   };
+  const verdicts = verdictsFor(
+    {
+      sub,
+      answers: state.answers,
+      picks: pickCands,
+      pool: inBudgetPool,
+      targets,
+      decides,
+      roles: [],
+      energyPriceCentsPerKwh: energyPrice,
+      answerPhrases: know.answerPhrases,
+    },
+    (id) => roles.get(id) ?? [],
+  );
+  // A size line says the size the product really is, not the bucket the shopper tapped (TRUST_POLISH_PLAN §2).
+  const sizedReasons = (pick: Pick) =>
+    pick.reasons.map((r) => {
+      const q = sub.questions.find((x) => x.id === r.questionId);
+      const bucket = q ? bucketOption(q, pick.product) : null;
+      const sameAttr = r.option.match?.some((m) => m.attr === bucket?.attr);
+      return bucket && sameAttr && bucket.option.card_reason ? { ...r, option: bucket.option } : r;
+    });
   const firstRole = (id: string | undefined) => (id ? roleNames(id)[0] : undefined);
   const basePath = `/izvelies/${group.id}/${sub.id}`;
 
@@ -280,7 +304,10 @@ export default async function ResultsPage({ searchParams }: Props) {
   // Brand reliability earns a "why" line only when it lifted the pick (grade 4–5 with solid evidence).
   const brandLine = (pick: Pick): string[] => {
     const grade = gradeOf(brandTable, pick.product.brand, sub!.id);
-    return (pick.quality?.brand ?? 0) >= 8 && grade !== null ? [t("brandReliable", { grade })] : [];
+    const sharedBrand = verdicts.sharedBrand?.brand.toLowerCase() === pick.product.brand.toLowerCase();
+    return (pick.quality?.brand ?? 0) >= 8 && grade !== null && !sharedBrand
+      ? [t("brandReliable", { grade })]
+      : [];
   };
 
   function toCard(pick: Pick, story = false): CardModel {
@@ -316,22 +343,9 @@ export default async function ResultsPage({ searchParams }: Props) {
     }
     const cand = { ...pick, price: pick.offer.priceCents };
     const pickRoles = story ? (roles.get(pick.product.id) ?? []) : [];
-    const verdict = story
-      ? verdictText(
-          verdictFor(cand, {
-            sub: sub!,
-            answers: state.answers,
-            picks: pickCands,
-            pool: inBudgetPool,
-            targets,
-            decides,
-            roles: pickRoles,
-            energyPriceCentsPerKwh: energyPrice,
-            answerPhrases: know.answerPhrases,
-          }),
-          textCtx,
-        )
-      : null;
+    const parts = story ? verdicts.byId.get(pick.product.id) : undefined;
+    const verdict = parts ? verdictText(parts, textCtx) : null;
+    const ungraded = graded && gradeOf(brandTable, pick.product.brand, sub!.id) === null;
     const flaw = story ? catchFor(cand, inBudgetPool, targets) : null;
     const confidence = story
       ? priceConfidence(pick.product, pick.offer.priceCents, histories.get(pick.product.id) ?? [], now)
@@ -343,9 +357,8 @@ export default async function ResultsPage({ searchParams }: Props) {
       verdict,
       catchText: flaw ? catchText(flaw, textCtx) : null,
       priceNote: confidence ? priceNoteText(confidence, pick.offer.priceCents, t) : null,
-      facts: factLines(pick.product, reviewSummary(pick.product), t, {
-        ungraded: graded && gradeOf(brandTable, pick.product.brand, sub!.id) === null,
-      }),
+      facts: factLines(pick.product, reviewSummary(pick.product), t),
+      caveats: ungraded ? [t("factUngraded")] : [],
       name: nameOf(pick.product),
       modelCode: pick.product.modelCode,
       ean: pick.product.ean,
@@ -355,7 +368,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       best: cardOffer(pick.offer, now),
       overBudgetByCents: pick.overBudgetByCents,
       priceLine: priceLine(pick.offer.priceCents, pick.offer.lowest30dCents),
-      whyFits: [...brandLine(pick), ...whyItFits(pick.reasons)].slice(0, 3),
+      whyFits: [...brandLine(pick), ...whyItFits(sizedReasons(pick))].slice(0, 3),
       unconfirmed: pick.fitUnknown ? [] : pick.unconfirmed.map((k) => attrLabel(k).toLowerCase()),
       unknownData: pick.fitUnknown ? unknownText(pick.unconfirmed) : null,
       energy: energyFor(pick.product, pick.offer.priceCents),
@@ -394,7 +407,23 @@ export default async function ResultsPage({ searchParams }: Props) {
     };
   }
 
-  const cards = result.picks.map((p) => toCard(p, true));
+  const storyCards = result.picks.map((p) => toCard(p, true));
+  // What every card would say alike is said once, above them (TRUST_POLISH_PLAN §2).
+  const shared = sharedLines(storyCards);
+  const cards = storyCards.map((c, i) => ({
+    ...c,
+    whyFits: c.whyFits.filter((l) => !shared.includes(l)),
+    facts: c.facts.filter((l) => !shared.includes(l)),
+    historyNote: i === 0 || storyCards.slice(0, i).every((x) => x.priceLine.kind !== "no_history"),
+  }));
+  const sharedBrandLine = verdicts.sharedBrand
+    ? t("sharedBrand", {
+        count: verdicts.sharedBrand.count,
+        total: storyCards.length,
+        brand: canonicalBrand(verdicts.sharedBrand.brand),
+        grade: verdicts.sharedBrand.grade,
+      })
+    : null;
   const extraCards = result.extras.map((p) => toCard(p));
   // Everything else in range, best value first, on request (the shopper decides how far to look).
   const moreShown = Math.min(result.more.length, Math.max(0, Math.floor(Number(vairak) || 0)));
@@ -995,6 +1024,14 @@ export default async function ResultsPage({ searchParams }: Props) {
           <h2 id="picks-title" className="sr-only">
             {t("picksLabel")}
           </h2>
+          {sharedBrandLine || shared.length ? (
+            <div className="mb-3 flex flex-col gap-1 text-[15px] text-mist" data-shared-facts>
+              {sharedBrandLine ? <p>{sharedBrandLine}</p> : null}
+              {shared.length ? (
+                <p>{t("sharedFacts", { total: storyCards.length, facts: shared.join(" · ") })}</p>
+              ) : null}
+            </div>
+          ) : null}
           <CardRow>
             {cards.map((c) => (
               <ResultCard key={c.productId} card={c} />

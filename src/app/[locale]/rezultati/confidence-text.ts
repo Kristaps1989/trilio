@@ -91,6 +91,11 @@ export function verdictText(parts: VerdictPart[], ctx: TextContext): string {
           return t("verdictThin", { attrs: p.attrs.map((a) => ctx.attrLabel(a).toLowerCase()).join(", ") });
         case "value":
           return t("verdictValue", { count: p.matching });
+        case "cheaper":
+          return t("verdictCheaper", {
+            amount: formatEur(p.savedCents),
+            name: (ctx.shortNameOf ?? ctx.nameOf)(p.byId),
+          });
       }
     })
     .filter(Boolean)
@@ -183,7 +188,6 @@ export function factLines(
   p: ProductView,
   reviews: { x10: number; count: number; shops: number } | null,
   t: Translator,
-  opts: { ungraded: boolean },
 ): string[] {
   const out: string[] = [];
   if (reviews)
@@ -199,6 +203,17 @@ export function factLines(
   if (p.attributes.discontinued === true) out.push(t("factDiscontinued"));
   else if (typeof p.attributes.model_year === "number")
     out.push(t("factModelYear", { year: String(p.attributes.model_year) }));
-  if (opts.ungraded) out.push(t("factUngraded"));
   return out;
+}
+
+/**
+ * Lines every card shows the same (the legal warranty, one size bucket) say
+ * nothing about the choice: they are said once for all (docs/TRUST_POLISH_PLAN.md §2).
+ */
+export function sharedLines(cards: { whyFits: string[]; facts: string[] }[]): string[] {
+  if (cards.length < 2) return [];
+  const [first, ...rest] = cards;
+  return [...first!.whyFits, ...first!.facts].filter((line) =>
+    rest.every((c) => c.whyFits.includes(line) || c.facts.includes(line)),
+  );
 }

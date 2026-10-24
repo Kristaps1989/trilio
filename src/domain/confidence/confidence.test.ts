@@ -5,6 +5,7 @@ import { offer, product } from "@/domain/testing/builders";
 import {
   argumentTargets,
   assignRoles,
+  bucketOption,
   catchFor,
   coverage,
   gainsOf,
@@ -16,6 +17,7 @@ import {
   targetIn,
   targetOf,
   verdictFor,
+  verdictsFor,
   whyNot,
   type VerdictContext,
 } from "./confidence";
@@ -168,6 +170,59 @@ describe("verdict", () => {
     expect(verdictFor(byId(r.picks, "Zzz Mid"), { ...noPhrase, roles: ["cheapest_good"] })[0]!.kind).toBe(
       "cheapest_sound",
     );
+  });
+});
+
+describe("verdicts for the picks together (docs/TRUST_POLISH_PLAN.md §2)", () => {
+  const table = {
+    reviewed: true,
+    note: "",
+    ungraded: [],
+    brands: { Dreame: { grade: 4 } },
+  } as unknown as VerdictContext["table"];
+  const products = [
+    f("Tristar T9", 540, { volume_l: 380, noise_db: 39 }),
+    f("Dreame AF30", 790, { volume_l: 300, noise_db: 37 }),
+    f("Dreame DZ30", 1068, { volume_l: 420, noise_db: 37 }),
+  ];
+  const inp = input(products, { household: "2" });
+  const cands = products.map((p) => byId(candidatePool({ ...inp, budget: null }), p.id));
+  const ctx: VerdictContext = {
+    sub: fridge,
+    answers: inp.answers,
+    picks: cands,
+    pool: cands,
+    targets: [],
+    decides: ["volume_l", "noise_db"],
+    roles: [],
+    energyPriceCentsPerKwh: 25,
+    answerPhrases: {},
+    table,
+  };
+  const v = verdictsFor(ctx, () => []);
+  const keyOf = (id: string) => JSON.stringify(v.byId.get(id));
+
+  it("says a brand grade shared by two picks once, above the cards", () => {
+    expect(v.sharedBrand).toMatchObject({ brand: "Dreame", grade: 4, count: 2 });
+    for (const parts of v.byId.values()) expect(parts.some((p) => p.kind === "reliable")).toBe(false);
+  });
+
+  it("gives every pick its own claim", () => {
+    const all = products.map((p) => keyOf(p.id));
+    expect(new Set(all).size).toBe(3);
+    expect(v.byId.get("Dreame DZ30")![0]).toMatchObject({ kind: "leads", attr: "volume_l", value: 420 });
+    expect(v.byId.get("Tristar T9")!.some((p) => p.kind === "cheaper")).toBe(true);
+  });
+});
+
+describe("bucketOption", () => {
+  it("names the size the product is, not only the one asked for", () => {
+    const q = fridge.questions.find((x) => x.id === "household")!;
+    const big = f("Big", 500, { volume_l: 420 });
+    const b = bucketOption(q, big);
+    expect(b?.attr).toBe("volume_l");
+    const small = bucketOption(q, f("Small", 500, { volume_l: 150 }));
+    expect(small === null || small.option.value !== b!.option.value).toBe(true);
   });
 });
 

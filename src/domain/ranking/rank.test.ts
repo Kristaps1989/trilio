@@ -5,6 +5,7 @@ import { limitsFridge } from "@/domain/testing/fixtures";
 import { evaluateQuestion, passesHardFilters, withinBudget, withinStretch } from "./filters";
 import {
   assignTiers,
+  earnsPrice,
   countMatches,
   mainstreamCeilingCents,
   pickThree,
@@ -322,5 +323,34 @@ describe("mainstreamCeilingCents", () => {
   it("needs at least six prices to tell what is usual", () => {
     expect(mainstreamCeilingCents([10000, 20000, 30000, 40000, 500000])).toBeNull();
     expect(mainstreamCeilingCents([])).toBeNull();
+  });
+});
+
+describe("earnsPrice: brand alone does not earn a big premium (docs/TRUST_POLISH_PLAN.md §6)", () => {
+  const cand = (name: string, price: number, score: number, brand: number, reviews?: [number, number]) => {
+    const p = product({ name, price });
+    if (reviews)
+      p.offers[0] = offer({ priceCents: price * 100, ratingX10: reviews[0], ratingCount: reviews[1] });
+    return {
+      product: p,
+      score,
+      reasons: [],
+      quality: { brand, spec: 0 },
+      offer: p.offers[0]!,
+      unconfirmed: [],
+      fitUnknown: false,
+      price: price * 100,
+    };
+  };
+  it("lets better specs earn any premium", () => {
+    expect(earnsPrice(cand("A", 54, 50, -4), cand("B", 79, 60, -4))).toBe(true);
+  });
+  it("lets brand alone earn at most 15 %", () => {
+    expect(earnsPrice(cand("A", 54, 50, -4), cand("B", 79, 58, 8))).toBe(false);
+    expect(earnsPrice(cand("A", 70, 50, -4), cand("B", 79, 58, 8))).toBe(true);
+  });
+  it("lets brand plus better shop reviews earn more", () => {
+    expect(earnsPrice(cand("A", 54, 50, -4, [41, 30]), cand("B", 79, 58, 8, [47, 40]))).toBe(true);
+    expect(earnsPrice(cand("A", 54, 50, -4, [48, 30]), cand("B", 79, 58, 8, [47, 40]))).toBe(false);
   });
 });
