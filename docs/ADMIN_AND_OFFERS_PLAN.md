@@ -165,3 +165,21 @@ Both kinds of buyer accept the same offer, but the contract and the invoice diff
 | Refurbished | grade, warranty and saving shown (rule 1) | same |
 
 Data: `offer_orders.buyer_kind` (`person` / `company`), `company_name`, `company_reg_no`, `company_vat_no`, `legal_address`. The purchase terms page has a B2C and a B2B section. The admin order list shows the buyer kind, and the accounting CSV exports both the invoice number series and the buyer details.
+
+## 10. Order tracking (owner, 24 Oct 2026)
+
+Both sides must see where an order is, and the delivery date must be recorded: the 14-day withdrawal period of a private buyer starts on the day the goods are received, and the warranty runs from it.
+
+**Data.** `offer_orders` gains `carrier` (`omniva`, `dpd`, `venipak`, `latvijas_pasts`, `courier_other`), `tracking_number`, `tracking_url` (built from the carrier's public tracking page and the number, or pasted for "other"), `shipped_at`, `delivered_at`, `delivery_confirmed_by` (`carrier`, `admin`, `buyer`). Every change is a row in `offer_order_events` (status, time, source, note), which is the timeline both sides see.
+
+**Statuses shown to the buyer** (Latvian): Apmaksāts → Sagatavots sūtīšanai → Nodots kurjeram (with the carrier, the tracking number and a link to the carrier's tracking page) → Piegādāts (date). Side exits: Atgriešana pieteikta → Atgriešana saņemta → Atmaksāts.
+
+**Where it appears.**
+- Buyer: `/konts/pasutijumi/{id}` with the timeline, the tracking link, the invoice, the withdrawal button (private buyers, 14 days from `delivered_at`) and a button **"Saņēmu preci"** that records delivery when the carrier's status is late. E-mail on every status change: shipped (with the tracking link), delivered (with the withdrawal and warranty information), return received, refunded.
+- Admin: the order page has the same timeline plus the actions "Sagatavots", "Nodots kurjeram" (carrier and tracking number; the URL is built automatically), "Piegādāts", notes. The Pasūtījumi list shows the status, days since shipping, and highlights orders shipped more than 5 working days ago without a delivery status, so lost parcels are noticed.
+
+**Automatic updates (PR 4).** A job polls the carriers' tracking for open orders twice a day and records transit and delivery events, so the admin rarely has to mark "Piegādāts" by hand: Omniva and Latvijas Pasts have public tracking endpoints by parcel number; DPD Latvija and Venipak need an account and API key (`DPD_API_KEY`, `VENIPAK_API_KEY`, optional). A carrier's "delivered" sets `delivered_at` with `delivery_confirmed_by = carrier`; the buyer's button or the admin can still correct it, and the correction is audited.
+
+**Shipping labels (later).** When the volume justifies it, the same carrier accounts can create the shipment and print the label from the admin order page (Omniva and DPD offer this in their APIs), filling the tracking number automatically. Until then the admin ships through the carrier's own portal and pastes the number.
+
+**PR placement.** Fields, timeline, buyer page, admin actions and e-mails are part of PR 3; carrier polling and the late-parcel highlight are PR 4; label printing is in §7.
