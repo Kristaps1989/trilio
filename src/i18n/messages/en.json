@@ -697,6 +697,7 @@
             "Technical logs: the hosting service briefly records IP addresses and requests for security and fixing errors. Basis: legitimate interests.",
             "Usage statistics: only if you allow it in the cookie window, Google Analytics records the pages and sections visited and the buttons pressed, as well as the device and browser type and approximate location (country, city). Your typed text, answers and e-mail are not there. Basis: your consent, which you can withdraw at any time with the “Cookie settings” link at the bottom of the page.",
             "Visit statistics without cookies: Trilio counts page views itself. From the IP address, the browser and a random value that changes every day we make an anonymous code that cannot be linked to you or to other days; the IP address itself is not stored. Basis: legitimate interests.",
+            "Arriving from an ad: if you arrive by clicking an ad, we record the ad click identifier (gclid) and the campaign name with that day's visit code (without cookies, as for visit statistics), to count how many shop clicks and saves each ad brought. Basis: legitimate interests.",
             "Personal offers: if you allow it, we e-mail offers for products you saved. We keep the consent, the offers sent and whether the offer page was opened (the e-mails have no tracking). Basis: your consent, which you can withdraw at any time with the link in the e-mail or in the wishlist.",
             "Purchases from Trilio: name, phone, delivery address or parcel locker, company details (if buying for a company), payment status, parcel number and invoices. Basis: performance of a contract and a legal obligation (accounting)."
           ]
@@ -710,12 +711,15 @@
         },
         {
           "h": "Who we share data with",
-          "p": ["Data is processed only by these service providers and only as far as their task requires:"],
+          "p": [
+            "Data is processed only by these service providers and only as far as their task requires:"
+          ],
           "items": [
             "Railway: server and database hosting.",
             "Cloudflare: domain name system (DNS).",
             "Google: signing in with a Google account, if you choose it.",
             "Google Ireland Limited: usage statistics (Google Analytics), only with your consent.",
+            "Google Ireland Limited: Google Ads measurement (which ad brought a visitor), only with your consent. Ads are not personalised.",
             "Resend: sending e-mails (EU region).",
             "Paysera LT, UAB: payment processing.",
             "Anthropic: finding the category from free text, as described above.",
@@ -742,6 +746,7 @@
             "Search answers and click statistics: without an account they are not linked to you, and we use them for statistics.",
             "Sign-in links in e-mails: 15 minutes.",
             "Visit statistics: raw records 35 days, then only totals per day and page.",
+            "Arriving from an ad: 90 days, then only totals per day and campaign.",
             "Purchases and invoices: invoices are kept for the period required by law (5 years), also after the account is deleted; when the account is deleted, the phone number and delivery notes are erased."
           ]
         },
@@ -761,11 +766,15 @@
         },
         {
           "h": "Children",
-          "p": ["The service is not intended for children under 13."]
+          "p": [
+            "The service is not intended for children under 13."
+          ]
         },
         {
           "h": "Changes",
-          "p": ["We'll e-mail account holders about significant changes to this policy."]
+          "p": [
+            "We'll e-mail account holders about significant changes to this policy."
+          ]
         }
       ]
     },
@@ -851,7 +860,9 @@
         },
         {
           "h": "Changes to the terms",
-          "p": ["We'll e-mail account holders about significant changes at least 30 days in advance."]
+          "p": [
+            "We'll e-mail account holders about significant changes at least 30 days in advance."
+          ]
         }
       ]
     },
@@ -914,12 +925,14 @@
         },
         {
           "h": "Shop pages",
-          "p": ["When you open a shop's page, the shop's cookie policy applies."]
+          "p": [
+            "When you open a shop's page, the shop's cookie policy applies."
+          ]
         },
         {
           "h": "How to manage cookies",
           "p": [
-            "You can change your choice about statistics cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics cookies are deleted.",
+            "You can change your choice about statistics and ad measurement cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics cookies are deleted.",
             "You can also delete or block cookies in the browser settings. If you delete the sign-in cookie, you will need to sign in again."
           ]
         }
@@ -937,7 +950,9 @@
       "sections": [
         {
           "h": "Contact",
-          "p": ["For questions, withdrawals and data requests write to {email}. We answer on working days."]
+          "p": [
+            "For questions, withdrawals and data requests write to {email}. We answer on working days."
+          ]
         },
         {
           "h": "For shops",
@@ -1029,8 +1044,8 @@
     }
   },
   "consent": {
-    "title": "Cookies for statistics",
-    "text": "Do you allow Google Analytics cookies? They help us see which sections and buttons are used, so we can improve Trilio. Without your permission they are not loaded, and the site works the same. More: <policy>cookie policy</policy>.",
+    "title": "Cookies for statistics and ad measurement",
+    "text": "Do you allow Google Analytics and Google Ads measurement cookies? They help us see which sections and buttons are used and which ads bring visitors, so we can improve Trilio. Ads are not personalised for you. Without your permission the cookies are not loaded, and the site works the same. More: <policy>cookie policy</policy>.",
     "accept": "Allow",
     "reject": "Don't allow",
     "settings": "Cookie settings"

@@ -687,6 +687,7 @@
             "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses.",
             "Lietošanas statistika: tikai ja to atļauj sīkdatņu logā, Google Analytics reģistrē apmeklētās lapas, sadaļas un nospiestās pogas, kā arī ierīces un pārlūka veidu un aptuveno atrašanās vietu (valsts, pilsēta). Tava ievadītā teksta, atbilžu un e-pasta tur nav. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā.",
             "Apmeklējumu statistika bez sīkdatnēm: Trilio pats saskaita lapu skatījumus. No IP adreses, pārlūka un katru dienu jaunas nejaušas vērtības veidojam anonīmu kodu, ko nevar sasaistīt ar tevi vai ar citām dienām; pašu IP adresi neglabājam. Pamats: leģitīmās intereses.",
+            "Atnākšana no reklāmas: ja atnāc, uzklikšķinot uz reklāmas, reģistrējam reklāmas klikšķa identifikatoru (gclid) un kampaņas nosaukumu kopā ar tās dienas apmeklējuma kodu (bez sīkdatnēm, kā apmeklējumu statistikai), lai saskaitītu, cik klikšķu uz veikaliem un saglabājumu atveda katra reklāma. Pamats: leģitīmās intereses.",
             "Personīgi piedāvājumi: ja to atļauj, e-pastā sūtām piedāvājumus par precēm, ko saglabāji. Glabājam piekrišanu, nosūtītos piedāvājumus un to, vai piedāvājuma lapa atvērta (e-pastos izsekošanas nav). Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti e-pastā vai vēlmju sarakstā.",
             "Pirkumi no Trilio: vārds, telefons, piegādes adrese vai pakomāts, uzņēmuma rekvizīti (ja pērc uzņēmumam), maksājuma statuss, sūtījuma numurs un rēķini. Pamats: līguma izpilde un juridisks pienākums (grāmatvedība)."
           ]
@@ -708,6 +709,7 @@
             "Cloudflare: domēna vārdu sistēma (DNS).",
             "Google: ienākšana ar Google kontu, ja to izvēlies.",
             "Google Ireland Limited: lietošanas statistika (Google Analytics), tikai ar tavu piekrišanu.",
+            "Google Ireland Limited: Google Ads reklāmu mērījumi (kura reklāma atveda apmeklētāju), tikai ar tavu piekrišanu. Reklāmas netiek personalizētas.",
             "Resend: e-pastu nosūtīšana (ES reģions).",
             "Paysera LT, UAB: maksājumu apstrāde.",
             "Anthropic: kategorijas noteikšana no brīvā teksta, kā aprakstīts iepriekš.",
@@ -734,6 +736,7 @@
             "Meklēšanas atbildes un klikšķu statistika: bez konta tās nav saistītas ar tevi, un tās izmantojam statistikai.",
             "Ienākšanas saites e-pastā: 15 minūtes.",
             "Apmeklējumu statistika: neapstrādāti ieraksti 35 dienas, pēc tam tikai kopsummas pa dienām un lapām.",
+            "Atnākšana no reklāmas: 90 dienas, pēc tam tikai kopsummas pa dienām un kampaņām.",
             "Pirkumi un rēķini: rēķinus glabājam likumā noteikto laiku (5 gadus), arī pēc konta dzēšanas; dzēšot kontu, tālruni un piegādes piezīmes izdzēšam."
           ]
         },
@@ -753,11 +756,15 @@
         },
         {
           "h": "Bērni",
-          "p": ["Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."]
+          "p": [
+            "Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."
+          ]
         },
         {
           "h": "Izmaiņas",
-          "p": ["Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."]
+          "p": [
+            "Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."
+          ]
         }
       ],
       "summary": [
@@ -844,7 +851,9 @@
         },
         {
           "h": "Izmaiņas noteikumos",
-          "p": ["Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."]
+          "p": [
+            "Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."
+          ]
         }
       ],
       "summary": [
@@ -912,12 +921,14 @@
         },
         {
           "h": "Veikalu lapas",
-          "p": ["Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."]
+          "p": [
+            "Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."
+          ]
         },
         {
           "h": "Kā pārvaldīt sīkdatnes",
           "p": [
-            "Savu izvēli par statistikas sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics sīkdatnes tiek dzēstas.",
+            "Savu izvēli par statistikas un reklāmu mērījumu sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics sīkdatnes tiek dzēstas.",
             "Sīkdatnes vari dzēst vai bloķēt arī pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
           ]
         }
@@ -935,7 +946,9 @@
       "sections": [
         {
           "h": "Saziņa",
-          "p": ["Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."]
+          "p": [
+            "Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."
+          ]
         },
         {
           "h": "Veikaliem",
@@ -1031,8 +1044,8 @@
     "translationLink": "Latviešu versija"
   },
   "consent": {
-    "title": "Sīkdatnes statistikai",
-    "text": "Vai atļauj Google Analytics sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas, lai uzlabotu Trilio. Bez atļaujas tās netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
+    "title": "Sīkdatnes statistikai un reklāmu mērījumiem",
+    "text": "Vai atļauj Google Analytics un Google Ads mērījumu sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas un kuras reklāmas atved apmeklētājus, lai uzlabotu Trilio. Reklāmas tev personalizētas netiek. Bez atļaujas sīkdatnes netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
     "accept": "Atļaut",
     "reject": "Neatļaut",
     "settings": "Sīkdatņu iestatījumi"

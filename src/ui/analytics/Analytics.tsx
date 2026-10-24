@@ -42,10 +42,13 @@ function loadGtag(measurementId: string) {
     // eslint-disable-next-line prefer-rest-params
     window.dataLayer!.push(arguments);
   };
+  // Consent Mode v2, basic: nothing loads before "Atļaut". The visitor's yes covers
+  // statistics and measuring which ads brought them (docs/GROWTH_PLAN.md §5, Phase 0);
+  // ad personalisation (remarketing lists) stays denied.
   window.gtag("consent", "default", {
     analytics_storage: "granted",
-    ad_storage: "denied",
-    ad_user_data: "denied",
+    ad_storage: "granted",
+    ad_user_data: "granted",
     ad_personalization: "denied",
   });
   window.gtag("js", new Date());

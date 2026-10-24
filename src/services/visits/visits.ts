@@ -8,7 +8,7 @@ import { RAW_RETENTION_DAYS, rigaDay, visitOf, visitorHash } from "@/domain/anal
 // One random salt per day lives in the database so every instance hashes
 // alike; salts older than yesterday are deleted by the daily rollup.
 
-async function saltFor(db: Db, day: string): Promise<string> {
+export async function saltFor(db: Db, day: string): Promise<string> {
   const fresh = randomBytes(24).toString("base64url");
   await db.insert(visitSalts).values({ day, salt: fresh }).onConflictDoNothing();
   const [row] = await db
