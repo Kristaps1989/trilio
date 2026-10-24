@@ -300,3 +300,21 @@ Why (evaluated from the shopper's side): the radar asked three questions and sho
 - No dark patterns: easy cancellation, no fake urgency or scarcity.
 - GDPR: radar requirements and answers are personal preferences. Provide account deletion and data export.
 - Trademark: "Trilio" is also used by a US data-backup company (trilio.io). That's a different field, but run a trademark search before registering.
+
+## Admin section and personal offers (owner, 24 Oct 2026)
+
+The owner has an admin section (`/admin`, only for `ADMIN_EMAILS`):
+- statistics, including Trilio's own cookie-less visit counts;
+- users and their saved items;
+- demand (products by how many people saved them);
+- personal offers and orders, and system health.
+
+Shoppers who opt in (a checkbox under the heart, never pre-ticked) can get a personal offer from Trilio for a product they saved. Trilio is then the seller:
+- one-screen checkout;
+- free delivery in Latvia;
+- Paysera payment;
+- Trilio's invoice;
+- order tracking;
+- the 14-day withdrawal right for private buyers.
+
+These offers never appear in public results and never affect the ranking (rule 4). Details: `docs/ADMIN_AND_OFFERS_PLAN.md`.

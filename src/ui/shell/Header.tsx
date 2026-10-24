@@ -10,7 +10,7 @@ import { Logo } from "../Logo";
 // re-mounts between pages. The signed-in state is read on the client from
 // Auth.js, which keeps landing pages cacheable.
 
-type Session = { user?: { name?: string | null; email?: string | null } } | null;
+type Session = { user?: { name?: string | null; email?: string | null; isAdmin?: boolean } } | null;
 
 function initialOf(session: Session): string | null {
   const source = session?.user?.name || session?.user?.email;
@@ -61,6 +61,15 @@ export function Header() {
         <Logo />
       </Link>
       <nav aria-label={t("nav")} className="flex items-center gap-2">
+        {session?.user?.isAdmin ? (
+          <Link
+            href="/admin"
+            aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+            className="inline-flex min-h-11 items-center rounded-full border border-lime px-[14px] text-sm font-semibold text-lime"
+          >
+            {t("admin")}
+          </Link>
+        ) : null}
         <Link
           href="/velmju-saraksts"
           aria-current={pathname.startsWith("/velmju-saraksts") ? "page" : undefined}

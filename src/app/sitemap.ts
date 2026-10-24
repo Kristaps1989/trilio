@@ -15,7 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/izvelies`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/modelis`, changeFrequency: "monthly", priority: 0.5 },
-    ...["/noteikumi", "/privatums", "/sikdatnes", "/kontakti"].map((path) => ({
+    ...["/noteikumi", "/pirkuma-noteikumi", "/privatums", "/sikdatnes", "/kontakti"].map((path) => ({
       url: `${base}${path}`,
       changeFrequency: "yearly" as const,
       priority: 0.2,

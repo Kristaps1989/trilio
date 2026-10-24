@@ -91,6 +91,31 @@ export function formatDateDative(d: Date): string {
   return `${WEEKDAYS_LV_DAT[d.getDay()]}, ${d.getDate()}. ${MONTHS_LV_DAT[d.getMonth()]}`;
 }
 
+const MONTHS_LV_LOC = [
+  "janvārī",
+  "februārī",
+  "martā",
+  "aprīlī",
+  "maijā",
+  "jūnijā",
+  "jūlijā",
+  "augustā",
+  "septembrī",
+  "oktobrī",
+  "novembrī",
+  "decembrī",
+];
+
+/** "Tu saglabāji to 12. oktobrī": the locative case, without the weekday. */
+export function formatDayLocative(d: Date): string {
+  return `${d.getDate()}. ${MONTHS_LV_LOC[d.getMonth()]}`;
+}
+
+/** Short numeric date for tables: "24.10.2026". */
+export function formatDateShort(d: Date): string {
+  return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+}
+
 /** Nominative for headings and tables: "trešdiena, 21. oktobris". */
 export function formatDateNominative(d: Date): string {
   return `${WEEKDAYS_LV[d.getDay()]}, ${d.getDate()}. ${MONTHS_LV_NOM[d.getMonth()]}`;

@@ -4,7 +4,15 @@ import { Resend } from "resend";
 // sent and the call reports `skipped`, so development and CI never need
 // the service. Templates are plain text + minimal HTML, Latvian only.
 
-export type EmailMessage = { to: string; subject: string; text: string; html?: string };
+export type EmailMessage = {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  replyTo?: string;
+  /** e.g. List-Unsubscribe for commercial messages. */
+  headers?: Record<string, string>;
+};
 export type EmailResult =
   { ok: true; id: string | null } | { ok: false; reason: "disabled" | "error"; detail?: string };
 
@@ -30,7 +38,9 @@ export function createEmailSender(env: Record<string, string | undefined> = proc
           to: message.to,
           subject: message.subject,
           text: message.text,
-          html: message.html ?? `<p>${escapeHtml(message.text).replace(/\n/g, "<br>")}</p>`,
+          html: message.html ?? textToHtml(message.text),
+          ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+          ...(message.headers ? { headers: message.headers } : {}),
         });
         if (res.error) return { ok: false, reason: "error", detail: res.error.message };
         return { ok: true, id: res.data?.id ?? null };
@@ -39,6 +49,19 @@ export function createEmailSender(env: Record<string, string | undefined> = proc
       }
     },
   };
+}
+
+/** Plain text to minimal HTML: paragraphs, line breaks and clickable links. */
+export function textToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map(
+      (para) =>
+        `<p>${escapeHtml(para)
+          .replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}">${u}</a>`)
+          .replace(/\n/g, "<br>")}</p>`,
+    )
+    .join("");
 }
 
 export function escapeHtml(s: string): string {

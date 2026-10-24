@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -12,6 +13,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 // Phase 1 tables from docs/DATA_MODEL.md. Money is integer cents. Shop names
@@ -224,6 +226,13 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   image: text("image"),
   locale: text("locale").notNull().default("lv"),
+  /** Consent to personal offers by e-mail (docs/ADMIN_AND_OFFERS_PLAN.md §2.3); unticked by default. */
+  offersOptIn: boolean("offers_opt_in").notNull().default(false),
+  offersOptInAt: timestamp("offers_opt_in_at", { withTimezone: true }),
+  /** One-click unsubscribe token for offer e-mails; set when the first offer is sent. */
+  offersToken: text("offers_token").unique(),
+  /** The admin's private notes about this customer (shown in the GDPR export). */
+  adminNote: text("admin_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -274,7 +283,8 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "expired",
 ]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "captured", "failed", "canceled"]);
-export const paymentKindEnum = pgEnum("payment_kind", ["initial", "renewal"]);
+/** initial and renewal: the e-mail service; order: a personal offer bought from Trilio. */
+export const paymentKindEnum = pgEnum("payment_kind", ["initial", "renewal", "order"]);
 export const paymentProviderEnum = pgEnum("payment_provider", ["paysera", "mock"]);
 
 /** Subscription plans are configuration rows: 1,99 €/month and 12 €/year at launch. */
@@ -324,9 +334,12 @@ export const payments = pgTable(
   "payments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    subscriptionId: uuid("subscription_id")
-      .notNull()
-      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    /** Set for the e-mail service; null for an order payment. */
+    subscriptionId: uuid("subscription_id").references(() => subscriptions.id, { onDelete: "cascade" }),
+    /** Set for an order payment (personal offers). */
+    offerOrderId: uuid("offer_order_id").references((): AnyPgColumn => offerOrders.id, {
+      onDelete: "set null",
+    }),
     /** Our unique order reference sent to the provider; idempotency key for callbacks. */
     orderId: text("order_id").notNull().unique(),
     providerRequestId: text("provider_request_id"),
@@ -490,3 +503,246 @@ export type SavedItem = typeof savedItems.$inferSelect;
 export type Radar = typeof radars.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Plan = typeof plans.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Admin section, visit counting and personal offers (docs/ADMIN_AND_OFFERS_PLAN.md).
+
+/**
+ * First-party page views without cookies: the visitor is a hash of a daily
+ * random salt, the IP and the user agent, so nobody can be followed across
+ * days. Raw rows are purged after 35 days; `visit_daily` keeps the counts.
+ */
+export const visits = pgTable(
+  "visits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    day: date("day").notNull(),
+    path: text("path").notNull(),
+    section: text("section").notNull(),
+    subcategory: text("subcategory"),
+    visitorHash: text("visitor_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("visits_day_idx").on(t.day)],
+);
+
+/** Today's and yesterday's salt; older ones are deleted, which makes old hashes unlinkable. */
+export const visitSalts = pgTable("visit_salts", {
+  day: date("day").primaryKey(),
+  salt: text("salt").notNull(),
+});
+
+export const visitDaily = pgTable(
+  "visit_daily",
+  {
+    day: date("day").notNull(),
+    path: text("path").notNull(),
+    section: text("section").notNull(),
+    subcategory: text("subcategory"),
+    views: integer("views").notNull(),
+    visitors: integer("visitors").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.path] })],
+);
+
+/** Every admin write: who, what, which record, when, from where. */
+export const adminAudit = pgTable(
+  "admin_audit",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    adminEmail: text("admin_email").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    details: jsonb("details").$type<Record<string, unknown>>(),
+    ip: text("ip"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("admin_audit_created_idx").on(t.createdAt)],
+);
+
+/** Switches the admin flips at runtime (e.g. pausing all offer e-mails). */
+export const appFlags = pgTable("app_flags", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const offerStatusEnum = pgEnum("offer_status", [
+  "draft",
+  "sent",
+  "opened",
+  "accepted",
+  "paid",
+  "expired",
+  "cancelled",
+]);
+
+/** One personal offer to one person for one product. */
+export const specialOffers = pgTable(
+  "special_offers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** The public link /piedavajums/{token}: 32 random bytes, base64url. */
+    token: text("token").notNull().unique(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+    /** Snapshot, so the offer still reads right if the catalogue changes. */
+    productName: text("product_name").notNull(),
+    subcategoryId: text("subcategory_id").notNull(),
+    condition: conditionEnum("condition").notNull().default("new"),
+    grade: text("grade"),
+    warrantyMonths: integer("warranty_months").notNull().default(24),
+    priceCents: integer("price_cents").notNull(),
+    /** The monitored best price, its shop and the 30-day low when the offer was made (frozen claims). */
+    referencePriceCents: integer("reference_price_cents"),
+    referenceLow30Cents: integer("reference_low30_cents"),
+    referenceStoreName: text("reference_store_name"),
+    quantity: integer("quantity").notNull().default(1),
+    deliveryWorkingDays: integer("delivery_working_days").notNull().default(3),
+    validUntil: timestamp("valid_until", { withTimezone: true }).notNull(),
+    message: text("message"),
+    /** Admin-only: distributor and purchase price. Never shown to the shopper or exported to them. */
+    supplierNote: text("supplier_note"),
+    costCents: integer("cost_cents"),
+    status: offerStatusEnum("status").notNull().default("draft"),
+    /** Offers created together ("Piedāvāt visiem") share a batch. */
+    batchId: uuid("batch_id"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    openedAt: timestamp("opened_at", { withTimezone: true }),
+    remindedAt: timestamp("reminded_at", { withTimezone: true }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  },
+  (t) => [index("special_offers_user_idx").on(t.userId), index("special_offers_status_idx").on(t.status)],
+);
+
+export const orderStatusEnum = pgEnum("order_status", [
+  "awaiting_payment",
+  "paid",
+  "packed",
+  "shipped",
+  "delivered",
+  "return_requested",
+  "returned",
+  "refunded",
+  "cancelled",
+]);
+export const buyerKindEnum = pgEnum("buyer_kind", ["person", "company"]);
+export const deliveryMethodEnum = pgEnum("delivery_method", ["courier", "locker"]);
+
+/** An accepted offer: who buys, where it goes, payment and delivery state. One per offer. */
+export const offerOrders = pgTable(
+  "offer_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    offerId: uuid("offer_id")
+      .notNull()
+      .unique()
+      .references(() => specialOffers.id, { onDelete: "restrict" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    /** Shown to the buyer and on the payment: "T-1042". */
+    number: text("number").notNull().unique(),
+    status: orderStatusEnum("status").notNull().default("awaiting_payment"),
+    amountCents: integer("amount_cents").notNull(),
+    buyerKind: buyerKindEnum("buyer_kind").notNull().default("person"),
+    fullName: text("full_name").notNull(),
+    phone: text("phone"),
+    email: text("email").notNull(),
+    street: text("street"),
+    city: text("city"),
+    postcode: text("postcode"),
+    country: text("country").notNull().default("LV"),
+    deliveryMethod: deliveryMethodEnum("delivery_method").notNull().default("courier"),
+    lockerId: text("locker_id"),
+    lockerName: text("locker_name"),
+    carryIn: boolean("carry_in").notNull().default(false),
+    deliveryNote: text("delivery_note"),
+    companyName: text("company_name"),
+    companyRegNo: text("company_reg_no"),
+    companyVatNo: text("company_vat_no"),
+    legalAddress: text("legal_address"),
+    termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    carrier: text("carrier"),
+    trackingNumber: text("tracking_number"),
+    trackingUrl: text("tracking_url"),
+    packedAt: timestamp("packed_at", { withTimezone: true }),
+    shippedAt: timestamp("shipped_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    /** carrier, admin or buyer. */
+    deliveryConfirmedBy: text("delivery_confirmed_by"),
+    lastTrackedAt: timestamp("last_tracked_at", { withTimezone: true }),
+    returnRequestedAt: timestamp("return_requested_at", { withTimezone: true }),
+    returnedAt: timestamp("returned_at", { withTimezone: true }),
+    refundedAt: timestamp("refunded_at", { withTimezone: true }),
+    refundReference: text("refund_reference"),
+    /** "Viss kārtībā?" seven days after delivery: a link that needs no sign-in. */
+    feedbackToken: text("feedback_token").notNull().unique(),
+    feedbackAskedAt: timestamp("feedback_asked_at", { withTimezone: true }),
+    feedback: text("feedback"),
+    feedbackNote: text("feedback_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("offer_orders_status_idx").on(t.status), index("offer_orders_user_idx").on(t.userId)],
+);
+
+/** The timeline both sides see, plus sign-ins through offer links. */
+export const offerEvents = pgTable(
+  "offer_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    offerId: uuid("offer_id")
+      .notNull()
+      .references(() => specialOffers.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id").references(() => offerOrders.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    /** admin, buyer, system or carrier. */
+    source: text("source").notNull(),
+    note: text("note"),
+    data: jsonb("data").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("offer_events_offer_idx").on(t.offerId)],
+);
+
+export const invoiceKindEnum = pgEnum("invoice_kind", ["invoice", "credit_note"]);
+
+/**
+ * Trilio's sales ledger. Seller and buyer are snapshots: invoices must be kept
+ * unchanged for accounting, also after the buyer deletes the account.
+ */
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: invoiceKindEnum("kind").notNull().default("invoice"),
+    /** "TR-2026-0001"; credit notes share the series. */
+    number: text("number").notNull().unique(),
+    year: integer("year").notNull(),
+    seq: integer("seq").notNull(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => offerOrders.id, { onDelete: "restrict" }),
+    /** For a credit note: the invoice it reverses. */
+    creditForId: uuid("credit_for_id"),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    seller: jsonb("seller").$type<Record<string, string>>().notNull(),
+    buyer: jsonb("buyer").$type<Record<string, string>>().notNull(),
+    lines: jsonb("lines").$type<{ text: string; quantity: number; totalCents: number }[]>().notNull(),
+    netCents: integer("net_cents").notNull(),
+    vatCents: integer("vat_cents").notNull(),
+    totalCents: integer("total_cents").notNull(),
+    /** 21 when Trilio is VAT-registered at issue time; null: "PVN nav piemērojams". */
+    vatRate: integer("vat_rate"),
+  },
+  (t) => [uniqueIndex("invoices_year_seq_idx").on(t.year, t.seq)],
+);
+
+export type SpecialOffer = typeof specialOffers.$inferSelect;
+export type OfferOrder = typeof offerOrders.$inferSelect;
+export type OfferEvent = typeof offerEvents.$inferSelect;
+export type Invoice = typeof invoices.$inferSelect;

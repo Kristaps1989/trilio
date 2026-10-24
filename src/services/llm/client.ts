@@ -214,6 +214,11 @@ export function cacheHitRate(
 export async function usageToday(db: Db, now = new Date()) {
   const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
+  return usageSince(db, start);
+}
+
+/** Calls, tokens, cache hit rate and estimated cost per purpose and model since `start` (the admin's month view). */
+export async function usageSince(db: Db, start: Date) {
   const rows: UsageRow[] = await db
     .select({
       purpose: llmCalls.purpose,

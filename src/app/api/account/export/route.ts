@@ -4,7 +4,10 @@ import { currentUserId } from "@/auth";
 import {
   accounts,
   db,
+  invoices,
   notifySettings,
+  offerOrders,
+  specialOffers,
   payments,
   radarEvents,
   radars,
@@ -29,6 +32,9 @@ export async function GET() {
       email: users.email,
       name: users.name,
       locale: users.locale,
+      offersOptIn: users.offersOptIn,
+      offersOptInAt: users.offersOptInAt,
+      adminNote: users.adminNote,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -77,6 +83,40 @@ export async function GET() {
         .where(inArray(payments.subscriptionId, subIds))
     : [];
 
+  // Personal offers and orders; the admin's purchase price and supplier stay out (not personal data).
+  const offers = await db
+    .select({
+      id: specialOffers.id,
+      productName: specialOffers.productName,
+      condition: specialOffers.condition,
+      priceCents: specialOffers.priceCents,
+      validUntil: specialOffers.validUntil,
+      message: specialOffers.message,
+      status: specialOffers.status,
+      sentAt: specialOffers.sentAt,
+      openedAt: specialOffers.openedAt,
+      createdAt: specialOffers.createdAt,
+    })
+    .from(specialOffers)
+    .where(eq(specialOffers.userId, userId));
+  const orders = await db.select().from(offerOrders).where(eq(offerOrders.userId, userId));
+  const orderIds = orders.map((o) => o.id);
+  const orderInvoices = orderIds.length
+    ? await db.select().from(invoices).where(inArray(invoices.orderId, orderIds))
+    : [];
+  const orderPayments = orderIds.length
+    ? await db
+        .select({
+          orderId: payments.orderId,
+          kind: payments.kind,
+          amountCents: payments.amountCents,
+          status: payments.status,
+          paidAt: payments.paidAt,
+        })
+        .from(payments)
+        .where(inArray(payments.offerOrderId, orderIds))
+    : [];
+
   return NextResponse.json(
     {
       exportedAt: new Date().toISOString(),
@@ -88,7 +128,10 @@ export async function GET() {
       radarEvents: events,
       savedAnswers: sessions,
       subscriptions: subs,
-      payments: pays,
+      payments: [...pays, ...orderPayments],
+      offers,
+      orders: orders.map((o) => ({ ...o, feedbackToken: undefined })),
+      invoices: orderInvoices,
     },
     {
       headers: {

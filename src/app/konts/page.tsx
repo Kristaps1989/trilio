@@ -4,6 +4,9 @@ import { getTranslations } from "next-intl/server";
 import { auth, signOut } from "@/auth";
 import { Button, ButtonLink, buttonClass } from "@/ui/Button";
 import { Kicker, Page, PageTitle, Panel } from "@/ui/layout";
+import { db } from "@/db";
+import { offersOptIn } from "@/services/offers/offers";
+import { OffersConsent } from "@/ui/OffersConsent";
 import { DeleteAccount } from "./DeleteAccount";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +40,21 @@ export default async function AccountPage() {
             {t("openRadar")}
           </ButtonLink>
         </div>
+      </Panel>
+
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("ordersTitle")}</h2>
+        <p className="text-[15px] text-stone">{t("ordersHint")}</p>
+        <div>
+          <ButtonLink href="/konts/pasutijumi" variant="outline" size="sm">
+            {t("openOrders")}
+          </ButtonLink>
+        </div>
+      </Panel>
+
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("offersTitle")}</h2>
+        <OffersConsent initial={await offersOptIn(db, session.user.id)} />
       </Panel>
 
       <Panel className="flex flex-col gap-3">

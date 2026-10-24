@@ -6,6 +6,8 @@ import { processPaymentEvent } from "@/services/billing/engine";
 import { createEmailSender } from "@/services/notify/email";
 import { paymentsProvider } from "@/services/payments";
 import { billingTexts } from "@/services/texts";
+import { offerMailDeps } from "@/services/offers/deps";
+import { afterOrderPaid } from "@/services/offers/notify";
 
 // Paysera posts `notification_id=…` (form-encoded) here. The body is never
 // trusted on its own: the event is fetched from the provider with MAC
@@ -26,9 +28,13 @@ export async function POST(request: Request) {
   const outcome = await processPaymentEvent(db, provider, event);
   await provider.acknowledge(event.notificationId).catch(() => undefined);
 
+  if (outcome === "order_paid") {
+    const [payment] = await db.select().from(payments).where(eq(payments.orderId, event.orderId));
+    if (payment?.offerOrderId) await afterOrderPaid(db, payment.offerOrderId, offerMailDeps());
+  }
   if (outcome === "activated" || outcome === "renewed") {
     const [payment] = await db.select().from(payments).where(eq(payments.orderId, event.orderId));
-    const [sub] = payment
+    const [sub] = payment?.subscriptionId
       ? await db.select().from(subscriptions).where(eq(subscriptions.id, payment.subscriptionId))
       : [];
     const [user] = sub

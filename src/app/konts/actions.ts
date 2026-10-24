@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { currentUserId, signOut } from "@/auth";
 import { db, subscriptions, users } from "@/db";
+import { forgetBuyer } from "@/services/offers/privacy";
 
 // GDPR: account deletion. Hard delete; saved items, radars, sessions, accounts, push
 // subscriptions and subscriptions cascade from the users row. Billing stays
@@ -17,6 +18,8 @@ export async function deleteAccountAction(): Promise<void> {
     .update(subscriptions)
     .set({ status: "canceled", canceledAt: new Date(), nextBillingAt: null, tokenEncrypted: null })
     .where(eq(subscriptions.userId, userId));
+  // Offers nobody bought go; paid orders stay for accounting, without what the courier needed.
+  await forgetBuyer(db, userId);
   await db.delete(users).where(eq(users.id, userId));
   await signOut({ redirectTo: "/?deleted=1" });
 }

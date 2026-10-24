@@ -1,0 +1,10 @@
+{
+  "$comment": "Carriers for orders Trilio sells itself (docs/ADMIN_AND_OFFERS_PLAN.md §10). Configuration, not code: fix a tracking link here if a carrier changes its site. {number} is replaced by the tracking number.",
+  "carriers": [
+    { "id": "omniva", "name": "Omniva", "trackingUrl": "https://www.omniva.lv/sutijumu-izsekosana/?barcode={number}" },
+    { "id": "dpd", "name": "DPD", "trackingUrl": "https://www.dpdgroup.com/lv/mydpd/my-parcels/search?parcelNumber={number}" },
+    { "id": "venipak", "name": "Venipak", "trackingUrl": "https://venipak.com/lv/tracking/track/{number}/" },
+    { "id": "latvijas_pasts", "name": "Latvijas Pasts", "trackingUrl": "https://www.pasts.lv/lv/kategorija/sutijumu_sekosana/?id={number}" },
+    { "id": "courier_other", "name": "Cits kurjers", "trackingUrl": null }
+  ]
+}

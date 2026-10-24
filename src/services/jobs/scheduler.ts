@@ -3,6 +3,7 @@ import { eprelClientFromEnv } from "@/services/eprel/client";
 import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
 import { runAllJobs } from "./all";
+import { eventful, runHousekeeping } from "./housekeeping";
 
 // In-process scheduler for the web service, so product data arrives without a
 // separate Railway cron service. Started from src/instrumentation.ts.
@@ -32,6 +33,9 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
     // Energy-label facts for products in the label categories (docs/ATTRIBUTES.md).
     const eprel = await runEprelJob(db, { client: eprelClientFromEnv(), limit: EPREL_PER_TICK });
     if (eprel.checked) log.log("eprel:", eprel);
+    // Visit counts and offers run every tick, also when no shop is due.
+    const housekeeping = await runHousekeeping(db);
+    if (eventful(housekeeping)) log.log("housekeeping:", JSON.stringify(housekeeping));
     const result = await runAllJobs(db);
     if (!result) return false;
     log.log(

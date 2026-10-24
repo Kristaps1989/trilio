@@ -25,8 +25,11 @@ Open the web service → **Variables** → add:
 | `FEATURE_LLM_EXTRACT` | `0` | `1` fills product attributes/tags from feed text after each scheduled ingestion run. |
 | `APP_URL` | `https://trilio.lv` | Public URL; payment callback/redirects and auth URLs are built from it. |
 | `GOOGLE_SITE_VERIFICATION` | from Search Console (HTML tag method) | Optional; adds the verification meta tag. |
-| `COMPANY_NAME`, `COMPANY_REG_NO`, `COMPANY_ADDRESS`, `COMPANY_EMAIL` | your company's registry details | Shown on the legal pages; required by Latvian law. `COMPANY_VAT_NO` only if VAT-registered. |
+| `COMPANY_NAME`, `COMPANY_REG_NO`, `COMPANY_ADDRESS`, `COMPANY_EMAIL` | your company's registry details | Shown on the legal pages and on Trilio's invoices; required by Latvian law. `COMPANY_VAT_NO` only once VAT-registered: invoices then show 21 % VAT automatically. `COMPANY_EMAIL` also receives order notes (new order, withdrawal, problem). |
 | `GA_MEASUREMENT_ID` | `G-…` from Google Analytics | Optional. Turns on the consent banner and opt-in analytics (`docs/ANALYTICS.md`). |
+| `ADMIN_EMAILS` | the e-mail you sign in with | Who may open `/admin` (comma-separated). Empty = nobody (`docs/ADMIN_AND_OFFERS_PLAN.md`). |
+| `OFFERS_SENDER_NAME` | `Kristaps` | Optional; personal-offer e-mails are signed "Kristaps no Trilio". Default "Trilio". |
+| `OMNIVA_API_URL`, `OMNIVA_USERNAME`, `OMNIVA_PASSWORD` | from your Omniva account manager | Optional; automatic delivery tracking for Omniva parcels. Without them the admin or the buyer marks delivery. |
 | `AUTH_SECRET` | `openssl rand -base64 32` | Session signing (Auth.js). |
 | `AUTH_URL` | same as `APP_URL` | |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". Steps: `docs/AUTH_SETUP.md`. |

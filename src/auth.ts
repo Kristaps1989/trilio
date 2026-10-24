@@ -6,6 +6,8 @@ import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
+import { isAdminEmail } from "@/config/admin";
+import { offerSignIn } from "@/services/offers/offers";
 
 // Google and email magic link (spec §5.1 step 4; Apple deferred by the owner
 // on 18 Oct 2026, see docs/AUTH_SETUP.md). Each provider is on
@@ -34,6 +36,18 @@ function providers(): NextAuthConfig["providers"] {
       }),
     );
   }
+  // Sign-in through a personal offer link (docs/ADMIN_AND_OFFERS_PLAN.md §5.3): the link was
+  // e-mailed to the account's address, so while the offer is open it proves what a magic link proves.
+  list.push(
+    Credentials({
+      id: "offer",
+      name: "Offer link",
+      credentials: { token: { label: "Token", type: "text" } },
+      async authorize(credentials) {
+        return offerSignIn(db, String(credentials?.token ?? ""));
+      },
+    }),
+  );
   if (devLoginEnabled) {
     list.push(
       Credentials({
@@ -74,6 +88,8 @@ export const authConfig: NextAuthConfig = {
     },
     session({ session, token }) {
       if (token.uid) session.user.id = String(token.uid);
+      // Only drives the header's "Admin" link; every admin page and action checks again on the server.
+      (session.user as { isAdmin?: boolean }).isAdmin = isAdminEmail(session.user.email);
       return session;
     },
   },

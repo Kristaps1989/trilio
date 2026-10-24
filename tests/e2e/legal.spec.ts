@@ -6,6 +6,7 @@ const PAGES = [
   ["/noteikumi", "Lietošanas noteikumi", "Atteikuma tiesības"],
   ["/sikdatnes", "Sīkdatņu politika", "authjs.session-token"],
   ["/kontakti", "Kontakti un rekvizīti", "Reģistrācijas Nr."],
+  ["/pirkuma-noteikumi", "Pirkuma noteikumi", "14 dienu laikā no preces saņemšanas"],
 ] as const;
 
 for (const [path, title, marker] of PAGES) {
@@ -27,8 +28,8 @@ test("every page footer links the legal pages, and the sitemap lists them", asyn
   for (const path of ["/", "/izvelies"]) {
     await page.goto(path);
     const nav = page.getByRole("navigation", { name: "Juridiskā informācija" });
-    for (const label of ["Noteikumi", "Privātums", "Sīkdatnes", "Kontakti"]) {
-      await expect(nav.getByRole("link", { name: label })).toBeVisible();
+    for (const label of ["Noteikumi", "Pirkuma noteikumi", "Privātums", "Sīkdatnes", "Kontakti"]) {
+      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
   }
   const sitemap = await (await request.get("/sitemap.xml")).text();

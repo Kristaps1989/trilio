@@ -9,6 +9,7 @@ import { db, users } from "@/db";
 import { cancelAtPeriodEnd, resumeSubscription, startSubscription } from "@/services/billing/engine";
 import { appBaseUrl, paymentsProvider } from "@/services/payments";
 import { removeSaved, setThreshold } from "@/db/queries/wishlist";
+import { offersOptIn, setOffersOptIn } from "@/services/offers/offers";
 import { keyOf, saveTarget, type SaveTarget } from "./save";
 
 // Heart toggles and the digest setting. Every action checks the session and
@@ -27,7 +28,7 @@ const Target = z.discriminatedUnion("kind", [
 export async function toggleSavedAction(
   raw: SaveTarget,
   save: boolean,
-): Promise<{ ok: true; saved: boolean } | { ok: false; reason: "auth" | "invalid" }> {
+): Promise<{ ok: true; saved: boolean; askOffers: boolean } | { ok: false; reason: "auth" | "invalid" }> {
   const userId = await currentUserId();
   if (!userId) return { ok: false, reason: "auth" };
   const target = Target.safeParse(raw);
@@ -38,7 +39,19 @@ export async function toggleSavedAction(
     await removeSaved(db, userId, keyOf(target.data));
   }
   revalidatePath("/velmju-saraksts");
-  return { ok: true, saved: save };
+  // Saving a product is the moment to ask about personal offers (docs/ADMIN_AND_OFFERS_PLAN.md §11.7).
+  const askOffers = save && target.data.kind === "product" && !(await offersOptIn(db, userId));
+  return { ok: true, saved: save, askOffers };
+}
+
+/** The personal-offers consent: a checkbox the shopper ticks (never pre-ticked), withdrawn the same way. */
+export async function setOffersOptInAction(optIn: boolean): Promise<boolean> {
+  const userId = await currentUserId();
+  if (!userId || typeof optIn !== "boolean") return false;
+  await setOffersOptIn(db, userId, optIn);
+  revalidatePath("/velmju-saraksts");
+  revalidatePath("/konts");
+  return true;
 }
 
 export async function setThresholdAction(threshold: string): Promise<boolean> {
