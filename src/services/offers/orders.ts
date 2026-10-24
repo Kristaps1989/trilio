@@ -25,6 +25,9 @@ import {
 } from "@/domain/offers/offers";
 import type { PaymentEvent, PaymentProvider } from "@/services/payments/types";
 
+/** The free delivery line on every invoice, stored in Latvian (the invoice language); shown translated. */
+export const DELIVERY_LINE = "Piegāde Latvijā";
+
 // Orders for personal offers (docs/ADMIN_AND_OFFERS_PLAN.md §5, §9, §10).
 // Trilio is the seller: a paid order gets an invoice from Trilio's own
 // series, every step is an event on the timeline both sides see, and a
@@ -288,7 +291,7 @@ export async function issueInvoice(
       buyer: buyerOf(order),
       lines: [
         { text: `${offer.productName}${condition}`, quantity: 1, totalCents: order.amountCents },
-        { text: "Piegāde Latvijā", quantity: 1, totalCents: 0 },
+        { text: DELIVERY_LINE, quantity: 1, totalCents: 0 },
       ],
       netCents: split.netCents,
       vatCents: split.vatCents,

@@ -108,7 +108,7 @@ run("runWishlistJob", () => {
     const res = await runWishlistJob(db, {
       email,
       baseUrl: "https://trilio.example",
-      texts: wishlistTexts(),
+      texts: wishlistTexts,
     });
     expect(res.skippedNoAccess).toBeGreaterThanOrEqual(1);
     const mine = email.sent.filter((m) => m.to.startsWith("wishlist-job-"));
@@ -123,7 +123,7 @@ run("runWishlistJob", () => {
     expect(item!.lastNotifiedAt).not.toBeNull();
 
     const again = memoryEmailSender();
-    await runWishlistJob(db, { email: again, baseUrl: "https://trilio.example", texts: wishlistTexts() });
+    await runWishlistJob(db, { email: again, baseUrl: "https://trilio.example", texts: wishlistTexts });
     expect(again.sent.filter((m) => m.to.startsWith("wishlist-job-"))).toHaveLength(0);
   });
 
@@ -133,7 +133,7 @@ run("runWishlistJob", () => {
       .set({ baselinePriceCents: 5200, lastNotifiedAt: null })
       .where(eq(savedItems.userId, subscriber));
     const email = memoryEmailSender();
-    await runWishlistJob(db, { email, baseUrl: "https://trilio.example", texts: wishlistTexts() });
+    await runWishlistJob(db, { email, baseUrl: "https://trilio.example", texts: wishlistTexts });
     expect(email.sent.filter((m) => m.to.startsWith("wishlist-job-"))).toHaveLength(0);
   });
 });

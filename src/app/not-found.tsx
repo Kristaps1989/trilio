@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import { ButtonLink } from "@/ui/Button";
-import { Kicker, Lead, PageTitle, Screen } from "@/ui/layout";
+import Link from "next/link";
+import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("errors");
-  return { title: t("notFoundTitle"), robots: { index: false } };
-}
-
-/** Branded 404 inside the normal header and footer. */
-export default async function NotFound() {
-  const t = await getTranslations("errors");
+// Paths outside the localised routes (an unknown /api/… address, say) end
+// here. Pages under [locale] use src/app/[locale]/not-found.tsx.
+export default function NotFound() {
   return (
-    <Screen size="text">
-      <Kicker>{t("notFoundKicker")}</Kicker>
-      <PageTitle>{t("notFoundTitle")}</PageTitle>
-      <Lead>{t("notFoundText")}</Lead>
-      <div className="mt-2 flex flex-wrap gap-3">
-        <ButtonLink href="/">{t("home")}</ButtonLink>
-        <ButtonLink href="/izvelies" variant="outline">
-          {t("categories")}
-        </ButtonLink>
-      </div>
-    </Screen>
+    <html lang="lv">
+      <body className="flex min-h-screen items-center justify-center bg-night p-6 text-mist">
+        <main className="flex max-w-md flex-col gap-3">
+          <h1 className="font-heading text-3xl font-bold">Šādas lapas nav</h1>
+          <p lang="en" className="text-stone">
+            Page not found.
+          </p>
+          <Link href="/" className="text-lime underline">
+            trilio.lv
+          </Link>
+        </main>
+      </body>
+    </html>
   );
 }

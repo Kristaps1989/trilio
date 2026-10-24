@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
+import { localizedPath } from "@/i18n/routing";
+import { useUiLocale } from "@/i18n/useUiLocale";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Logo } from "../Logo";
@@ -35,6 +36,36 @@ export function HeartIcon({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * The switch to the other language (docs/ENGLISH_AND_ACCESSIBILITY_PLAN.md §4.1):
+ * the same page and query in the other language, plus ?lang= so the proxy
+ * remembers the choice. A full page load, because the html lang changes.
+ */
+function LanguageSwitch({ pathname }: { pathname: string }) {
+  const t = useTranslations("header");
+  const locale = useUiLocale();
+  const other = locale === "en" ? "lv" : "en";
+  const target = (search: string) => {
+    const path = localizedPath(`${pathname}${search}`, other);
+    return `${path}${path.includes("?") ? "&" : "?"}lang=${other}`;
+  };
+  return (
+    <a
+      href={target("")}
+      onClick={(e) => {
+        e.preventDefault();
+        window.location.assign(target(window.location.search));
+      }}
+      hrefLang={other}
+      lang={other}
+      aria-label={t("switchToLabel")}
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line-30 px-3 text-sm font-semibold text-mist"
+    >
+      {other.toUpperCase()}
+    </a>
+  );
+}
+
 export function Header() {
   const t = useTranslations("header");
   const pathname = usePathname();
@@ -61,6 +92,7 @@ export function Header() {
         <Logo />
       </Link>
       <nav aria-label={t("nav")} className="flex items-center gap-2">
+        {pathname.startsWith("/admin") ? null : <LanguageSwitch pathname={pathname} />}
         {session?.user?.isAdmin ? (
           <Link
             href="/admin"

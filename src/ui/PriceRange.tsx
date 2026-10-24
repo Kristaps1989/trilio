@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useUiLocale } from "@/i18n/useUiLocale";
 import type { PriceStats } from "@/domain/flow/insight";
 import { formatEur } from "@/i18n/format";
 import { DualRange, Histogram } from "./RangeSlider";
@@ -47,6 +48,7 @@ export function PriceRange({
   big?: boolean;
 }) {
   const t = useTranslations("budget");
+  const locale = useUiLocale();
   const { step, lo, hi, top } = priceScale(stats);
 
   function setField(key: "min" | "max", text: string) {
@@ -66,7 +68,7 @@ export function PriceRange({
         className={`font-heading font-semibold text-mist ${big ? "text-[clamp(28px,5vw,40px)]" : "text-[28px]"}`}
         aria-hidden="true"
       >
-        {t("range", { min: formatEur(value.min), max: formatEur(value.max) })}
+        {t("range", { min: formatEur(value.min, locale), max: formatEur(value.max, locale) })}
       </p>
       {stats ? (
         <Histogram
@@ -74,7 +76,10 @@ export function PriceRange({
           min={stats.minCents}
           max={stats.scaleMaxCents}
           value={{ min: value.min, max: Math.min(value.max, hi) }}
-          description={t("histogram", { min: formatEur(stats.minCents), max: formatEur(stats.maxCents) })}
+          description={t("histogram", {
+            min: formatEur(stats.minCents, locale),
+            max: formatEur(stats.maxCents, locale),
+          })}
         />
       ) : null}
       {/* The slider spans the usual prices; an upper limit above it sits at the right end. */}
@@ -85,7 +90,7 @@ export function PriceRange({
         step={step}
         value={{ min: Math.min(value.min, hi - step), max: Math.min(value.max, hi) }}
         onChange={(r) => onChange({ min: r.min, max: r.max >= hi && value.max > hi ? value.max : r.max })}
-        valueText={(v) => formatEur(v)}
+        valueText={(v) => formatEur(v, locale)}
       />
       <div className="flex gap-3">
         {(["min", "max"] as const).map((key) => (
@@ -110,12 +115,12 @@ export function PriceRange({
           <button
             key={d}
             type="button"
-            aria-label={t("widenByAria", { amount: formatEur(d) })}
+            aria-label={t("widenByAria", { amount: formatEur(d, locale) })}
             disabled={value.max >= top}
             onClick={() => onChange({ min: value.min, max: Math.min(top, value.max + d) })}
             className="min-h-11 rounded-full bg-chip px-4 text-sm font-semibold text-mist hover:bg-lime-18 disabled:opacity-40"
           >
-            +{formatEur(d)}
+            +{formatEur(d, locale)}
           </button>
         ))}
       </div>

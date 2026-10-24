@@ -8,6 +8,7 @@ import { decodeState } from "@/domain/flow/state";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer, evaluateItem, searchProposal, type WishlistEvent } from "@/domain/wishlist/wishlist";
 import { formatEur } from "@/i18n/format";
+import { isUiLocale, localizedPath, type UiLocale } from "@/i18n/routing";
 import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { createEmailSender, type EmailSender } from "@/services/notify/email";
 
@@ -33,7 +34,7 @@ type Current = {
 
 export async function runWishlistJob(
   db: Db,
-  opts: { email?: EmailSender; baseUrl: string; texts: WishlistTexts; now?: Date },
+  opts: { email?: EmailSender; baseUrl: string; texts: (lang: UiLocale) => WishlistTexts; now?: Date },
 ): Promise<WishlistJobResult> {
   const now = opts.now ?? new Date();
   const email = opts.email ?? createEmailSender();
@@ -80,31 +81,34 @@ export async function runWishlistJob(
   }
 
   for (const [userId, list] of events) {
-    const [user] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
+    const [user] = await db
+      .select({ email: users.email, locale: users.locale })
+      .from(users)
+      .where(eq(users.id, userId));
     if (!user) continue;
+    const lang: UiLocale = isUiLocale(user.locale) ? user.locale : "lv";
+    const texts = opts.texts(lang);
     const lines = list.map(({ event, current, label }) => {
       const v = {
         name: current.product.name,
-        price: formatEur(event.newPriceCents),
+        price: formatEur(event.newPriceCents, lang),
         shop: current.offer.storeName,
-        old: formatEur(event.oldPriceCents),
+        old: formatEur(event.oldPriceCents, lang),
       };
-      return event.kind === "search" && label
-        ? opts.texts.searchLine({ ...v, label })
-        : opts.texts.productLine(v);
+      return event.kind === "search" && label ? texts.searchLine({ ...v, label }) : texts.productLine(v);
     });
     const first = list[0]!;
     const subject =
       list.length === 1
-        ? opts.texts.subjectOne({
+        ? texts.subjectOne({
             name: first.current.product.name,
-            price: formatEur(first.event.newPriceCents),
+            price: formatEur(first.event.newPriceCents, lang),
           })
-        : opts.texts.subjectMany({ count: list.length });
+        : texts.subjectMany({ count: list.length });
     const sent = await email.send({
       to: user.email,
       subject,
-      text: `${lines.join("\n")}\n\n${opts.texts.view}: ${opts.baseUrl}/velmju-saraksts`,
+      text: `${lines.join("\n")}\n\n${texts.view}: ${opts.baseUrl}${localizedPath("/velmju-saraksts", lang)}`,
     });
     if (!sent.ok) continue;
     for (const { event } of list) await markNotified(db, event.itemId, event.newPriceCents, now);

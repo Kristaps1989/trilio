@@ -33,4 +33,10 @@ describe("job texts", () => {
     expect(b.failedSubject).toBe("Cenu paziņojumu maksājums neizdevās");
     expect(b.expired).toContain("Abonements beidzies");
   });
+  it("speak English to accounts that chose it", () => {
+    expect(wishlistTexts("en").subjectOne({ name: "Bosch", price: "€599" })).toContain("€599");
+    expect(wishlistTexts("en").view).not.toBe(wishlistTexts("lv").view);
+    expect(billingTexts("en").failedSubject).not.toBe(billingTexts("lv").failedSubject);
+    expect(billingTexts("en").receiptBody({ amount: "€12", next: "1 May" })).toContain("1 May");
+  });
 });

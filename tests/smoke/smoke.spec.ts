@@ -26,8 +26,13 @@ test.describe("every sitemap URL renders", () => {
     const res = await request.get("/sitemap.xml");
     expect(res.status()).toBe(200);
     const xml = await res.text();
-    const paths = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
+    const all = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
+    // Latvian pages render in the browser; their English twins (/en/…) are checked over HTTP,
+    // which keeps the run inside its time budget.
+    const english = all.filter((p) => p === "/en" || p.startsWith("/en/"));
+    const paths = all.filter((p) => !english.includes(p));
     expect(paths.length).toBeGreaterThan(20);
+    expect(english.length).toBe(paths.length);
     const failures: string[] = [];
     for (const path of paths) {
       try {
@@ -35,6 +40,14 @@ test.describe("every sitemap URL renders", () => {
       } catch (e) {
         failures.push(`${path}: ${(e as Error).message.split("\n")[0]}`);
       }
+    }
+    for (const path of english) {
+      const r = await request.get(path);
+      const html = await r.text();
+      if (r.status() >= 400) failures.push(`${path}: status ${r.status()}`);
+      else if (!html.includes('<html lang="en"')) failures.push(`${path}: not lang="en"`);
+      else if (ERROR_SCREEN.test(html.replace(/<script[\s\S]*?<\/script>/g, "")))
+        failures.push(`${path}: error screen`);
     }
     expect(failures, failures.join("\n")).toEqual([]);
   });

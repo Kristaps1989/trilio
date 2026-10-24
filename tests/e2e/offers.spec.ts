@@ -297,7 +297,11 @@ test("an unknown or draft offer link is a 404; the purchase terms cover both kin
   await page.goto("/pirkuma-noteikumi");
   await expect(page.getByRole("heading", { name: "Privātpersonām: atteikuma tiesības" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Uzņēmumiem" })).toBeVisible();
-  await expect(page.getByText("Piegāde Latvijā vienmēr ir bez maksas.")).toBeVisible();
+  // Once in the "Īsumā" summary at the top, once in the full text.
+  await expect(page.getByRole("region", { name: "Īsumā" })).toContainText(
+    "Piegāde Latvijā vienmēr ir bez maksas.",
+  );
+  await expect(page.getByText("Piegāde Latvijā vienmēr ir bez maksas.")).toHaveCount(2);
   const unsub = await page.request.post("/api/offers/unsubscribe/not-a-token", {
     data: "List-Unsubscribe=One-Click",
   });

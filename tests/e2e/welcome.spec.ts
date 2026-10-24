@@ -18,6 +18,7 @@ test("no horizontal scroll and touch targets ≥ 44 px", async ({ page }) => {
   for (const link of await page.getByRole("link").all()) {
     const box = await link.boundingBox();
     expect(box, "link has a box").not.toBeNull();
+    if (box!.width <= 1) continue; // the skip link: hidden until focused (checked in a11y.spec.ts)
     expect(box!.height, "touch target height").toBeGreaterThanOrEqual(44);
   }
 });

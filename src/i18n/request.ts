@@ -1,12 +1,15 @@
 import { getRequestConfig } from "next-intl/server";
+import { setActiveLocale } from "./active";
 import { currentMarket } from "./market";
+import { isUiLocale, routing, type UiLocale } from "./routing";
 
-// The UI language follows the market (LV → lv, LT → lt, EE → et). Locale
-// files for lt and et are scaffolded from lv (scripts/scaffold-locales.py)
-// and carry "__status": "pending_translation"; any key missing from a
-// locale falls back to Latvian so a partial translation never breaks a page.
+// The UI language comes from the URL (src/i18n/routing.ts): the market's own
+// language without a prefix, English under /en. Locale files for lt and et
+// are scaffolded from lv (scripts/scaffold-locales.py) and carry
+// "__status": "pending_translation"; any key missing from a locale falls
+// back to Latvian, so a partial translation never breaks a page.
 
-export const locales = ["lv", "lt", "et"] as const;
+export const locales = ["lv", "lt", "et", "en"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "lv";
 
@@ -32,11 +35,24 @@ export async function loadMessages(locale: Locale): Promise<Messages> {
   return deepMerge(lv, over);
 }
 
-export default getRequestConfig(async () => {
-  const locale = currentMarket().locale;
+/** Messages for a UI locale: the market's own language for "lv", English for "en". */
+export function messagesLocale(ui: UiLocale): Locale {
+  return ui === "en" ? "en" : currentMarket().locale;
+}
+
+/** The html lang of a UI locale. */
+export function htmlLang(ui: UiLocale): string {
+  return ui === "en" ? "en" : currentMarket().locale;
+}
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requested = await requestLocale;
+  const locale: UiLocale = isUiLocale(requested) ? requested : routing.defaultLocale;
+  setActiveLocale(locale);
+  const market = currentMarket().locale;
   return {
     locale,
-    messages: await loadMessages(locale),
-    timeZone: locale === "lt" ? "Europe/Vilnius" : locale === "et" ? "Europe/Tallinn" : "Europe/Riga",
+    messages: await loadMessages(messagesLocale(locale)),
+    timeZone: market === "lt" ? "Europe/Vilnius" : market === "et" ? "Europe/Tallinn" : "Europe/Riga",
   };
 });

@@ -3,10 +3,16 @@ import {
   categoryGender,
   formatCm,
   formatDateDative,
+  formatDateNominative,
+  formatDateShort,
+  formatDayLocative,
+  formatDb,
   formatEur,
   formatEurDelta,
   formatInt,
+  formatLitres,
   formatNumber,
+  formatPlain,
   formatRating,
 } from "./format";
 
@@ -79,5 +85,38 @@ describe("categoryGender", () => {
       "Elektriskās zobu birstes",
     ])
       expect(categoryGender(l)).toBe("f");
+  });
+});
+
+describe("English formats (docs/ENGLISH_AND_ACCESSIBILITY_PLAN.md §4.3)", () => {
+  it("puts € in front, groups with commas and uses a decimal point", () => {
+    expect(formatEur(59900, "en")).toBe("€599");
+    expect(formatEur(107900, "en")).toBe("€1,079");
+    expect(formatEur(1990, "en")).toBe("€19.90");
+    expect(formatEur(-18000, "en")).toBe("−€180");
+    expect(formatEurDelta(18000, "en")).toBe("+€180");
+    expect(formatInt(1234567, "en")).toBe("1,234,567");
+    expect(formatNumber(59.5, 1, "en")).toBe("59.5");
+    expect(formatRating(8.6, "en")).toBe("8.6");
+    expect(formatCm(59.5, "en")).toBe(`59.5${NB}cm`);
+    expect(formatLitres(1200, "en")).toBe(`1,200${NB}L`);
+    expect(formatDb(38, "en")).toBe(`38${NB}dB`);
+    expect(formatPlain(0.5, "en")).toBe("0.5");
+  });
+  it("writes dates the British way, without day-month ambiguity", () => {
+    const d = new Date(2026, 9, 28);
+    expect(formatDateDative(d, "en")).toBe("Wednesday, 28 October");
+    expect(formatDateNominative(d, "en")).toBe("Wednesday, 28 October");
+    expect(formatDayLocative(d, "en")).toBe("28 October");
+    expect(formatDateShort(d, "en")).toBe("28 Oct 2026");
+  });
+  it("keeps the Latvian forms for lv and outside a request", () => {
+    const d = new Date(2026, 9, 28);
+    expect(formatDateDative(d, "lv")).toBe("trešdienai, 28. oktobrim");
+    expect(formatDateNominative(d)).toBe("trešdiena, 28. oktobris");
+    expect(formatDayLocative(d)).toBe("28. oktobrī");
+    expect(formatDateShort(d)).toBe("28.10.2026");
+    expect(formatPlain(0.5)).toBe("0,5");
+    expect(formatEur(107900, "lv")).toBe(`1${TS}079${NB}€`);
   });
 });

@@ -7,6 +7,7 @@ import type { EmailMessage, EmailSender } from "@/services/notify/email";
 import { offersPaused } from "@/services/admin/audit";
 import { referenceFor } from "./reference";
 import { composeOfferEmail, type OfferMailContext } from "./compose";
+import { localizedPath } from "@/i18n/routing";
 
 // Personal offers (docs/ADMIN_AND_OFFERS_PLAN.md §3–§5): made by the admin,
 // one per person per product, sent only to people who opted in, and claims
@@ -149,15 +150,17 @@ export async function sendOffer(
   if (offer.validUntil.getTime() <= now.getTime()) return { ok: false, reason: "expired" };
   if (await offersPaused(db)) return { ok: false, reason: "paused" };
   const [user] = await db
-    .select({ email: users.email, optIn: users.offersOptIn })
+    .select({ email: users.email, optIn: users.offersOptIn, locale: users.locale })
     .from(users)
     .where(eq(users.id, offer.userId));
   if (!user?.optIn) return { ok: false, reason: "no_consent" };
   const unsub = await ensureOffersToken(db, offer.userId);
+  const lang = user.locale === "en" ? "en" : "lv";
   const message = composeOfferEmail(offer, {
     ...deps,
     to: user.email,
-    unsubscribeUrl: `${deps.baseUrl}/piedavajumi/atteikties/${unsub}`,
+    lang,
+    unsubscribeUrl: `${deps.baseUrl}${localizedPath(`/piedavajumi/atteikties/${unsub}`, lang)}`,
     saved: await savedContext(db, offer),
     now,
   });
@@ -181,11 +184,16 @@ export async function previewOffer(
 ): Promise<EmailMessage | null> {
   const offer = await offerById(db, offerId);
   if (!offer?.userId) return null;
-  const [user] = await db.select({ email: users.email }).from(users).where(eq(users.id, offer.userId));
+  const [user] = await db
+    .select({ email: users.email, locale: users.locale })
+    .from(users)
+    .where(eq(users.id, offer.userId));
+  const lang = user?.locale === "en" ? "en" : "lv";
   return composeOfferEmail(offer, {
     ...ctx,
     to: user?.email ?? "",
-    unsubscribeUrl: `${ctx.baseUrl}/piedavajumi/atteikties/…`,
+    lang,
+    unsubscribeUrl: `${ctx.baseUrl}${localizedPath("/piedavajumi/atteikties/…", lang)}`,
     saved: await savedContext(db, offer),
     now: ctx.now ?? new Date(),
   });

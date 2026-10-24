@@ -5,6 +5,7 @@ import { feedbackDue, reminderDue, shouldExpire } from "@/domain/offers/offers";
 import { sendOrderEmail, sendReminder, type MailDeps } from "./emails";
 import { moveOrder } from "./orders";
 import type { CarrierTracker } from "./tracking";
+import { userLang } from "./texts";
 
 // Housekeeping for offers and orders, run on every scheduler tick
 // (docs/ADMIN_AND_OFFERS_PLAN.md §5, §10, §11): expire what passed its date,
@@ -58,7 +59,7 @@ export async function runOffersJob(
     .where(and(eq(offerOrders.status, "delivered"), isNull(offerOrders.feedbackAskedAt)));
   for (const { order, offer } of delivered) {
     if (!feedbackDue(order, now)) continue;
-    await sendOrderEmail("feedback", order, offer, deps);
+    await sendOrderEmail("feedback", order, offer, deps, { lang: await userLang(db, order.userId) });
     await db.update(offerOrders).set({ feedbackAskedAt: now }).where(eq(offerOrders.id, order.id));
     await db
       .insert(offerEvents)
@@ -95,7 +96,9 @@ export async function runOffersJob(
         note: status.lastEvent ?? undefined,
       });
       if (moved.ok) {
-        await sendOrderEmail("delivered", moved.order, offer, deps);
+        await sendOrderEmail("delivered", moved.order, offer, deps, {
+          lang: await userLang(db, moved.order.userId),
+        });
         result.delivered++;
       }
     }

@@ -15,7 +15,7 @@ export function isBot(userAgent: string | null | undefined): boolean {
 }
 
 /** Paths that are not pages people read: the admin's own, APIs, files, payment redirects. */
-const SKIP = /^\/(admin|api|_next|go|maksajums)(\/|$)|\.[a-z0-9]{2,5}$/i;
+const SKIP = /^\/(en\/)?(admin|api|_next|go|maksajums)(\/|$)|\.[a-z0-9]{2,5}$/i;
 
 /** What to record for a page view, or null when it should not count. */
 export function visitOf(rawPath: string, userAgent: string | null | undefined): PageInfo | null {
