@@ -395,7 +395,10 @@
       "self_empty": "pašiztukšošanās stacija",
       "cleaning_program": "automātiskā tīrīšana",
       "auto_off": "automātiska izslēgšanās",
-      "discontinued": "vairs neražo"
+      "discontinued": "vairs neražo",
+      "dual_basket": "divi grozi",
+      "dishwasher_safe": "grozs mazgājams trauku mazgājamajā mašīnā",
+      "window": "skata lodziņš"
     },
     "airflow_m3h": "{delta} m³/h nosūkšanas jauda",
     "tank_l": "{delta} L ūdens tvertne",
@@ -542,7 +545,10 @@
     "mapping_lidar": "Lidar kartēšana",
     "mapping_camera": "Kameras kartēšana",
     "mapping_gyro": "Giroskops",
-    "unitMonths": "mēn."
+    "unitMonths": "mēn.",
+    "dual_basket": "Divi grozi",
+    "dishwasher_safe": "Grozs mazgājams trauku mazgājamajā mašīnā",
+    "window": "Skata lodziņš"
   },
   "model": {
     "title": "Es jau zinu modeli",
@@ -682,6 +688,7 @@
             "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses.",
             "Lietošanas statistika: tikai ja to atļauj sīkdatņu logā, Google Analytics reģistrē apmeklētās lapas, sadaļas un nospiestās pogas, kā arī ierīces un pārlūka veidu un aptuveno atrašanās vietu (valsts, pilsēta). Tava ievadītā teksta, atbilžu un e-pasta tur nav. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā.",
             "Apmeklējumu statistika bez sīkdatnēm: Trilio pats saskaita lapu skatījumus. No IP adreses, pārlūka un katru dienu jaunas nejaušas vērtības veidojam anonīmu kodu, ko nevar sasaistīt ar tevi vai ar citām dienām; pašu IP adresi neglabājam. Pamats: leģitīmās intereses.",
+            "Atnākšana no reklāmas: ja atnāc, uzklikšķinot uz reklāmas, reģistrējam reklāmas klikšķa identifikatoru (gclid) un kampaņas nosaukumu kopā ar tās dienas apmeklējuma kodu (bez sīkdatnēm, kā apmeklējumu statistikai), lai saskaitītu, cik klikšķu uz veikaliem un saglabājumu atveda katra reklāma. Pamats: leģitīmās intereses.",
             "Personīgi piedāvājumi: ja to atļauj, e-pastā sūtām piedāvājumus par precēm, ko saglabāji. Glabājam piekrišanu, nosūtītos piedāvājumus un to, vai piedāvājuma lapa atvērta (e-pastos izsekošanas nav). Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti e-pastā vai vēlmju sarakstā.",
             "Pirkumi no Trilio: vārds, telefons, piegādes adrese vai pakomāts, uzņēmuma rekvizīti (ja pērc uzņēmumam), maksājuma statuss, sūtījuma numurs un rēķini. Pamats: līguma izpilde un juridisks pienākums (grāmatvedība)."
           ]
@@ -703,6 +710,7 @@
             "Cloudflare: domēna vārdu sistēma (DNS).",
             "Google: ienākšana ar Google kontu, ja to izvēlies.",
             "Google Ireland Limited: lietošanas statistika (Google Analytics), tikai ar tavu piekrišanu.",
+            "Google Ireland Limited: Google Ads reklāmu mērījumi (kura reklāma atveda apmeklētāju), tikai ar tavu piekrišanu. Reklāmas netiek personalizētas.",
             "Resend: e-pastu nosūtīšana (ES reģions).",
             "Paysera LT, UAB: maksājumu apstrāde.",
             "Anthropic: kategorijas noteikšana no brīvā teksta, kā aprakstīts iepriekš.",
@@ -729,6 +737,7 @@
             "Meklēšanas atbildes un klikšķu statistika: bez konta tās nav saistītas ar tevi, un tās izmantojam statistikai.",
             "Ienākšanas saites e-pastā: 15 minūtes.",
             "Apmeklējumu statistika: neapstrādāti ieraksti 35 dienas, pēc tam tikai kopsummas pa dienām un lapām.",
+            "Atnākšana no reklāmas: 90 dienas, pēc tam tikai kopsummas pa dienām un kampaņām.",
             "Pirkumi un rēķini: rēķinus glabājam likumā noteikto laiku (5 gadus), arī pēc konta dzēšanas; dzēšot kontu, tālruni un piegādes piezīmes izdzēšam."
           ]
         },
@@ -748,11 +757,15 @@
         },
         {
           "h": "Bērni",
-          "p": ["Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."]
+          "p": [
+            "Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."
+          ]
         },
         {
           "h": "Izmaiņas",
-          "p": ["Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."]
+          "p": [
+            "Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."
+          ]
         }
       ],
       "summary": [
@@ -839,7 +852,9 @@
         },
         {
           "h": "Izmaiņas noteikumos",
-          "p": ["Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."]
+          "p": [
+            "Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."
+          ]
         }
       ],
       "summary": [
@@ -907,12 +922,14 @@
         },
         {
           "h": "Veikalu lapas",
-          "p": ["Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."]
+          "p": [
+            "Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."
+          ]
         },
         {
           "h": "Kā pārvaldīt sīkdatnes",
           "p": [
-            "Savu izvēli par statistikas sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics sīkdatnes tiek dzēstas.",
+            "Savu izvēli par statistikas un reklāmu mērījumu sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics sīkdatnes tiek dzēstas.",
             "Sīkdatnes vari dzēst vai bloķēt arī pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
           ]
         }
@@ -930,7 +947,9 @@
       "sections": [
         {
           "h": "Saziņa",
-          "p": ["Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."]
+          "p": [
+            "Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."
+          ]
         },
         {
           "h": "Veikaliem",
@@ -1412,7 +1431,8 @@
       "demand": "Pieprasījums",
       "offers": "Piedāvājumi",
       "orders": "Pasūtījumi",
-      "system": "Sistēma"
+      "system": "Sistēma",
+      "ads": "Reklāma"
     },
     "today": {
       "title": "Šodien",
@@ -1798,6 +1818,161 @@
       "what": "Ko",
       "target": "Kam",
       "noAudit": "Darbību vēl nav."
+    },
+    "ads": {
+      "nav": {
+        "label": "Reklāmas sadaļas",
+        "overview": "Pārskats",
+        "campaigns": "Kampaņas",
+        "proposals": "Priekšlikumi",
+        "keywords": "Atslēgvārdi",
+        "creatives": "Reklāmas",
+        "strategy": "Stratēģija",
+        "seo": "SEO"
+      },
+      "title": "Reklāma",
+      "sub": "Google meklēšanas reklāmas ar ikdienas Claude optimizētāju. Tu nosaki budžetu; kods sargā robežas.",
+      "provider": "Savienojums: {name}",
+      "providerOff": "Reklāmas izslēgtas. Iestati FEATURE_ADS=1 un Google Ads piekļuves datus (docs/GROWTH_PLAN.md).",
+      "providerGoogle": "Google Ads",
+      "providerMock": "testa režīms (bez Google)",
+      "paused": "Visas reklāmas apturētas.",
+      "pauseAll": "Apturēt visu",
+      "resume": "Atsākt",
+      "statSpend7": "Tēriņi 7 d.",
+      "statSpendMonth": "Tēriņi šomēnes",
+      "statClicks7": "Klikšķi 7 d.",
+      "statShop7": "Klikšķi uz veikaliem no reklāmām",
+      "statSaves7": "Saglabājumi no reklāmām",
+      "statCpa": "Izmaksas par svērto konversiju",
+      "statTarget": "mērķis {amount}",
+      "statNoTarget": "mērķis nav noteikts",
+      "settings": "Iestatījumi",
+      "dailyBudget": "Dienas budžets, €",
+      "floor": "Minimālais budžets, €",
+      "target": "Mērķa izmaksas par svērto konversiju, € (tukšs — nav)",
+      "clickWeight": "Svars: klikšķis uz veikalu",
+      "saveWeight": "Svars: saglabājums",
+      "mode": "Režīms",
+      "modeObserve": "Novērot — tikai priekšlikumi",
+      "modeApprove": "Apstiprināt — es apstiprinu katru",
+      "modeAuto": "Automātiski — negatīvie atslēgvārdi un pauzes bez jautāšanas",
+      "saveSettings": "Saglabāt iestatījumus",
+      "saved": "Saglabāts.",
+      "steps": "Darbības",
+      "build": "Izveidot kampaņas no kategorijām",
+      "built": "Izveidotas {campaigns} kampaņas, {groups} reklāmu grupas, {keywords} atslēgvārdi (melnraksts).",
+      "sync": "Nosūtīt uz Google (apturētas)",
+      "synced": "Nosūtīts: {created}, neizdevās: {failed}.",
+      "enableAll": "Ieslēgt kampaņas",
+      "enabled": "Ieslēgtas kampaņas: {count}.",
+      "runNow": "Palaist optimizētāju tagad",
+      "ran": "Optimizētājs: {proposals} priekšlikumi, {applied} piemēroti, {blocked} bloķēti.",
+      "ranFailed": "Optimizētājs neizdevās: {reason}.",
+      "lastRun": "Pēdējais skrējiens",
+      "noRun": "Optimizētājs vēl nav skrējis.",
+      "campaignsTitle": "Kampaņas",
+      "colCampaign": "Kampaņa",
+      "colStatus": "Statuss",
+      "colBudget": "Budžets dienā",
+      "colClicks7": "Klikšķi 7 d.",
+      "colCost7": "Tēriņi 7 d.",
+      "colGroups": "Grupas",
+      "colActions": "Darbības",
+      "status_draft": "melnraksts",
+      "status_enabled": "ieslēgta",
+      "status_paused": "apturēta",
+      "status_removed": "noņemta",
+      "enable": "Ieslēgt",
+      "pause": "Apturēt",
+      "pmaxTitle": "Performance Max",
+      "pmaxHint": "Vajag apstiprinātu 1200×628 un 1200×1200 attēlu kādai grupas kategorijai. Kampaņa tiek izveidota apturēta.",
+      "pmaxGroup": "Kategoriju grupa",
+      "pmaxBudget": "Budžets dienā, €",
+      "pmaxCreate": "Izveidot Performance Max",
+      "pmaxDone": "Performance Max izveidota (apturēta).",
+      "pmaxFailed": "Neizdevās: {reason}",
+      "proposalsTitle": "Gaida lēmumu",
+      "noProposals": "Nav priekšlikumu, kas gaida.",
+      "colAction": "Darbība",
+      "colDetails": "Ko maina",
+      "colReason": "Kāpēc",
+      "colEffect": "Gaidāmais efekts",
+      "colConfidence": "Pārliecība",
+      "colDecision": "Lēmums",
+      "approve": "Apstiprināt",
+      "reject": "Noraidīt",
+      "historyTitle": "Vēsture",
+      "pstatus_proposed": "gaida",
+      "pstatus_applied": "piemērots",
+      "pstatus_rejected": "noraidīts",
+      "pstatus_blocked": "bloķēts",
+      "pstatus_failed": "neizdevās",
+      "changesTitle": "Izmaiņas Google kontā",
+      "colWhen": "Kad",
+      "colOperation": "Operācija",
+      "colResult": "Rezultāts",
+      "action_add_negative": "Negatīvs atslēgvārds",
+      "action_pause_keyword": "Apturēt atslēgvārdu",
+      "action_enable_keyword": "Ieslēgt atslēgvārdu",
+      "action_add_keyword": "Jauns atslēgvārds",
+      "action_set_cpc": "CPC griesti",
+      "action_move_budget": "Budžeta pārvietošana",
+      "action_new_ad": "Jauna reklāma",
+      "action_flag_landing": "Piezīme par lapu",
+      "keywordsTitle": "Atslēgvārdi",
+      "colKeyword": "Atslēgvārds",
+      "colMatch": "Atbilstība",
+      "colGroup": "Grupa",
+      "colSource": "Avots",
+      "colClicks28": "Klikšķi 28 d.",
+      "colCost28": "Tēriņi 28 d.",
+      "negativesTitle": "Negatīvie atslēgvārdi",
+      "addNegative": "Pievienot negatīvo",
+      "negativeText": "Vārds vai frāze",
+      "negativeCampaign": "Kampaņa",
+      "allCampaigns": "Visas kampaņas",
+      "negativeAdded": "Pievienots.",
+      "termsTitle": "Meklēšanas frāzes (28 d.)",
+      "colTerm": "Frāze",
+      "colLabel": "Claude vērtējums",
+      "colConversions": "Konversijas (Google)",
+      "label_relevant": "atbilst",
+      "label_irrelevant": "neatbilst",
+      "label_unsure": "nav skaidrs",
+      "adsTitle": "Teksta reklāmas",
+      "colHeadlines": "Virsraksti",
+      "colDescriptions": "Apraksti",
+      "creativesTitle": "Attēli un video scenāriji",
+      "creativesHint": "Claude raksta tekstu, Trilio veidne to zīmē zīmola krāsās ar dzīviem skaitļiem. Augšupielādē tikai to, ko apstiprini.",
+      "generateFor": "Kategorija",
+      "generate": "Ģenerēt",
+      "generated": "Izveidoti melnraksti.",
+      "noCreatives": "Vēl nav reklāmu materiālu.",
+      "videoScript": "Video scenārijs",
+      "seconds": "{seconds} s",
+      "cstatus_draft": "melnraksts",
+      "cstatus_approved": "apstiprināts",
+      "cstatus_rejected": "noraidīts",
+      "cstatus_uploaded": "augšupielādēts",
+      "approveUpload": "Apstiprināt un augšupielādēt",
+      "strategyTitle": "Nedēļas stratēģija",
+      "noMemo": "Pirmā nedēļas atskaite būs pirmdien pēc pirmā skrējiena.",
+      "ownerNote": "Tava piezīme nākamajai nedēļai",
+      "saveNote": "Saglabāt piezīmi",
+      "runsTitle": "Ikdienas skrējieni",
+      "colDay": "Diena",
+      "colSummary": "Kopsavilkums",
+      "colCounts": "Priekšl. / piem. / bloķ.",
+      "seoTitle": "SEO iespējas",
+      "seoHint": "Vaicājumi, kur Trilio pēdējās 28 dienās ir 5.–20. vietā: tos var pacelt ar saturu.",
+      "colQuery": "Vaicājums",
+      "colPage": "Lapa",
+      "colImpressions": "Parādījumi",
+      "colPosition": "Vieta",
+      "markDone": "Izdarīts",
+      "done": "izdarīts",
+      "noSeo": "Search Console dati vēl nav ielasīti."
     }
   },
   "alertsUnsubscribe": {

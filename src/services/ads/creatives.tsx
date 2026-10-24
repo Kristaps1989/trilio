@@ -240,7 +240,7 @@ export async function renderCreative(
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 * unit }}>
-        <div style={{ width: 36 * unit, height: 36 * unit, borderRadius: 8 * unit, background: LIME }} />
+        <LogoMark size={40 * unit} />
         <div style={{ fontFamily: "Space Grotesk", fontSize: 34 * unit, fontWeight: 700 }}>trilio</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 * unit }}>
@@ -282,7 +282,7 @@ export async function renderLogo(): Promise<Response> {
         background: NIGHT,
       }}
     >
-      <div style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: 240, color: LIME }}>t</div>
+      <LogoMark size={800} />
     </div>,
     { width: 1200, height: 1200, fonts: await brandFonts() },
   );

@@ -75,6 +75,9 @@ export default defineConfig({
         ADMIN_EMAILS: "e2e-admin@example.invalid",
         OFFERS_SENDER_NAME: "Kristaps",
         OMNIVA_LOCATIONS_URL: "http://127.0.0.1:4011/locations.json",
+        // Paid traffic against a fake account (tests/e2e/ads.spec.ts).
+        FEATURE_ADS: "1",
+        ADS_PROVIDER: "mock",
       },
     },
   ],

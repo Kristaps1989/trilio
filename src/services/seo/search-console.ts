@@ -117,13 +117,26 @@ export async function pullSearchConsole(
   to: string,
 ): Promise<number> {
   const rows = await sc.rows(from, to);
-  for (const r of rows) {
-    const values = { clicks: r.clicks, impressions: r.impressions, position: r.position };
+  const values = rows.map((r) => ({
+    day: r.day,
+    query: r.query.slice(0, 200),
+    page: r.page.slice(0, 200),
+    clicks: r.clicks,
+    impressions: r.impressions,
+    position: r.position,
+  }));
+  for (let i = 0; i < values.length; i += 500)
     await db
       .insert(seoQueries)
-      .values({ day: r.day, query: r.query.slice(0, 200), page: r.page.slice(0, 200), ...values })
-      .onConflictDoUpdate({ target: [seoQueries.day, seoQueries.query, seoQueries.page], set: values });
-  }
+      .values(values.slice(i, i + 500))
+      .onConflictDoUpdate({
+        target: [seoQueries.day, seoQueries.query, seoQueries.page],
+        set: {
+          clicks: sql`excluded.clicks`,
+          impressions: sql`excluded.impressions`,
+          position: sql`excluded.position`,
+        },
+      });
   return rows.length;
 }
 

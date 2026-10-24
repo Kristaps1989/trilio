@@ -285,44 +285,64 @@ export async function pullReports(db: Db, provider: AdsProvider, from: string, t
   const { known: k, byResource } = await known(db);
   if (k.campaigns.length === 0) return { stats: 0, terms: 0 };
   const { stats, terms } = await provider.report(from, to, k);
-  let s = 0;
-  for (const r of stats) {
+  const statRows = stats.flatMap((r) => {
     const own = byResource.get(r.resource);
-    if (!own || !r.day) continue;
-    const values = {
-      impressions: r.impressions,
-      clicks: r.clicks,
-      costMicros: r.costMicros,
-      conversions: r.conversions,
-    };
-    await db
-      .insert(adDailyStats)
-      .values({ day: r.day, level: own.level, entityId: own.id, ...values })
-      .onConflictDoUpdate({
-        target: [adDailyStats.day, adDailyStats.level, adDailyStats.entityId],
-        set: values,
-      });
-    s++;
-  }
-  let t = 0;
+    if (!own || !r.day) return [];
+    return [
+      {
+        day: r.day,
+        level: own.level,
+        entityId: own.id,
+        impressions: r.impressions,
+        clicks: r.clicks,
+        costMicros: r.costMicros,
+        conversions: r.conversions,
+      },
+    ];
+  });
+  // Several rows of one search term can come back for a day (different match types): summed.
+  const termMap = new Map<string, typeof adSearchTerms.$inferInsert>();
   for (const r of terms) {
     const own = byResource.get(r.adGroup);
     if (!own || own.level !== "ad_group" || !r.term) continue;
-    const values = {
-      impressions: r.impressions,
-      clicks: r.clicks,
-      costMicros: r.costMicros,
-      conversions: r.conversions,
-    };
+    const term = r.term.toLowerCase().slice(0, 200);
+    const key = `${r.day}|${own.id}|${term}`;
+    const prev = termMap.get(key);
+    termMap.set(key, {
+      day: r.day,
+      adGroupId: own.id,
+      term,
+      impressions: (prev?.impressions ?? 0) + r.impressions,
+      clicks: (prev?.clicks ?? 0) + r.clicks,
+      costMicros: (prev?.costMicros ?? 0) + r.costMicros,
+      conversions: (prev?.conversions ?? 0) + r.conversions,
+    });
+  }
+  const metricsSet = {
+    impressions: sql`excluded.impressions`,
+    clicks: sql`excluded.clicks`,
+    costMicros: sql`excluded.cost_micros`,
+    conversions: sql`excluded.conversions`,
+  };
+  for (let i = 0; i < statRows.length; i += 500)
+    await db
+      .insert(adDailyStats)
+      .values(statRows.slice(i, i + 500))
+      .onConflictDoUpdate({
+        target: [adDailyStats.day, adDailyStats.level, adDailyStats.entityId],
+        set: metricsSet,
+      });
+  const termRows = [...termMap.values()];
+  for (let i = 0; i < termRows.length; i += 500)
     await db
       .insert(adSearchTerms)
-      .values({ day: r.day, adGroupId: own.id, term: r.term.toLowerCase().slice(0, 200), ...values })
+      .values(termRows.slice(i, i + 500))
       .onConflictDoUpdate({
         target: [adSearchTerms.day, adSearchTerms.adGroupId, adSearchTerms.term],
-        set: values,
+        set: metricsSet,
       });
-    t++;
-  }
+  const s = statRows.length;
+  const t = termRows.length;
   return { stats: s, terms: t };
 }
 
@@ -330,8 +350,9 @@ export const dayOffset = (now: Date, days: number) => rigaDay(new Date(now.getTi
 
 /** Spend from Google and conversions from Trilio's own counts, over the last 7 days. */
 export async function performance(db: Db, now = new Date()): Promise<Performance> {
-  const from = dayOffset(now, 7);
-  const to = dayOffset(now, 1);
+  // Seven days up to today: Google's spend for today arrives tomorrow, Trilio's own counts are live.
+  const from = dayOffset(now, 6);
+  const to = dayOffset(now, 0);
   const [cost] = await db
     .select({ micros: sql<number>`coalesce(sum(${adDailyStats.costMicros}), 0)::bigint` })
     .from(adDailyStats)
