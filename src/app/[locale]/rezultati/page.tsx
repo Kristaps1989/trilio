@@ -6,7 +6,7 @@ import { db, searchSessions } from "@/db";
 import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
 import { subcategoryAttrs } from "@/domain/catalog/attributes";
-import { canonicalBrand, displayName } from "@/domain/catalog/naming";
+import { canonicalBrand, displayName, shortName } from "@/domain/catalog/naming";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { deliveryDate, urgencyDate, workingDaysUntil } from "@/domain/delivery/delivery";
 import { upgradeDelta } from "@/domain/delta/delta";
@@ -157,7 +157,7 @@ export default async function ResultsPage({ searchParams }: Props) {
   const attrLabel = (key: string) => (ta.has(key as "width_cm") ? ta(key as "width_cm") : key);
   const enumLabel = (key: string, value: string) => enums[key]?.[value] ?? value;
   const typeLabel = tp.has(sub.id as "fridge") ? tp(sub.id as "fridge") : "";
-  const nameOf = (p: ProductView) => displayName(p.name, p.brand, sub.id, typeLabel);
+  const nameOf = (p: ProductView) => displayName(p.name, p.brand, sub.id, typeLabel, p.modelCode);
 
   const products = await loadCandidates(db, sub.id);
   const input = {
@@ -233,6 +233,10 @@ export default async function ResultsPage({ searchParams }: Props) {
     nameOf: (id) => {
       const p = products.find((x) => x.id === id);
       return p ? nameOf(p) : id;
+    },
+    shortNameOf: (id) => {
+      const p = products.find((x) => x.id === id);
+      return p ? shortName(p.name, p.brand, p.modelCode) : id;
     },
   };
   const firstRole = (id: string | undefined) => (id ? roleNames(id)[0] : undefined);
@@ -876,19 +880,8 @@ export default async function ResultsPage({ searchParams }: Props) {
     urgency,
     picks: pickCands,
     scored: candidatePool({ ...input, showUnknown: true }),
+    decides,
   });
-  const gainsOver = (from: ProductView, fromPrice: number) => (byId: string) => {
-    const by = pickCands.find((p) => p.product.id === byId);
-    if (!by) return [];
-    const d = upgradeDelta(
-      { product: from, priceCents: fromPrice },
-      { product: by.product, priceCents: by.price, reasons: by.reasons },
-      energyPrice,
-      sub.compare,
-      sub.id,
-    );
-    return d.status === "differs" ? deltaLines(d.gains, td, attrLabel, enumLabel) : [];
-  };
 
   // What a saved search is called in the wishlist: the subcategory and the answers that narrow it.
   const flowIds = new Set(sub.questions.filter((q) => q.stage === "flow").map((q) => q.id));
@@ -1019,18 +1012,23 @@ export default async function ResultsPage({ searchParams }: Props) {
             {t("whyNotTitle")}
           </summary>
           <p className="mt-1 text-[15px] text-stone">{t("whyNotLead")}</p>
-          <ul className="mt-3 flex flex-col gap-3">
+          <ul className="mt-3 flex flex-col divide-y divide-line-25">
             {whyNots.map((w) => (
               <li
                 key={w.product.id}
-                className="flex flex-col gap-0.5 text-[15px] text-mist"
+                className="flex flex-col gap-1 py-3 text-[15px] first:pt-0 last:pb-0"
                 data-why-not-item={w.reason.kind}
               >
-                <span className="font-semibold">
-                  <span lang="lv">{nameOf(w.product)}</span> · {formatEur(w.priceCents)}
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-mist" lang="lv" data-why-not-name>
+                    {nameOf(w.product)}
+                  </span>
+                  <span className="shrink-0 font-semibold text-mist tabular-nums">
+                    {formatEur(w.priceCents)}
+                  </span>
                 </span>
-                <span className="text-stone">
-                  {whyNotText(w, textCtx, gainsOver(w.product, w.priceCents))}
+                <span className="text-stone" data-why-not-reason>
+                  {whyNotText(w, textCtx)}
                 </span>
               </li>
             ))}

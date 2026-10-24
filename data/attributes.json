@@ -2237,6 +2237,9 @@
         }
       },
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "gludek",
@@ -2283,6 +2286,9 @@
         }
       },
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "tvaicētāj",
@@ -3341,6 +3347,9 @@
         }
       },
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "gril"
@@ -3364,6 +3373,9 @@
       "fit": [],
       "enums": {},
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "toster",
@@ -3385,6 +3397,9 @@
       "fit": [],
       "enums": {},
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "sendvič",
@@ -3435,6 +3450,9 @@
         }
       },
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "fritier",
@@ -3458,6 +3476,9 @@
       "fit": [],
       "enums": {},
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "maizes krāsn",
@@ -3483,6 +3504,9 @@
       "defaultFalse": [
         "hotplates"
       ],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "mini krāsn",
@@ -3560,6 +3584,9 @@
       "fit": [],
       "enums": {},
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "žāvētāj",
@@ -3855,6 +3882,9 @@
         }
       },
       "defaultFalse": [],
+      "better": {
+        "power_w": "none"
+      },
       "sanity": {
         "stems": [
           "taisnot",

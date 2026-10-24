@@ -20,6 +20,8 @@ export type TextContext = {
   answerPhrase: (questionId: string) => string | null;
   /** The product's display name. */
   nameOf: (id: string) => string;
+  /** "Dreame AF30-WH": the product named inside a sentence (docs/TRUST_POLISH_PLAN.md §3). */
+  shortNameOf?: (id: string) => string;
 };
 
 const stars = (x10: number) => formatNumber(x10 / 10, 1);
@@ -127,19 +129,26 @@ export function priceNoteText(pc: PriceConfidence, priceCents: number, t: Transl
   return `${text[0]!.toUpperCase()}${text.slice(1)}.`;
 }
 
-/** The reason line of one "Kāpēc ne šie?" product (§3 A4). */
-export function whyNotText(w: WhyNot, ctx: TextContext, gains: (byId: string) => string[]): string {
+/** The reason line of one "Kāpēc ne šie?" product (§3 A4), one sentence with a capital and a full stop. */
+export function whyNotText(w: WhyNot, ctx: TextContext): string {
   const { t } = ctx;
   const r = w.reason;
+  const name = ctx.shortNameOf ?? ctx.nameOf;
   switch (r.kind) {
     case "fit":
-      return r.attr && r.max !== null && r.value !== null
-        ? t("whyFitRange", {
-            label: ctx.attrLabel(r.attr).toLowerCase(),
-            value: ctx.attrValue(r.attr, r.value),
-            max: ctx.attrValue(r.attr, r.max),
-          })
-        : t("whyFitChoice", { chosen: r.chosen.join(", ") });
+      if (r.attr && r.max !== null && r.value !== null)
+        return t("whyFitRange", {
+          label: ctx.attrLabel(r.attr),
+          value: ctx.attrValue(r.attr, r.value),
+          max: ctx.attrValue(r.attr, r.max),
+        });
+      if (r.attr && r.value !== null && typeof r.value === "number")
+        return t("whyFitValue", {
+          label: ctx.attrLabel(r.attr),
+          value: ctx.attrValue(r.attr, r.value),
+          chosen: r.chosen.join(", "),
+        });
+      return t("whyFitChoice", { chosen: r.chosen.join(", ") });
     case "unknown":
       return t("whyUnknown", { attrs: r.attrs.map((a) => ctx.attrLabel(a).toLowerCase()).join(", ") });
     case "over_budget":
@@ -148,14 +157,24 @@ export function whyNotText(w: WhyNot, ctx: TextContext, gains: (byId: string) =>
       return t("whyDiscontinued");
     case "dominated":
       return r.extraCents > 0
-        ? t("whyDominated", { amount: formatEur(r.extraCents), name: ctx.nameOf(r.byId) })
-        : t("whyDominatedSame", { name: ctx.nameOf(r.byId) });
-    case "weaker": {
-      const g = gains(r.byId).slice(0, 2);
-      return g.length
-        ? t("whyWeaker", { name: ctx.nameOf(r.byId), amount: formatEur(r.extraCents), gains: g.join(", ") })
-        : t("whyWeakerPlain", { name: ctx.nameOf(r.byId), amount: formatEur(r.extraCents) });
-    }
+        ? t("whyDominated", { amount: formatEur(r.extraCents), name: name(r.byId) })
+        : t("whyDominatedSame", { name: name(r.byId) });
+    case "weaker":
+      return t("whyWeaker", {
+        name: name(r.byId),
+        amount: formatEur(r.extraCents),
+        gains: r.gains
+          .map((g) =>
+            typeof g.theirs === "boolean"
+              ? t("whyGainFeature", { feature: ctx.featureName(g.attr) })
+              : t("whyGain", {
+                  label: ctx.attrLabel(g.attr).toLowerCase(),
+                  theirs: g.attr === "energy_class" ? String(g.theirs) : ctx.attrValue(g.attr, g.theirs),
+                  mine: g.attr === "energy_class" ? String(g.mine) : ctx.attrValue(g.attr, g.mine),
+                }),
+          )
+          .join(", "),
+      });
   }
 }
 

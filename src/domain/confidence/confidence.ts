@@ -1,6 +1,8 @@
+import { directionIn } from "@/domain/catalog/attributes";
+import { sameModel } from "@/domain/catalog/naming";
 import type { ProductView } from "@/domain/catalog/types";
 import { numberAttr } from "@/domain/catalog/types";
-import { numberRule } from "@/domain/delta/delta";
+import { minStep, numberRule } from "@/domain/delta/delta";
 import { energyCost10yCents } from "@/domain/energy/energy";
 import { activeOptions } from "@/domain/questions/engine";
 import type { Answers, Question, Subcategory } from "@/domain/questions/schema";
@@ -34,6 +36,14 @@ export function targetOf(attr: string): Target | null {
   if (FEATURES.has(attr)) return { attr, kind: "bool" };
   const dir = betterDirection(attr);
   return dir ? { attr, kind: dir } : null;
+}
+
+/** `targetOf` with the category's own direction (power is no gain in an air fryer; docs/TRUST_POLISH_PLAN.md §4). */
+export function targetIn(attr: string, subcategoryId: string | undefined): Target | null {
+  const dir = directionIn(attr, subcategoryId);
+  if (dir === "none") return null;
+  if (dir) return { attr, kind: dir };
+  return targetOf(attr);
 }
 
 /** Higher is better; null when the product does not state it. */
@@ -83,7 +93,7 @@ export function argumentTargets(sub: Subcategory, answers: Answers, decides: str
     if (t && !out.some((x) => x.attr === t.attr)) out.push(t);
   };
   add(priorityTarget(sub, answers)?.target ?? null);
-  for (const a of decides) add(targetOf(a));
+  for (const a of decides) add(targetIn(a, sub.id));
   return out;
 }
 
@@ -115,7 +125,7 @@ export function passesQualityFloor(
   if (grade !== null && grade < 3) return false;
   if (grade === null && graded && !decides.every((a) => known(c.product, a))) return false;
   for (const attr of decides) {
-    const t = targetOf(attr);
+    const t = targetIn(attr, sub.id);
     if (!t) continue;
     const mine = goodness(c.product, t);
     if (mine === null) continue;
@@ -388,7 +398,11 @@ export type WhyNotReason =
   | { kind: "over_budget"; overCents: number }
   | { kind: "discontinued" }
   | { kind: "dominated"; byId: string; extraCents: number }
-  | { kind: "weaker"; byId: string; extraCents: number };
+  /** A pick costs `extraCents` more and is measurably better on `gains` (never empty). */
+  | { kind: "weaker"; byId: string; extraCents: number; gains: Gain[] };
+
+/** One measurable advantage, with both values: "tilpums 9 L (šim 2,5 L)". */
+export type Gain = { attr: string; theirs: unknown; mine: unknown };
 
 export type WhyNot = {
   product: ProductView;
@@ -407,6 +421,8 @@ export type WhyNotInput = {
   picks: Candidate[];
   /** Every scored candidate at any price (rank's candidatePool, unknown fit included). */
   scored: Candidate[];
+  /** The category's deciding attributes (knowledge.json), compared before the compare list. */
+  decides: string[];
   table?: BrandTable;
 };
 
@@ -436,11 +452,13 @@ function fitReason(p: ProductView, q: Question, answers: Answers): WhyNotReason 
 export function whyNot(input: WhyNotInput): WhyNot[] {
   const table = input.table ?? brandTable;
   const picked = new Set(input.picks.map((p) => p.product.id));
+  // A colour or finish variant of a pick is the same choice, not an alternative (docs/TRUST_POLISH_PLAN.md §3).
+  const variantOfPick = (p: ProductView) => input.picks.some((k) => sameModel(k.product, p));
   const max = input.budget?.max;
   const stretch = max === undefined ? Infinity : Math.round(max * 1.25);
   const min = input.budget?.min ?? 0;
   const offered = input.products
-    .filter((p) => !picked.has(p.id))
+    .filter((p) => !picked.has(p.id) && !variantOfPick(p))
     .map((p) => ({ p, offer: bestOffer(eligibleOffers(p, "new", input.urgency)) }))
     .filter((x): x is { p: ProductView; offer: NonNullable<typeof x.offer> } => !!x.offer)
     .filter((x) => x.offer.priceCents >= min);
@@ -504,9 +522,30 @@ function reasonFor(
     .sort((a, b) => b.score - a.score)[0];
   if (dominator)
     return { kind: "dominated", byId: dominator.product.id, extraCents: price - dominator.price };
-  const better = [...input.picks].filter((k) => k.score > me.score).sort((a, b) => a.price - b.price)[0];
-  if (better) return { kind: "weaker", byId: better.product.id, extraCents: better.price - price };
+  // A pick that is better on something the shopper can see, cheapest first; "better overall" alone is no reason.
+  const keys = [...input.decides, ...input.sub.compare];
+  for (const k of [...input.picks].filter((x) => x.score > me.score).sort((a, b) => a.price - b.price)) {
+    const gains = gainsOf(k.product, p, keys, input.sub.id);
+    if (gains.length) return { kind: "weaker", byId: k.product.id, extraCents: k.price - price, gains };
+  }
   return null;
+}
+
+/** Where `by` is measurably better than `p` on `keys`, in order, at most two. */
+export function gainsOf(by: ProductView, p: ProductView, keys: string[], subcategoryId: string): Gain[] {
+  const out: Gain[] = [];
+  for (const attr of new Set(keys)) {
+    const t = targetIn(attr, subcategoryId);
+    if (!t) continue;
+    const a = goodness(by, t);
+    const b = goodness(p, t);
+    if (a === null || b === null) continue;
+    const rule = t.kind === "min" || t.kind === "max" ? numberRule(attr, subcategoryId) : undefined;
+    if (a - b < (rule ? minStep(rule, a, b) : minLead(t))) continue;
+    out.push({ attr, theirs: by.attributes[attr], mine: p.attributes[attr] });
+    if (out.length === 2) break;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- price

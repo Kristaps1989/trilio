@@ -1,3 +1,4 @@
+import { cleanName } from "@/domain/catalog/naming";
 import { eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { users } from "@/db/schema";
@@ -90,7 +91,7 @@ export async function runWishlistJob(
     const texts = opts.texts(lang);
     const lines = list.map(({ event, current, label }) => {
       const v = {
-        name: current.product.name,
+        name: cleanName(current.product.name, current.product.brand, current.product.modelCode),
         price: formatEur(event.newPriceCents, lang),
         shop: current.offer.storeName,
         old: formatEur(event.oldPriceCents, lang),
@@ -101,7 +102,11 @@ export async function runWishlistJob(
     const subject =
       list.length === 1
         ? texts.subjectOne({
-            name: first.current.product.name,
+            name: cleanName(
+              first.current.product.name,
+              first.current.product.brand,
+              first.current.product.modelCode,
+            ),
             price: formatEur(first.event.newPriceCents, lang),
           })
         : texts.subjectMany({ count: list.length });

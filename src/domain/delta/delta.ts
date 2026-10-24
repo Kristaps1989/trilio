@@ -1,4 +1,4 @@
-import { attributeType } from "@/domain/catalog/attributes";
+import { attributeType, directionIn } from "@/domain/catalog/attributes";
 import { boolAttr, numberAttr, stringAttr, type ProductView } from "@/domain/catalog/types";
 import { energyCost10yCents } from "@/domain/energy/energy";
 import { brandTable, gradeOf, ungradedSubcategory } from "@/domain/ranking/consider";
@@ -51,8 +51,23 @@ const NUMBER_RULES: Record<string, { higherIsBetter: boolean | null; minDelta: n
 };
 
 /** For numeric keys: is a higher value better (null: neither), and the smallest difference worth mentioning. */
-export function numberRule(key: string): { higherIsBetter: boolean | null; minDelta: number } | undefined {
-  return NUMBER_RULES[key];
+export function numberRule(
+  key: string,
+  subcategoryId?: string,
+): { higherIsBetter: boolean | null; minDelta: number } | undefined {
+  const rule = NUMBER_RULES[key];
+  const dir = directionIn(key, subcategoryId);
+  if (!rule || !dir) return rule;
+  return { ...rule, higherIsBetter: dir === "none" ? null : dir === "max" };
+}
+
+/**
+ * The smallest difference worth mentioning between two values: the rule's
+ * step, or a tenth of the larger value when that is smaller, so 2 L counts
+ * in a 9 L air fryer while a fridge still needs 10 L.
+ */
+export function minStep(rule: { minDelta: number }, a: number, b: number): number {
+  return Math.min(rule.minDelta, Math.max(Math.abs(a), Math.abs(b)) / 10);
 }
 
 /** Size differences matter for fit, not as an upgrade; they are compared in the table instead. */
@@ -162,12 +177,12 @@ export function upgradeDelta(
         });
       }
     } else if (type === "number") {
-      const rule = NUMBER_RULES[key];
+      const rule = numberRule(key, subcategoryId);
       const va = numberAttr(a, key);
       const vb = numberAttr(b, key);
       if (!rule || va === null || vb === null) continue;
       const delta = Math.round((vb - va) * 10) / 10;
-      if (Math.abs(delta) < rule.minDelta) continue;
+      if (Math.abs(delta) < minStep(rule, va, vb)) continue;
       const better = rule.higherIsBetter === null ? null : rule.higherIsBetter ? delta > 0 : delta < 0;
       items.push({ kind: "number", key, delta, better });
     } else if (type === "boolean") {

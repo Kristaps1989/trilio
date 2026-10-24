@@ -1,3 +1,4 @@
+import { cleanName } from "@/domain/catalog/naming";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
@@ -79,7 +80,7 @@ function toCard(
   const total = cost !== null ? tcoCents(pick.offer.priceCents, pick.product.kwhYear, energyPrice) : null;
   return {
     productId: pick.product.id,
-    name: pick.product.name,
+    name: cleanName(pick.product.name, pick.product.brand, pick.product.modelCode),
     modelCode: pick.product.modelCode,
     ean: pick.product.ean,
     specs: pick.product.specs,
