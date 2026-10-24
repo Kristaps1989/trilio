@@ -42,18 +42,33 @@ test("an ad visit is credited with the shop click that follows it", async ({ pag
     .getByRole("link", { name: /^Pirkt/ })
     .first();
   const href = await buy.getAttribute("href");
-  // Give the landing a moment to be written after the beacon's response.
-  await page.waitForTimeout(500);
-  const res = await page.request.get(href!, { maxRedirects: 0 });
-  expect(res.status()).toBe(302);
+  const url = new URL(page.url());
+  const ad = Object.fromEntries([...url.searchParams].filter(([k]) => k !== "sub"));
 
   const admin = await (await browser.newContext()).newPage();
   await signIn(admin, "/admin/reklama");
   await expect(admin.locator("[data-ads-provider]")).toHaveAttribute("data-ads-provider", "mock");
-  const shopClicks = Number(
-    (await admin.locator("[data-ad-conversions]").getAttribute("data-ad-conversions"))!.split("/")[0],
-  );
-  expect(shopClicks).toBeGreaterThanOrEqual(1);
+  const credited = async () => {
+    await admin.reload();
+    return Number(
+      (await admin.locator("[data-ad-conversions]").getAttribute("data-ad-conversions"))!.split("/")[0],
+    );
+  };
+  // The landing is written after the beacon's answer, and the visit endpoint rate-limits
+  // one address (all of CI shares one). Until the click is credited: send the landing
+  // again from the same browser, then click through to the shop.
+  await expect
+    .poll(
+      async () => {
+        await page.request.post("/api/visit", { data: { path: url.pathname, ad } });
+        await page.waitForTimeout(1_000);
+        const res = await page.request.get(href!, { maxRedirects: 0 });
+        expect(res.status()).toBe(302);
+        return credited();
+      },
+      { timeout: 120_000, intervals: [2_000, 5_000, 10_000] },
+    )
+    .toBeGreaterThanOrEqual(1);
   await admin.context().close();
 });
 
