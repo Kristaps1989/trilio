@@ -1,5 +1,6 @@
 import type { DeltaItem } from "@/domain/delta/delta";
-import { formatEur, formatInt, formatNumber, formatRating } from "@/i18n/format";
+import { numberRule } from "@/domain/delta/delta";
+import { formatEur, formatInt, formatNumber } from "@/i18n/format";
 
 // Turns structured delta items into Latvian lines through the translator.
 // Kept out of the domain so no copy lives in business logic.
@@ -20,9 +21,9 @@ export function deltaLines(
     switch (i.kind) {
       case "number": {
         const abs = num(Math.abs(i.delta));
-        if (i.key === "noise_db") return t(i.better ? "noise_db_better" : "noise_db_worse", { delta: abs });
-        if (i.key === "weight_kg")
-          return t(i.better ? "weight_kg_better" : "weight_kg_worse", { delta: abs });
+        // Lower is better (noise, weight, programme time, water): "par 4 dB klusāks".
+        if (numberRule(i.key)?.higherIsBetter === false)
+          return t(`${i.key}_${i.better ? "better" : "worse"}`, { delta: abs });
         const signed = (i.delta > 0 ? "+" : "−") + abs;
         return t(i.key, { delta: signed });
       }
@@ -36,8 +37,6 @@ export function deltaLines(
         return t(i.better ? "energy_cost_better" : "energy_cost_worse", {
           amount: formatEur(Math.abs(i.deltaCents)),
         });
-      case "rating":
-        return t(i.better ? "rating_better" : "rating_worse", { to: formatRating(i.to / 10) });
       case "brand":
         return t(i.better ? (i.from === null ? "brand_proven" : "brand_better") : "brand_worse", {
           to: i.to,

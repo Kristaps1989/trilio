@@ -3,8 +3,9 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db, searchSessions } from "@/db";
-import { loadCandidates } from "@/db/queries/catalog";
+import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
+import { subcategoryAttrs } from "@/domain/catalog/attributes";
 import { canonicalBrand, displayName } from "@/domain/catalog/naming";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { deliveryDate, urgencyDate, workingDaysUntil } from "@/domain/delivery/delivery";
@@ -15,12 +16,27 @@ import {
   energyPriceFromEnv,
   tcoCents,
 } from "@/domain/energy/energy";
+import {
+  argumentTargets,
+  assignRoles,
+  catchFor,
+  coverage,
+  priceConfidence,
+  priorityTarget,
+  reviewSummary,
+  verdictFor,
+  whyNot,
+} from "@/domain/confidence/confidence";
+import { decidingAttrs, glossaryLine, knowledgeOf, watchOutFor } from "@/domain/knowledge/knowledge";
+import { withinBudget } from "@/domain/ranking/filters";
 import { optionCounts, priceStats } from "@/domain/flow/insight";
 import {
   budgetCents,
   decodeState,
   encodeState,
   priceRange,
+  withAnswer,
+  withoutAnswer,
   withSetting,
   type FlowState,
 } from "@/domain/flow/state";
@@ -28,17 +44,17 @@ import { priceLine } from "@/domain/pricing/omnibus";
 import { chosenOptions, isRangeAnswer, visibleQuestions } from "@/domain/questions/engine";
 import { getGroupOfSubcategory, getSubcategory } from "@/domain/questions/catalog";
 import type { Answers, Question, Subcategory } from "@/domain/questions/schema";
-import { brandTable, gradeOf, worthConsidering } from "@/domain/ranking/consider";
+import { brandTable, gradeOf, ungradedSubcategory, worthConsidering } from "@/domain/ranking/consider";
 import { candidatePool, rank, type Pick, type RefurbishedPick } from "@/domain/ranking/rank";
 import { relaxations, type Relaxation } from "@/domain/ranking/relax";
 import { whyItFits } from "@/domain/ranking/score";
 import {
   formatDateDative,
+  formatDayLocative,
   formatEur,
   formatInt,
   formatNumber,
   formatPlain,
-  formatRating,
 } from "@/i18n/format";
 import { currentMarket } from "@/i18n/market";
 import { ButtonLink } from "@/ui/Button";
@@ -50,6 +66,16 @@ import { currentUserId } from "@/auth";
 import { betterDirection, enumLabels, formatAttr } from "./attr-format";
 import { CompareTable, type CompareColumn, type CompareRow } from "./CompareTable";
 import { deltaLines } from "./delta-text";
+import { ConfidenceQuestion } from "./ConfidenceQuestion";
+import {
+  catchText,
+  factLines,
+  priceNoteText,
+  roleLabel,
+  verdictText,
+  whyNotText,
+  type TextContext,
+} from "./confidence-text";
 import { FilterBar, type Chip } from "./FilterBar";
 import { HowWeRank } from "./HowWeRank";
 import { cardMedia } from "./card-media";
@@ -59,6 +85,34 @@ import { activeLocale } from "@/i18n/active";
 export const dynamic = "force-dynamic";
 
 type Props = { searchParams: Promise<{ sub?: string; a?: string; vairak?: string }> };
+
+/** Deeper facts shown in the compare table when a product states them (docs/CONFIDENCE_PLAN.md C2, C3). */
+const DETAIL_ROWS = [
+  "programme_min",
+  "quick_wash_min",
+  "water_l_cycle",
+  "moisture_pct",
+  "condensation_cls",
+  "inverter",
+  "door_reversible",
+  "fast_freeze",
+  "water_dispenser",
+  "auto_dose",
+  "delay_start",
+  "child_lock",
+  "half_load",
+  "suction_pa",
+  "bin_l",
+  "mapping",
+  "self_empty",
+  "cleaning_program",
+  "cup_height_cm",
+  "auto_off",
+  "noise_class",
+  "repairability",
+  "warranty_months",
+  "model_year",
+];
 
 /** "Rādīt vairāk variantus" adds this many cards per tap. */
 const MORE_STEP = 10;
@@ -137,9 +191,51 @@ export default async function ResultsPage({ searchParams }: Props) {
     ...products.map((p) => productKey(p.id)),
   ]);
 
-  const tierLabel = (tier: NonNullable<Pick["tier"]>) =>
-    t(`tier${tier[0]!.toUpperCase()}${tier.slice(1)}` as "tierBudget");
   const cheapest = result.picks[0] ?? null;
+
+  // Three options a shopper can trust (docs/CONFIDENCE_PLAN.md): why each pick is
+  // here, a verdict in the shopper's terms, its catch, and what was rejected.
+  const lang = activeLocale();
+  const know = knowledgeOf(sub.id);
+  const decides = decidingAttrs(sub.id);
+  enums.mapping = {
+    lidar: ta("mapping_lidar"),
+    camera: ta("mapping_camera"),
+    gyro: ta("mapping_gyro"),
+  };
+  const inBudgetPool = candidatePool(input).filter((c) => withinBudget(c.price, budget));
+  const priority = priorityTarget(sub, state.answers);
+  const targets = argumentTargets(sub, state.answers, decides);
+  const roleTarget = priority?.target ?? targets[0] ?? null;
+  const roleTargetLabel = priority
+    ? priority.label.toLowerCase()
+    : roleTarget
+      ? attrLabel(roleTarget.attr).toLowerCase()
+      : "";
+  const pickCands = result.picks.map((p) => ({ ...p, price: p.offer.priceCents }));
+  const roles = assignRoles(pickCands, inBudgetPool, sub, roleTarget, decides);
+  const roleNames = (id: string) => (roles.get(id) ?? []).map((r) => roleLabel(r, roleTargetLabel, t));
+  const histories = await dailyLowest(
+    db,
+    result.picks.map((p) => p.product.id),
+  );
+  const graded = brandTable.reviewed && !ungradedSubcategory(brandTable, sub.id);
+  const featureName = (key: string) =>
+    td.has(`feature.${key}` as "feature.no_frost")
+      ? td(`feature.${key}` as "feature.no_frost")
+      : attrLabel(key).toLowerCase();
+  const textCtx: TextContext = {
+    t: (key, values) => t(key as "title", values as Record<string, string>),
+    attrLabel,
+    attrValue: (key, value) => formatAttr(key, value, (k) => ta(k as "yes"), enums),
+    featureName,
+    answerPhrase: (questionId) => know.answerPhrases[questionId]?.[lang] ?? null,
+    nameOf: (id) => {
+      const p = products.find((x) => x.id === id);
+      return p ? nameOf(p) : id;
+    },
+  };
+  const firstRole = (id: string | undefined) => (id ? roleNames(id)[0] : undefined);
   const basePath = `/izvelies/${group.id}/${sub.id}`;
 
   function energyFor(p: ProductView, price: number) {
@@ -183,7 +279,7 @@ export default async function ResultsPage({ searchParams }: Props) {
     return (pick.quality?.brand ?? 0) >= 8 && grade !== null ? [t("brandReliable", { grade })] : [];
   };
 
-  function toCard(pick: Pick): CardModel {
+  function toCard(pick: Pick, story = false): CardModel {
     const others = otherOffers(pick.product, pick.offer);
     let upgrade: CardModel["upgrade"] = null;
     if (cheapest && pick.product.id !== cheapest.product.id) {
@@ -199,7 +295,7 @@ export default async function ResultsPage({ searchParams }: Props) {
         const lines = (items: typeof d.items) => deltaLines(items, td, attrLabel, enumLabel);
         upgrade = {
           priceDeltaCents: d.priceDeltaCents,
-          tierLabel: cheapest.tier ? tierLabel(cheapest.tier) : t("cheapestOption"),
+          tierLabel: firstRole(cheapest.product.id) ?? t("cheapestOption"),
           gains: lines(d.gains),
           other: lines(d.other),
           tradeoffs: lines(d.tradeoffs),
@@ -214,15 +310,44 @@ export default async function ResultsPage({ searchParams }: Props) {
         };
       }
     }
+    const cand = { ...pick, price: pick.offer.priceCents };
+    const pickRoles = story ? (roles.get(pick.product.id) ?? []) : [];
+    const verdict = story
+      ? verdictText(
+          verdictFor(cand, {
+            sub: sub!,
+            answers: state.answers,
+            picks: pickCands,
+            pool: inBudgetPool,
+            targets,
+            decides,
+            roles: pickRoles,
+            energyPriceCentsPerKwh: energyPrice,
+            answerPhrases: know.answerPhrases,
+          }),
+          textCtx,
+        )
+      : null;
+    const flaw = story ? catchFor(cand, inBudgetPool, targets) : null;
+    const confidence = story
+      ? priceConfidence(pick.product, pick.offer.priceCents, histories.get(pick.product.id) ?? [], now)
+      : null;
     return {
       productId: pick.product.id,
+      roles: pickRoles.map((r) => roleLabel(r, roleTargetLabel, t)),
+      roleIds: pickRoles,
+      verdict,
+      catchText: flaw ? catchText(flaw, textCtx) : null,
+      priceNote: confidence ? priceNoteText(confidence, pick.offer.priceCents, t) : null,
+      facts: factLines(pick.product, reviewSummary(pick.product), t, {
+        ungraded: graded && gradeOf(brandTable, pick.product.brand, sub!.id) === null,
+      }),
       name: nameOf(pick.product),
       modelCode: pick.product.modelCode,
       ean: pick.product.ean,
       specs: specsOf(pick.product),
       tier: pick.overBudgetByCents > 0 ? null : pick.tier,
       recommended: pick.recommended,
-      rating: pick.product.rating,
       best: cardOffer(pick.offer, now),
       overBudgetByCents: pick.overBudgetByCents,
       priceLine: priceLine(pick.offer.priceCents, pick.offer.lowest30dCents),
@@ -244,7 +369,15 @@ export default async function ResultsPage({ searchParams }: Props) {
   function toRefurbCard(pick: RefurbishedPick): CardModel {
     const others = otherOffers(pick.product, pick.offer);
     return {
-      ...toCard({ ...pick, tier: null, recommended: false, overBudgetByCents: 0, fitUnknown: false }),
+      ...toCard({
+        ...pick,
+        price: pick.offer.priceCents,
+        tier: null,
+        recommended: false,
+        overBudgetByCents: 0,
+        fitUnknown: false,
+      }),
+      facts: [],
       tier: null,
       upgrade: null,
       otherOffers: others.list,
@@ -257,8 +390,8 @@ export default async function ResultsPage({ searchParams }: Props) {
     };
   }
 
-  const cards = result.picks.map(toCard);
-  const extraCards = result.extras.map(toCard);
+  const cards = result.picks.map((p) => toCard(p, true));
+  const extraCards = result.extras.map((p) => toCard(p));
   // Everything else in range, best value first, on request (the shopper decides how far to look).
   const moreShown = Math.min(result.more.length, Math.max(0, Math.floor(Number(vairak) || 0)));
   const moreCards = result.more.slice(0, moreShown).map((c) => ({
@@ -289,6 +422,10 @@ export default async function ResultsPage({ searchParams }: Props) {
         budgetMaxCents: budget?.max ?? null,
         costs,
       })
+    : [];
+  // The category's common regrets, when the data confirms one for this pick (§3 C4); two notes at most.
+  const regrets = focus
+    ? watchOutFor(focus.product, sub.id, lang).slice(0, Math.max(0, 2 - notes.length))
     : [];
   const years = (y: number) => formatNumber(Math.max(0.1, Math.ceil(y * 10) / 10));
   function noteText(n: AdviceNote): string {
@@ -553,72 +690,109 @@ export default async function ResultsPage({ searchParams }: Props) {
     });
   }
 
-  // Compare table (spec §3.4) over the category's own attributes.
+  // Compare table (spec §3.4) over the category's own attributes, in groups (docs/CONFIDENCE_PLAN.md C3).
   const compared = [...result.picks, ...result.extras];
   const columns: CompareColumn[] = compared.map((p) => ({
     name: nameOf(p.product),
     badge:
       p.overBudgetByCents > 0
         ? t("overBudget", { amount: formatEur(p.overBudgetByCents) })
-        : p.tier
-          ? tierLabel(p.tier)
-          : null,
+        : (firstRole(p.product.id) ?? null),
   }));
   const rows: CompareRow[] = [];
   const minIndex = (vals: (number | null)[]) => bestIdx(vals, (x, y) => x < y);
   const maxIndex = (vals: (number | null)[]) => bestIdx(vals, (x, y) => x > y);
-  rows.push({
-    label: t("rowPrice"),
-    values: compared.map((p) => `${formatEur(p.offer.priceCents)} · ${p.offer.storeName}`),
-    bestIndex: minIndex(compared.map((p) => p.offer.priceCents)),
-    alwaysShow: true,
-  });
-  rows.push({
-    label: t("rowAvailability"),
-    values: compared.map((p) => (p.offer.stock === "in" ? t("stockIn") : t("stockSoon"))),
-    bestIndex: null,
-  });
-  rows.push({
-    label: t("rowModel"),
-    values: compared.map((p) => `${p.product.modelCode} · ${p.product.ean ?? "—"}`),
-    bestIndex: null,
-    alwaysShow: true,
-  });
-  for (const key of sub.compare) {
+  const SIZE = new Set(["height_cm", "width_cm", "depth_cm", "cup_height_cm"]);
+  const TRUST = new Set(["warranty_months", "model_year", "repairability"]);
+  const groupOf = (key: string) =>
+    SIZE.has(key) ? t("groupSize") : TRUST.has(key) ? t("groupTrust") : t("groupDaily");
+  const modelRows: CompareRow[] = [
+    {
+      label: t("rowPrice"),
+      group: t("groupModel"),
+      values: compared.map((p) => `${formatEur(p.offer.priceCents)} · ${p.offer.storeName}`),
+      bestIndex: minIndex(compared.map((p) => p.offer.priceCents)),
+      alwaysShow: true,
+    },
+    {
+      label: t("rowAvailability"),
+      group: t("groupModel"),
+      values: compared.map((p) => (p.offer.stock === "in" ? t("stockIn") : t("stockSoon"))),
+      bestIndex: null,
+    },
+    {
+      label: t("rowModel"),
+      group: t("groupModel"),
+      values: compared.map((p) => `${p.product.modelCode} · ${p.product.ean ?? "—"}`),
+      bestIndex: null,
+      alwaysShow: true,
+    },
+  ];
+  // The category's compare rows, then what decides satisfaction and the deeper facts (rows unknown for all are left out).
+  const subKeys = new Set(subcategoryAttrs(sub.id)?.key ?? []);
+  const keys = [...new Set([...sub.compare, ...decides, ...DETAIL_ROWS.filter((k) => subKeys.has(k))])];
+  const attrRows: CompareRow[] = [];
+  for (const key of keys) {
     const raw = compared.map((p) => p.product.attributes[key]);
     if (raw.every((v) => v === undefined || v === null)) continue;
     const nums = raw.map((v) => (typeof v === "number" ? v : null));
-    const dir = betterDirection(key);
-    rows.push({
+    const dir = key === "model_year" ? "max" : betterDirection(key);
+    attrRows.push({
       label: attrLabel(key),
+      group: groupOf(key),
+      hint: glossaryLine(key, lang),
       values: raw.map((v) => formatAttr(key, v, (k) => ta(k as "yes"), enums)),
       bestIndex: dir === "min" ? minIndex(nums) : dir === "max" ? maxIndex(nums) : null,
     });
   }
+  const costRows: CompareRow[] = [];
   if (ENERGY_SUBCATEGORIES.has(sub.id)) {
     const costsRow = compared.map((p) => energyCost10yCents(p.product.kwhYear, energyPrice));
     const totals = compared.map((p) => tcoCents(p.offer.priceCents, p.product.kwhYear, energyPrice));
     if (costsRow.some((c) => c !== null)) {
-      rows.push({
+      costRows.push({
         label: t("rowEnergy10y"),
+        group: t("groupCost"),
         values: costsRow.map((c) => (c === null ? ta("unknown") : formatEur(c))),
         bestIndex: minIndex(costsRow),
       });
-      rows.push({
+      costRows.push({
         label: t("rowTco"),
+        group: t("groupCost"),
         values: totals.map((c) => (c === null ? ta("unknown") : formatEur(c))),
         bestIndex: minIndex(totals),
       });
     }
   }
-  rows.push({
-    label: t("rowRating"),
-    values: compared.map((p) =>
-      p.product.rating === null ? ta("unknown") : `${formatRating(p.product.rating / 10)}/10`,
+  const trustRows: CompareRow[] = [];
+  if (graded) {
+    const grades = compared.map((p) => gradeOf(brandTable, p.product.brand, sub.id));
+    trustRows.push({
+      label: t("rowReliability"),
+      group: t("groupTrust"),
+      values: grades.map((g) => (g === null ? ta("unknown") : t("reliabilityValue", { grade: g }))),
+      bestIndex: maxIndex(grades),
+    });
+  }
+  const reviews = compared.map((p) => reviewSummary(p.product));
+  if (reviews.some(Boolean)) {
+    trustRows.push({
+      label: t("rowReviews"),
+      group: t("groupTrust"),
+      values: reviews.map((r) =>
+        r
+          ? t("factReviews", { score: formatNumber(r.x10 / 10, 1), count: r.count, shops: r.shops })
+          : ta("unknown"),
+      ),
+      bestIndex: maxIndex(reviews.map((r) => r?.x10 ?? null)),
+    });
+  }
+  const groupOrder = [t("groupModel"), t("groupDaily"), t("groupSize"), t("groupCost"), t("groupTrust")];
+  rows.push(
+    ...[...modelRows, ...attrRows, ...costRows, ...trustRows].sort(
+      (a, b) => groupOrder.indexOf(a.group!) - groupOrder.indexOf(b.group!),
     ),
-    bestIndex: maxIndex(compared.map((p) => p.product.rating)),
-    alwaysShow: true,
-  });
+  );
 
   const excluded = Object.entries(result.excludedBy)
     .filter(([, n]) => n > 0)
@@ -628,7 +802,14 @@ export default async function ResultsPage({ searchParams }: Props) {
         count,
       }),
     );
+  // The panel tells this search's story with its own numbers (§3 A7).
+  const cov = coverage(products, urgency);
+  const matchedAnswers = candidatePool({ ...input, showUnknown: true }).length;
   const howItems = [
+    t("howStep1", { products: cov.products, shops: cov.shops }),
+    t("howStep2", { count: matchedAnswers }),
+    t("howStep3", { count: result.matchingCount }),
+    t("howStep4"),
     t("howFilters"),
     t("howRanking"),
     t("howRecommendation"),
@@ -637,6 +818,7 @@ export default async function ResultsPage({ searchParams }: Props) {
     t("howAdvice", { energy: `${formatInt(energyPrice)} ct`, water: formatEur(costs.waterCentsPerM3) }),
     t("howRefurbished"),
     t("howUnconfirmed"),
+    t("howReviews"),
     ...(excluded.length ? [t("howExcluded", { items: excluded.join("; ") })] : []),
   ];
 
@@ -647,6 +829,66 @@ export default async function ResultsPage({ searchParams }: Props) {
       : budget === null
         ? t("leadNoBudget")
         : t("lead", { count: result.matchingCount });
+
+  // Coverage line (§3 A1): how much was looked at, and when.
+  const rigaDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Europe/Riga" });
+  const updated = cov.updatedAt
+    ? t("coverageUpdated", {
+        when:
+          rigaDay(cov.updatedAt) === rigaDay(now)
+            ? t("coverageToday", {
+                time: new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "lv-LV", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "Europe/Riga",
+                }).format(cov.updatedAt),
+              })
+            : formatDayLocative(cov.updatedAt),
+      })
+    : "";
+  const coverageLine =
+    cov.products > 0
+      ? `${t("coverage", { products: cov.products, shops: cov.shops, updated, matching: result.matchingCount })}${
+          result.picks.length ? ` ${t("coverageClose")}` : ""
+        }`
+      : null;
+  // One product earned both the value and the priority role: say so (§2 rule 2).
+  const sensibleId = [...roles.entries()].find(([, v]) => v.includes("sensible"))?.[0];
+  const oneWinner =
+    !!priority &&
+    !!sensibleId &&
+    (roles.get(sensibleId) ?? []).includes("priority") &&
+    result.picks.length > 1;
+
+  // Priorities in plain sight (§3 A6): one tap re-ranks with the same URL state.
+  const prioritiesQ = sub.questions.find((q) => q.id === "priorities");
+  const activePriority = (() => {
+    const a = state.answers.priorities;
+    return Array.isArray(a) ? a[0] : typeof a === "string" ? a : undefined;
+  })();
+
+  // "Kāpēc ne šie?" (§3 A4).
+  const whyNots = whyNot({
+    products,
+    sub,
+    answers: state.answers,
+    budget,
+    urgency,
+    picks: pickCands,
+    scored: candidatePool({ ...input, showUnknown: true }),
+  });
+  const gainsOver = (from: ProductView, fromPrice: number) => (byId: string) => {
+    const by = pickCands.find((p) => p.product.id === byId);
+    if (!by) return [];
+    const d = upgradeDelta(
+      { product: from, priceCents: fromPrice },
+      { product: by.product, priceCents: by.price, reasons: by.reasons },
+      energyPrice,
+      sub.compare,
+      sub.id,
+    );
+    return d.status === "differs" ? deltaLines(d.gains, td, attrLabel, enumLabel) : [];
+  };
 
   // What a saved search is called in the wishlist: the subcategory and the answers that narrow it.
   const flowIds = new Set(sub.questions.filter((q) => q.stage === "flow").map((q) => q.id));
@@ -668,6 +910,11 @@ export default async function ResultsPage({ searchParams }: Props) {
       <div className="flex flex-col gap-[10px]">
         <Kicker>{t("kicker", { count: result.matchingCount })}</Kicker>
         <PageTitle scale="results">{t("title")}</PageTitle>
+        {coverageLine ? (
+          <p className="max-w-[760px] text-base font-semibold text-mist" data-coverage>
+            {coverageLine}
+          </p>
+        ) : null}
         <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
           {lead}
           {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
@@ -675,7 +922,46 @@ export default async function ResultsPage({ searchParams }: Props) {
             ? ` ${t("leadDominated", { count: result.picks.length })}`
             : ""}
           {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
+          {oneWinner ? ` ${t("oneWinner")}` : ""}
         </p>
+        {prioritiesQ && result.picks.length ? (
+          <nav aria-labelledby="priorities-title" className="flex flex-col gap-2">
+            <h2 id="priorities-title" className="text-[15px] font-bold text-mist">
+              {t("prioritiesTitle")}
+            </h2>
+            <ul className="flex flex-wrap gap-2">
+              {[
+                ...prioritiesQ.options.map((o) => ({
+                  value: o.value,
+                  label: o.label,
+                  href: href(sub, withAnswer(state, prioritiesQ.id, [o.value])),
+                })),
+                {
+                  value: "",
+                  label: t("prioritiesAny"),
+                  href: href(sub, withoutAnswer(state, prioritiesQ.id)),
+                },
+              ].map((o) => {
+                const active = (activePriority ?? "") === o.value;
+                return (
+                  <li key={o.value || "any"}>
+                    <Link
+                      href={o.href}
+                      aria-current={active ? "true" : undefined}
+                      data-ga-event="priority_tapped"
+                      data-ga-param-priority={o.value || "any"}
+                      className={`flex min-h-11 items-center rounded-full px-[14px] text-sm font-semibold ${
+                        active ? "bg-lime text-night" : "border border-line-30 text-mist hover:bg-lime-18"
+                      }`}
+                    >
+                      {o.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        ) : null}
         <FilterBar chips={chips} state={state} subId={sub.id} />
         <div>{saveSearch("inline")}</div>
         <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
@@ -724,6 +1010,34 @@ export default async function ResultsPage({ searchParams }: Props) {
         </section>
       ) : null}
 
+      {whyNots.length ? (
+        <details className="rounded-panel border-[1.5px] border-line-25 px-5 py-4" data-why-not>
+          <summary
+            className="flex min-h-11 cursor-pointer items-center font-heading text-lg font-semibold text-mist"
+            data-ga-event="why_not_opened"
+          >
+            {t("whyNotTitle")}
+          </summary>
+          <p className="mt-1 text-[15px] text-stone">{t("whyNotLead")}</p>
+          <ul className="mt-3 flex flex-col gap-3">
+            {whyNots.map((w) => (
+              <li
+                key={w.product.id}
+                className="flex flex-col gap-0.5 text-[15px] text-mist"
+                data-why-not-item={w.reason.kind}
+              >
+                <span className="font-semibold">
+                  <span lang="lv">{nameOf(w.product)}</span> · {formatEur(w.priceCents)}
+                </span>
+                <span className="text-stone">
+                  {whyNotText(w, textCtx, gainsOver(w.product, w.priceCents))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
       {result.hiddenUnknownCount > 0 ? (
         <p className="text-[15px] text-stone">
           {t("hiddenUnknown", { count: result.hiddenUnknownCount })}{" "}
@@ -736,7 +1050,7 @@ export default async function ResultsPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      {notes.length ? (
+      {notes.length || regrets.length ? (
         <section aria-labelledby="advice-title" className="flex flex-col gap-3">
           <SectionTitle id="advice-title">{t("worthKnowing")}</SectionTitle>
           <ul className="flex flex-col gap-3">
@@ -767,6 +1081,15 @@ export default async function ResultsPage({ searchParams }: Props) {
                 </li>
               );
             })}
+            {regrets.map((r) => (
+              <li
+                key={r}
+                className="rounded-control bg-lime-12 px-4 py-3 text-base leading-normal text-mist"
+                data-regret
+              >
+                {r}
+              </li>
+            ))}
           </ul>
         </section>
       ) : null}
@@ -869,6 +1192,21 @@ export default async function ResultsPage({ searchParams }: Props) {
           </div>
           {saveSearch("inline")}
         </Panel>
+      ) : null}
+
+      {result.picks.length ? (
+        <ConfidenceQuestion
+          subcategoryId={sub.id}
+          sessionId={sessionId}
+          labels={{
+            question: t("confidenceQ"),
+            yes: t("confidenceYes"),
+            no: t("confidenceNo"),
+            note: t("confidenceNote"),
+            send: t("confidenceSend"),
+            thanks: t("confidenceThanks"),
+          }}
+        />
       ) : null}
 
       <div className="flex flex-wrap gap-3">

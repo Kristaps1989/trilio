@@ -177,6 +177,7 @@ export function extractProducts(html: string, pageUrl: string): FeedRecord[] {
       .find(Boolean);
     const sku = clean(product.sku);
     const link = sameHostUrl(offer?.url ?? product.url, pageUrl);
+    const rating = resolve(product.aggregateRating, byId) as Node | undefined;
     records.push({
       id: sku ?? gtin ?? link,
       title: clean(product.name),
@@ -190,6 +191,10 @@ export function extractProducts(html: string, pageUrl: string): FeedRecord[] {
       mpn: clean(product.mpn) ?? sku,
       condition: condition(offer?.itemCondition ?? product.itemCondition),
       google_product_category: clean(product.category),
+      rating_value: rating && typeof rating === "object" ? clean(rating.ratingValue) : undefined,
+      rating_best: rating && typeof rating === "object" ? clean(rating.bestRating) : undefined,
+      rating_count:
+        rating && typeof rating === "object" ? clean(rating.reviewCount ?? rating.ratingCount) : undefined,
     });
   }
   // Only a single-product page: on a page with several products we cannot tell whose EAN it is.

@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { EnergyLabel } from "@/domain/catalog/media";
 import type { PriceLine } from "@/domain/pricing/omnibus";
-import { formatEur, formatEurDelta, formatRating } from "@/i18n/format";
+import { formatEur, formatEurDelta } from "@/i18n/format";
 import { buttonClass } from "@/ui/Button";
 import { EnergyBadge } from "@/ui/EnergyBadge";
 import { ProductImage } from "@/ui/ProductImage";
@@ -22,13 +22,23 @@ export type CardOffer = {
 
 export type CardModel = {
   productId: string;
+  /** Why this card is here (docs/CONFIDENCE_PLAN.md A2): earned roles, shown as pills. */
+  roles: string[];
+  roleIds: string[];
+  /** One or two sentences in the shopper's terms, first on the card (A3). Picks only. */
+  verdict: string | null;
+  /** What it is not, against the best available (A5). */
+  catchText: string | null;
+  /** How settled the price is (B6). */
+  priceNote: string | null;
+  /** Evidence: reviews, warranty, model year (B1–B3). */
+  facts: string[];
   name: string;
   modelCode: string;
   ean: string | null;
   specs: string | null;
   tier: "budget" | "mid" | "top" | null;
   recommended: boolean;
-  rating: number | null;
   best: CardOffer;
   overBudgetByCents: number;
   priceLine: PriceLine;
@@ -127,9 +137,6 @@ export async function ResultCard({ card }: { card: CardModel }) {
   if (card.refurbished) return <RefurbishedCard card={card} />;
   const t = await getTranslations("results");
   const over = card.overBudgetByCents > 0;
-  const tierLabel = card.tier
-    ? t(`tier${card.tier[0]!.toUpperCase()}${card.tier.slice(1)}` as "tierBudget")
-    : null;
 
   return (
     <article
@@ -139,24 +146,30 @@ export async function ResultCard({ card }: { card: CardModel }) {
       aria-label={card.name}
       id={`p-${card.productId}`}
       data-score={card.score}
+      data-tier={card.tier ?? "none"}
+      data-roles={card.roleIds.join(" ")}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
+      {over || card.roles.length || card.recommended ? (
+        <ul className="flex flex-wrap gap-1.5" aria-label={t("rolesLabel")}>
           {over ? (
-            <span className={`${pill} bg-over-bg text-over-text`}>
+            <li className={`${pill} bg-over-bg text-over-text`}>
               {t("overBudget", { amount: formatEur(card.overBudgetByCents) })}
-            </span>
-          ) : tierLabel ? (
-            <span className={`${pill} bg-card-pill text-night`}>{tierLabel}</span>
+            </li>
           ) : null}
-          {card.recommended ? <span className={`${pill} bg-lime text-night`}>{t("recommended")}</span> : null}
-        </div>
-        {card.rating !== null ? (
-          <span className="whitespace-nowrap pt-[5px] text-sm text-muted">
-            {t("rating", { score: formatRating(card.rating / 10) })}
-          </span>
-        ) : null}
-      </div>
+          {card.roles.map((r) => (
+            <li key={r} className={`${pill} bg-card-pill text-night`} data-role-pill>
+              {r}
+            </li>
+          ))}
+          {card.recommended ? <li className={`${pill} bg-lime text-night`}>{t("recommended")}</li> : null}
+        </ul>
+      ) : null}
+
+      {card.verdict ? (
+        <p className="text-[17px] leading-snug font-semibold" data-verdict>
+          {card.verdict}
+        </p>
+      ) : null}
 
       <ProductImage src={card.image.src} alt={card.name} fallback={card.image.fallback} size="card" />
 
@@ -187,6 +200,11 @@ export async function ResultCard({ card }: { card: CardModel }) {
               : ""}
           </span>
         </p>
+        {card.priceNote ? (
+          <p className="text-sm font-semibold text-success" data-price-note>
+            {card.priceNote}
+          </p>
+        ) : null}
         <p className="text-sm text-muted">
           {card.priceLine.kind === "lowest_now"
             ? t("lowest30Now")
@@ -222,6 +240,12 @@ export async function ResultCard({ card }: { card: CardModel }) {
         </div>
       ) : null}
 
+      {card.catchText ? (
+        <p className="text-sm leading-[1.45] text-over-text" data-catch>
+          {card.catchText}
+        </p>
+      ) : null}
+
       {card.energyLabel ? <EnergyBadge label={card.energyLabel} /> : null}
 
       {card.energy ? (
@@ -236,11 +260,11 @@ export async function ResultCard({ card }: { card: CardModel }) {
         </p>
       ) : null}
 
-      {card.whyFits.length ? (
+      {card.whyFits.length || card.facts.length ? (
         <div className="flex flex-col gap-1.5">
           <p className="sr-only">{t("whyFits")}</p>
-          <ul className="flex flex-col gap-1.5 text-[15px]">
-            {card.whyFits.map((w) => (
+          <ul className="flex flex-col gap-1.5 text-[15px]" data-proofs>
+            {[...card.whyFits, ...card.facts].map((w) => (
               <li key={w} className="flex gap-2">
                 <CheckIcon className="text-success" />
                 <span>{w}</span>

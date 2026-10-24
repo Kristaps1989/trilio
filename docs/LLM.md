@@ -69,6 +69,8 @@ Until then, products that still lack fit data are left out of the picks and show
 
 Claude is also used offline, outside the app, to draft question sets for new categories and the brand table (`data/brands.json`). A human reviews both before they ship, and the "Vērts apsvērt" card stays off until the table is marked `reviewed`.
 
+Label-only facts are never asked from the model, so a guess can never become a warranty or a model year: `warranty_months`, `model_year`, `discontinued`, `noise_class`, `condensation_cls`, `repairability`, `moisture_pct` (`NOT_EXTRACTED` in `catalog-prompt.ts`). They come from EPREL and shop spec tables only.
+
 ## Not using the model for
 
 - Filtering, scoring, picking the three options, tiers, "Trilio ieteikums", "Vērts apsvērt" and the "Vērts zināt" notes.

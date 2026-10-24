@@ -65,6 +65,7 @@ run("runExtractionJob", () => {
         temp_control: false,
         volume_l: 1.7,
         power_w: 2200,
+        auto_off: true,
       }),
       row(2, "kettle", "XJGAPS", { volume_l: 1.7 }),
       row(3, "fridge", "XJFRIDGENEW", {}),
@@ -106,7 +107,7 @@ run("runExtractionJob", () => {
     const mine = asked.filter((u) => u.includes("Testbrand"));
     expect(mine).toHaveLength(1);
     expect(mine[0]).toContain("XJGAPS");
-    expect(mine[0]).toMatch(/Report only these keys: material, temp_control, power_w\./);
+    expect(mine[0]).toMatch(/Report only these keys: material, temp_control, power_w, auto_off\./);
 
     const [complete] = await db.select().from(products).where(eq(products.id, ids.XJCOMPLETE!));
     expect(complete!.extractionModel).toBe("not-needed");

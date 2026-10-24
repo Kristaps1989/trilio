@@ -22,6 +22,11 @@ export type OfferView = {
   url: string;
   /** Lowest price of this offer in the previous 30 days, excluding the current price (Omnibus). */
   lowest30dCents: number | null;
+  /** The shop's review score in tenths of a star (46 = 4,6 ★) and how many reviews it rests on. */
+  ratingX10?: number | null;
+  ratingCount?: number | null;
+  /** When the shop last listed this offer (the coverage line's "atjaunots"). */
+  lastSeenAt?: Date | null;
 };
 
 export type ProductView = {

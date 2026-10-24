@@ -22,6 +22,8 @@ export type Tier = "budget" | "mid" | "top";
 
 export type Pick = Scored & {
   offer: OfferView;
+  /** The best offer's price in cents (the same as offer.priceCents). */
+  price: number;
   /** Null when the picks are too close in price for tiers to mean anything (§2.8). */
   tier: Tier | null;
   recommended: boolean;

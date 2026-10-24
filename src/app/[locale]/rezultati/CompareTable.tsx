@@ -1,15 +1,21 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button } from "@/ui/Button";
 
 // Spec §3.4: side-by-side grid with a sticky first column, best value per
 // row shaded (not when all equal), and a "differences only" toggle that
-// always keeps price, model and rating.
+// always keeps price and model. Rows come in groups ("Ikdienā", "Izmēri",
+// "Izmaksas", "Uzticamība un garantija", "Modelis un cena") and a feature
+// row can carry a one-line explanation (docs/CONFIDENCE_PLAN.md C3).
 
 export type CompareRow = {
   label: string;
+  /** The group heading this row sits under; rows of one group are kept together. */
+  group?: string;
+  /** "Kas tas ir?": a plain-language line about the feature. */
+  hint?: string | null;
   values: string[];
   /** Index of the best value, or null when equal / not comparable. */
   bestIndex: number | null;
@@ -92,25 +98,47 @@ export function CompareTable({ columns, rows }: { columns: CompareColumn[]; rows
               </tr>
             </thead>
             <tbody>
-              {visible.map((r) => (
-                <tr key={r.label}>
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 border-t border-card-line bg-white px-[14px] py-3 text-left text-sm font-semibold text-muted"
-                  >
-                    {r.label}
-                  </th>
-                  {r.values.map((v, i) => (
-                    <td
-                      key={i}
-                      className={`border-t border-card-line px-[14px] py-3 align-top leading-[1.4] ${
-                        r.bestIndex === i ? "bg-best font-bold" : ""
-                      }`}
+              {visible.map((r, i) => (
+                <Fragment key={r.label}>
+                  {r.group && r.group !== visible[i - 1]?.group ? (
+                    <tr>
+                      <th
+                        scope="colgroup"
+                        colSpan={columns.length + 1}
+                        className="border-t-2 border-card-line bg-card-pill px-[14px] py-2 text-left text-sm font-bold text-night"
+                      >
+                        {r.group}
+                      </th>
+                    </tr>
+                  ) : null}
+                  <tr>
+                    <th
+                      scope="row"
+                      className="sticky left-0 z-10 border-t border-card-line bg-white px-[14px] py-3 text-left text-sm font-semibold text-muted"
                     >
-                      {v}
-                    </td>
-                  ))}
-                </tr>
+                      {r.hint ? (
+                        <details>
+                          <summary className="cursor-pointer underline decoration-dotted underline-offset-2">
+                            {r.label}
+                          </summary>
+                          <span className="mt-1 block max-w-[220px] font-normal">{r.hint}</span>
+                        </details>
+                      ) : (
+                        r.label
+                      )}
+                    </th>
+                    {r.values.map((v, i) => (
+                      <td
+                        key={i}
+                        className={`border-t border-card-line px-[14px] py-3 align-top leading-[1.4] ${
+                          r.bestIndex === i ? "bg-best font-bold" : ""
+                        }`}
+                      >
+                        {v}
+                      </td>
+                    ))}
+                  </tr>
+                </Fragment>
               ))}
             </tbody>
           </table>

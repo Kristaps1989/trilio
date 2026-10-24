@@ -249,3 +249,15 @@ describe("excludedByName", () => {
       expect(excludedByName(sub!, name!), name).toBeNull();
   });
 });
+
+describe("units for the confidence facts", () => {
+  it("reads years, percentages, warranty months and pascals", () => {
+    expect(parseQuantity("2025", "year")).toBe(2025);
+    expect(parseQuantity("1999", "year")).toBeNull();
+    expect(parseQuantity("53 %", "pct")).toBe(53);
+    expect(parseQuantity("2 gadi", "months")).toBe(24);
+    expect(parseQuantity("5", "months")).toBe(60);
+    expect(parseQuantity("24 mēneši", "months")).toBe(24);
+    expect(parseQuantity("4000 Pa", "pa")).toBe(4000);
+  });
+});

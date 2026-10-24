@@ -120,6 +120,10 @@ export const offers = pgTable(
     /** Shop's own ETA in working days when the feed has one; otherwise the store default applies. */
     deliveryEtaDays: integer("delivery_eta_days"),
     url: text("url").notNull(),
+    /** The shop's own review score (schema.org aggregateRating), in tenths of a star: 46 = 4,6 ★. */
+    ratingX10: integer("rating_x10"),
+    /** How many reviews the shop's score is based on. */
+    ratingCount: integer("rating_count"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -175,6 +179,24 @@ export const waitlistLeads = pgTable("waitlist_leads", {
   source: text("source").notNull().default("free_text"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * "Vai šie trīs deva pārliecību izvēlēties?" (docs/CONFIDENCE_PLAN.md §3 E):
+ * one anonymous answer per results view. No identity, no e-mail.
+ */
+export const confidenceAnswers = pgTable(
+  "confidence_answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    searchSessionId: uuid("search_session_id").references(() => searchSessions.id, { onDelete: "set null" }),
+    subcategoryId: text("subcategory_id").notNull(),
+    confident: boolean("confident").notNull(),
+    /** "Kā?" — what was missing, at most 300 characters. */
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("confidence_answers_created_idx").on(t.createdAt)],
+);
 
 export const affiliateClicks = pgTable(
   "affiliate_clicks",

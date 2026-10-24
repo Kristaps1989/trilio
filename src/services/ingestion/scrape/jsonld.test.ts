@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GRAPH_PAGE, INLINE_PAGE } from "./fixtures";
+import { reviewScore } from "../common";
 import { decodeEntities, eanFromAttributes, extractProducts, jsonLdNodes } from "./jsonld";
 
 const URL_A = "https://shop-a.example/sadzives-tehnika/ledusskapji/ledusskapji/rf414eps4/gorenje";
@@ -112,5 +113,45 @@ describe("JSON-LD product extraction", () => {
     const records = extractProducts(`${two}<div data-ean="4242005217380"></div>`, URL_B);
     expect(records).toHaveLength(2);
     expect(records.every((r) => r.gtin === undefined)).toBe(true);
+  });
+});
+
+describe("shop reviews (docs/CONFIDENCE_PLAN.md B1)", () => {
+  const page = (rating: unknown) =>
+    `<script type="application/ld+json">${JSON.stringify({
+      "@type": "Product",
+      name: "Bosch KGN39",
+      sku: "k1",
+      brand: "Bosch",
+      aggregateRating: rating,
+      offers: {
+        "@type": "Offer",
+        price: "599",
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+      },
+    })}</script>`;
+
+  it("reads the score, the scale and the count", () => {
+    const [r] = extractProducts(
+      page({ "@type": "AggregateRating", ratingValue: "4.6", bestRating: 5, reviewCount: 128 }),
+      "https://shop.example/p",
+    );
+    expect(r).toMatchObject({ rating_value: "4.6", rating_best: "5", rating_count: "128" });
+    expect(reviewScore(r!)).toEqual({ ratingX10: 46, ratingCount: 128 });
+  });
+
+  it("drops a score without a count, out of range, or on another scale", () => {
+    expect(reviewScore({ rating_value: "4.6" })).toEqual({ ratingX10: null, ratingCount: null });
+    expect(reviewScore({ rating_value: "6", rating_count: "3" })).toEqual({
+      ratingX10: null,
+      ratingCount: null,
+    });
+    expect(reviewScore({ rating_value: "9", rating_best: "10", rating_count: "20" })).toEqual({
+      ratingX10: 45,
+      ratingCount: 20,
+    });
+    const [none] = extractProducts(page(undefined), "https://shop.example/p");
+    expect(none!.rating_value).toBeUndefined();
   });
 });

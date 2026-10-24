@@ -39,6 +39,9 @@ export const NormalisedOfferSchema = z.object({
   condition: z.enum(["new", "refurbished"]).default("new"),
   grade: z.string().nullable().default(null),
   warrantyMonths: z.number().int().nonnegative().nullable().default(null),
+  /** The shop's review score in tenths of a star (0–50) and its review count. */
+  ratingX10: z.number().int().min(0).max(50).nullable().default(null),
+  ratingCount: z.number().int().positive().nullable().default(null),
   priceCents: z.number().int().positive(),
   stock: z.enum(["in", "soon", "out"]),
   deliveryEtaDays: z.number().int().nonnegative().nullable().default(null),
@@ -48,8 +51,11 @@ export const NormalisedOfferSchema = z.object({
 export type NormalisedOffer = z.infer<typeof NormalisedOfferSchema>;
 
 /** What upsertOffers accepts: provenance and the spec table are optional (sample data, tests). */
-export type UpsertRow = Omit<NormalisedOffer, "attributeSources" | "specTable" | "eprelId"> &
-  Partial<Pick<NormalisedOffer, "attributeSources" | "specTable" | "eprelId">>;
+export type UpsertRow = Omit<
+  NormalisedOffer,
+  "attributeSources" | "specTable" | "eprelId" | "ratingX10" | "ratingCount"
+> &
+  Partial<Pick<NormalisedOffer, "attributeSources" | "specTable" | "eprelId" | "ratingX10" | "ratingCount">>;
 
 export type Rejected = { reason: string; raw: unknown };
 

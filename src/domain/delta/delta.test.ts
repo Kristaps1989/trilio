@@ -90,7 +90,7 @@ describe("why paying more makes sense (docs/UPGRADE_REASONS_PLAN.md)", () => {
     expect(d.tradeoffs).toEqual([{ kind: "number", key: "noise_db", delta: 17, better: false }]);
   });
 
-  it("a higher Trilio rating and a more reliable brand are reasons too", () => {
+  it("a more reliable brand is a reason; a rating is not (no composite score is published)", () => {
     const a = robot("Acme R1", { run_min: 120, noise_db: 60 }, 74);
     const b = product({
       name: "Miele Scout RX3",
@@ -100,7 +100,7 @@ describe("why paying more makes sense (docs/UPGRADE_REASONS_PLAN.md)", () => {
       attrs: { vacuum_type: "robot", run_min: 120, noise_db: 60 },
     });
     const d = upgradeDelta(at(a, 350), at(b, 450), 25, vacuum.compare, "vacuum");
-    expect(d.gains).toContainEqual({ kind: "rating", to: 86, better: true });
+    expect(d.gains.some((g) => (g.kind as string) === "rating")).toBe(false);
     expect(d.gains).toContainEqual({ kind: "brand", from: null, to: 5, better: true });
     expect(d.tradeoffs).toEqual([]);
   });

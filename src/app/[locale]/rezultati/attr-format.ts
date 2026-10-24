@@ -34,6 +34,8 @@ const UNIT_SUFFIX: Record<string, string> = {
   bar: "bar",
   g: "g",
   kwh: "kWh",
+  pct: "%",
+  pa: "Pa",
 };
 
 export function formatAttr(
@@ -51,6 +53,9 @@ export function formatAttr(
     if (unit === "l") return formatLitres(value);
     if (unit === "db") return formatDb(value);
     if (unit === "pcs") return formatInt(value);
+    // A year is written as is ("2025"), without a thousands separator.
+    if (unit === "year") return String(Math.round(value));
+    if (unit === "months") return `${formatInt(value)} ${ta("unitMonths")}`;
     const n = Number.isInteger(value) ? formatInt(value) : formatNumber(value);
     // "apgr./min" is Latvian; the translator has the word for the page's language.
     const suffix = unit === "rpm" ? ta("unitRpm") : unit ? UNIT_SUFFIX[unit] : undefined;

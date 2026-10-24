@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { offers, products, stores } from "@/db/schema";
+import { offers, priceSnapshots, products, stores } from "@/db/schema";
 import { excludedByName } from "@/domain/catalog/normalise";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { currentMarket } from "@/i18n/market";
@@ -25,6 +25,9 @@ type OfferRow = {
   deliveryEtaDays: number | null;
   url: string;
   lowest30dCents: number | null;
+  ratingX10: number | null;
+  ratingCount: number | null;
+  lastSeenAt: Date;
 };
 
 async function offerRows(db: Db, where: ReturnType<typeof and> | undefined): Promise<OfferRow[]> {
@@ -42,6 +45,9 @@ async function offerRows(db: Db, where: ReturnType<typeof and> | undefined): Pro
       stock: offers.stock,
       deliveryEtaDays: offers.deliveryEtaDays,
       url: offers.url,
+      ratingX10: offers.ratingX10,
+      ratingCount: offers.ratingCount,
+      lastSeenAt: offers.lastSeenAt,
       lowest30dCents: sql<number | null>`(
         select case when min(s.price_cents) filter (where s.price_cents <> ${offers.priceCents}) is null
                     then null else min(s.price_cents) end
@@ -70,6 +76,9 @@ function toOffer(r: OfferRow): OfferView {
     storeDefaultDeliveryDays: r.storeDefaultDeliveryDays,
     url: r.url,
     lowest30dCents: r.lowest30dCents === null ? null : Number(r.lowest30dCents),
+    ratingX10: r.ratingX10,
+    ratingCount: r.ratingCount,
+    lastSeenAt: r.lastSeenAt,
   };
 }
 
@@ -201,4 +210,39 @@ function assemble(productRows: ProductRow[], rows: OfferRow[]): ProductView[] {
     byProduct.set(r.productId, list);
   }
   return productRows.map((p) => toProduct(p, byProduct.get(p.id) ?? []));
+}
+
+/**
+ * The lowest new in-stock price per day across shops for each product, oldest
+ * first (the price confidence line, docs/CONFIDENCE_PLAN.md B6).
+ */
+export async function dailyLowest(
+  db: Db,
+  productIds: string[],
+  days = 90,
+): Promise<Map<string, { day: string; priceCents: number }[]>> {
+  const out = new Map<string, { day: string; priceCents: number }[]>();
+  if (productIds.length === 0) return out;
+  const rows = await db
+    .select({
+      productId: offers.productId,
+      day: sql<string>`to_char(date_trunc('day', ${priceSnapshots.capturedAt}), 'YYYY-MM-DD')`,
+      priceCents: sql<number>`min(${priceSnapshots.priceCents})`,
+    })
+    .from(priceSnapshots)
+    .innerJoin(offers, eq(offers.id, priceSnapshots.offerId))
+    .innerJoin(stores, eq(stores.id, offers.storeId))
+    .where(
+      sql`${offers.productId} in ${productIds} and ${offers.condition} = 'new' and ${stores.active} = true
+        and ${priceSnapshots.stock} <> 'out'
+        and ${priceSnapshots.capturedAt} >= now() - make_interval(days => ${days})`,
+    )
+    .groupBy(offers.productId, sql`2`)
+    .orderBy(sql`2`);
+  for (const r of rows) {
+    const list = out.get(r.productId) ?? [];
+    list.push({ day: r.day, priceCents: Number(r.priceCents) });
+    out.set(r.productId, list);
+  }
+  return out;
 }

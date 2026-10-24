@@ -1203,6 +1203,363 @@
         "lietotn",
         "\\bapp\\b"
       ]
+    },
+    "model_year": {
+      "type": "number",
+      "unit": "year",
+      "labels": [
+        "modeļa gads",
+        "izlaides gads",
+        "ražošanas gads",
+        "modeļa izlaides gads"
+      ]
+    },
+    "discontinued": {
+      "type": "boolean",
+      "labels": []
+    },
+    "programme_min": {
+      "type": "number",
+      "unit": "min",
+      "labels": [
+        "eco programmas ilgums",
+        "eco 40-60 programmas ilgums",
+        "programmas ilgums",
+        "standarta programmas ilgums",
+        "nominālās programmas ilgums"
+      ]
+    },
+    "quick_wash_min": {
+      "type": "number",
+      "unit": "min",
+      "labels": [
+        "ātrās programmas ilgums",
+        "ātrās mazgāšanas ilgums",
+        "ātrā programma"
+      ]
+    },
+    "moisture_pct": {
+      "type": "number",
+      "unit": "pct",
+      "labels": [
+        "atlikušais mitrums",
+        "atlikušā mitruma saturs",
+        "atlikušais mitrums pēc centrifūgas"
+      ]
+    },
+    "noise_class": {
+      "type": "string",
+      "labels": [
+        "trokšņa klase",
+        "trokšņa emisijas klase",
+        "akustiskā trokšņa emisijas klase"
+      ]
+    },
+    "condensation_cls": {
+      "type": "string",
+      "labels": [
+        "kondensācijas efektivitātes klase",
+        "kondensācijas klase"
+      ]
+    },
+    "repairability": {
+      "type": "string",
+      "labels": [
+        "remontējamības klase"
+      ]
+    },
+    "warranty_months": {
+      "type": "number",
+      "unit": "months",
+      "labels": [
+        "garantija",
+        "ražotāja garantija",
+        "garantijas laiks",
+        "garantijas termiņš",
+        "garantija (mēneši)"
+      ]
+    },
+    "inverter": {
+      "type": "boolean",
+      "labels": [
+        "invertora kompresors",
+        "invertora motors",
+        "kompresora tips",
+        "motora tips",
+        "inverter"
+      ],
+      "true": [
+        "invert"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "invert"
+      ]
+    },
+    "door_reversible": {
+      "type": "boolean",
+      "labels": [
+        "durvju pārkāršana",
+        "pārkarināmas durvis",
+        "maināms durvju atvēršanas virziens",
+        "durvju atvēršanas virziena maiņa",
+        "pārkarināmas durvis"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes",
+        "maināms",
+        "iespējam"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ]
+    },
+    "fast_freeze": {
+      "type": "boolean",
+      "labels": [
+        "ātrā sasaldēšana",
+        "super freeze",
+        "superfreeze",
+        "ātrās sasaldēšanas funkcija"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "super ?freeze",
+        "ātrā sasaldēšana",
+        "fast ?freeze"
+      ]
+    },
+    "water_dispenser": {
+      "type": "boolean",
+      "labels": [
+        "ūdens dozators",
+        "ūdens dispenseris",
+        "ūdens padeve"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "ūdens dozator",
+        "water dispenser"
+      ]
+    },
+    "auto_dose": {
+      "type": "boolean",
+      "labels": [
+        "automātiska mazgāšanas līdzekļa dozēšana",
+        "autodozēšana",
+        "automātiskā dozēšana"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "auto ?dos",
+        "i-?dos",
+        "autodoz"
+      ]
+    },
+    "delay_start": {
+      "type": "boolean",
+      "labels": [
+        "atliktais starts",
+        "atliktā sākuma taimeris",
+        "starta atlikšana",
+        "atliktā starta funkcija"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes",
+        "\\d"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "atlikt\\S* (starts|sākum)"
+      ]
+    },
+    "child_lock": {
+      "type": "boolean",
+      "labels": [
+        "bērnu drošības slēdzene",
+        "bērnu aizsardzība",
+        "bērnu slēdzene"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "bērnu (drošības )?slēdz"
+      ]
+    },
+    "half_load": {
+      "type": "boolean",
+      "labels": [
+        "pusslodzes funkcija",
+        "pusslodze",
+        "pusslodzes programma"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "pusslod",
+        "half ?load"
+      ]
+    },
+    "suction_pa": {
+      "type": "number",
+      "unit": "pa",
+      "labels": [
+        "sūkšanas jauda (pa)",
+        "sūkšanas spēks",
+        "sūkšanas spēks (pa)"
+      ]
+    },
+    "bin_l": {
+      "type": "number",
+      "unit": "l",
+      "labels": [
+        "putekļu tvertnes tilpums",
+        "putekļu konteinera tilpums",
+        "putekļu tvertnes ietilpība",
+        "putekļu maisa tilpums"
+      ]
+    },
+    "self_empty": {
+      "type": "boolean",
+      "labels": [
+        "pašiztukšošanās stacija",
+        "automātiskās iztukšošanas stacija"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "pašiztukšo",
+        "self[- ]?empt",
+        "auto[- ]?empty",
+        "iztukšošanas stacij"
+      ]
+    },
+    "cleaning_program": {
+      "type": "boolean",
+      "labels": [
+        "automātiska tīrīšanas programma",
+        "tīrīšanas programma",
+        "automātiskā tīrīšana"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "automātisk\\S* tīrīšan",
+        "auto ?clean"
+      ]
+    },
+    "cup_height_cm": {
+      "type": "number",
+      "unit": "cm",
+      "labels": [
+        "maksimālais krūzes augstums",
+        "krūzes augstums",
+        "maksimālais tasītes augstums"
+      ]
+    },
+    "auto_off": {
+      "type": "boolean",
+      "labels": [
+        "automātiska izslēgšanās",
+        "automātiskā izslēgšana"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "automātisk\\S* izslēg",
+        "auto[- ]?off"
+      ]
     }
   },
   "accessory": [
@@ -1249,7 +1606,15 @@
         "noise_db",
         "no_frost",
         "form",
-        "hinge"
+        "hinge",
+        "inverter",
+        "door_reversible",
+        "fast_freeze",
+        "water_dispenser",
+        "model_year",
+        "discontinued",
+        "noise_class",
+        "warranty_months"
       ],
       "fit": [
         "install",
@@ -1532,7 +1897,13 @@
         "noise_db",
         "no_frost",
         "climate_class",
-        "garage_ok"
+        "garage_ok",
+        "inverter",
+        "fast_freeze",
+        "model_year",
+        "discontinued",
+        "noise_class",
+        "warranty_months"
       ],
       "fit": [
         "form",
@@ -1643,7 +2014,19 @@
         "noise_db",
         "steam",
         "install",
-        "washer_dryer"
+        "washer_dryer",
+        "inverter",
+        "programme_min",
+        "quick_wash_min",
+        "moisture_pct",
+        "water_l_cycle",
+        "auto_dose",
+        "delay_start",
+        "child_lock",
+        "model_year",
+        "discontinued",
+        "noise_class",
+        "warranty_months"
       ],
       "fit": [
         "loading",
@@ -1756,7 +2139,14 @@
         "capacity_kg",
         "energy_class",
         "noise_db",
-        "stackable"
+        "stackable",
+        "programme_min",
+        "condensation_cls",
+        "repairability",
+        "model_year",
+        "discontinued",
+        "noise_class",
+        "warranty_months"
       ],
       "fit": [
         "dryer_type"
@@ -1819,7 +2209,9 @@
         "steam_gmin",
         "anti_calc",
         "weight_kg",
-        "power_w"
+        "power_w",
+        "auto_off",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -1863,7 +2255,8 @@
         "steamer_type",
         "steam_gmin",
         "tank_l",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -1912,7 +2305,15 @@
         "energy_class",
         "noise_db",
         "third_basket",
-        "auto_open"
+        "auto_open",
+        "programme_min",
+        "half_load",
+        "delay_start",
+        "water_l_cycle",
+        "model_year",
+        "discontinued",
+        "noise_class",
+        "warranty_months"
       ],
       "fit": [
         "install",
@@ -2019,7 +2420,8 @@
         "width_cm",
         "zones",
         "flexi_zone",
-        "booster"
+        "booster",
+        "warranty_months"
       ],
       "fit": [
         "hob_type",
@@ -2102,7 +2504,10 @@
         "pyrolytic",
         "steam",
         "wifi",
-        "energy_class"
+        "energy_class",
+        "model_year",
+        "discontinued",
+        "warranty_months"
       ],
       "fit": [
         "height_cm"
@@ -2129,7 +2534,10 @@
         "width_cm",
         "airflow_m3h",
         "noise_db",
-        "recirculation"
+        "recirculation",
+        "model_year",
+        "discontinued",
+        "warranty_months"
       ],
       "fit": [
         "hood_type",
@@ -2199,7 +2607,8 @@
         "height_cm",
         "micro_type",
         "volume_l",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [
         "install",
@@ -2280,7 +2689,12 @@
         "mop",
         "pet_brush",
         "hepa",
-        "bagless"
+        "bagless",
+        "suction_pa",
+        "bin_l",
+        "self_empty",
+        "weight_kg",
+        "warranty_months"
       ],
       "fit": [
         "vacuum_type"
@@ -2332,6 +2746,39 @@
               ]
             }
           ]
+        },
+        "mapping": {
+          "values": [
+            "lidar",
+            "camera",
+            "gyro"
+          ],
+          "rules": [
+            {
+              "value": "lidar",
+              "text": [
+                "\\blidar\\b",
+                "\\blds\\b",
+                "lāzer\\S* navigāc",
+                "laser navigation"
+              ]
+            },
+            {
+              "value": "camera",
+              "text": [
+                "vslam",
+                "kamer\\S* navigāc",
+                "camera navigation"
+              ]
+            },
+            {
+              "value": "gyro",
+              "text": [
+                "giroskop",
+                "gyroscop"
+              ]
+            }
+          ]
         }
       },
       "defaultFalse": [],
@@ -2353,7 +2800,8 @@
       "key": [
         "steam_type",
         "tank_l",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2410,7 +2858,10 @@
         "coffee_type",
         "milk_system",
         "pressure_bar",
-        "tank_l"
+        "tank_l",
+        "cleaning_program",
+        "cup_height_cm",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2498,7 +2949,8 @@
     "grinder": {
       "key": [
         "grinder_type",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2544,7 +2996,9 @@
         "material",
         "temp_control",
         "volume_l",
-        "power_w"
+        "power_w",
+        "auto_off",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2601,7 +3055,8 @@
         "blender_type",
         "power_w",
         "volume_l",
-        "heating"
+        "heating",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2655,7 +3110,8 @@
     "handblender": {
       "key": [
         "cordless",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2679,7 +3135,8 @@
       "key": [
         "foodproc_type",
         "power_w",
-        "volume_l"
+        "volume_l",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2723,7 +3180,8 @@
     "mixer": {
       "key": [
         "mixer_type",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2765,7 +3223,8 @@
     "chopper": {
       "key": [
         "volume_l",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2783,7 +3242,8 @@
     },
     "mincer": {
       "key": [
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2804,7 +3264,8 @@
     "scale": {
       "key": [
         "precision_g",
-        "max_kg"
+        "max_kg",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2823,7 +3284,8 @@
     "knife": {
       "key": [
         "cordless",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2845,7 +3307,8 @@
     "grill": {
       "key": [
         "grill_type",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2895,7 +3358,8 @@
     "toaster": {
       "key": [
         "slots",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2915,7 +3379,8 @@
     "sandwich": {
       "key": [
         "interchangeable_plates",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -2937,7 +3402,8 @@
       "key": [
         "fryer_type",
         "volume_l",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -2986,7 +3452,8 @@
     "breadmaker": {
       "key": [
         "power_w",
-        "programs"
+        "programs",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -3008,7 +3475,8 @@
         "hotplates",
         "volume_l",
         "convection",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -3032,7 +3500,8 @@
     "juicer": {
       "key": [
         "juicer_type",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -3085,7 +3554,8 @@
     "dehydrator": {
       "key": [
         "trays",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -3104,7 +3574,8 @@
     },
     "vacuumsealer": {
       "key": [
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -3127,7 +3598,8 @@
         "shaver_type",
         "wet_dry",
         "run_min",
-        "clean_station"
+        "clean_station",
+        "warranty_months"
       ],
       "fit": [
         "shaver_type"
@@ -3229,7 +3701,8 @@
       "key": [
         "trimmer_type",
         "run_min",
-        "wet_dry"
+        "wet_dry",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -3300,7 +3773,8 @@
         "power_w",
         "ionic",
         "foldable",
-        "weight_kg"
+        "weight_kg",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {},
@@ -3326,7 +3800,8 @@
         "styler_type",
         "temp_control",
         "ionic",
-        "power_w"
+        "power_w",
+        "warranty_months"
       ],
       "fit": [
         "styler_type"
@@ -3404,7 +3879,8 @@
         "brush_type",
         "pressure_sensor",
         "app",
-        "programs"
+        "programs",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {
@@ -3468,7 +3944,8 @@
       "key": [
         "epilator_type",
         "wet_dry",
-        "cordless"
+        "cordless",
+        "warranty_months"
       ],
       "fit": [],
       "enums": {

@@ -95,6 +95,7 @@ export const sampleAdapter: FeedAdapter = {
             condition,
             grade: base.g ?? null,
             warrantyMonths: warrantyMonths(base.wr),
+            ...sampleReviews(base.id, base.s, o.price_eur),
             priceCents: Math.round(o.price_eur * 100),
             stock: o.stock,
             deliveryEtaDays: null,
@@ -107,3 +108,21 @@ export const sampleAdapter: FeedAdapter = {
     return result;
   },
 };
+
+/**
+ * Made-up shop reviews for the design sample (deterministic per product and
+ * shop): most products get a few dozen, some fewer than the 10 the card needs
+ * before it shows a star line (docs/CONFIDENCE_PLAN.md B1).
+ */
+function sampleReviews(
+  id: string,
+  score: number,
+  priceEur: number,
+): { ratingX10: number; ratingCount: number } {
+  let h = Math.round(priceEur);
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 9973;
+  return {
+    ratingX10: Math.min(50, Math.max(30, Math.round(score * 5))),
+    ratingCount: (h % 9 === 0 ? 0 : 6) + (h % 60) + 1,
+  };
+}
