@@ -1,0 +1,416 @@
+{
+  "note": "Seed keywords for Google Search (docs/GROWTH_PLAN.md, Phase 0). Drafted by Claude from categories.json and knowledge.json; the owner reviews. Volumes and CPCs come from Keyword Planner once the account exists. short = the category name in ad headlines (max 20 characters).",
+  "negatives": [
+    "remonts",
+    "rezerves daļas",
+    "rezerves daļa",
+    "instrukcija",
+    "lietošanas instrukcija",
+    "darbs",
+    "vakance",
+    "noma",
+    "īre",
+    "lietots",
+    "lietota",
+    "lietoti",
+    "bezmaksas",
+    "ss.lv",
+    "kļūda",
+    "neieslēdzas",
+    "nedarbojas",
+    "servisa",
+    "serviss",
+    "filtrs",
+    "maisiņi",
+    "detaļa",
+    "bilde",
+    "zīmējums",
+    "lego"
+  ],
+  "subcategories": {
+    "fridge": {
+      "short": "Ledusskapji",
+      "keywords": [
+        "ledusskapis",
+        "ledusskapji",
+        "ledusskapis ar saldētavu",
+        "kombinētais ledusskapis",
+        "iebūvējams ledusskapis",
+        "no frost ledusskapis",
+        "ledusskapja cena",
+        "labākais ledusskapis",
+        "ledusskapis akcija",
+        "kluss ledusskapis"
+      ]
+    },
+    "freezer": {
+      "short": "Saldētavas",
+      "keywords": [
+        "saldētava",
+        "saldētavas",
+        "saldētava skapis",
+        "saldētājkaste",
+        "vertikālā saldētava",
+        "saldētava no frost",
+        "saldētavas cena"
+      ]
+    },
+    "washer": {
+      "short": "Veļas mašīnas",
+      "keywords": [
+        "veļas mašīna",
+        "veļas mašīnas",
+        "veļas mazgājamā mašīna",
+        "šaura veļas mašīna",
+        "veļas mašīna ar žāvētāju",
+        "veļas mašīnas cena",
+        "labākā veļas mašīna",
+        "iebūvējama veļas mašīna"
+      ]
+    },
+    "dryer": {
+      "short": "Veļas žāvētāji",
+      "keywords": [
+        "veļas žāvētājs",
+        "veļas žāvētāji",
+        "siltumsūkņa žāvētājs",
+        "veļas žāvējamā mašīna",
+        "žāvētāja cena"
+      ]
+    },
+    "iron": {
+      "short": "Gludekļi",
+      "keywords": [
+        "gludeklis",
+        "gludekļi",
+        "tvaika gludeklis",
+        "tvaika ģenerators gludeklis",
+        "gludekļa cena"
+      ]
+    },
+    "steamer": {
+      "short": "Tvaicētāji",
+      "keywords": [
+        "apģērbu tvaicētājs",
+        "drēbju tvaicētājs",
+        "tvaicētājs drēbēm",
+        "rokas tvaicētājs"
+      ]
+    },
+    "dish": {
+      "short": "Trauku mašīnas",
+      "keywords": [
+        "trauku mazgājamā mašīna",
+        "trauku mašīna",
+        "iebūvējama trauku mazgājamā mašīna",
+        "šaura trauku mašīna",
+        "trauku mašīnas cena",
+        "45 cm trauku mašīna"
+      ]
+    },
+    "hob": {
+      "short": "Plīts virsmas",
+      "keywords": [
+        "plīts virsma",
+        "indukcijas plīts",
+        "indukcijas virsma",
+        "keramiskā plīts virsma",
+        "elektriskā plīts",
+        "gāzes plīts"
+      ]
+    },
+    "oven": {
+      "short": "Cepeškrāsnis",
+      "keywords": [
+        "cepeškrāsns",
+        "cepeškrāsnis",
+        "iebūvējama cepeškrāsns",
+        "cepeškrāsns ar tvaiku",
+        "pirolītiskā cepeškrāsns"
+      ]
+    },
+    "hood": {
+      "short": "Tvaika nosūcēji",
+      "keywords": [
+        "tvaika nosūcējs",
+        "tvaika nosūcēji",
+        "virtuves tvaika nosūcējs",
+        "iebūvējams tvaika nosūcējs",
+        "sienas tvaika nosūcējs"
+      ]
+    },
+    "micro": {
+      "short": "Mikroviļņu krāsnis",
+      "keywords": [
+        "mikroviļņu krāsns",
+        "mikroviļņu krāsnis",
+        "iebūvējama mikroviļņu krāsns",
+        "mikroviļņu krāsns ar grilu"
+      ]
+    },
+    "vacuum": {
+      "short": "Putekļsūcēji",
+      "keywords": [
+        "putekļsūcējs",
+        "putekļsūcēji",
+        "robots putekļsūcējs",
+        "bezvadu putekļsūcējs",
+        "vertikālais putekļsūcējs",
+        "putekļsūcējs ar mazgāšanu",
+        "putekļsūcēja cena",
+        "labākais putekļsūcējs"
+      ]
+    },
+    "steamclean": {
+      "short": "Tvaika tīrītāji",
+      "keywords": [
+        "tvaika tīrītājs",
+        "tvaika mops",
+        "grīdas tvaika tīrītājs"
+      ]
+    },
+    "coffee": {
+      "short": "Kafijas automāti",
+      "keywords": [
+        "kafijas automāts",
+        "kafijas aparāts",
+        "espresso automāts",
+        "kafijas automāts ar dzirnaviņām",
+        "kapsulu kafijas automāts",
+        "kafijas automāta cena"
+      ]
+    },
+    "grinder": {
+      "short": "Kafijas dzirnaviņas",
+      "keywords": [
+        "kafijas dzirnaviņas",
+        "elektriskās kafijas dzirnaviņas",
+        "kafijas dzirnaviņas ar dzirnakmeņiem"
+      ]
+    },
+    "kettle": {
+      "short": "Tējkannas",
+      "keywords": [
+        "elektriskā tējkanna",
+        "tējkanna",
+        "tējkanna ar temperatūras regulēšanu",
+        "stikla tējkanna"
+      ]
+    },
+    "blender": {
+      "short": "Blenderi",
+      "keywords": [
+        "blenderis",
+        "kokteiļu blenderis",
+        "smūtiju blenderis",
+        "jaudīgs blenderis"
+      ]
+    },
+    "handblender": {
+      "short": "Rokas blenderi",
+      "keywords": [
+        "rokas blenderis",
+        "iegremdējamais blenderis",
+        "bezvadu rokas blenderis"
+      ]
+    },
+    "foodproc": {
+      "short": "Virtuves kombaini",
+      "keywords": [
+        "virtuves kombains",
+        "pārtikas procesors",
+        "virtuves kombains ar bļodu"
+      ]
+    },
+    "mixer": {
+      "short": "Mikseri",
+      "keywords": [
+        "mikseris",
+        "planetārais mikseris",
+        "rokas mikseris",
+        "virtuves mikseris"
+      ]
+    },
+    "chopper": {
+      "short": "Smalcinātāji",
+      "keywords": [
+        "smalcinātājs",
+        "dārzeņu smalcinātājs",
+        "elektriskais smalcinātājs"
+      ]
+    },
+    "mincer": {
+      "short": "Gaļas mašīnas",
+      "keywords": [
+        "gaļas maļamā mašīna",
+        "elektriskā gaļas mašīna",
+        "gaļasmašīna"
+      ]
+    },
+    "scale": {
+      "short": "Virtuves svari",
+      "keywords": [
+        "virtuves svari",
+        "elektroniskie virtuves svari",
+        "precīzie svari"
+      ]
+    },
+    "knife": {
+      "short": "Elektriskie naži",
+      "keywords": [
+        "elektriskais nazis",
+        "elektriskais virtuves nazis"
+      ]
+    },
+    "grill": {
+      "short": "Galda grili",
+      "keywords": [
+        "elektriskais grils",
+        "galda grils",
+        "kontaktgrils"
+      ]
+    },
+    "toaster": {
+      "short": "Tosteri",
+      "keywords": [
+        "tosteris",
+        "maizes tosteris",
+        "tosteris 4 šķēlēm"
+      ]
+    },
+    "sandwich": {
+      "short": "Sendviču tosteri",
+      "keywords": [
+        "sendviču tosteris",
+        "vafeļu panna",
+        "sviestmaižu tosteris"
+      ]
+    },
+    "airfryer": {
+      "short": "Karstā gaisa friteri",
+      "keywords": [
+        "karstā gaisa friteris",
+        "air fryer",
+        "airfryer",
+        "friteris",
+        "taukvāres katls",
+        "karstā gaisa fritieris",
+        "friteris ar diviem groziem"
+      ]
+    },
+    "breadmaker": {
+      "short": "Maizes krāsniņas",
+      "keywords": [
+        "maizes krāsns",
+        "maizes krāsniņa",
+        "maizes cepšanas mašīna"
+      ]
+    },
+    "minioven": {
+      "short": "Mini krāsnis",
+      "keywords": [
+        "mini krāsns",
+        "mini cepeškrāsns",
+        "galda krāsns"
+      ]
+    },
+    "juicer": {
+      "short": "Sulu spiedes",
+      "keywords": [
+        "sulu spiede",
+        "lēnā sulu spiede",
+        "citrusu sulu spiede"
+      ]
+    },
+    "dehydrator": {
+      "short": "Žāvētāji",
+      "keywords": [
+        "augļu žāvētājs",
+        "dārzeņu žāvētājs",
+        "pārtikas žāvētājs",
+        "dehidrators"
+      ]
+    },
+    "vacuumsealer": {
+      "short": "Vakuumpakotāji",
+      "keywords": [
+        "vakuumpakotājs",
+        "vakuuma iepakotājs",
+        "vakuuma iepakošanas aparāts"
+      ]
+    },
+    "shaver": {
+      "short": "Skuvekļi",
+      "keywords": [
+        "elektriskais skuveklis",
+        "skuveklis",
+        "bārdas skuveklis"
+      ]
+    },
+    "trimmer": {
+      "short": "Trimmeri",
+      "keywords": [
+        "bārdas trimmeris",
+        "matu griežamā mašīna",
+        "trimmeris"
+      ]
+    },
+    "hairdryer": {
+      "short": "Fēni",
+      "keywords": [
+        "fēns",
+        "matu fēns",
+        "jaudīgs fēns",
+        "fēns ar jonizāciju"
+      ]
+    },
+    "styler": {
+      "short": "Matu veidotāji",
+      "keywords": [
+        "matu taisnotājs",
+        "matu lokšķēres",
+        "matu veidotājs",
+        "fēnsuka"
+      ]
+    },
+    "toothbrush": {
+      "short": "Zobu birstes",
+      "keywords": [
+        "elektriskā zobu birste",
+        "zobu birste elektriskā",
+        "skaņas zobu birste"
+      ]
+    },
+    "epilator": {
+      "short": "Epilatori",
+      "keywords": [
+        "epilators",
+        "epilators sievietēm",
+        "bezvadu epilators"
+      ]
+    }
+  },
+  "competitors": {
+    "note": "Owner decision, 24 Oct 2026: bid on the names of Latvian price-comparison sites. Their names are keywords only, never in ad text (honesty lint), and the ads say what Trilio is, so no one is led to think it is them (CJEU C-236/08, C-323/09).",
+    "names": [
+      "kurpirkt",
+      "salidzini"
+    ],
+    "keywords": [
+      "kurpirkt",
+      "kurpirkt.lv",
+      "kurpirkt lv",
+      "kur pirkt lv",
+      "salidzini",
+      "salidzini.lv",
+      "salidzini lv",
+      "salīdzini lv",
+      "salīdzini.lv",
+      "cenu salīdzināšana",
+      "preču cenu salīdzināšana",
+      "salīdzināt cenas"
+    ],
+    "landingPath": "/izvelies",
+    "short": "Trilio"
+  }
+}
