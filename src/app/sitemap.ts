@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { allSubcategories, catalog } from "@/domain/questions/catalog";
 import { appBaseUrl } from "@/services/payments";
+import { languageAlternates } from "./[locale]/seo";
 
 // Built per request: the site URL comes from APP_URL at runtime, not at build time.
 export const dynamic = "force-dynamic";
@@ -45,5 +46,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       });
     }
   }
-  return entries;
+  // Every page exists in Latvian (no prefix) and English (/en). Each address is
+  // listed with all its language versions as hreflang alternates, as Google documents.
+  return entries.flatMap((e) => {
+    const path = e.url.slice(base.length) || "/";
+    const languages = languageAlternates(path);
+    return [
+      { ...e, alternates: { languages } },
+      { ...e, url: languages.en!, priority: (e.priority ?? 0.5) / 2, alternates: { languages } },
+    ];
+  });
 }

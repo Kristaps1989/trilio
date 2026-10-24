@@ -1,12 +1,13 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { analyticsId } from "@/config/analytics";
+import type { UiLocale } from "@/i18n/routing";
 import { ConsentSettingsButton } from "./analytics/Analytics";
 
 /** Terms, purchase terms, privacy, cookies and contacts: linked from every page's footer. */
-export async function LegalLinks() {
-  const t = await getTranslations("footer");
-  const consent = await getTranslations("consent");
+export async function LegalLinks({ locale }: { locale: UiLocale }) {
+  const t = await getTranslations({ locale, namespace: "footer" });
+  const consent = await getTranslations({ locale, namespace: "consent" });
   const links = [
     ["/noteikumi", t("terms")],
     ["/pirkuma-noteikumi", t("purchase")],

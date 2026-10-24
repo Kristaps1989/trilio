@@ -23,6 +23,7 @@ import { upsertOffers } from "@/services/ingestion/upsert";
 import { memoryEmailSender } from "@/services/notify/email";
 import { createMockProvider, mockComplete } from "@/services/payments/mock";
 import { composeOrderEmail, sendReminder, type MailDeps } from "./emails";
+import { userLang } from "./texts";
 import { runOffersJob } from "./job";
 import {
   afterAcceptedWithoutPayments,
@@ -469,6 +470,15 @@ run("offers and orders", () => {
     const fb = composeOrderEmail("feedback", order, offer, d);
     expect(fb.text).toContain(`/pasutijums/${order.feedbackToken}?atbilde=ok`);
     expect(fb.text).toContain("?atbilde=problema");
+    // In English: English copy and formats, links to the /en pages.
+    const en = composeOrderEmail("refunded", order, offer, d, { lang: "en" });
+    expect(en.text).toContain(formatEur(3900, "en"));
+    expect(en.subject).not.toBe(composeOrderEmail("refunded", order, offer, d).subject);
+    expect(composeOrderEmail("paid", order, offer, d, { lang: "en" }).text).toContain(
+      `${BASE}/en/konts/pasutijumi/${order.id}`,
+    );
+    expect(await userLang(db, null)).toBe("lv");
+    expect(await userLang(db, buyer.id)).toBe("lv");
   });
 
   it("records one feedback answer and tells the inbox about a problem", async () => {

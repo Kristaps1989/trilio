@@ -23,6 +23,7 @@ export function GET() {
     `- [Sākums](${base}/): choose by questions or check a known model`,
     `- [Kategorijas](${base}/izvelies): all appliance groups`,
     `- [Modeļa pārbaude](${base}/modelis): enter a model code to see better value alternatives`,
+    `- [English](${base}/en): every page is also in English under /en with the same path, e.g. ${base}/en/kategorija/fridge`,
     "",
     "## Category pages (best picks, updated hourly)",
     "",

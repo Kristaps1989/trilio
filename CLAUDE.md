@@ -24,7 +24,7 @@ Trilio is a web app (mobile-first) that guides a shopper through a short one-que
 7. **Shop names are configuration, not code.** The UI must not hard-code any retailer brand.
 
 ## UI and copy
-- The UI language is **Latvian**, with Lithuanian and Estonian later. Keep all copy in i18n message files from the start.
+- The UI language is **Latvian**, with **English under `/en`** (docs/LOCALES.md) and Lithuanian and Estonian later. Keep all copy in i18n message files; every new key needs its English text in `en.json`, and new category texts go in `data/categories.en.json`.
 - Latvian grammar matters. Use correct cases, a decimal comma (59,5 cm), a space before € (599 €) and a thin or normal space as the thousands separator (1 079 €).
 - Follow `docs/BRAND.md`: dark "Nakts zaļš" background, lime accent, Space Grotesk headings and Figtree body text.
 - **Accessibility:** use real `<button>`, `<a>` and `<label>` elements. Touch targets must be at least 44 px. Text contrast must be at least 4.5:1.

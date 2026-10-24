@@ -35,14 +35,16 @@ const SECTION_BY_FIRST_SEGMENT: Record<string, string> = {
 const ID = /^[a-z][a-z0-9_-]{0,40}$/;
 
 export function pageInfo(pathname: string, search = ""): PageInfo {
-  const segments = pathname.split("/").filter(Boolean);
+  const all = pathname.split("/").filter(Boolean);
+  // English pages ("/en/rezultati") count in the same section as their Latvian twin.
+  const segments = all[0] === "en" ? all.slice(1) : all;
   const first = segments[0] ?? "";
   const section = SECTION_BY_FIRST_SEGMENT[first] ?? "other";
   let subcategory: string | undefined;
   if (first === "izvelies") subcategory = segments[2];
   else if (first === "kategorija") subcategory = segments[1];
   else if (first === "rezultati") subcategory = new URLSearchParams(search).get("sub") ?? undefined;
-  const path = "/" + segments.join("/");
+  const path = "/" + all.join("/");
   return { path, section, subcategory: subcategory && ID.test(subcategory) ? subcategory : undefined };
 }
 

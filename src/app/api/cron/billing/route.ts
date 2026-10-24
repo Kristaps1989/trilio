@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const base = appBaseUrl();
   const results = await runBillingJob(db, provider, {
     email: createEmailSender(),
-    texts: billingTexts(),
+    texts: billingTexts,
     urls: {
       acceptUrl: `${base}/radars`,
       cancelUrl: `${base}/radars`,

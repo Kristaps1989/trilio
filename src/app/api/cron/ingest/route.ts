@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   // New products get attributes/tags from the extraction job (docs/LLM.md) when it is enabled.
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
   // Wishlist: one e-mail digest of price drops per subscriber (docs/PRODUCT_SPEC.md §5).
-  const wishlist = await runWishlistJob(db, { baseUrl: appBaseUrl(), texts: wishlistTexts() });
+  const wishlist = await runWishlistJob(db, { baseUrl: appBaseUrl(), texts: wishlistTexts });
   // Privacy policy retention: waitlist entries older than 12 months.
   const waitlistPurged = await purgeOldWaitlistLeads(db);
   // Rejected samples stay in the log, not in the HTTP response.

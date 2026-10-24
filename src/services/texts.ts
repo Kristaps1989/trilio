@@ -1,19 +1,22 @@
+import en from "@/i18n/messages/en.json";
 import lv from "@/i18n/messages/lv.json";
+import type { UiLocale } from "@/i18n/routing";
 import type { BillingTexts } from "@/services/billing/job";
 import type { WishlistTexts } from "@/services/wishlist/job";
 
-// Latvian copy for background jobs, read straight from the message file so
-// the jobs work from the CLI (no request context) as well as from routes.
-// Only simple {placeholder} interpolation is needed here.
+// Copy for background jobs in the recipient's language (users.locale), read
+// straight from the message files so the jobs work from the CLI (no request
+// context) as well as from routes. Only simple {placeholder} interpolation is
+// needed here.
+
+const MESSAGES = { lv, en } as const;
 
 function fill(template: string, values: Record<string, string | number> = {}): string {
   return template.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? `{${k}}`));
 }
 
-const email = lv.email;
-const wishlist = lv.wishlist;
-
-export function billingTexts(): BillingTexts {
+export function billingTexts(lang: UiLocale = "lv"): BillingTexts {
+  const { email, wishlist } = MESSAGES[lang];
   return {
     receiptSubject: (v) => fill(email.receiptSubject, v),
     receiptBody: (v) => fill(email.receiptBody, v),
@@ -23,7 +26,8 @@ export function billingTexts(): BillingTexts {
   };
 }
 
-export function wishlistTexts(): WishlistTexts {
+export function wishlistTexts(lang: UiLocale = "lv"): WishlistTexts {
+  const { email } = MESSAGES[lang];
   return {
     subjectOne: (v) => fill(email.wishlistSubjectOne, v),
     subjectMany: (v) => fill(email.wishlistSubjectMany, v),

@@ -13,7 +13,9 @@
     "nav": "Galvenā izvēlne",
     "account": "Mans konts ({initial})",
     "wishlist": "Vēlmju saraksts",
-    "admin": "Admin"
+    "admin": "Admin",
+    "switchToLabel": "This page in English",
+    "skip": "Pāriet uz saturu"
   },
   "footer": {
     "tagline": "Salīdzinām cenas partneru veikalos",
@@ -229,7 +231,8 @@
     "moreShowFirst": "Rādīt vairāk variantus ({total})",
     "moreShow": "{count, plural, one {Rādīt vēl # variantu} other {Rādīt vēl # variantus}} no {total}",
     "saveTitle": "Saglabā šo meklējumu",
-    "saveSub": "Vēlmju sarakstā redzēsi šī brīža labāko piedāvājumu un cenu vēsturi. Ja vēlies, par {price}/mēn. paziņosim e-pastā, kad cenas kritīs."
+    "saveSub": "Vēlmju sarakstā redzēsi šī brīža labāko piedāvājumu un cenu vēsturi. Ja vēlies, par {price}/mēn. paziņosim e-pastā, kad cenas kritīs.",
+    "externalEprel": "(EPREL, atveras jaunā cilnē)"
   },
   "waitlist": {
     "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",
@@ -237,7 +240,8 @@
     "notify": "Paziņot, kad pievienosim",
     "thanks": "Paldies! Paziņosim, kad pievienosim šo kategoriju.",
     "invalidEmail": "Ievadi derīgu e-pasta adresi.",
-    "consent": "E-pastu izmantosim tikai, lai paziņotu par šo kategoriju, un dzēsīsim ne vēlāk kā pēc 12 mēnešiem. Sīkāk: <privacy>Privātuma politika</privacy>."
+    "consent": "E-pastu izmantosim tikai, lai paziņotu par šo kategoriju, un dzēsīsim ne vēlāk kā pēc 12 mēnešiem. Sīkāk: <privacy>Privātuma politika</privacy>.",
+    "emailPlaceholder": "tavs@epasts.lv"
   },
   "freeText": {
     "title": "Pastāsti saviem vārdiem, kas tev vajadzīgs",
@@ -405,7 +409,8 @@
     "foldable": "Salokāms",
     "pressure_sensor": "Spiediena sensors",
     "app": "Lietotne",
-    "doors": "Durvis"
+    "doors": "Durvis",
+    "unitRpm": "apgr./min"
   },
   "model": {
     "title": "Es jau zinu modeli",
@@ -440,7 +445,8 @@
     "noProviders": "Ienākšana vēl nav iestatīta.",
     "consent": "Turpinot tu piekrīti <terms>Lietošanas noteikumiem</terms> un apliecini, ka esi iepazinies ar <privacy>Privātuma politiku</privacy>.",
     "kicker": "Konts",
-    "or": "vai"
+    "or": "vai",
+    "emailPlaceholder": "tavs@epasts.lv"
   },
   "account": {
     "title": "Konts",
@@ -457,7 +463,13 @@
     "ordersTitle": "Mani pasūtījumi",
     "ordersHint": "Preces, ko pirki no Trilio personīgā piedāvājumā: statuss, sūtījuma izsekošana un rēķini.",
     "openOrders": "Atvērt pasūtījumus",
-    "offersTitle": "Personīgi piedāvājumi"
+    "offersTitle": "Personīgi piedāvājumi",
+    "language": "E-pastu valoda",
+    "languageEn": "English",
+    "languageHint": "Šajā valodā tev rakstām e-pastus.",
+    "languageLv": "Latviešu",
+    "languageSaved": "Saglabāts.",
+    "languageSave": "Saglabāt"
   },
   "email": {
     "dropSubject": "Cena kritusi: {name} tagad {price}",
@@ -610,6 +622,12 @@
           "h": "Izmaiņas",
           "p": ["Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."]
         }
+      ],
+      "summary": [
+        "Meklēšanai konts nav vajadzīgs; tavas atbildes glabājam bez vārda un e-pasta.",
+        "Statistikas sīkdatnes (Google Analytics) liekam tikai tad, ja tu to atļauj. Trilio paša apmeklējumu skaitīšana sīkdatnes neizmanto.",
+        "Visus savus datus vari lejupielādēt un kontu dzēst pats lapā “Konts”.",
+        "Sūdzības: Datu valsts inspekcija (www.dvi.gov.lv)."
       ]
     },
     "terms": {
@@ -693,6 +711,11 @@
           "h": "Izmaiņas noteikumos",
           "p": ["Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."]
         }
+      ],
+      "summary": [
+        "Trilio palīdz izvēlēties; pērc tu no veikala, pēc veikala noteikumiem. Izņēmums ir personīgie piedāvājumi: tur pārdevējs ir Trilio.",
+        "Veikalu komisija nekad neietekmē preču secību.",
+        "Cenu paziņojumu abonementu vari atcelt jebkurā brīdī; 14 dienu laikā pēc pirmā maksājuma atmaksājam visu summu."
       ]
     },
     "cookies": {
@@ -722,6 +745,11 @@
           "name": "trilio_consent",
           "purpose": "Atceras tavu izvēli par statistikas sīkdatnēm.",
           "duration": "6 mēneši"
+        },
+        {
+          "name": "trilio_lang",
+          "purpose": "Atceras valodu, ko izvēlējies ar pārslēgu.",
+          "duration": "1 gads"
         },
         {
           "name": "_ga",
@@ -855,8 +883,17 @@
             "Ja rodas problēma, vispirms raksti uz {email}, un atbildēsim vienas darba dienas laikā. Privātpersona var vērsties arī Patērētāju tiesību aizsardzības centrā (www.ptac.gov.lv) vai ES strīdu risināšanas platformā. Līgumam piemērojami Latvijas likumi."
           ]
         }
+      ],
+      "summary": [
+        "Piegāde Latvijā vienmēr ir bez maksas.",
+        "Privātpersonas var atteikties 14 dienu laikā pēc preces saņemšanas bez iemesla, un atpakaļsūtīšana ir bez maksas.",
+        "Privātpersonām ir 2 gadu likumiskā garantija; pretenzijas risina Trilio.",
+        "Uzņēmumi saņem rēķinu uz uzņēmumu; 14 dienu atteikuma tiesības uz tiem neattiecas."
       ]
-    }
+    },
+    "summaryTitle": "Īsumā",
+    "translationNote": "Šis ir tulkojums ērtībai. Saistošā ir latviešu valodas versija.",
+    "translationLink": "Latviešu versija"
   },
   "consent": {
     "title": "Sīkdatnes statistikai",
@@ -1188,7 +1225,8 @@
     "total": "Kopā",
     "noVat": "PVN nav piemērojams (pārdevējs nav reģistrēts PVN maksātājs).",
     "paid": "Apmaksāts ar maksājumu karti vai bankas saiti.",
-    "refunded": "Summa atmaksāta pircējam."
+    "refunded": "Summa atmaksāta pircējam.",
+    "deliveryLine": "Piegāde Latvijā"
   },
   "timeline": {
     "none": "Vēl nekas nav noticis.",

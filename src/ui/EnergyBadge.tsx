@@ -4,6 +4,7 @@ import type { EnergyLabel } from "@/domain/catalog/media";
 // The EU energy class arrow with links to the official label and the product
 // information sheet in EPREL (docs/PICTURES_AND_LLM_PLAN.md §2). Colours are
 // the label's A–G scale; the dark letter keeps large-text contrast on each.
+// Both links say, for screen readers, that they open EPREL in a new tab.
 
 const CLASS_COLOURS: Record<string, string> = {
   A: "#00a651",
@@ -32,9 +33,11 @@ export async function EnergyBadge({ label }: { label: EnergyLabel }) {
       </span>
       <a href={label.labelUrl} target="_blank" rel="noopener" className={link}>
         {t("energyLabel")}
+        <span className="sr-only"> {t("externalEprel")}</span>
       </a>
       <a href={label.sheetUrl} target="_blank" rel="noopener" className={link}>
         {t("energySheet")}
+        <span className="sr-only"> {t("externalEprel")}</span>
       </a>
     </div>
   );

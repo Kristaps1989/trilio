@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db, payments, plans, subscriptions, users } from "@/db";
 import { formatDateNominative, formatEur } from "@/i18n/format";
+import { isUiLocale } from "@/i18n/routing";
 import { processPaymentEvent } from "@/services/billing/engine";
 import { createEmailSender } from "@/services/notify/email";
 import { paymentsProvider } from "@/services/payments";
@@ -38,18 +39,22 @@ export async function POST(request: Request) {
       ? await db.select().from(subscriptions).where(eq(subscriptions.id, payment.subscriptionId))
       : [];
     const [user] = sub
-      ? await db.select({ email: users.email }).from(users).where(eq(users.id, sub.userId))
+      ? await db
+          .select({ email: users.email, locale: users.locale })
+          .from(users)
+          .where(eq(users.id, sub.userId))
       : [];
     const [plan] = sub ? await db.select().from(plans).where(eq(plans.id, sub.planId)) : [];
     if (user && plan && sub) {
-      const texts = billingTexts();
-      const amount = formatEur(plan.priceCents);
+      const lang = isUiLocale(user.locale) ? user.locale : ("lv" as const);
+      const texts = billingTexts(lang);
+      const amount = formatEur(plan.priceCents, lang);
       await createEmailSender().send({
         to: user.email,
         subject: texts.receiptSubject({ amount }),
         text: texts.receiptBody({
           amount,
-          next: sub.nextBillingAt ? formatDateNominative(sub.nextBillingAt) : "—",
+          next: sub.nextBillingAt ? formatDateNominative(sub.nextBillingAt, lang) : "—",
         }),
       });
     }

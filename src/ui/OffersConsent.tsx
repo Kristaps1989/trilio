@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { setOffersOptInAction } from "@/app/velmju-saraksts/actions";
+import { setOffersOptInAction } from "@/app/[locale]/velmju-saraksts/actions";
 
 // Consent to personal offers by e-mail (docs/ADMIN_AND_OFFERS_PLAN.md §2.3,
 // §11.7): a checkbox the shopper ticks, never pre-ticked, and unticked the

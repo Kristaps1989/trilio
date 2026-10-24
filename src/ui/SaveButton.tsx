@@ -1,10 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { isUiLocale, localizedPath, type UiLocale } from "@/i18n/routing";
 import { useState, useTransition } from "react";
-import { toggleSavedAction } from "@/app/velmju-saraksts/actions";
-import type { SaveTarget } from "@/app/velmju-saraksts/save";
+import { toggleSavedAction } from "@/app/[locale]/velmju-saraksts/actions";
+import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 import { OffersConsent } from "./OffersConsent";
 
@@ -29,7 +30,7 @@ function Heart({ filled }: { filled: boolean }) {
   );
 }
 
-function signInUrl(target: SaveTarget): string {
+function signInUrl(target: SaveTarget, locale: UiLocale): string {
   const p = new URLSearchParams();
   if (target.kind === "product") p.set("product", target.productId);
   else {
@@ -38,7 +39,10 @@ function signInUrl(target: SaveTarget): string {
     p.set("label", target.label);
   }
   p.set("next", `${window.location.pathname}${window.location.search}`);
-  return `/ienakt?callbackUrl=${encodeURIComponent(`/velmju-saraksts/pievienot?${p.toString()}`)}`;
+  return localizedPath(
+    `/ienakt?callbackUrl=${encodeURIComponent(`/velmju-saraksts/pievienot?${p.toString()}`)}`,
+    locale,
+  );
 }
 
 export function SaveButton({
@@ -55,6 +59,7 @@ export function SaveButton({
   name: string;
 }) {
   const t = useTranslations("wishlist");
+  const locale = useLocale();
   const router = useRouter();
   const [saved, setSaved] = useState(initial);
   const [pending, start] = useTransition();
@@ -75,7 +80,7 @@ export function SaveButton({
       const r = await toggleSavedAction(target, next);
       if (!r.ok) {
         setSaved(!next);
-        if (r.reason === "auth") window.location.href = signInUrl(target);
+        if (r.reason === "auth") window.location.href = signInUrl(target, isUiLocale(locale) ? locale : "lv");
         return;
       }
       setAsk(r.askOffers && variant === "card");

@@ -1,7 +1,8 @@
 "use client";
 
 // Last-resort screen when the root layout itself fails, so no i18n provider
-// or stylesheet can be assumed: plain Latvian copy with inline brand styles.
+// or stylesheet can be assumed: Latvian copy with an English line under it
+// (marked lang="en" for screen readers), inline brand styles.
 
 export default function GlobalError({
   error,
@@ -34,6 +35,9 @@ export default function GlobalError({
           <p style={{ margin: 0, color: "#A9BDB9", fontSize: 18, lineHeight: 1.5 }}>
             Tā ir mūsu kļūda, nevis tava. Pamēģini vēlreiz pēc brīža.
           </p>
+          <p lang="en" style={{ margin: 0, color: "#A9BDB9", fontSize: 16, lineHeight: 1.5 }}>
+            The page could not be loaded. It is our fault, not yours — please try again in a moment.
+          </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
             <button
               type="button"
@@ -50,7 +54,7 @@ export default function GlobalError({
                 cursor: "pointer",
               }}
             >
-              Mēģināt vēlreiz
+              Mēģināt vēlreiz <span lang="en">· Try again</span>
             </button>
             {/* A full page load, not client navigation: the app shell is what failed. */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
@@ -69,7 +73,7 @@ export default function GlobalError({
                 fontWeight: 600,
               }}
             >
-              Uz sākumu
+              Uz sākumu <span lang="en">· Home</span>
             </a>
           </div>
           {error.digest ? (

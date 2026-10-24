@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import type { Invoice } from "@/db/schema";
 import { formatDateShort, formatEur } from "@/i18n/format";
 import { PrintButton } from "./PrintButton";
+import { DELIVERY_LINE } from "@/services/offers/orders";
 
 // An invoice or credit note from Trilio's series, printable (docs/ADMIN_AND_OFFERS_PLAN.md
 // §2.4, §9). Seller and buyer come from the invoice's own snapshot.
@@ -60,7 +61,7 @@ export async function InvoiceDocument({ invoice, orderNumber }: { invoice: Invoi
         <tbody>
           {invoice.lines.map((l, i) => (
             <tr key={i} className="border-b border-card-line">
-              <td className="py-2">{l.text}</td>
+              <td className="py-2">{l.text === DELIVERY_LINE ? t("deliveryLine") : l.text}</td>
               <td className="py-2 text-right">{l.quantity}</td>
               <td className="py-2 text-right">{formatEur(l.totalCents)}</td>
             </tr>

@@ -1,0 +1,1263 @@
+{
+  "meta": {
+    "title": "Trilio — the best three. No searching.",
+    "description": "Tell us what you need and we'll find the three best home appliances in our partner shops in Latvia.",
+    "tagline": "The best three. No searching.",
+    "groupDescription": "{group}: answer a few questions and get the three best options in partner shops, with prices matched by EAN and electricity costs.",
+    "modelDescription": "Enter a model or a shop link: we'll check its price in partner shops and show whether the same money buys something better."
+  },
+  "header": {
+    "signIn": "Sign in",
+    "logoAlt": "Trilio",
+    "home": "Trilio — home",
+    "nav": "Main menu",
+    "account": "My account ({initial})",
+    "wishlist": "Wishlist",
+    "admin": "Admin",
+    "switchToLabel": "Šī lapa latviešu valodā",
+    "skip": "Skip to content"
+  },
+  "footer": {
+    "tagline": "We compare prices in partner shops",
+    "back": "Back",
+    "terms": "Terms",
+    "purchase": "Purchase terms",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "contacts": "Contacts",
+    "legalNav": "Legal information"
+  },
+  "welcome": {
+    "headline": "Tell us what you need. We'll find the three best options.",
+    "help": "Help me choose",
+    "knowModel": "I already know the model",
+    "kicker": "Shopping helper · home appliances",
+    "lead": "Answer a few questions and we'll compare only the products that partner shops actually have in stock.",
+    "meta": "Takes about a minute · no sign-up · new and refurbished products are never mixed"
+  },
+  "flow": {
+    "progress": "Question {n} of {m}",
+    "continue": "Continue",
+    "why": "Why we ask:",
+    "dontKnow": "I don't know",
+    "back": "Back",
+    "pickUpTo": "Choose up to {max}",
+    "other": "Something else — I'll describe it in my own words",
+    "chooseGroup": "What are you looking for?",
+    "chooseSub": "Be more specific",
+    "groupsHint": "Choose a product group — then we'll ask a few questions.",
+    "skip": "Skip",
+    "unitCm": "cm",
+    "numberHint": "Enter a number from {min} to {max}",
+    "guideKicker": "Help me choose",
+    "stepOf": "Step {n} of {m}",
+    "next": "Next",
+    "count": "{count, plural, =0 {None available right now} one {# product} other {# products}}",
+    "matching": "{count, plural, =0 {No product matches} one {# product matches} other {# products match}}",
+    "noLimit": "No limit",
+    "noLimitSub": "we'll show every size",
+    "hasLimit": "There is a limit",
+    "hasLimitSub": "enter the largest that fits",
+    "upTo": "Up to {value} {unit}",
+    "rangeLabel": "{title}: at most",
+    "deadEnd": "No product matches these answers right now.",
+    "deadEndBack": "Change the previous answer"
+  },
+  "budget": {
+    "title": "How much do you want to spend?",
+    "upTo": "Up to {amount}",
+    "notSet": "No set budget",
+    "custom": "Another amount",
+    "customLabel": "Amount in euros",
+    "why": "We'll show only products in this price range. If fewer than three fit, we'll show up to two options at most 25% above the upper limit, clearly marked.",
+    "from": "From",
+    "to": "To",
+    "minLabel": "Lowest price, euros",
+    "maxLabel": "Highest price, euros",
+    "show": "{count, plural, =0 {No products in this range} =1 {Show 1 product} =2 {Show 2 products} =3 {Show 3 products} other {Show the best 3 of #}}",
+    "showPending": "Show products",
+    "widenBy": "Raise by:",
+    "widenByAria": "Raise the upper limit by {amount}",
+    "widen": "No product in this price range — widen it to {amount}?",
+    "histogram": "Product prices from {min} to {max}; the tallest bars show where most products are.",
+    "range": "{min}–{max}"
+  },
+  "refurbished": {
+    "title": "Show refurbished products too?",
+    "yes": "Yes, show them separately",
+    "no": "No, new only",
+    "why": "Refurbished products are always shown in a separate block, with their condition grade, warranty and saving against new."
+  },
+  "urgency": {
+    "title": "How soon do you need it?",
+    "asap": "As soon as possible",
+    "asapSub": "delivery by {date}",
+    "twoWeeks": "Within two weeks",
+    "twoWeeksSub": "delivery by {date}",
+    "noRush": "No rush",
+    "noRushSub": "save it to your wishlist to follow the price"
+  },
+  "results": {
+    "title": "The best options for you",
+    "eanNote": "We match prices by the EAN barcode, so the same model in different shops is one product.",
+    "howWeRank": "How do we choose and rank?",
+    "tierBudget": "Budget option",
+    "tierMid": "Mid-range",
+    "tierTop": "Top of the range",
+    "recommended": "Trilio's pick",
+    "rating": "Rating {score}/10",
+    "model": "Model {code} · EAN {ean}",
+    "overBudget": "{amount} over budget",
+    "lowest30Now": "Lowest price of the last 30 days right now",
+    "lowest30Was": "The lowest price in 30 days was {amount} — save the product to see when the price drops",
+    "buy": "Buy — {shop}",
+    "compare": "Compare specifications side by side",
+    "differencesOnly": "Show differences only",
+    "refurbLabel": "REFURBISHED · SHOWN SEPARATELY",
+    "refurbSameModel": "the same model as new",
+    "energy10y": "Electricity over 10 years ~{energy} · with the purchase ~{total}",
+    "energyClass": "Energy class {cls} (EU energy label database EPREL)",
+    "energyLabel": "Energy label",
+    "energySheet": "Product information sheet",
+    "changeAnswers": "Change answers",
+    "startOver": "Start over",
+    "lead": "{count, plural, =0 {No product matches your answers and budget.} =1 {One product matches your answers and budget.} other {# products match your answers and budget.}}",
+    "leadExtras": "We also show {count, plural, =1 {one option} other {# options}} slightly over budget.",
+    "leadDominated": "We recommend {count, plural, =1 {one} other {#}}: the other products in this price range cost more but are not better.",
+    "leadNone": "Try a higher budget or save this search — your wishlist will show when a product fits.",
+    "leadNoBudget": "No budget set, so we show the best at any price.",
+    "answers": "Your answers",
+    "edit": "Change",
+    "howFilters": "Filters: only products in stock (or coming soon, if you're not in a hurry) that meet every required answer and fit the price range. If a shop doesn't state a size or type that decides whether the product fits, we leave it out of the main options — you can switch them on separately.",
+    "howRanking": "Rating: the product's quality for its price. Quality is made of the brand's reliability in this category (independent consumer research, with sources), the product's specifications compared with the others in this search (energy class, noise, capacity, useful features), the shop's rating and points for each of your answers. When quality is similar, the cheaper one wins; when the price is similar, the better one. Up to three options across the price range, and we recommend a pricier one only if it is better than the cheaper ones — the card shows what the difference buys.",
+    "howRecommendation": "“Trilio's pick” appears only when one option is clearly better than the others and its sizes and type are known. If none is clearly better, there is no pick — choose by price.",
+    "howCommission": "We earn a commission on purchases in partner shops. It never affects the selection or the order.",
+    "howEnergy": "Electricity costs are for 10 years at {price}/kWh, from the EU energy label data.",
+    "howRefurbished": "Refurbished products are always shown separately, never together with new ones.",
+    "brandReliable": "Reliable brand — {grade}/5 in this category",
+    "howUnconfirmed": "If a less important specification is unknown, we say “not known” rather than guess.",
+    "delivery": "delivery by {date}",
+    "deliveryDays": "{days, plural, =1 {# working day} other {# working days}}",
+    "stockIn": "In stock",
+    "stockSoon": "Coming soon",
+    "otherShops": "In other shops",
+    "savingVsMax": "Save {amount} against the dearest shop",
+    "unconfirmed": "Not known: {items}",
+    "whyFits": "Why it fits",
+    "upgrade": "{amount} more than “{tier}”",
+    "upgradeGains": "You get: {items}",
+    "upgradeOther": "Differs: {items}",
+    "upgradeTradeoffs": "But: {items}",
+    "upgradeNoGain": "Slightly higher overall, but not clearly better in any specification.",
+    "onlyBrand": "the difference is mainly brand and design",
+    "noHistory": "Price history is still building up — you'll see it in your wishlist",
+    "refurbGrade": "Condition: {grade}",
+    "refurbWarranty": "{months, plural, =1 {#-month warranty} other {#-month warranty}}",
+    "refurbSaving": "Save {amount} against new",
+    "refurbTitle": "Refurbished products",
+    "extrasTitle": "Slightly over budget",
+    "compareTitle": "Comparison",
+    "compareClose": "Close the comparison",
+    "rowPrice": "Lowest price",
+    "rowAvailability": "Availability",
+    "rowModel": "Model / EAN",
+    "rowEnergy10y": "Electricity over 10 years",
+    "rowTco": "Total over 10 years",
+    "rowRating": "Trilio rating",
+    "rowSpecs": "Specifications",
+    "compareBestHint": "In green — the best value in the row.",
+    "radarMonthly": "€1.99",
+    "view": "View — {shop}",
+    "refurbBadge": "Refurbished",
+    "kicker": "Ready · {count, plural, =0 {no matching products} =1 {# matching product} other {# matching products}}",
+    "howTitle": "How Trilio chooses and ranks",
+    "empty": "Nothing is available with these requirements right now. Try changing an answer or the budget.",
+    "picksLabel": "Recommended options",
+    "leadSimilar": "These options cost about the same, around {amount} — choose by what matters more to you.",
+    "filters": "Your choices",
+    "priceAny": "Any price",
+    "priceRange": "{min}–{max}",
+    "priceUpTo": "up to {max}",
+    "priceFrom": "from {min}",
+    "brandsChip": "Brands",
+    "brandsAny": "Any brand",
+    "brandsOnly": "Show only these brands",
+    "brandsHint": "Chosen brands rank higher. If you tick “only these”, others won't be shown.",
+    "moreChip": "What else matters?",
+    "urgencyChip": "Delivery",
+    "refurbChip": "Refurbished products",
+    "refurbOn": "Show separately",
+    "refurbOff": "Don't show",
+    "rangeAny": "{label}: no limit",
+    "rangeUpTo": "{label}: up to {value} {unit}",
+    "numberChip": "{label}: {value} {unit}",
+    "sheetShow": "{count, plural, =0 {No results} =1 {Show 1 result} =2 {Show 2 results} =3 {Show 3 results} other {Show the best 3 of #}}",
+    "sheetCancel": "Cancel",
+    "sheetClear": "Clear",
+    "relaxTitle": "More options",
+    "relaxPrice": "{gain, plural, one {+ # option} other {+ # options}} with a budget up to {amount}",
+    "relaxPriceMin": "{gain, plural, one {+ # option} other {+ # options}} without the lower price limit",
+    "relaxRange": "{gain, plural, one {+ # option} other {+ # options}} if {label} up to {value} {unit}",
+    "relaxRangeAny": "{gain, plural, one {+ # option} other {+ # options}} without a limit: {label}",
+    "relaxBrands": "{gain, plural, one {+ # option} other {+ # options}} with other brands too",
+    "relaxUnknown": "{gain, plural, one {+ # option} other {+ # options}} if products with incomplete data are shown too",
+    "hiddenUnknown": "{count, plural, one {For # more product} other {For # more products}} the shop doesn't state all the data needed.",
+    "hiddenUnknownShow": "Show them too",
+    "unknownData": "The shop doesn't state: {items}",
+    "sameSpecs": "technically equal — only the price differs",
+    "worthKnowing": "Worth knowing",
+    "worthConsidering": "Worth considering — {brand}",
+    "worthConsideringWhy": "You didn't choose this brand, but this product is at least as good and cheaper.",
+    "seeProduct": "View",
+    "adviceEnergy": "For +{extra} — energy class {to} instead of {from}: ~{saving} less on electricity a year, paying for itself in about {years} years.",
+    "adviceCheaper": "{saving} cheaper — similar capacity{energy}.",
+    "adviceCheaperEnergy": ", energy class {to} (+{extra} a year on electricity)",
+    "adviceCheaperSame": ", the same consumption",
+    "adviceQuieter": "For +{extra} — {to} dB instead of {from} dB.",
+    "adviceBigger": "For +{extra} — +{litres} L capacity.",
+    "adviceNoFrost": "For +{extra} — no defrosting (No Frost).",
+    "adviceHeatpump": "For +{extra} — a heat-pump dryer: ~{saving} less on electricity a year, paying for itself in about {years} years.",
+    "adviceCoffee": "A capsule costs ~{capsule} a cup, beans ~{bean}. At your cups a day, an automatic coffee machine pays for itself in about {months} months.",
+    "adviceBags": "Bags cost ~{amount} a year.",
+    "adviceBagsAlt": " Bagless: {name} for {price}.",
+    "howAdvice": "“Worth knowing” notes are calculated by code from energy label data and these prices: electricity {energy}/kWh, water {water}/m³. A payback is shown only if it is shorter than the product's service life.",
+    "howExcluded": "This time the filters left out: {items}.",
+    "excludedItem": "{label} — {count}",
+    "sheetShowPending": "Show results",
+    "filterPriceTitle": "How much do you want to spend?",
+    "cheapestOption": "the cheapest option",
+    "moreTitle": "Other options in this price range",
+    "moreLead": "Sorted the same way — the best quality for the price. All match your answers.",
+    "moreShowFirst": "Show more options ({total})",
+    "moreShow": "{count, plural, one {Show # more option} other {Show # more options}} of {total}",
+    "saveTitle": "Save this search",
+    "saveSub": "Your wishlist shows the best current offer and the price history. If you like, for {price}/month we'll e-mail you when prices drop.",
+    "externalEprel": "(EPREL, opens in a new tab)"
+  },
+  "waitlist": {
+    "outOfScope": "For now we only help choose home appliances",
+    "emailLabel": "E-mail",
+    "notify": "Tell me when it's added",
+    "thanks": "Thank you! We'll let you know when we add this category.",
+    "invalidEmail": "Enter a valid e-mail address.",
+    "consent": "We'll use the e-mail only to tell you about this category, and delete it within 12 months. More: <privacy>Privacy policy</privacy>.",
+    "emailPlaceholder": "you@example.com"
+  },
+  "freeText": {
+    "title": "Tell us in your own words what you need",
+    "hint": "For example: “a quiet fridge for a student up to 500 euros” or “a robot that also mops, we have a dog”.",
+    "label": "Your description",
+    "submit": "Find",
+    "searching": "Searching…",
+    "notUnderstood": "We didn't understand what exactly you need. Choose from the list.",
+    "chooseFromList": "Choose from the list",
+    "error": "Something went wrong. Please try again.",
+    "aiNote": "To find the category, the text may be processed by artificial intelligence. Don't write personal data in it.",
+    "kicker": "Your own request"
+  },
+  "delta": {
+    "volume_l": "{delta} L capacity",
+    "noise_db_better": "{delta} dB quieter",
+    "noise_db_worse": "{delta} dB louder",
+    "capacity_kg": "{delta} kg load",
+    "place_settings": "{delta} place settings",
+    "run_min": "{delta} min run time",
+    "power_w": "{delta} W power",
+    "spin_rpm": "{delta} rpm spin",
+    "energy_class_better": "better energy class ({to})",
+    "energy_class_worse": "worse energy class ({to})",
+    "energy_cost_worse": "~{amount} more on electricity over 10 years",
+    "energy_cost_better": "~{amount} less on electricity over 10 years",
+    "gained": "{feature}",
+    "lost": "without: {feature}",
+    "feature": {
+      "no_frost": "No Frost",
+      "freezer": "freezer",
+      "mop": "mops floors",
+      "pet_brush": "pet hair brush",
+      "hepa": "HEPA filter",
+      "wifi": "phone control",
+      "steam": "steam function",
+      "pyrolytic": "pyrolytic cleaning",
+      "third_basket": "third basket",
+      "auto_open": "automatic door opening",
+      "flexi_zone": "flexible zone",
+      "booster": "booster heating",
+      "recirculation": "works without an outside vent",
+      "milk_system": "milk frothing",
+      "anti_calc": "anti-scale system",
+      "temp_control": "temperature control",
+      "heating": "heating",
+      "cordless": "cordless",
+      "bagless": "bagless",
+      "convection": "hot air",
+      "interchangeable_plates": "interchangeable plates",
+      "stackable": "can stand on a washing machine",
+      "hotplates": "hob rings",
+      "washer_dryer": "drying",
+      "garage_ok": "suits an unheated room",
+      "wet_dry": "usable with water (Wet & Dry)",
+      "clean_station": "cleaning station",
+      "ionic": "ionisation",
+      "foldable": "foldable",
+      "pressure_sensor": "pressure sensor",
+      "app": "app"
+    },
+    "airflow_m3h": "{delta} m³/h extraction",
+    "tank_l": "{delta} L water tank",
+    "zones": "{delta} cooking zones",
+    "slots": "{delta} slices",
+    "trays": "{delta} trays",
+    "pressure_bar": "{delta} bar pressure",
+    "steam_gmin": "{delta} g/min steam",
+    "weight_kg_better": "{delta} kg lighter",
+    "weight_kg_worse": "{delta} kg heavier",
+    "rating_better": "higher Trilio rating ({to}/10)",
+    "rating_worse": "lower Trilio rating ({to}/10)",
+    "brand_better": "more reliable brand in this category ({to}/5)",
+    "brand_proven": "brand with proven reliability in this category ({to}/5)",
+    "brand_worse": "less reliable brand in this category ({to}/5)",
+    "enum": "{label}: {to}"
+  },
+  "attr": {
+    "width_cm": "Width",
+    "height_cm": "Height",
+    "depth_cm": "Depth",
+    "volume_l": "Capacity",
+    "capacity_kg": "Load",
+    "place_settings": "Place settings",
+    "energy_class": "Energy class",
+    "noise_db": "Noise level",
+    "spin_rpm": "Spin speed",
+    "power_w": "Power",
+    "run_min": "Run time",
+    "no_frost": "No Frost",
+    "freezer": "Freezer",
+    "mop": "Mopping",
+    "pet_brush": "Pet hair brush",
+    "hepa": "HEPA filter",
+    "wifi": "Phone control",
+    "steam": "Steam",
+    "pyrolytic": "Pyrolysis",
+    "climate_class": "Climate class",
+    "yes": "Yes",
+    "no": "No",
+    "unknown": "—",
+    "form": "Type",
+    "hinge": "Door hinge",
+    "fridge_volume_l": "Fridge capacity",
+    "freezer_volume_l": "Freezer capacity",
+    "kwh_year": "Electricity a year",
+    "energy_kwh_100": "Electricity per 100 cycles",
+    "water_l_cycle": "Water per cycle",
+    "tank_l": "Water tank",
+    "airflow_m3h": "Extraction rate",
+    "steam_gmin": "Steam output",
+    "pressure_bar": "Pressure",
+    "zones": "Cooking zones",
+    "slots": "Slices",
+    "trays": "Trays",
+    "precision_g": "Precision",
+    "max_kg": "Max. weight",
+    "weight_kg": "Weight",
+    "programs": "Programmes",
+    "loading": "Loading",
+    "washer_dryer": "With dryer",
+    "install": "Installation",
+    "dryer_type": "Type",
+    "stackable": "On a washing machine",
+    "integration": "Integration",
+    "third_basket": "Third basket",
+    "auto_open": "Door opening",
+    "hob_type": "Type",
+    "flexi_zone": "Flexible zone",
+    "booster": "Booster",
+    "hood_type": "Installation",
+    "recirculation": "No outside vent",
+    "micro_type": "Functions",
+    "vacuum_type": "Type",
+    "bagless": "Bagless",
+    "steam_type": "Type",
+    "coffee_type": "Type",
+    "milk_system": "Milk frothing",
+    "grinder_type": "Type",
+    "iron_type": "Type",
+    "anti_calc": "Anti-scale system",
+    "steamer_type": "Type",
+    "material": "Material",
+    "temp_control": "Temperature control",
+    "blender_type": "Type",
+    "heating": "Heating",
+    "cordless": "Cordless",
+    "foodproc_type": "Type",
+    "mixer_type": "Type",
+    "grill_type": "Type",
+    "interchangeable_plates": "Interchangeable plates",
+    "fryer_type": "Type",
+    "hotplates": "Hob rings",
+    "convection": "Hot air",
+    "juicer_type": "Type",
+    "garage_ok": "Unheated room",
+    "shaver_type": "Shaver type",
+    "trimmer_type": "Trimmer type",
+    "styler_type": "Styler type",
+    "brush_type": "Brush type",
+    "epilator_type": "Epilator type",
+    "wet_dry": "Wet & Dry",
+    "clean_station": "Cleaning station",
+    "ionic": "Ionisation",
+    "foldable": "Foldable",
+    "pressure_sensor": "Pressure sensor",
+    "app": "App",
+    "doors": "Doors",
+    "unitRpm": "rpm"
+  },
+  "model": {
+    "title": "I already know the model",
+    "hint": "Enter the model name, code or paste a link from a shop.",
+    "label": "Model, code or link",
+    "submit": "Check",
+    "notFound": "We didn't find this model in partner shops. Try another code or choose with questions.",
+    "yourChoice": "Your choice",
+    "betterValue": "Better value for the same money",
+    "alternative": "Alternative",
+    "lead": "Alternatives are in the same size class and within ±12% of the price; sorted by total cost over 10 years (price + electricity).",
+    "fitTitle": "Will it fit?",
+    "fitHint": "Check the height, width and depth against the space where it will stand. For built-in appliances, the niche height decides.",
+    "dimensions": "Size: {dims}",
+    "tco": "Total over 10 years: {amount}",
+    "kicker": "Model check",
+    "placeholder": "e.g. KGN39VLCT",
+    "alternatives": "Alternatives",
+    "refurbished": "Refurbished"
+  },
+  "auth": {
+    "title": "Sign in",
+    "why": "An account lets you see your wishlist on any device.",
+    "google": "Continue with Google",
+    "emailLabel": "E-mail",
+    "emailSubmit": "Send a sign-in link",
+    "emailSent": "Link sent. Check your e-mail — it's valid for 15 minutes.",
+    "devLogin": "Development sign-in (tests only)",
+    "devSubmit": "Sign in without a password",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {email}",
+    "noProviders": "Sign-in is not set up yet.",
+    "consent": "By continuing you agree to the <terms>Terms of use</terms> and confirm you have read the <privacy>Privacy policy</privacy>.",
+    "kicker": "Account",
+    "or": "or",
+    "emailPlaceholder": "you@example.com"
+  },
+  "account": {
+    "title": "Account",
+    "export": "Download my data",
+    "exportHint": "A JSON file with your account, wishlist and saved answers (GDPR data portability).",
+    "delete": "Delete account",
+    "deleteHint": "Deletes the account, the wishlist and the subscription. This cannot be undone.",
+    "deleteConfirm": "Really delete the account and all its data?",
+    "deleteYes": "Yes, delete",
+    "deleted": "Account deleted.",
+    "kicker": "Account and data",
+    "radarHint": "Saved products, searches, price history and e-mail notifications.",
+    "openRadar": "Open the wishlist",
+    "ordersTitle": "My orders",
+    "ordersHint": "Products you bought from Trilio in a personal offer: status, parcel tracking and invoices.",
+    "openOrders": "Open orders",
+    "offersTitle": "Personal offers",
+    "language": "E-mail language",
+    "languageHint": "Our e-mails to you are in this language.",
+    "languageLv": "Latviešu",
+    "languageEn": "English",
+    "languageSaved": "Saved.",
+    "languageSave": "Save"
+  },
+  "email": {
+    "dropSubject": "Price drop: {name} now {price}",
+    "dropBody": "{name} ({shop}) now costs {price} — {delta} less than when you started following it.",
+    "similarSubject": "A similar model at a better price: {name}",
+    "similarBody": "{name} matches your requirements and costs {price} ({shop}).",
+    "view": "View the wishlist",
+    "receiptSubject": "Trilio price alerts — payment {amount}",
+    "receiptBody": "Thank you! We received {amount} for price alerts. Next payment: {next}.",
+    "failedSubject": "The price alerts payment failed",
+    "failedBody": "We could not charge {amount}. We'll try again on {next}. If your card has changed, update it on the wishlist page.",
+    "unsubscribe": "Stop alerts",
+    "wishlistSubjectOne": "Price drop: {name} now {price}",
+    "wishlistSubjectMany": "Prices dropped for {count} saved products",
+    "wishlistProductLine": "{name} — {price} ({shop}), was {old}",
+    "wishlistSearchLine": "{label}: the best option is now {name} — {price} ({shop}), was {old}",
+    "wishlistView": "View the wishlist"
+  },
+  "landing": {
+    "title": "The best {category}",
+    "titleBudget": "The best {category} up to {budget}",
+    "metaTitle": "The best {category} {year}: prices and comparison",
+    "metaTitleBudget": "The best {category} up to {budget} ({year})",
+    "related": "Other categories",
+    "productDescription": "{name}: prices {shops, plural, =1 {in # partner shop} other {in # partner shops}}, matched by the EAN barcode.",
+    "description": "The three best {category} in partner shops in Latvia by price, quality and electricity costs. Matched by EAN, no hidden advertising.",
+    "descriptionBudget": "The three best {category} up to {budget} in partner shops in Latvia. Matched by EAN, no hidden advertising.",
+    "lead": "Chosen from {count, plural, =1 {# product} other {# products}} in partner shops, updated {date}.",
+    "leadMainstream": "Three options in the most common price range up to {max}; set a higher budget to see premium models.",
+    "budgets": "By budget",
+    "upTo": "up to {budget}",
+    "allCategories": "All categories",
+    "noOffers": "No offers in this category right now.",
+    "faqTitle": "Frequently asked questions",
+    "faq1q": "How does Trilio choose the best {category}?",
+    "faq1a": "We choose products that partner shops have in stock and that fit your price range, and rank them by quality for the price: the brand's reliability in this category, the product's specifications and how well it matches your answers. Up to three options across the price range: the best value overall, the best in the cheaper part and the best in the pricier part. We recommend a pricier option only if it is better than the cheaper ones. Shop commissions do not affect the order.",
+    "faq2q": "Are the prices up to date?",
+    "faq2a": "We update prices and availability several times a day from the shops' data feeds and match them by the EAN barcode. Discounts are shown only against the lowest price of the previous 30 days.",
+    "faq3q": "What is a refurbished product?",
+    "faq3a": "A refurbished product is the same model with the same EAN that, after a return, a demonstration or a repair, has been checked and is sold again, usually well below the price of a new one. For each we show the condition grade the shop states, the warranty and how much you save against the same model new. A product bought online, refurbished too, can usually be returned within 14 days. Refurbished products are always shown in a separate block, never among the new ones, and chosen by the same criteria as your choice.",
+    "breadcrumbHome": "Home",
+    "ctaTitle": "Answer a few questions and we'll choose for you",
+    "ctaButton": "Start choosing"
+  },
+  "home": {
+    "categoriesTitle": "Popular categories",
+    "categoriesHint": "The best options in each category — no questions if you just want to look.",
+    "howTitle": "How Trilio works",
+    "how1": "Answer 3–6 questions about what really matters to you.",
+    "how2": "We compare partner shops' stock by the EAN barcode — one model, one product.",
+    "how3": "We show the best three in three price classes, refurbished separately. Shop commissions don't affect the order."
+  },
+  "legal": {
+    "updated": "In force from 24 October 2026",
+    "notSet": "—",
+    "kicker": "Legal information",
+    "summaryTitle": "In short",
+    "translationNote": "This is an English translation for convenience. The Latvian version is binding.",
+    "translationLink": "Latvian version",
+    "privacy": {
+      "title": "Privacy policy",
+      "description": "What personal data Trilio processes, why, how long it is kept and what your rights are.",
+      "intro": "This policy explains what personal data Trilio processes, why, how long we keep it and what your rights are. We process only what the service needs, and we do not sell data.",
+      "summary": [
+        "Searching needs no account; your answers are kept without your name or e-mail.",
+        "Statistics cookies (Google Analytics) are set only if you allow them. Trilio's own visit counts use no cookies.",
+        "You can download all your data and delete your account yourself on the Account page.",
+        "Complaints: the Data State Inspectorate (www.dvi.gov.lv)."
+      ],
+      "sections": [
+        {
+          "h": "Controller",
+          "p": [
+            "The controller of personal data is {company}, registration No. {regNo}, legal address: {address}. Send questions about data to {email}."
+          ]
+        },
+        {
+          "h": "What we process and why",
+          "items": [
+            "Searching without an account: answers to the questions (category, budget, requirements) are kept without a name or e-mail, to show results and understand demand. Basis: legitimate interests.",
+            "Clicks on shop links: we record which offer was opened and when, without your identity, to account for partner commissions. Basis: legitimate interests.",
+            "Account: e-mail address. If you sign in with Google, also the name, profile picture link and access tokens issued by Google. Basis: performance of a contract.",
+            "Wishlist: the products and searches you save and notification settings. For browser notifications we keep the subscription address and keys issued by the browser. Basis: performance of a contract.",
+            "Subscription and payments: plan, status, payment amounts and dates and a payment token issued by Paysera, kept encrypted. Card data is processed only by Paysera; Trilio never sees or stores it. Basis: performance of a contract and a legal obligation.",
+            "Waiting list: if you leave an e-mail under “Something else”, we keep the e-mail and the request text to tell you when the category is available. Basis: your consent, which you can withdraw at any time.",
+            "Technical logs: the hosting service briefly records IP addresses and requests for security and fixing errors. Basis: legitimate interests.",
+            "Usage statistics: only if you allow it in the cookie window, Google Analytics records the pages and sections visited and the buttons pressed, as well as the device and browser type and approximate location (country, city). Your typed text, answers and e-mail are not there. Basis: your consent, which you can withdraw at any time with the “Cookie settings” link at the bottom of the page.",
+            "Visit statistics without cookies: Trilio counts page views itself. From the IP address, the browser and a random value that changes every day we make an anonymous code that cannot be linked to you or to other days; the IP address itself is not stored. Basis: legitimate interests.",
+            "Personal offers: if you allow it, we e-mail offers for products you saved. We keep the consent, the offers sent and whether the offer page was opened (the e-mails have no tracking). Basis: your consent, which you can withdraw at any time with the link in the e-mail or in the wishlist.",
+            "Purchases from Trilio: name, phone, delivery address or parcel locker, company details (if buying for a company), payment status, parcel number and invoices. Basis: performance of a contract and a legal obligation (accounting)."
+          ]
+        },
+        {
+          "h": "Artificial intelligence",
+          "p": [
+            "If you describe what you are looking for under “Something else”, the text may be sent to Anthropic's Claude model to find the product category. The log keeps only the time and size of the request, not the text. Please don't write personal data there.",
+            "The order of products and the prices are calculated by ordinary code, not by artificial intelligence."
+          ]
+        },
+        {
+          "h": "Who we share data with",
+          "p": ["Data is processed only by these service providers and only as far as their task requires:"],
+          "items": [
+            "Railway: server and database hosting.",
+            "Cloudflare: domain name system (DNS).",
+            "Google: signing in with a Google account, if you choose it.",
+            "Google Ireland Limited: usage statistics (Google Analytics), only with your consent.",
+            "Resend: sending e-mails (EU region).",
+            "Paysera LT, UAB: payment processing.",
+            "Anthropic: finding the category from free text, as described above.",
+            "Browser notification services (for example Google, Mozilla, Apple): delivering browser notifications, if you switch them on.",
+            "Couriers (Omniva, DPD, Venipak, Latvijas Pasts): name, phone and delivery address, to deliver a product you bought."
+          ],
+          "after": [
+            "Partner shops receive only what you send them yourself by opening their page. We do not pass on your e-mail or search history."
+          ]
+        },
+        {
+          "h": "Transfers outside the EU",
+          "p": [
+            "Some service providers (Railway, Cloudflare, Google, Resend, Anthropic) are US companies. We transfer data to them on the basis of the EU–US Data Privacy Framework or standard contractual clauses approved by the European Commission."
+          ]
+        },
+        {
+          "h": "How long we keep data",
+          "items": [
+            "Account data and wishlist: while the account is active. A removed product or search is deleted at once.",
+            "Deleting the account is final: we delete the account, the wishlist, the subscription and payment records in Trilio's system. Accounting documents for payments made are kept by Paysera and our accountant for the period required by law (5 years).",
+            "Waiting list: until the category launches, but no longer than 12 months.",
+            "Usage statistics in Google Analytics: 14 months.",
+            "Search answers and click statistics: without an account they are not linked to you, and we use them for statistics.",
+            "Sign-in links in e-mails: 15 minutes.",
+            "Visit statistics: raw records 35 days, then only totals per day and page.",
+            "Purchases and invoices: invoices are kept for the period required by law (5 years), also after the account is deleted; when the account is deleted, the phone number and delivery notes are erased."
+          ]
+        },
+        {
+          "h": "Your rights",
+          "p": [
+            "You have the right to access your data, correct it, delete it, restrict its processing, object to processing, receive it in a portable format and withdraw consent at any time.",
+            "On the Account page you can download all your data and delete the account yourself. Send other requests to {email}, and we'll answer within a month.",
+            "If you believe your data has been processed unlawfully, you can complain to the Data State Inspectorate (www.dvi.gov.lv)."
+          ]
+        },
+        {
+          "h": "Cookies",
+          "p": [
+            "Cookies the service needs are always used. Google Analytics statistics cookies are set only with your permission. There are no advertising cookies. More in the cookie policy."
+          ]
+        },
+        {
+          "h": "Children",
+          "p": [
+            "The service is not intended for children under 13. Only adults can take out a paid subscription."
+          ]
+        },
+        {
+          "h": "Changes",
+          "p": ["We'll e-mail account holders about significant changes to this policy."]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms of use",
+      "description": "Terms of the Trilio service and the price alerts subscription.",
+      "intro": "These terms apply to the use of {site} and the price alerts subscription. Please read them before creating an account or paying.",
+      "summary": [
+        "Trilio helps you choose; you buy from the shop, under the shop's terms. Personal offers are the exception: there Trilio is the seller.",
+        "Shop commissions never affect the order of products.",
+        "The price alerts subscription can be cancelled at any time; within 14 days of the first payment you get a full refund."
+      ],
+      "sections": [
+        {
+          "h": "Who we are",
+          "p": [
+            "The service is provided by {company}, registration No. {regNo}, legal address: {address}, e-mail: {email}."
+          ]
+        },
+        {
+          "h": "What Trilio does",
+          "p": [
+            "Trilio helps you choose home appliances: we ask a few questions and show the most suitable offers from partner shops.",
+            "Trilio does not sell products itself: you make the purchase contract with the shop, and the shop's terms, prices, delivery, warranty and right of withdrawal apply. The exception is personal offers we send to those who allowed it: there the seller is Trilio, and the Purchase terms (/pirkuma-noteikumi) apply."
+          ]
+        },
+        {
+          "h": "Accuracy of prices and information",
+          "p": [
+            "Prices, stock and delivery times come from the shops' data and are updated several times a day, but they may change sooner in the shop. The price on the shop's page at the time of purchase is decisive.",
+            "Discounts are compared with the lowest price of the previous 30 days."
+          ]
+        },
+        {
+          "h": "How we earn",
+          "p": [
+            "Some links to shops are partner links. If you buy a product after following one, the shop may pay us a commission. It costs you nothing.",
+            "The commission does not affect the order of products. The order depends only on your answers, the price and the product's properties, as described in “How do we choose and rank?”.",
+            "The second source of income is the price alerts subscription."
+          ]
+        },
+        {
+          "h": "Account",
+          "p": [
+            "An account is needed for the wishlist and price alerts. You are responsible for the security of your e-mail or Google account. You can delete the account at any time on the Account page."
+          ]
+        },
+        {
+          "h": "Price alerts subscription",
+          "items": [
+            "The price and the period (month or year) are shown before payment. Prices are in euros.",
+            "The subscription renews automatically every period, and the fee is charged to the same card until you cancel.",
+            "You can cancel at any time under “Wishlist”, “Subscription and payment”. Alerts keep working until the end of the paid period, and the next payment is not charged. A started period is not refunded, except under the right of withdrawal.",
+            "If a renewal payment fails, we try again after 1, 3 and 5 days. If it still fails, the subscription ends.",
+            "We'll announce price changes at least 30 days in advance. The new price applies only to the next period, and you can cancel before it starts.",
+            "Payments are processed by Paysera LT, UAB. Trilio never sees or stores card details."
+          ]
+        },
+        {
+          "h": "Right of withdrawal (14 days)",
+          "p": [
+            "As a consumer you have the right to withdraw from the subscription within 14 days of the first payment without giving a reason. Write to {email} from the account's e-mail address. No form is required; a clear statement is enough.",
+            "We'll refund the full amount paid within 14 days to the same card. You can stop further periods at any time as described above."
+          ]
+        },
+        {
+          "h": "Fair use",
+          "p": [
+            "Don't use Trilio for automated data collection, to disrupt the service or for unlawful purposes. In case of a breach we may restrict access."
+          ]
+        },
+        {
+          "h": "Liability",
+          "p": [
+            "We collect the information carefully but do not guarantee that it is always complete and current. We are not responsible for the shops' products, delivery or services.",
+            "Our liability to you does not exceed the subscription fees paid in the last 12 months, except where the law does not allow liability to be limited. These terms do not limit your consumer rights."
+          ]
+        },
+        {
+          "h": "Disputes",
+          "p": [
+            "We settle disputes by negotiation; write to {email}.",
+            "A consumer can also turn to the Consumer Rights Protection Centre (www.ptac.gov.lv), including its Consumer Dispute Resolution Commission. The laws of the Republic of Latvia apply."
+          ]
+        },
+        {
+          "h": "Changes to the terms",
+          "p": ["We'll e-mail account holders about significant changes at least 30 days in advance."]
+        }
+      ]
+    },
+    "cookies": {
+      "title": "Cookie policy",
+      "description": "Which cookies Trilio uses and why.",
+      "intro": "Trilio always uses only the cookies the service cannot work without. Google Analytics statistics cookies are set only if you allow it in the cookie window. We use no advertising cookies.",
+      "tableName": "Cookie",
+      "tablePurpose": "Purpose",
+      "tableDuration": "Duration",
+      "rows": [
+        {
+          "name": "authjs.session-token",
+          "purpose": "Remembers that you are signed in.",
+          "duration": "30 days"
+        },
+        {
+          "name": "authjs.csrf-token",
+          "purpose": "Protects sign-in against forged requests.",
+          "duration": "Until the browser closes"
+        },
+        {
+          "name": "authjs.callback-url",
+          "purpose": "Remembers which page to return to after signing in.",
+          "duration": "Until the browser closes"
+        },
+        {
+          "name": "trilio_consent",
+          "purpose": "Remembers your choice about statistics cookies.",
+          "duration": "6 months"
+        },
+        {
+          "name": "trilio_lang",
+          "purpose": "Remembers the language you chose with the switch.",
+          "duration": "1 year"
+        },
+        {
+          "name": "_ga",
+          "purpose": "Google Analytics: tells visitors apart in statistics. Only with your permission.",
+          "duration": "2 years"
+        },
+        {
+          "name": "_ga_<ID>",
+          "purpose": "Google Analytics: keeps the state of the visit. Only with your permission.",
+          "duration": "2 years"
+        }
+      ],
+      "sections": [
+        {
+          "h": "Names on a secure connection",
+          "p": [
+            "On trilio.lv these cookie names are prefixed with “__Secure-” or “__Host-”. This means they are sent only over an encrypted connection."
+          ]
+        },
+        {
+          "h": "Browser notifications",
+          "p": [
+            "If you switch browser notifications on, the browser registers a Trilio service worker. It is not a cookie. You can switch notifications off on the wishlist page or in the browser settings."
+          ]
+        },
+        {
+          "h": "Shop pages",
+          "p": ["When you open a shop's page, the shop's cookie policy applies."]
+        },
+        {
+          "h": "How to manage cookies",
+          "p": [
+            "You can change your choice about statistics cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics cookies are deleted.",
+            "You can also delete or block cookies in the browser settings. If you delete the sign-in cookie, you will need to sign in again."
+          ]
+        }
+      ]
+    },
+    "contacts": {
+      "title": "Contacts and company details",
+      "description": "Trilio's company details and how to reach us.",
+      "intro": "Trilio is a home-appliance choice and price comparison service.",
+      "company": "Company",
+      "regNo": "Registration No.",
+      "vatNo": "VAT No.",
+      "address": "Legal address",
+      "email": "E-mail",
+      "sections": [
+        {
+          "h": "Contact",
+          "p": ["For questions, withdrawals and data requests write to {email}. We answer on working days."]
+        },
+        {
+          "h": "For shops",
+          "p": [
+            "If you are a shop and would like to offer a product data feed or join the partner programme, write to {email}."
+          ]
+        }
+      ]
+    },
+    "purchase": {
+      "title": "Purchase terms",
+      "description": "Terms for products Trilio sells itself in personal offers: price, delivery, right of withdrawal, warranty for private persons and companies.",
+      "intro": "These terms apply to products that {company} sells itself when you accept a personal offer on {site}. Products from partner shops are covered by the shops' terms.",
+      "summary": [
+        "Delivery in Latvia is always free.",
+        "Private buyers can withdraw within 14 days of receiving the product, without a reason, and the return is free.",
+        "Private buyers get the 2-year legal guarantee; warranty claims go to Trilio.",
+        "Companies get an invoice to the company; the 14-day withdrawal does not apply to them."
+      ],
+      "sections": [
+        {
+          "h": "Seller",
+          "p": [
+            "The seller is {company}, registration No. {regNo}, legal address: {address}, e-mail: {email}. The invoice is issued by the seller."
+          ]
+        },
+        {
+          "h": "Offer and contract",
+          "items": [
+            "We send personal offers only to those who allowed it. An offer is valid until the date stated in it or until the product's stock runs out.",
+            "The contract is concluded when the order is paid. We send the confirmation and the invoice to the account's e-mail.",
+            "Prices are in euros. If the seller is VAT-registered, VAT is included in the price; otherwise VAT does not apply.",
+            "The saving is compared with the lowest price in partner shops over the previous 30 days and is stated only if our price is lower."
+          ]
+        },
+        {
+          "h": "Payment",
+          "p": [
+            "Payments are processed by Paysera LT, UAB: payment card, bank link, Apple Pay or Google Pay, where available. Trilio never sees or stores card details."
+          ]
+        },
+        {
+          "h": "Delivery",
+          "items": [
+            "Delivery in Latvia is always free.",
+            "Large appliances are delivered by courier to the door; if carrying in is needed, say so in the order. Smaller appliances can also be collected from an Omniva parcel locker.",
+            "The delivery time is stated in working days before payment. The courier calls before delivery. You can see the parcel status and the tracking link under “My orders”.",
+            "Check the packaging when you receive the product. If it is damaged, note it on the courier's document and write to us."
+          ]
+        },
+        {
+          "h": "Private persons: right of withdrawal",
+          "items": [
+            "You have the right to withdraw from the purchase within 14 days of the day you receive the product, without giving a reason.",
+            "You can withdraw with the “Withdraw from the purchase” button on the order page or by writing to {email}.",
+            "The return within Latvia is free: we arrange the courier. Return the product within 14 days of withdrawing.",
+            "We refund the money within 14 days of receiving the withdrawal at the latest, but may hold it until we receive the product back. We refund using the same payment method.",
+            "You are liable for a reduction in the product's value if you used it more than needed to establish its nature, characteristics and functioning."
+          ]
+        },
+        {
+          "h": "Private persons: guarantee",
+          "p": [
+            "The product has the 2-year legal guarantee against non-conformity with the contract. If the offer states a longer manufacturer's warranty, it applies in addition. Send claims to {email}: we handle them, not the distributor."
+          ]
+        },
+        {
+          "h": "Companies",
+          "items": [
+            "The invoice is made out to the company with the details you enter in the order.",
+            "The 14-day consumer right of withdrawal does not apply to companies.",
+            "The warranty is the manufacturer's warranty stated in the offer. Send claims to {email}: we handle them.",
+            "The seller's liability for indirect losses is excluded as far as the law allows."
+          ]
+        },
+        {
+          "h": "Refurbished products",
+          "p": [
+            "For a refurbished product we state the condition grade, the warranty and the saving against new. Before paying you confirm that you know the product's condition. New and refurbished products are never mixed."
+          ]
+        },
+        {
+          "h": "Disputes",
+          "p": [
+            "If there is a problem, first write to {email}, and we'll answer within one working day. A private person can also turn to the Consumer Rights Protection Centre (www.ptac.gov.lv) or the EU dispute resolution platform. Latvian law applies to the contract."
+          ]
+        }
+      ]
+    }
+  },
+  "consent": {
+    "title": "Cookies for statistics",
+    "text": "Do you allow Google Analytics cookies? They help us see which sections and buttons are used, so we can improve Trilio. Without your permission they are not loaded, and the site works the same. More: <policy>cookie policy</policy>.",
+    "accept": "Allow",
+    "reject": "Don't allow",
+    "settings": "Cookie settings"
+  },
+  "errors": {
+    "notFoundKicker": "404 · PAGE NOT FOUND",
+    "notFoundTitle": "There is no such page",
+    "notFoundText": "The link may be out of date or the address may have a typo. Start again or choose a category.",
+    "errorKicker": "ERROR",
+    "errorTitle": "The page could not be loaded",
+    "errorText": "This is our fault, not yours. Try again in a moment — if it keeps happening, write to us.",
+    "retry": "Try again",
+    "home": "Home",
+    "categories": "Choose a category",
+    "code": "Error code: {digest}"
+  },
+  "productType": {
+    "fridge": "fridge",
+    "freezer": "freezer",
+    "washer": "washing machine",
+    "dryer": "tumble dryer",
+    "dish": "dishwasher",
+    "hob": "hob",
+    "oven": "oven",
+    "hood": "cooker hood",
+    "micro": "microwave",
+    "vacuum": "vacuum cleaner",
+    "steamclean": "steam cleaner",
+    "coffee": "coffee machine",
+    "grinder": "coffee grinder",
+    "iron": "iron",
+    "steamer": "garment steamer",
+    "kettle": "kettle",
+    "blender": "blender",
+    "handblender": "hand blender",
+    "foodproc": "food processor",
+    "mixer": "mixer",
+    "chopper": "chopper",
+    "mincer": "meat mincer",
+    "scale": "kitchen scale",
+    "knife": "electric knife",
+    "grill": "table grill",
+    "toaster": "toaster",
+    "sandwich": "sandwich toaster",
+    "airfryer": "air fryer",
+    "breadmaker": "bread maker",
+    "minioven": "mini oven",
+    "juicer": "juicer",
+    "dehydrator": "food dehydrator",
+    "vacuumsealer": "vacuum sealer"
+  },
+  "wishlist": {
+    "cancelConfirm": "Really cancel? Alerts keep working until {date}, then stop. The wishlist stays.",
+    "cancelNo": "No, keep it",
+    "cancelSub": "Cancel the subscription",
+    "cancelYes": "Yes, cancel",
+    "canceledBody": "Nothing was charged. You can try again.",
+    "canceledTitle": "Payment cancelled",
+    "cardBadge": "CARD",
+    "expired": "The subscription has ended. Switch alerts on again to continue.",
+    "method": "Card {label}, {plan}",
+    "noSubscription": "No active subscription.",
+    "pastDue": "The payment failed — we'll try again on {date}. Check your card.",
+    "pay": "Pay",
+    "paymentsOff": "Payments are not switched on yet. Leave your e-mail and we'll tell you when price alerts are available. The wishlist already works.",
+    "planKicker": "Price alerts · payment",
+    "resumeSub": "Resume the subscription",
+    "validUntil": "valid until {date}",
+    "waitlistDone": "Thank you! We'll write to {email} when price alerts are available.",
+    "waitlistEmail": "E-mail",
+    "waitlistError": "Could not save. Check the e-mail and try again.",
+    "waitlistJoin": "Tell me",
+    "willEnd": "The subscription ends on {date}",
+    "planTitle": "Price alerts",
+    "planMonthly": "{price} a month",
+    "planAnnual": "{price} a year",
+    "planAnnualSub": "save 50%",
+    "payNote": "Card details are handled by Paysera — Trilio never sees or stores them.",
+    "sendTo": "We'll send alerts to {email}.",
+    "legalNote": "The subscription renews automatically at the same price until you cancel. You can cancel at any time, and alerts keep working until the end of the paid period. Within 14 days of the first payment you can ask for a full refund. By paying you agree to the <terms>Terms of use</terms>.",
+    "subscription": "Subscription and payment",
+    "title": "Wishlist",
+    "kicker": "Saved: {count}",
+    "sub": "Saved products and searches with the best current offer and the price history.",
+    "signedOutTitle": "Your wishlist",
+    "signedOut": "Sign in to save products and searches and see them on any device.",
+    "signIn": "Sign in",
+    "empty": "Nothing saved yet. Tap “Save” on a product or “Save search” on the results page.",
+    "findProducts": "Choose a product",
+    "searchesTitle": "Saved searches",
+    "productsTitle": "Saved products",
+    "searchBest": "The best option now",
+    "searchCount": "{count, plural, one {# product matches} other {# products match}}",
+    "searchNone": "Nothing matches right now. Open the results to change the answers or the price.",
+    "openResults": "View results",
+    "changeDown": "{amount} cheaper than when saved",
+    "changeUp": "{amount} dearer than when saved",
+    "changeSame": "the price hasn't changed since you saved it",
+    "outOfStock": "Not available right now",
+    "buy": "To {shop}",
+    "history": "Price over 90 days",
+    "low": "lowest",
+    "high": "highest",
+    "save": "Save",
+    "saved": "Saved",
+    "saveSearch": "Save search",
+    "searchSaved": "Search saved",
+    "notifyTitle": "E-mail alerts",
+    "notifyOffTitle": "Get an e-mail when prices drop",
+    "notifyOffBody": "Once a day, one summary of price drops for your saved products and searches. No advertising.",
+    "notifyCta": "Switch alerts on · {price}/month",
+    "notifyOn": "Alerts are on. We send them to {email}.",
+    "thresholdTitle": "Which drops should we report?",
+    "thresholdAny": "Any drop",
+    "threshold5": "At least 5%",
+    "threshold10": "At least 10%",
+    "paidBanner": "Alerts are on! You'll get an e-mail when a saved price drops.",
+    "confirmTitle": "Alerts are on!",
+    "confirmBody": "Once a day we'll send a summary if a saved price drops.",
+    "toList": "To the wishlist",
+    "subscribe": "Switch alerts on",
+    "feature1": "One e-mail a day, only about price drops",
+    "feature2": "All saved products and searches, in all partner shops",
+    "feature3": "Switch off at any time",
+    "account": "Account",
+    "accountLine": "Signed in as {email} · {provider}",
+    "offersTitle": "Personal offers"
+  },
+  "offerEmail": {
+    "subject": "{name} from Trilio: {product} for {price}",
+    "greeting": "Hello!",
+    "saved": "You saved {product} on {date}, when the price was {then}.",
+    "intro": "I've found an offer for you: {product}.",
+    "deal": "I can offer it for {price} with free delivery in Latvia by {date}.",
+    "shops": "In shops right now from {ref}.",
+    "saving": "That is {saving} cheaper than the lowest price in shops over the last 30 days.",
+    "refurbished": "Refurbished product, condition: {grade}. Warranty: {months} months.",
+    "why": "Why cheaper? Trilio buys directly from the distributor and delivers itself.",
+    "valid": "The offer is valid until {date}.",
+    "cta": "See the offer: {url}",
+    "sign": "{name}, Trilio",
+    "footer": "You get this e-mail because you allowed Trilio to write about personal offers. Unsubscribe: {url}",
+    "reminderSubject": "Reminder: {product} for {price} until {date}",
+    "reminderBody": "Hello! My offer of {product} for {price} is valid until {date}. This is the last e-mail about this offer. If you don't need it, there's nothing to do.",
+    "orderLink": "Order, invoice and status: {url}",
+    "paidSubject": "Order {number} received",
+    "paidBody": "Thank you! We received {amount} for {product}. Free delivery in Latvia by {date}. The courier will call before delivery.",
+    "shippedSubject": "{product} is on its way",
+    "shippedBody": "Order {number} has been handed to the courier ({carrier}).",
+    "tracking": "Track the parcel: {url}",
+    "deliveredSubject": "Order {number} delivered",
+    "deliveredPerson": "The product has been delivered. If you change your mind, you can withdraw from the purchase without giving a reason until {deadline}, and the return within Latvia is free. Warranty: {months} months, write to {email}.",
+    "deliveredCompany": "The product has been delivered. Warranty: {months} months, write to {email}.",
+    "returnSubject": "Withdrawal from order {number} received",
+    "returnBody": "We received your withdrawal. We'll contact you within one working day about the free return. We'll refund the money within 14 days at the latest.",
+    "refundSubject": "Refund for order {number}",
+    "refundBody": "We have refunded {amount}. The money usually reaches your account within 1–5 working days.",
+    "feedbackSubject": "Is everything all right with {product}?",
+    "feedbackBody": "Hello! A week ago you received {product}. Is everything all right?",
+    "feedbackOk": "All fine: {url}",
+    "feedbackProblem": "There is a problem: {url}"
+  },
+  "offersConsent": {
+    "ask": "If I find it cheaper, tell you by e-mail?",
+    "label": "I'd like personal offers for the products I've saved",
+    "hint": "If we can offer one of your saved products for less than the shops, we'll write. Only about that product, no advertising. You can unsubscribe at any time.",
+    "on": "Thank you! We'll write only about products you saved.",
+    "off": "We won't send personal offers any more."
+  },
+  "offer": {
+    "kicker": "Personal offer",
+    "boxLabel": "Offer",
+    "saving": "{saving} cheaper than the lowest price in shops over the last 30 days",
+    "shops": "In shops right now from {price}",
+    "delivery": "Free delivery in Latvia, by {date}",
+    "warranty": "Warranty: {months} months, sold by Trilio",
+    "refurbished": "Refurbished product, condition: {grade}. Warranty: {months} months.",
+    "why": "Why cheaper? Trilio buys directly from the distributor and delivers itself.",
+    "accept": "Accept the offer",
+    "continue": "Continue the order",
+    "valid": "Valid until {date}",
+    "notYours": "This offer was sent to another account. Sign out and open the link again.",
+    "product": "About the product",
+    "terms": "Sold by Trilio. <link>Purchase terms</link>",
+    "paid": "This offer has already been paid for.",
+    "cancelled": "This offer is no longer valid.",
+    "expired": "The offer has expired.",
+    "openOrder": "Open the order",
+    "shopOffers": "See prices in shops"
+  },
+  "checkout": {
+    "kicker": "Order",
+    "buyerKind": "I'm buying as",
+    "kind_person": "A private person",
+    "kind_company": "A company",
+    "fullName": "Full name",
+    "phone": "Phone",
+    "phoneHint": "The courier will call before delivery.",
+    "companyName": "Company name",
+    "companyRegNo": "Registration number",
+    "companyVatNo": "VAT number (if any)",
+    "legalAddress": "Legal address (if different from delivery)",
+    "companyNote": "The invoice will be made out to the company. The 14-day right of withdrawal does not apply to companies.",
+    "deliveryMethod": "How should we deliver?",
+    "method_courier": "Courier to the door",
+    "method_locker": "Omniva parcel locker",
+    "street": "Street, house, flat",
+    "city": "City",
+    "postcode": "Postcode",
+    "locker": "Which parcel locker?",
+    "lockerPick": "Choose a parcel locker",
+    "lockerText": "Parcel locker name or address",
+    "carryIn": "Does it need carrying in (stairs, no lift)?",
+    "carryIn_no": "No",
+    "carryIn_yes": "Yes",
+    "note": "Note for the courier (optional)",
+    "deliveryLarge": "Courier to the door, free, by {date}",
+    "deliverySmall": "Free delivery in Latvia, by {date}",
+    "confirmTo": "We'll send the confirmation and the invoice to {email}.",
+    "refurbishedConfirm": "I understand the product is refurbished (condition: {grade}).",
+    "termsPerson": "I agree to the <link>Purchase terms</link> and know I can withdraw from the purchase within 14 days of receiving it.",
+    "termsCompany": "I agree to the <link>Purchase terms</link>.",
+    "pay": "Pay {amount}",
+    "acceptOnly": "Accept the offer",
+    "paysera": "Payment is handled by Paysera. Trilio never sees card details.",
+    "paymentsSoon": "Payments are being set up. We'll save your order and write to you about how to pay.",
+    "cancelled": "The payment was not completed. You can try again.",
+    "closed": "This offer can no longer be accepted.",
+    "fix": "Please correct the marked fields.",
+    "error": {
+      "required": "Fill in this field.",
+      "postcode": "The postcode looks like LV-1050.",
+      "phone": "Enter a phone number, for example 20000000.",
+      "regNo": "The registration number has 11 digits.",
+      "vatNo": "The VAT number looks like LV00000000000.",
+      "terms": "To continue, agree to the terms.",
+      "refurbished": "Confirm that you know the product's condition.",
+      "locker": "Choose a parcel locker."
+    }
+  },
+  "orders": {
+    "kicker": "Account",
+    "title": "My orders",
+    "empty": "No orders yet. They will appear here when you accept a personal offer.",
+    "orderKicker": "Order {number}",
+    "thanks": "Thank you! Payment received. We've e-mailed the confirmation and the invoice.",
+    "paymentsSoon": "Order saved. Payments are being set up, and we'll write to you about how to pay.",
+    "line": {
+      "awaiting": "Waiting for payment",
+      "preparing": "We're preparing it for shipping. Delivery by {date}.",
+      "shipped": "Handed to the courier ({carrier}). The courier will call before delivery.",
+      "delivered": "Delivered on {date}",
+      "return_requested": "Withdrawal received. We'll contact you about the free return.",
+      "returned": "Product received back. We'll refund you in the next few days.",
+      "refunded": "Money refunded.",
+      "cancelled": "Order cancelled."
+    },
+    "status": {
+      "awaiting_payment": "Waiting for payment",
+      "paid": "Paid",
+      "packed": "Ready to ship",
+      "shipped": "With the courier",
+      "delivered": "Delivered",
+      "return_requested": "Withdrawal requested",
+      "returned": "Return received",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled"
+    },
+    "track": "Track the parcel ({carrier}) {number}",
+    "received": "I've received it",
+    "pay": "Pay {amount}",
+    "deliveryTo": "Delivery",
+    "deliveryPrice": "Delivery price",
+    "free": "Free",
+    "warranty": "Warranty",
+    "warrantyText": "{months} months. Write to Trilio: {email}",
+    "withdrawal": "Right of withdrawal",
+    "withdrawalUntil": "Until {date}, without a reason, free return",
+    "withdrawalBefore": "14 days after receiving it, without a reason, free return",
+    "invoice": "Invoice {number}",
+    "creditNote": "Credit note {number}",
+    "withdrawTitle": "Withdraw from the purchase",
+    "withdrawBody": "You can withdraw without a reason. The return within Latvia is free: we'll contact you about a courier within one working day. We'll refund the money within 14 days at the latest.",
+    "withdraw": "Withdraw from the purchase",
+    "timeline": "History"
+  },
+  "feedback": {
+    "kicker": "Trilio",
+    "title": "Is everything all right?",
+    "body": "A week ago you received a product from Trilio. Tell us whether everything is fine.",
+    "ok": "All fine",
+    "problem": "There is a problem",
+    "what": "What happened?",
+    "send": "Send",
+    "thanksOk": "Thank you!",
+    "thanksOkBody": "We're glad. If anything changes, write to us.",
+    "thanksProblem": "Thank you for telling us",
+    "thanksProblemBody": "We received your message and will contact you within one working day."
+  },
+  "unsubscribe": {
+    "kicker": "Trilio",
+    "title": "Unsubscribe from personal offers?",
+    "body": "We'll stop sending e-mails about personal offers. Your wishlist and account stay.",
+    "confirm": "Unsubscribe",
+    "doneTitle": "Done",
+    "doneBody": "We won't send personal offers any more. If you change your mind, switch them on in your wishlist."
+  },
+  "invoice": {
+    "title": "Invoice",
+    "creditTitle": "Credit note",
+    "date": "Date: {date}",
+    "order": "Order {number}",
+    "print": "Print",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "regNo": "Reg. No. {value}",
+    "vatNo": "VAT No. {value}",
+    "contact": "Contact person: {name}",
+    "lines": "Items",
+    "item": "Item",
+    "qty": "Quantity",
+    "sum": "Amount",
+    "net": "Amount excl. VAT",
+    "vat": "VAT {rate}%",
+    "total": "Total",
+    "noVat": "VAT not applicable (the seller is not VAT-registered).",
+    "paid": "Paid by card or bank link.",
+    "refunded": "Amount refunded to the buyer.",
+    "deliveryLine": "Delivery in Latvia"
+  },
+  "timeline": {
+    "none": "Nothing has happened yet.",
+    "kind": {
+      "created": "Created",
+      "sent": "Sent",
+      "opened": "Opened",
+      "reminded": "Reminded",
+      "signin": "Signed in with the link",
+      "accepted": "Accepted",
+      "details_updated": "Details updated",
+      "paid": "Paid",
+      "packed": "Ready to ship",
+      "shipped": "Handed to the courier",
+      "delivered": "Delivered",
+      "return_requested": "Withdrawal requested",
+      "returned": "Return received",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "extended": "Extended",
+      "feedback_asked": "Asked whether all is fine",
+      "feedback_ok": "All fine",
+      "feedback_problem": "Problem reported",
+      "problem_resolved": "Problem resolved",
+      "delivery_corrected": "Delivery date corrected",
+      "note": "Note"
+    },
+    "source": {
+      "admin": "admin",
+      "buyer": "buyer",
+      "system": "system",
+      "carrier": "carrier"
+    }
+  }
+}

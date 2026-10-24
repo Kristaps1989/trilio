@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { ComponentProps, ReactNode } from "react";
 
 // Button set from the Claude Design prototype (docs/DESIGN_FIX_PLAN.md §3).

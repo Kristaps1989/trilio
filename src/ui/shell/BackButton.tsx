@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 // The footer's back button (spec §2). Answers live in the URL, so browser
 // history is the flow's history. Screens without a step to go back to keep

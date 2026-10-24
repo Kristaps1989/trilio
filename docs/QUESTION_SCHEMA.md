@@ -1,5 +1,7 @@
 # Question schema (`data/categories.json`)
 
+The English text of every label, title and note lives in `data/categories.en.json`, keyed by ids (docs/LOCALES.md). When you add or reword a question, add its English text there too; `catalog.test.ts` checks it.
+
 Every subcategory's questions are data. The page that renders a question never knows which category it belongs to. The Zod schema in `src/domain/questions/schema.ts` is the source of truth; a unit test validates the JSON on every CI run. Answers are matched against product **attributes**, whose vocabulary is `data/attributes.json` (see `docs/ATTRIBUTES.md`).
 
 ```jsonc

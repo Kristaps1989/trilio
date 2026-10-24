@@ -95,7 +95,7 @@ export async function runAllJobs(db: Db, opts: { force?: boolean } = {}): Promis
   const extraction = extractionEnabled() ? await runExtractionJob(db, createCaller(db)) : null;
   // The day's Claude API spend so far, in the log of whichever service ran the job.
   if (extraction) console.log("llm today:", JSON.stringify(await usageToday(db)));
-  const wishlist = await runWishlistJob(db, { baseUrl: appBaseUrl(), texts: wishlistTexts() });
+  const wishlist = await runWishlistJob(db, { baseUrl: appBaseUrl(), texts: wishlistTexts });
   // Privacy policy retention: waitlist entries older than 12 months.
   const waitlistPurged = await purgeOldWaitlistLeads(db);
   return { stores: results, extraction, wishlist, waitlistPurged };

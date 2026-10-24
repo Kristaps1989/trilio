@@ -7,6 +7,7 @@ import Resend from "next-auth/providers/resend";
 import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 import { isAdminEmail } from "@/config/admin";
+import { rememberedLanguage } from "@/i18n/path";
 import { offerSignIn } from "@/services/offers/offers";
 
 // Google and email magic link (spec §5.1 step 4; Apple deferred by the owner
@@ -61,7 +62,10 @@ function providers(): NextAuthConfig["providers"] {
           if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return null;
           const [existing] = await db.select().from(users).where(eq(users.email, email));
           if (existing) return { id: existing.id, email: existing.email, name: existing.name };
-          const [created] = await db.insert(users).values({ email, emailVerified: new Date() }).returning();
+          const [created] = await db
+            .insert(users)
+            .values({ email, emailVerified: new Date(), locale: await rememberedLanguage() })
+            .returning();
           return { id: created!.id, email: created!.email, name: created!.name };
         },
       }),
@@ -81,6 +85,13 @@ export const authConfig: NextAuthConfig = {
   // Credentials providers cannot use database sessions in Auth.js; JWT keeps one code path for all providers.
   session: { strategy: "jwt", maxAge: 30 * 24 * 3600 },
   pages: { signIn: "/ienakt" },
+  events: {
+    // A new account writes to its owner in the language they signed up in (src/i18n/path.ts).
+    async createUser({ user }) {
+      const locale = await rememberedLanguage();
+      if (user.id && locale !== "lv") await db.update(users).set({ locale }).where(eq(users.id, user.id));
+    },
+  },
   callbacks: {
     jwt({ token, user }) {
       if (user?.id) token.uid = user.id;

@@ -1,5 +1,7 @@
 # English language support, and a content accessibility review
 
+> **Status (24 Oct 2026): implemented.** Part A (English under `/en`) and Part B items 1–10 are built and covered by `tests/e2e/english.spec.ts` and `tests/e2e/a11y.spec.ts`. How it works now: docs/LOCALES.md. Notes on what differs from the plan: the switch shows "EN" / "LV"; signing in also stores the language in the cookie; 404 pages thrown from a page are still rendered on the client (as before); invoices stay Latvian, with only the delivery line translated on screen.
+
 Owner, 24 Oct 2026: prepare a plan for English on the platform, and review content accessibility.
 
 Part A is the plan for English. Part B is the accessibility review: what is good, what to fix, and what English changes about it.

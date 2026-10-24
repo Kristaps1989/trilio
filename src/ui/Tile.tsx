@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { ReactNode } from "react";
 
 // Category tile from the prototype: 112 px tall, icon at the top, label at

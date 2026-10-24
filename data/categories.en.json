@@ -1,0 +1,1778 @@
+{
+  "note": "English text for data/categories.json, keyed by group, subcategory, question and option ids. src/domain/questions/catalog.ts overlays it for /en pages; a missing text falls back to Latvian. Product rules (match, showIf, implies, budgets) live only in categories.json. Checked by catalog.test.ts.",
+  "groups": {
+    "cool": {
+      "label": "Fridges and freezers"
+    },
+    "laundry": {
+      "label": "Laundry and garment care"
+    },
+    "kitchenbig": {
+      "label": "Large kitchen appliances"
+    },
+    "clean": {
+      "label": "Cleaning"
+    },
+    "coffee": {
+      "label": "Coffee machines and grinders"
+    },
+    "kitchensmall": {
+      "label": "Small kitchen appliances"
+    },
+    "cooking": {
+      "label": "Grills, toasters and fryers"
+    },
+    "healthy": {
+      "label": "Healthy eating"
+    },
+    "personal": {
+      "label": "Personal care"
+    },
+    "other": {
+      "label": "Something else — I'll describe it in my own words"
+    }
+  },
+  "subcategories": {
+    "fridge": {
+      "label": "Fridges",
+      "description": "freestanding and built-in",
+      "questions": {
+        "install": {
+          "title": "Freestanding or built-in?",
+          "help": "A built-in appliance is hidden behind a kitchen cabinet door with the same front as the cabinets. A freestanding appliance is fully visible and can be moved.",
+          "options": {
+            "free": {
+              "label": "Freestanding",
+              "sublabel": "fully visible, can be moved",
+              "table_value": "Freestanding"
+            },
+            "builtin": {
+              "label": "Built-in",
+              "sublabel": "behind a kitchen cabinet door",
+              "card_reason": "Built-in — fits a kitchen niche",
+              "table_value": "Built-in"
+            }
+          }
+        },
+        "size": {
+          "title": "How tall should it be?",
+          "why": "The size is the appliance's height. Check the space under a wall cabinet or a sloping ceiling.",
+          "options": {
+            "h54": {
+              "label": "~54 cm",
+              "sublabel": "mini, on a counter or shelf",
+              "card_reason": "Mini — ~54 cm",
+              "table_value": "~54 cm"
+            },
+            "h85": {
+              "label": "~85 cm",
+              "sublabel": "under the worktop",
+              "card_reason": "Fits under the worktop",
+              "table_value": "~85 cm"
+            },
+            "h140": {
+              "label": "125–160 cm",
+              "sublabel": "medium height",
+              "table_value": "125–160 cm"
+            },
+            "h175": {
+              "label": "166–180 cm",
+              "sublabel": "tall, up to 180 cm",
+              "table_value": "166–180 cm"
+            },
+            "h195": {
+              "label": "181–205 cm",
+              "sublabel": "very tall, the most capacity",
+              "card_reason": "Large — over 180 cm",
+              "table_value": "181–205 cm"
+            }
+          }
+        },
+        "niche": {
+          "title": "How tall is the niche?",
+          "why": "The wrong niche height is the most common reason built-in fridges are returned. The size is usually in the kitchen plan or inside the cabinet.",
+          "options": {
+            "n88": {
+              "label": "82–88 cm",
+              "sublabel": "under the worktop",
+              "table_value": "Niche 82–88 cm"
+            },
+            "n122": {
+              "label": "102–123 cm",
+              "table_value": "Niche 102–123 cm"
+            },
+            "n158": {
+              "label": "140–158 cm",
+              "table_value": "Niche 140–158 cm"
+            },
+            "n178": {
+              "label": "177–178 cm",
+              "sublabel": "the most common",
+              "table_value": "Niche 177–178 cm"
+            },
+            "n194": {
+              "label": "194 cm or more",
+              "table_value": "Niche 194 cm"
+            }
+          }
+        },
+        "doors": {
+          "title": "How many doors?",
+          "why": "Two doors mean a separate freezer with its own temperature.",
+          "options": {
+            "one": {
+              "label": "One door",
+              "sublabel": "no freezer or a small compartment",
+              "table_value": "One door"
+            },
+            "two": {
+              "label": "Two doors",
+              "sublabel": "fridge and a separate freezer",
+              "card_reason": "Separate freezer",
+              "table_value": "Two doors"
+            },
+            "multi": {
+              "label": "Side-by-Side or French Door",
+              "sublabel": "~90 cm wide, large capacity",
+              "card_reason": "Two-door — large capacity",
+              "table_value": "Side-by-Side"
+            }
+          }
+        },
+        "hinge": {
+          "title": "How is the cabinet door attached?",
+          "why": "A built-in fridge has to fit the cabinet door you already have.",
+          "help": "Open the cabinet door: if it is screwed straight onto the fridge door, it is “door-on-door”. If the door is joined to a rail it slides along, it is “sliding”.",
+          "options": {
+            "fixed": {
+              "label": "Door-on-door",
+              "sublabel": "the cabinet door is screwed to the fridge door",
+              "table_value": "Door-on-door"
+            },
+            "sliding": {
+              "label": "Sliding",
+              "sublabel": "the cabinet door slides along a rail",
+              "table_value": "Sliding"
+            },
+            "unknown": {
+              "label": "Not sure",
+              "sublabel": "we'll show both kinds"
+            }
+          }
+        },
+        "household": {
+          "title": "How many people are in your household?",
+          "why": "The recommended capacity depends on it. A fridge that is too small is the most common complaint after buying.",
+          "options": {
+            "2": {
+              "label": "1–2",
+              "sublabel": "~200 L is enough"
+            },
+            "4": {
+              "label": "3–4",
+              "sublabel": "~300 L recommended"
+            },
+            "5": {
+              "label": "5 or more",
+              "sublabel": "380 L or more recommended"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "nofrost": {
+              "label": "No defrosting",
+              "sublabel": "No Frost",
+              "card_reason": "No Frost — no defrosting"
+            },
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "38 dB or less",
+              "card_reason": "Quiet — 38 dB or less"
+            },
+            "energy": {
+              "label": "Low energy use",
+              "sublabel": "lower bills over its whole life",
+              "card_reason": "Low energy use — saves on electricity"
+            },
+            "volume": {
+              "label": "Large capacity",
+              "card_reason": "Large capacity — 350 L or more"
+            }
+          }
+        }
+      }
+    },
+    "freezer": {
+      "label": "Freezers",
+      "description": "chest, upright, built-in",
+      "questions": {
+        "form": {
+          "title": "What kind of freezer are you looking for?",
+          "options": {
+            "upright": {
+              "label": "Upright",
+              "sublabel": "with drawers, like a fridge",
+              "table_value": "Upright"
+            },
+            "chest": {
+              "label": "Chest",
+              "sublabel": "roomy, opens from the top",
+              "card_reason": "Chest freezer — roomy",
+              "table_value": "Chest"
+            },
+            "builtin": {
+              "label": "Built-in",
+              "sublabel": "behind a kitchen cabinet door",
+              "table_value": "Built-in"
+            }
+          }
+        },
+        "size": {
+          "title": "How tall should it be?",
+          "options": {
+            "h85": {
+              "label": "~85 cm",
+              "sublabel": "under the worktop",
+              "table_value": "~85 cm"
+            },
+            "h145": {
+              "label": "125–160 cm",
+              "table_value": "125–160 cm"
+            },
+            "h185": {
+              "label": "170–200 cm",
+              "sublabel": "the most capacity",
+              "table_value": "170–200 cm"
+            }
+          }
+        },
+        "niche": {
+          "title": "How tall is the niche?",
+          "options": {
+            "n88": {
+              "label": "82–88 cm",
+              "sublabel": "under the worktop",
+              "table_value": "Niche 82–88 cm"
+            },
+            "n122": {
+              "label": "102–123 cm",
+              "table_value": "Niche 102–123 cm"
+            },
+            "n158": {
+              "label": "140–158 cm",
+              "table_value": "Niche 140–158 cm"
+            },
+            "n178": {
+              "label": "177–178 cm",
+              "table_value": "Niche 177–178 cm"
+            }
+          }
+        },
+        "place": {
+          "title": "Where will it stand?",
+          "why": "An ordinary freezer can stop freezing in a cold garage. There you need a model with a suitable climate class.",
+          "options": {
+            "home": {
+              "label": "Indoors",
+              "sublabel": "in a heated room"
+            },
+            "garage": {
+              "label": "Garage or unheated room",
+              "sublabel": "has to work in the cold too",
+              "card_reason": "Works in an unheated room too",
+              "table_value": "For an unheated room"
+            }
+          }
+        },
+        "amount": {
+          "title": "How much do you freeze?",
+          "options": {
+            "small": {
+              "label": "A little",
+              "sublabel": "up to ~100 L"
+            },
+            "mid": {
+              "label": "Average",
+              "sublabel": "~100–200 L"
+            },
+            "big": {
+              "label": "A lot",
+              "sublabel": "200 L or more",
+              "card_reason": "Large capacity — 200 L or more"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "nofrost": {
+              "label": "No defrosting",
+              "sublabel": "No Frost",
+              "card_reason": "No Frost — no defrosting"
+            },
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "40 dB or less",
+              "card_reason": "Quiet — 40 dB or less"
+            },
+            "energy": {
+              "label": "Low energy use",
+              "sublabel": "lower bills over its whole life",
+              "card_reason": "Low energy use — saves on electricity"
+            }
+          }
+        }
+      }
+    },
+    "washer": {
+      "label": "Washing machines",
+      "description": "front and top loading, with a dryer",
+      "questions": {
+        "loading": {
+          "title": "What kind of washing machine do you need?",
+          "options": {
+            "front": {
+              "label": "Front loading",
+              "sublabel": "the most common",
+              "table_value": "Front loading"
+            },
+            "top": {
+              "label": "Top loading",
+              "sublabel": "narrow — ~40 cm wide",
+              "card_reason": "Top loading — only 40 cm wide",
+              "table_value": "Top loading"
+            },
+            "combo": {
+              "label": "With a dryer",
+              "sublabel": "washes and dries in one",
+              "card_reason": "Washes and dries in one appliance",
+              "table_value": "With a dryer"
+            }
+          }
+        },
+        "place": {
+          "title": "Where will it stand?",
+          "options": {
+            "free": {
+              "label": "Freestanding",
+              "sublabel": "in open space"
+            },
+            "under": {
+              "label": "Under the worktop",
+              "sublabel": "height up to 85 cm",
+              "card_reason": "Fits under the worktop",
+              "table_value": "Under the worktop"
+            },
+            "builtin": {
+              "label": "Built-in",
+              "sublabel": "behind a cabinet door",
+              "table_value": "Built-in"
+            }
+          }
+        },
+        "depth": {
+          "title": "How deep can it be?",
+          "why": "Narrow washing machines fit a small bathroom, but they hold less laundry.",
+          "options": {
+            "d40": {
+              "label": "~40 cm",
+              "sublabel": "very narrow",
+              "card_reason": "Narrow — ~40 cm deep",
+              "table_value": "~40 cm"
+            },
+            "d45": {
+              "label": "~45–50 cm",
+              "sublabel": "narrow",
+              "card_reason": "Narrow — up to 50 cm",
+              "table_value": "~45–50 cm"
+            },
+            "d55": {
+              "label": "55 cm or more",
+              "sublabel": "standard",
+              "table_value": "55 cm+"
+            }
+          }
+        },
+        "household": {
+          "title": "How many people are in your household?",
+          "why": "It decides how many kilograms of laundry the machine has to wash in one go.",
+          "options": {
+            "2": {
+              "label": "1–2",
+              "sublabel": "6–7 kg is enough"
+            },
+            "4": {
+              "label": "3–4",
+              "sublabel": "8–9 kg recommended"
+            },
+            "5": {
+              "label": "5 or more",
+              "sublabel": "10 kg or more recommended"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "74 dB or less",
+              "card_reason": "Quiet spin — 74 dB or less"
+            },
+            "energy": {
+              "label": "Low energy use",
+              "sublabel": "less electricity and water",
+              "card_reason": "Class A — less electricity"
+            },
+            "steam": {
+              "label": "Steam function",
+              "sublabel": "refreshes and reduces creases",
+              "card_reason": "Steam — fewer creases"
+            }
+          }
+        }
+      }
+    },
+    "dryer": {
+      "label": "Tumble dryers",
+      "description": "heat pump and condenser",
+      "questions": {
+        "type": {
+          "title": "What kind of dryer are you looking for?",
+          "why": "A heat pump dryer costs more but uses about half as much electricity.",
+          "options": {
+            "heatpump": {
+              "label": "Heat pump",
+              "sublabel": "the lowest electricity use",
+              "card_reason": "Heat pump — lower electricity use",
+              "table_value": "Heat pump"
+            },
+            "condenser": {
+              "label": "Condenser",
+              "sublabel": "cheaper to buy, higher energy use",
+              "table_value": "Condenser"
+            }
+          }
+        },
+        "place": {
+          "title": "Where will it stand?",
+          "options": {
+            "side": {
+              "label": "Next to the washing machine"
+            },
+            "stack": {
+              "label": "On top of the washing machine",
+              "sublabel": "needs a stacking kit",
+              "card_reason": "Can stand on top of a washing machine",
+              "table_value": "On top of the washing machine"
+            }
+          }
+        },
+        "household": {
+          "title": "How many people are in your household?",
+          "why": "It decides how much laundry the dryer dries in one go.",
+          "options": {
+            "2": {
+              "label": "1–2",
+              "sublabel": "7 kg is enough"
+            },
+            "4": {
+              "label": "3–4",
+              "sublabel": "8 kg recommended"
+            },
+            "5": {
+              "label": "5 or more",
+              "sublabel": "9 kg or more recommended"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "65 dB or less",
+              "card_reason": "Quiet — 65 dB or less"
+            },
+            "energy": {
+              "label": "Low energy use",
+              "sublabel": "lower bills over its whole life",
+              "card_reason": "Low energy use — saves on electricity"
+            }
+          }
+        }
+      }
+    },
+    "iron": {
+      "label": "Irons",
+      "description": "steam irons and ironing systems",
+      "questions": {
+        "type": {
+          "title": "What kind of iron are you looking for?",
+          "options": {
+            "iron": {
+              "label": "Steam iron",
+              "table_value": "Iron"
+            },
+            "station": {
+              "label": "Steam generator",
+              "sublabel": "powerful steam, large tank",
+              "card_reason": "Steam generator — irons faster",
+              "table_value": "Steam generator"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "anticalc": {
+              "label": "Anti-calc system",
+              "sublabel": "the water in Riga is hard",
+              "card_reason": "Anti-calc system"
+            },
+            "light": {
+              "label": "Light",
+              "sublabel": "up to 1.3 kg",
+              "card_reason": "Light — up to 1.3 kg"
+            }
+          }
+        }
+      }
+    },
+    "steamer": {
+      "label": "Garment steamers",
+      "description": "for clothes care without an ironing board",
+      "questions": {
+        "type": {
+          "title": "What kind of steamer are you looking for?",
+          "options": {
+            "hand": {
+              "label": "Handheld",
+              "sublabel": "for travel and a quick refresh",
+              "table_value": "Handheld"
+            },
+            "stand": {
+              "label": "Standing",
+              "sublabel": "larger tank, works longer",
+              "table_value": "Standing"
+            }
+          }
+        }
+      }
+    },
+    "dish": {
+      "label": "Dishwashers",
+      "description": "built-in, freestanding, countertop",
+      "questions": {
+        "install": {
+          "title": "Built-in or freestanding?",
+          "help": "A built-in appliance is hidden behind a kitchen cabinet door with the same front as the cabinets. A freestanding appliance is fully visible and can be moved.",
+          "options": {
+            "builtin": {
+              "label": "Built-in",
+              "sublabel": "under the worktop, behind a panel",
+              "table_value": "Built-in"
+            },
+            "free": {
+              "label": "Freestanding",
+              "table_value": "Freestanding"
+            },
+            "tabletop": {
+              "label": "Countertop",
+              "sublabel": "stands on the worktop",
+              "card_reason": "Countertop — no niche needed",
+              "table_value": "Countertop"
+            }
+          }
+        },
+        "width": {
+          "title": "How wide?",
+          "options": {
+            "w45": {
+              "label": "45 cm",
+              "sublabel": "narrow, 9–10 place settings",
+              "card_reason": "Narrow — 45 cm",
+              "table_value": "45 cm"
+            },
+            "w60": {
+              "label": "60 cm",
+              "sublabel": "standard, 12–15 place settings",
+              "table_value": "60 cm"
+            }
+          }
+        },
+        "integration": {
+          "title": "Should the control panel be visible?",
+          "why": "It decides which kitchen front the machine fits.",
+          "options": {
+            "full": {
+              "label": "No, hidden",
+              "sublabel": "fully integrated",
+              "table_value": "Fully integrated"
+            },
+            "semi": {
+              "label": "Yes, above the front",
+              "sublabel": "semi-integrated",
+              "table_value": "Semi-integrated"
+            }
+          }
+        },
+        "niche": {
+          "title": "How tall is the niche?",
+          "why": "A standard niche is 82 cm tall; taller kitchens have 86–87 cm.",
+          "options": {
+            "h82": {
+              "label": "~82 cm",
+              "sublabel": "standard",
+              "table_value": "~82 cm"
+            },
+            "h86": {
+              "label": "~86–87 cm",
+              "sublabel": "taller, XL",
+              "table_value": "~86 cm"
+            }
+          }
+        },
+        "household": {
+          "title": "How many people are in your household?",
+          "why": "It decides how many place settings fit in one wash.",
+          "options": {
+            "2": {
+              "label": "1–2",
+              "sublabel": "6–9 place settings are enough"
+            },
+            "4": {
+              "label": "3–4",
+              "sublabel": "12–13 place settings recommended"
+            },
+            "5": {
+              "label": "5 or more",
+              "sublabel": "14 or more recommended"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "44 dB or less",
+              "card_reason": "Quiet — 44 dB or less"
+            },
+            "third": {
+              "label": "Third basket",
+              "sublabel": "for cutlery",
+              "card_reason": "Third basket for cutlery"
+            },
+            "autoopen": {
+              "label": "Automatic door opening",
+              "sublabel": "dries better",
+              "card_reason": "The door opens itself — dries better"
+            },
+            "energy": {
+              "label": "Low energy use",
+              "sublabel": "less electricity and water",
+              "card_reason": "Low energy use — saves electricity and water"
+            }
+          }
+        }
+      }
+    },
+    "hob": {
+      "label": "Cookers and hobs",
+      "description": "induction, ceramic, gas",
+      "questions": {
+        "type": {
+          "title": "What kind of cooker are you looking for?",
+          "options": {
+            "induction": {
+              "label": "Induction",
+              "sublabel": "the fastest, needs suitable pans",
+              "card_reason": "Induction — fast and safe",
+              "table_value": "Induction"
+            },
+            "ceramic": {
+              "label": "Ceramic",
+              "sublabel": "any pans will do",
+              "table_value": "Ceramic"
+            },
+            "gas": {
+              "label": "Gas",
+              "table_value": "Gas"
+            },
+            "cooker": {
+              "label": "Cooker with an oven",
+              "sublabel": "freestanding",
+              "table_value": "Cooker with an oven"
+            }
+          }
+        },
+        "width": {
+          "title": "How wide is the space for the hob?",
+          "why": "The hob has to fit the existing cut-out in the worktop.",
+          "options": {
+            "w30": {
+              "label": "Narrow, ~30 cm",
+              "sublabel": "1–2 zones",
+              "table_value": "~30 cm"
+            },
+            "w60": {
+              "label": "Standard, ~60 cm",
+              "sublabel": "4 zones",
+              "table_value": "~60 cm"
+            },
+            "w80": {
+              "label": "Wide, 70 cm or more",
+              "sublabel": "5 zones or flexible zones",
+              "table_value": "70 cm+"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "flexi": {
+              "label": "Flexible zone",
+              "sublabel": "for large pans",
+              "card_reason": "Flexible zone for large pans"
+            },
+            "booster": {
+              "label": "Fast heating",
+              "sublabel": "booster function",
+              "card_reason": "Booster — boils fast"
+            }
+          }
+        }
+      }
+    },
+    "oven": {
+      "label": "Ovens",
+      "description": "built-in",
+      "questions": {
+        "niche": {
+          "title": "What is the oven niche like?",
+          "options": {
+            "std": {
+              "label": "Standard, ~60 cm tall",
+              "table_value": "Standard (60 cm)"
+            },
+            "compact": {
+              "label": "Compact, ~45 cm tall",
+              "sublabel": "often with a microwave or steam function",
+              "card_reason": "Compact — fits a 45 cm niche",
+              "table_value": "Compact (45 cm)"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "pyro": {
+              "label": "Pyrolytic cleaning",
+              "sublabel": "cleans itself",
+              "card_reason": "Pyrolysis — cleans itself"
+            },
+            "steam": {
+              "label": "Steam function",
+              "card_reason": "Steam function for juicier food"
+            },
+            "wifi": {
+              "label": "Control from your phone",
+              "card_reason": "Controlled from a phone"
+            },
+            "volume": {
+              "label": "Large capacity",
+              "sublabel": "70 L or more",
+              "card_reason": "Large — 70 L or more"
+            }
+          }
+        }
+      }
+    },
+    "hood": {
+      "label": "Cooker hoods",
+      "description": "wall, island, built-in",
+      "questions": {
+        "type": {
+          "title": "Where will the hood go?",
+          "options": {
+            "wall": {
+              "label": "On the wall",
+              "table_value": "On the wall"
+            },
+            "island": {
+              "label": "Above an island",
+              "sublabel": "hung from the ceiling",
+              "table_value": "Island"
+            },
+            "builtin": {
+              "label": "Built into a cabinet",
+              "sublabel": "hidden in a kitchen cabinet",
+              "table_value": "Built-in"
+            }
+          }
+        },
+        "width": {
+          "title": "How wide should it be?",
+          "why": "The hood should be at least as wide as the hob.",
+          "options": {
+            "w50": {
+              "label": "~50 cm",
+              "table_value": "50 cm"
+            },
+            "w60": {
+              "label": "~60 cm",
+              "sublabel": "the most common",
+              "table_value": "60 cm"
+            },
+            "w90": {
+              "label": "80–90 cm",
+              "table_value": "80–90 cm"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "55 dB or less",
+              "card_reason": "Quiet — 55 dB or less"
+            },
+            "power": {
+              "label": "Powerful extraction",
+              "sublabel": "600 m³/h or more",
+              "card_reason": "Powerful — 600 m³/h or more"
+            },
+            "recirc": {
+              "label": "No duct outside",
+              "sublabel": "works with a filter",
+              "card_reason": "Can work without a duct outside"
+            }
+          }
+        }
+      }
+    },
+    "micro": {
+      "label": "Microwave ovens",
+      "description": "countertop and built-in",
+      "questions": {
+        "install": {
+          "title": "Freestanding or built-in?",
+          "options": {
+            "free": {
+              "label": "Freestanding",
+              "sublabel": "on the worktop",
+              "table_value": "Freestanding"
+            },
+            "builtin": {
+              "label": "Built-in",
+              "sublabel": "in a kitchen cabinet",
+              "table_value": "Built-in"
+            }
+          }
+        },
+        "niche": {
+          "title": "How tall is the niche?",
+          "options": {
+            "n38": {
+              "label": "~38 cm",
+              "table_value": "Niche 38 cm"
+            },
+            "n45": {
+              "label": "~45 cm",
+              "sublabel": "like a compact oven",
+              "table_value": "Niche 45 cm"
+            }
+          }
+        },
+        "function": {
+          "title": "What should it be able to do?",
+          "options": {
+            "solo": {
+              "label": "Only heat",
+              "table_value": "Heating"
+            },
+            "grill": {
+              "label": "Heat and grill",
+              "card_reason": "With a grill — a crispy crust",
+              "table_value": "With a grill"
+            },
+            "combi": {
+              "label": "Also bake like an oven",
+              "sublabel": "with hot air",
+              "card_reason": "Combination — replaces a second oven",
+              "table_value": "Combination"
+            }
+          }
+        },
+        "household": {
+          "title": "How many people are in your household?",
+          "why": "It decides how big a plate fits inside.",
+          "options": {
+            "2": {
+              "label": "1–2",
+              "sublabel": "~20 L is enough"
+            },
+            "4": {
+              "label": "3–4",
+              "sublabel": "~25 L recommended"
+            },
+            "5": {
+              "label": "5 or more",
+              "sublabel": "28 L or more recommended"
+            }
+          }
+        }
+      }
+    },
+    "vacuum": {
+      "label": "Vacuum cleaners",
+      "description": "robot, stick, classic, cyclonic",
+      "questions": {
+        "type": {
+          "title": "What kind of vacuum cleaner are you looking for?",
+          "options": {
+            "robot": {
+              "label": "Robot",
+              "sublabel": "cleans on its own on a schedule",
+              "card_reason": "Robot — cleans on its own on a schedule",
+              "table_value": "Robot"
+            },
+            "robotmop": {
+              "label": "Robot with mopping",
+              "sublabel": "mops the floor too",
+              "card_reason": "Mops the floor too",
+              "table_value": "Robot with mopping"
+            },
+            "stick": {
+              "label": "Cordless stick",
+              "sublabel": "battery powered, light and handy",
+              "card_reason": "Cordless — light and always handy",
+              "table_value": "Stick"
+            },
+            "corded": {
+              "label": "Corded",
+              "sublabel": "classic, steady power",
+              "card_reason": "Corded — steady power without charging",
+              "table_value": "Corded"
+            },
+            "handheld": {
+              "label": "Handheld",
+              "sublabel": "small, for the car and sofa",
+              "card_reason": "Handheld — small and convenient",
+              "table_value": "Handheld"
+            }
+          }
+        },
+        "area": {
+          "title": "How large an area will you clean?",
+          "why": "We use it to check that the battery lasts one cleaning session.",
+          "options": {
+            "50": {
+              "label": "Up to 50 m²",
+              "sublabel": "a flat"
+            },
+            "100": {
+              "label": "50–100 m²",
+              "card_reason": "Battery lasts for 50–100 m²"
+            },
+            "150": {
+              "label": "More than 100 m²",
+              "sublabel": "a house on several floors",
+              "card_reason": "Battery lasts for a large area"
+            }
+          }
+        },
+        "pets": {
+          "title": "Are there pets at home?",
+          "options": {
+            "yes": {
+              "label": "Yes",
+              "sublabel": "a dog or a cat",
+              "card_reason": "Brush for pet hair"
+            },
+            "no": {
+              "label": "No"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "allergy": {
+              "label": "Allergy",
+              "sublabel": "HEPA filter",
+              "card_reason": "HEPA filter — suits allergy sufferers"
+            },
+            "quiet": {
+              "label": "Quiet",
+              "sublabel": "70 dB or less",
+              "card_reason": "Quiet — 70 dB or less"
+            },
+            "bagless": {
+              "label": "Bagless",
+              "sublabel": "no bags to buy",
+              "card_reason": "Bagless — no extra costs"
+            }
+          }
+        }
+      }
+    },
+    "steamclean": {
+      "label": "Steam cleaners",
+      "description": "for floors, tiles and the bathroom",
+      "questions": {
+        "type": {
+          "title": "What kind of steam cleaner are you looking for?",
+          "options": {
+            "hand": {
+              "label": "Handheld",
+              "sublabel": "for surfaces and grout",
+              "table_value": "Handheld"
+            },
+            "mop": {
+              "label": "Steam mop",
+              "sublabel": "for floors",
+              "table_value": "Mop"
+            },
+            "cyl": {
+              "label": "With a tank",
+              "sublabel": "for longer cleaning",
+              "card_reason": "Large tank — longer cleaning",
+              "table_value": "With a tank"
+            }
+          }
+        }
+      }
+    },
+    "coffee": {
+      "label": "Coffee machines",
+      "description": "bean-to-cup, capsule, espresso",
+      "questions": {
+        "type": {
+          "title": "What kind of coffee machine would you like?",
+          "options": {
+            "auto": {
+              "label": "Bean-to-cup",
+              "sublabel": "grinds the beans itself",
+              "card_reason": "Built-in grinder — freshly ground coffee",
+              "table_value": "Bean-to-cup"
+            },
+            "capsule": {
+              "label": "Capsule",
+              "sublabel": "simple, but each cup costs more",
+              "card_reason": "Capsules — simple and quick",
+              "table_value": "Capsule"
+            },
+            "manual": {
+              "label": "Manual espresso",
+              "sublabel": "with a portafilter, like a café",
+              "card_reason": "Portafilter — full control over taste",
+              "table_value": "Manual"
+            }
+          }
+        },
+        "milk": {
+          "title": "Do you drink coffee with milk?",
+          "options": {
+            "yes": {
+              "label": "Yes",
+              "sublabel": "cappuccino, latte",
+              "card_reason": "Froths milk",
+              "table_value": "With a milk system"
+            },
+            "no": {
+              "label": "Only black",
+              "sublabel": "espresso, americano"
+            }
+          }
+        },
+        "cups": {
+          "title": "How many cups do you make a day?",
+          "why": "We use it to work out what one cup costs and when the machine pays for itself.",
+          "options": {
+            "2": {
+              "label": "1–2"
+            },
+            "4": {
+              "label": "3–4"
+            },
+            "6": {
+              "label": "5 or more",
+              "sublabel": "for a family or an office"
+            }
+          }
+        }
+      }
+    },
+    "grinder": {
+      "label": "Coffee grinders",
+      "description": "burr and blade",
+      "questions": {
+        "type": {
+          "title": "What kind of grinder are you looking for?",
+          "options": {
+            "burr": {
+              "label": "Burr",
+              "sublabel": "even grind — suits espresso",
+              "card_reason": "Burrs — an even grind",
+              "table_value": "Burr"
+            },
+            "blade": {
+              "label": "Blade",
+              "sublabel": "cheaper, coarser grind",
+              "table_value": "Blade"
+            }
+          }
+        }
+      }
+    },
+    "kettle": {
+      "label": "Kettles",
+      "description": "electric",
+      "questions": {
+        "type": {
+          "title": "What kind of kettle would you like?",
+          "options": {
+            "steel": {
+              "label": "Metal",
+              "sublabel": "durable",
+              "table_value": "Metal"
+            },
+            "glass": {
+              "label": "Glass",
+              "sublabel": "you can see the water",
+              "table_value": "Glass"
+            },
+            "temp": {
+              "label": "With temperature control",
+              "sublabel": "for green tea and coffee",
+              "card_reason": "Temperature control",
+              "table_value": "With temperature control"
+            }
+          }
+        }
+      }
+    },
+    "blender": {
+      "label": "Blenders",
+      "description": "for smoothies and shakes",
+      "questions": {
+        "type": {
+          "title": "What kind of blender are you looking for?",
+          "options": {
+            "jug": {
+              "label": "With a jug",
+              "sublabel": "for the whole family",
+              "table_value": "With a jug"
+            },
+            "personal": {
+              "label": "Personal",
+              "sublabel": "smoothie straight into the bottle",
+              "table_value": "Personal"
+            }
+          }
+        },
+        "use": {
+          "title": "What will you use it for most?",
+          "options": {
+            "smoothie": {
+              "label": "Smoothies"
+            },
+            "ice": {
+              "label": "Ice too",
+              "sublabel": "needs at least 1000 W",
+              "card_reason": "Powerful — crushes ice"
+            },
+            "soup": {
+              "label": "Soups too",
+              "sublabel": "with heating",
+              "card_reason": "With heating — makes soups"
+            }
+          }
+        }
+      }
+    },
+    "handblender": {
+      "label": "Hand blenders",
+      "description": "for soups, purées, sauces",
+      "questions": {
+        "type": {
+          "title": "Corded or cordless?",
+          "options": {
+            "cord": {
+              "label": "Corded",
+              "sublabel": "steady power",
+              "table_value": "Corded"
+            },
+            "cordless": {
+              "label": "Cordless",
+              "sublabel": "battery powered",
+              "table_value": "Cordless"
+            }
+          }
+        }
+      }
+    },
+    "foodproc": {
+      "label": "Food processors",
+      "description": "stand mixers and processors with discs",
+      "questions": {
+        "type": {
+          "title": "What are you looking for?",
+          "options": {
+            "stand": {
+              "label": "A stand mixer",
+              "sublabel": "for dough and biscuits",
+              "table_value": "Stand mixer"
+            },
+            "processor": {
+              "label": "A food processor",
+              "sublabel": "chops, grates, slices",
+              "table_value": "Food processor"
+            }
+          }
+        }
+      }
+    },
+    "mixer": {
+      "label": "Mixers",
+      "description": "hand and with a bowl",
+      "questions": {
+        "type": {
+          "title": "What kind of mixer are you looking for?",
+          "options": {
+            "hand": {
+              "label": "Handheld",
+              "sublabel": "for quick jobs",
+              "table_value": "Handheld"
+            },
+            "bowl": {
+              "label": "With a bowl",
+              "sublabel": "hands free",
+              "table_value": "With a bowl"
+            }
+          }
+        }
+      }
+    },
+    "chopper": {
+      "label": "Choppers",
+      "description": "for vegetables, herbs, nuts",
+      "questions": {}
+    },
+    "mincer": {
+      "label": "Meat grinders",
+      "description": "for minced meat and sausages",
+      "questions": {}
+    },
+    "scale": {
+      "label": "Kitchen scales",
+      "description": "everyday and precision",
+      "questions": {
+        "type": {
+          "title": "What kind of scales do you need?",
+          "options": {
+            "kitchen": {
+              "label": "Kitchen scales",
+              "sublabel": "accurate to 1 g",
+              "table_value": "1 g"
+            },
+            "precise": {
+              "label": "Precision scales",
+              "sublabel": "to 0.1 g — for spices and coffee",
+              "card_reason": "Accurate to 0.1 g",
+              "table_value": "0.1 g"
+            }
+          }
+        }
+      }
+    },
+    "knife": {
+      "label": "Electric kitchen knives",
+      "description": "for meat and bread",
+      "questions": {
+        "type": {
+          "title": "Corded or cordless?",
+          "options": {
+            "cord": {
+              "label": "Corded",
+              "table_value": "Corded"
+            },
+            "cordless": {
+              "label": "Cordless",
+              "table_value": "Cordless"
+            }
+          }
+        }
+      }
+    },
+    "grill": {
+      "label": "Table grills",
+      "description": "contact grills and table grill plates",
+      "questions": {
+        "type": {
+          "title": "What kind of grill are you looking for?",
+          "options": {
+            "contact": {
+              "label": "Contact",
+              "sublabel": "presses from both sides",
+              "table_value": "Contact"
+            },
+            "plate": {
+              "label": "Plate",
+              "sublabel": "open surface",
+              "table_value": "Plate"
+            }
+          }
+        }
+      }
+    },
+    "toaster": {
+      "label": "Toasters",
+      "description": "for 2 and 4 slices",
+      "questions": {
+        "slots": {
+          "title": "How many slices at once?",
+          "options": {
+            "2": {
+              "label": "2 slices",
+              "table_value": "2"
+            },
+            "4": {
+              "label": "4 slices",
+              "sublabel": "for a family",
+              "card_reason": "4 slices at once",
+              "table_value": "4"
+            }
+          }
+        }
+      }
+    },
+    "sandwich": {
+      "label": "Sandwich toasters",
+      "description": "for sandwiches and waffles",
+      "questions": {
+        "type": {
+          "title": "What should it be able to do?",
+          "options": {
+            "sand": {
+              "label": "Sandwiches"
+            },
+            "multi": {
+              "label": "Waffles and grilling too",
+              "sublabel": "interchangeable plates",
+              "card_reason": "Interchangeable plates",
+              "table_value": "Interchangeable plates"
+            }
+          }
+        }
+      }
+    },
+    "airfryer": {
+      "label": "Deep fryers and air fryers",
+      "description": "with oil and without",
+      "questions": {
+        "type": {
+          "title": "What kind of fryer are you looking for?",
+          "options": {
+            "air": {
+              "label": "Air fryer",
+              "sublabel": "almost no oil",
+              "table_value": "Air fryer"
+            },
+            "oil": {
+              "label": "Oil",
+              "sublabel": "classic",
+              "table_value": "Oil"
+            }
+          }
+        },
+        "portions": {
+          "title": "How many portions do you usually cook?",
+          "options": {
+            "2": {
+              "label": "1–2"
+            },
+            "4": {
+              "label": "3–4",
+              "card_reason": "Holds 3–4 portions"
+            },
+            "6": {
+              "label": "5 or more",
+              "card_reason": "Large — 6 L or more"
+            }
+          }
+        }
+      }
+    },
+    "breadmaker": {
+      "label": "Bread makers",
+      "description": "for white, rye and gluten-free bread",
+      "questions": {}
+    },
+    "minioven": {
+      "label": "Mini ovens",
+      "description": "countertop ovens, also with hotplates",
+      "questions": {
+        "type": {
+          "title": "Do you need hotplates?",
+          "options": {
+            "plain": {
+              "label": "No",
+              "sublabel": "oven only",
+              "table_value": "No hotplates"
+            },
+            "hob": {
+              "label": "Yes",
+              "sublabel": "oven with hotplates on top",
+              "card_reason": "With hotplates",
+              "table_value": "With hotplates"
+            }
+          }
+        },
+        "size": {
+          "title": "How large should it be?",
+          "options": {
+            "small": {
+              "label": "For pizza",
+              "sublabel": "~20 L"
+            },
+            "big": {
+              "label": "For a whole chicken",
+              "sublabel": "30 L or more",
+              "card_reason": "Large — 30 L or more"
+            }
+          }
+        }
+      }
+    },
+    "juicer": {
+      "label": "Juicers",
+      "description": "slow, centrifugal, citrus",
+      "questions": {
+        "type": {
+          "title": "What kind of juicer are you looking for?",
+          "options": {
+            "slow": {
+              "label": "Slow juicer",
+              "sublabel": "more juice, suits greens",
+              "card_reason": "Slow juicer — more juice",
+              "table_value": "Slow"
+            },
+            "centrif": {
+              "label": "Centrifugal",
+              "sublabel": "fast, for hard fruit",
+              "table_value": "Centrifugal"
+            },
+            "citrus": {
+              "label": "Citrus",
+              "sublabel": "for oranges and lemons",
+              "table_value": "Citrus"
+            }
+          }
+        }
+      }
+    },
+    "dehydrator": {
+      "label": "Food dehydrators",
+      "description": "for drying and dehydrating",
+      "questions": {
+        "size": {
+          "title": "How much will you dry?",
+          "options": {
+            "small": {
+              "label": "A little",
+              "sublabel": "up to 5 trays"
+            },
+            "big": {
+              "label": "A lot",
+              "sublabel": "6 trays or more",
+              "card_reason": "6 trays or more"
+            }
+          }
+        }
+      }
+    },
+    "vacuumsealer": {
+      "label": "Vacuum sealers",
+      "description": "for food storage and sous-vide",
+      "questions": {}
+    },
+    "shaver": {
+      "label": "Shavers",
+      "description": "rotary, foil, OneBlade type, women's",
+      "questions": {
+        "type": {
+          "title": "What kind of shaver are you looking for?",
+          "help": "Rotary heads follow the contours of the face in circular movements and handle longer stubble well. A foil shaver shaves in straight strokes and usually shaves closer to the skin. A hybrid (for example OneBlade) does not shave as smoothly, but it also trims the beard and shapes edges.",
+          "options": {
+            "rotary": {
+              "label": "With rotary heads",
+              "sublabel": "follows the face, good for a thick beard",
+              "table_value": "Rotary"
+            },
+            "foil": {
+              "label": "With a foil",
+              "sublabel": "straight strokes, a very close shave",
+              "table_value": "With a foil"
+            },
+            "hybrid": {
+              "label": "Shaves and trims",
+              "sublabel": "one blade for shaving, stubble and edges",
+              "card_reason": "Shaves, trims and shapes edges",
+              "table_value": "Hybrid"
+            },
+            "lady": {
+              "label": "Women's",
+              "sublabel": "for legs, underarms and the bikini area",
+              "table_value": "Women's"
+            }
+          }
+        },
+        "wet": {
+          "title": "Will you also shave with foam or in the shower?",
+          "options": {
+            "yes": {
+              "label": "Yes",
+              "sublabel": "needs Wet & Dry",
+              "card_reason": "Also for wet shaving (Wet & Dry)",
+              "table_value": "Wet & Dry"
+            },
+            "no": {
+              "label": "No, only dry"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "battery": {
+              "label": "Long battery life",
+              "sublabel": "60 min or more",
+              "card_reason": "Battery 60 min or more"
+            },
+            "station": {
+              "label": "Cleaning station",
+              "sublabel": "cleans and charges itself",
+              "card_reason": "With a cleaning station"
+            }
+          }
+        }
+      }
+    },
+    "trimmer": {
+      "label": "Trimmers and hair clippers",
+      "description": "for beard, hair, body",
+      "questions": {
+        "type": {
+          "title": "What do you need it for?",
+          "options": {
+            "beard": {
+              "label": "Beard",
+              "sublabel": "stubble and beard length",
+              "table_value": "Beard"
+            },
+            "clipper": {
+              "label": "Haircuts",
+              "sublabel": "hair clipper",
+              "table_value": "Hair clipper"
+            },
+            "body": {
+              "label": "Body",
+              "sublabel": "safe for sensitive areas",
+              "table_value": "Body"
+            },
+            "multi": {
+              "label": "Everything",
+              "sublabel": "beard, hair and body with interchangeable heads",
+              "card_reason": "All-in-one — one for everything",
+              "table_value": "All-in-one"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "battery": {
+              "label": "Long battery life",
+              "sublabel": "90 min or more",
+              "card_reason": "Battery 90 min or more"
+            },
+            "wet": {
+              "label": "Washable under water",
+              "sublabel": "easier to clean",
+              "card_reason": "Waterproof — washable under the tap"
+            }
+          }
+        }
+      }
+    },
+    "hairdryer": {
+      "label": "Hair dryers",
+      "description": "powerful, foldable, with ionisation",
+      "questions": {
+        "hair": {
+          "title": "What is your hair like?",
+          "why": "For long and thick hair a powerful dryer saves time and heats the hair less.",
+          "options": {
+            "short": {
+              "label": "Short or medium",
+              "sublabel": "normal power is enough"
+            },
+            "long": {
+              "label": "Long or thick",
+              "sublabel": "needs at least 2000 W",
+              "card_reason": "Powerful — 2000 W or more"
+            },
+            "travel": {
+              "label": "Needed for travel",
+              "sublabel": "foldable and light",
+              "card_reason": "Foldable — good for travel"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "ionic": {
+              "label": "Less frizz",
+              "sublabel": "ionisation",
+              "card_reason": "With ionisation — smoother hair"
+            },
+            "light": {
+              "label": "Light",
+              "sublabel": "up to 500 g",
+              "card_reason": "Light — up to 500 g"
+            }
+          }
+        }
+      }
+    },
+    "styler": {
+      "label": "Hair straighteners and stylers",
+      "description": "straighteners, curling irons, hot air brushes",
+      "questions": {
+        "type": {
+          "title": "What would you like to do with your hair?",
+          "options": {
+            "straight": {
+              "label": "Straighten",
+              "sublabel": "hair straightener",
+              "table_value": "Straightener"
+            },
+            "curl": {
+              "label": "Curl",
+              "sublabel": "curling iron",
+              "table_value": "Curling iron"
+            },
+            "air": {
+              "label": "Dry and style",
+              "sublabel": "hot air brush or styler with attachments",
+              "card_reason": "Dries and styles at once",
+              "table_value": "Hot air styler"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "temp": {
+              "label": "Temperature control",
+              "sublabel": "gentler on hair",
+              "card_reason": "Adjustable temperature"
+            },
+            "ionic": {
+              "label": "Less frizz",
+              "sublabel": "ionisation",
+              "card_reason": "With ionisation — smoother hair"
+            }
+          }
+        }
+      }
+    },
+    "toothbrush": {
+      "label": "Electric toothbrushes",
+      "description": "sonic, round head, children's",
+      "questions": {
+        "type": {
+          "title": "What kind of toothbrush are you looking for?",
+          "help": "Both adult types clean better than a manual toothbrush. A round head cleans each tooth on its own; a sonic one cleans several teeth at once with fast vibrations. Choose the one you find more comfortable.",
+          "options": {
+            "sonic": {
+              "label": "Sonic",
+              "sublabel": "oval head, very fast vibrations",
+              "table_value": "Sonic"
+            },
+            "round": {
+              "label": "With a round head",
+              "sublabel": "rotates and cleans each tooth on its own",
+              "table_value": "Rotating"
+            },
+            "kids": {
+              "label": "Children's",
+              "sublabel": "small head, gentler mode",
+              "table_value": "Children's"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "pressure": {
+              "label": "Pressure sensor",
+              "sublabel": "warns if you press too hard",
+              "card_reason": "Warns if you press too hard"
+            },
+            "app": {
+              "label": "With an app",
+              "sublabel": "shows where you have brushed",
+              "card_reason": "Connects to an app"
+            }
+          }
+        }
+      }
+    },
+    "epilator": {
+      "label": "Epilators",
+      "description": "epilators and IPL devices",
+      "questions": {
+        "type": {
+          "title": "How would you like to remove hair?",
+          "help": "IPL suits fair to medium-dark skin and dark hair. It does not work on very fair, grey or red hair. An epilator works on all hair, but can be unpleasant at first.",
+          "options": {
+            "epil": {
+              "label": "Epilator",
+              "sublabel": "pulls hair out by the root, smooth for 3–4 weeks",
+              "table_value": "Epilator"
+            },
+            "ipl": {
+              "label": "IPL hair removal",
+              "sublabel": "light pulses, less hair over time",
+              "card_reason": "IPL — less hair for longer",
+              "table_value": "IPL"
+            }
+          }
+        },
+        "priorities": {
+          "title": "What else matters to you?",
+          "options": {
+            "wet": {
+              "label": "Usable in the shower",
+              "sublabel": "hurts less in warm water",
+              "card_reason": "Usable in the shower too"
+            },
+            "cordless": {
+              "label": "Cordless",
+              "sublabel": "battery powered",
+              "card_reason": "Cordless"
+            }
+          }
+        }
+      }
+    }
+  }
+}
