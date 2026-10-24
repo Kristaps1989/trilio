@@ -19,12 +19,12 @@ export function writeConsent(value: "granted" | "denied"): void {
   window.dispatchEvent(new Event(CONSENT_CHANGED));
 }
 
-/** Removes Google Analytics cookies (`_ga`, `_ga_<id>`) after consent is withdrawn. */
+/** Removes the Google cookies (`_ga`, `_ga_<id>`, Google Ads `_gcl_*`) after consent is withdrawn. */
 export function deleteAnalyticsCookies(): void {
   const names = document.cookie
     .split(";")
     .map((c) => c.split("=")[0]!.trim())
-    .filter((n) => n === "_ga" || n.startsWith("_ga_"));
+    .filter((n) => n === "_ga" || n.startsWith("_ga_") || n.startsWith("_gcl_"));
   const host = location.hostname;
   const domains = ["", host, `.${host}`, `.${host.split(".").slice(-2).join(".")}`];
   for (const name of names) {

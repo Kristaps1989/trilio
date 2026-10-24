@@ -37,6 +37,9 @@ jobs:
       ALLOW_INSECURE_TEST_FEATURES: "1"
       # A fake GA4 id so the e2e suite exercises the consent banner and events (requests are stubbed).
       GA_MEASUREMENT_ID: G-TEST12345
+      # A fake Google Ads tag and conversion label, also stubbed in the e2e suite.
+      GOOGLE_ADS_TAG_ID: AW-123456789
+      GOOGLE_ADS_CONVERSION_SHOP_CLICK: shopClickTest
       PAYMENT_TOKEN_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       CI: "1"
     steps:

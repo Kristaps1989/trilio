@@ -752,7 +752,7 @@
         {
           "h": "Sīkdatnes",
           "p": [
-            "Pakalpojumam nepieciešamās sīkdatnes izmantojam vienmēr. Google Analytics statistikas sīkdatnes tiek iestatītas tikai pēc tavas atļaujas. Reklāmas sīkdatņu nav. Sīkāk: sīkdatņu politikā."
+            "Pakalpojumam nepieciešamās sīkdatnes izmantojam vienmēr. Google Analytics statistikas un Google Ads mērījumu sīkdatnes tiek iestatītas tikai pēc tavas atļaujas, un reklāmu personalizēšanai tās neizmantojam. Sīkāk: sīkdatņu politikā."
           ]
         },
         {
@@ -882,7 +882,7 @@
         },
         {
           "name": "trilio_consent",
-          "purpose": "Atceras tavu izvēli par statistikas sīkdatnēm.",
+          "purpose": "Atceras tavu izvēli par statistikas un reklāmu mērījumu sīkdatnēm.",
           "duration": "6 mēneši"
         },
         {
@@ -899,6 +899,11 @@
           "name": "_ga_<ID>",
           "purpose": "Google Analytics: saglabā apmeklējuma stāvokli. Tikai ar tavu atļauju.",
           "duration": "2 gadi"
+        },
+        {
+          "name": "_gcl_au, _gcl_aw",
+          "purpose": "Google Ads: saista apmeklējumu ar reklāmas klikšķi, lai redzētu, kura reklāma strādā. Tikai ar tavu atļauju.",
+          "duration": "90 dienas"
         }
       ],
       "sections": [
@@ -921,7 +926,7 @@
         {
           "h": "Kā pārvaldīt sīkdatnes",
           "p": [
-            "Savu izvēli par statistikas un reklāmu mērījumu sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics sīkdatnes tiek dzēstas.",
+            "Savu izvēli par statistikas un reklāmu mērījumu sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics un Google Ads sīkdatnes tiek dzēstas.",
             "Sīkdatnes vari dzēst vai bloķēt arī pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
           ]
         }

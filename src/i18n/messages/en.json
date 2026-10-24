@@ -759,7 +759,7 @@
         {
           "h": "Cookies",
           "p": [
-            "Cookies the service needs are always used. Google Analytics statistics cookies are set only with your permission. There are no advertising cookies. More in the cookie policy."
+            "Cookies the service needs are always used. Google Analytics statistics and Google Ads measurement cookies are set only with your permission, and we do not use them to personalise ads. More in the cookie policy."
           ]
         },
         {
@@ -861,7 +861,7 @@
     "cookies": {
       "title": "Cookie policy",
       "description": "Which cookies Trilio uses and why.",
-      "intro": "Trilio always uses only the cookies the service cannot work without. Google Analytics statistics cookies are set only if you allow it in the cookie window. We use no advertising cookies.",
+      "intro": "Trilio always uses only the cookies the service cannot work without. Google Analytics statistics cookies and Google Ads measurement cookies are set only if you allow it in the cookie window. They measure which ad brought you here; we do not use them to personalise ads (remarketing).",
       "tableName": "Cookie",
       "tablePurpose": "Purpose",
       "tableDuration": "Duration",
@@ -883,7 +883,7 @@
         },
         {
           "name": "trilio_consent",
-          "purpose": "Remembers your choice about statistics cookies.",
+          "purpose": "Remembers your choice about statistics and ad measurement cookies.",
           "duration": "6 months"
         },
         {
@@ -900,6 +900,11 @@
           "name": "_ga_<ID>",
           "purpose": "Google Analytics: keeps the state of the visit. Only with your permission.",
           "duration": "2 years"
+        },
+        {
+          "name": "_gcl_au, _gcl_aw",
+          "purpose": "Google Ads: links the visit to an ad click, to see which ads work. Only with your permission.",
+          "duration": "90 days"
         }
       ],
       "sections": [
@@ -922,7 +927,7 @@
         {
           "h": "How to manage cookies",
           "p": [
-            "You can change your choice about statistics and ad measurement cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics cookies are deleted.",
+            "You can change your choice about statistics and ad measurement cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics and Google Ads cookies are deleted.",
             "You can also delete or block cookies in the browser settings. If you delete the sign-in cookie, you will need to sign in again."
           ]
         }

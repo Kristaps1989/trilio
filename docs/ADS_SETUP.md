@@ -68,6 +68,50 @@ If the admin shows "Google Cloud projektam ir tikai Test piekļuve", step 1.3
 is still pending. If it shows "nav piekļuves šim Google Ads kontam", step 2.2
 is missing or used a different e-mail.
 
+## 5. The Google Ads tag and conversions
+
+Google Ads shows a snippet with `gtag('config', 'AW-…')`. Don't paste it into
+the site: it would load before the cookie banner, which EU law does not
+allow. Trilio already loads the same gtag.js after "Atļaut". It only needs the
+id:
+
+| Variable | Value |
+|---|---|
+| `GOOGLE_ADS_TAG_ID` | `AW-18535248572` (the id in the snippet) |
+
+For the optimiser to see results in Google too, create two conversion
+actions. Go to **Goals → Conversions → New conversion action → Website**, then
+"Add a conversion action manually":
+
+1. "Pāreja uz veikalu", category **Outbound click** (or "Submit lead form"),
+   value none, count **One**.
+2. "Saglabāts vēlmju sarakstā", category **Add to cart** or **Other**, count
+   **One**, and mark it **Secondary** so bidding does not chase it on its own.
+
+Each shows an event snippet with
+`'send_to': 'AW-18535248572/AbCdEf…'`. Copy the part after the slash into:
+
+| Variable | Value |
+|---|---|
+| `GOOGLE_ADS_CONVERSION_SHOP_CLICK` | the label of the first action |
+| `GOOGLE_ADS_CONVERSION_SAVE` | the label of the second action |
+
+### Verifying the tag
+
+Google's automatic check opens the page without accepting cookies. So it
+finds no tag, and the status can say "Not verified" or "No recent activity".
+That is expected with a consent banner and is not an error. To verify:
+
+1. Open [tagassistant.google.com](https://tagassistant.google.com), add
+   `https://trilio.lv` and connect.
+2. In the window that opens, press **Atļaut** in the cookie banner.
+3. Tag Assistant shows the tag `AW-…` firing. Click "Pirkt" on a result: the
+   "conversion" event appears.
+
+After the first real visitors accept cookies, the tag status in Google Ads
+changes to "Active" by itself, usually within a day. A conversion action shows
+"Recording conversions" after its first conversion.
+
 ## Alternative: a personal OAuth login
 
 If a service account is not possible, Trilio also accepts an OAuth client of
