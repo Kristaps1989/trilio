@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/ui/analytics/track";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { isUiLocale, localizedPath, type UiLocale } from "@/i18n/routing";
@@ -84,6 +85,7 @@ export function SaveButton({
         if (r.reason === "auth") window.location.href = signInUrl(target, isUiLocale(locale) ? locale : "lv");
         return;
       }
+      if (r.saved) track("save_item", { item: target.kind });
       setNote(variant === "card" && r.saved ? { alerts: r.alerts, askOffers: r.askOffers } : null);
       router.refresh();
     });

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { clickLabel, eventFromDataset, pageInfo } from "@/domain/analytics/page";
+import { adsConversionFor, type AdsTag } from "@/config/analytics";
 import { Button } from "@/ui/Button";
 import {
   CONSENT_CHANGED,
@@ -14,9 +15,12 @@ import {
   readConsent,
   writeConsent,
 } from "./consent";
+import { TRACK_EVENT, type TrackDetail } from "./track";
 
-// Google Analytics 4, opt-in only (docs/ANALYTICS.md). Nothing is loaded and
-// no cookie is set until the visitor accepts in the banner. Page views carry
+// Google Analytics 4 and the Google Ads tag, opt-in only (docs/ANALYTICS.md).
+// Nothing is loaded and no cookie is set until the visitor accepts in the
+// banner. GA4 events are sent to GA4 only; Google Ads gets its page view and
+// the two conversions (a shop click, a save) when their labels are set. Page views carry
 // the site section and subcategory, never the query string. Every button and
 // link click is sent as `ui_click`; elements with `data-ga-event` send their
 // own event (answers, offer clicks).
@@ -34,8 +38,10 @@ function subscribe(onChange: () => void) {
   return () => window.removeEventListener(CONSENT_CHANGED, onChange);
 }
 
-function loadGtag(measurementId: string) {
+function loadGtag(measurementId: string | null, ads: AdsTag | null) {
   if (window.gtag) return;
+  const first = measurementId ?? ads?.id;
+  if (!first) return;
   window.dataLayer = window.dataLayer ?? [];
   window.gtag = function gtag() {
     // gtag.js expects the `arguments` object itself, not an array.
@@ -52,29 +58,35 @@ function loadGtag(measurementId: string) {
     ad_personalization: "denied",
   });
   window.gtag("js", new Date());
-  window.gtag("config", measurementId, {
-    send_page_view: false,
-    allow_google_signals: false,
-    allow_ad_personalization_signals: false,
-  });
+  if (measurementId)
+    window.gtag("config", measurementId, {
+      send_page_view: false,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+    });
+  if (ads) window.gtag("config", ads.id, { allow_ad_personalization_signals: false });
   const script = document.createElement("script");
   script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(first)}`;
   document.head.appendChild(script);
 }
 
 const CLICKABLE = "a, button, [role=button], [role=radio], [role=checkbox]";
 
-function onDocumentClick(event: MouseEvent) {
+function onDocumentClick(event: MouseEvent, measurementId: string | null, ads: AdsTag | null) {
   const el = (event.target as Element | null)?.closest<HTMLElement>(CLICKABLE);
   if (!el || !window.gtag || el.closest("[data-ga-ignore]")) return;
   const page = pageInfo(location.pathname, location.search);
   const base = { section: page.section, subcategory: page.subcategory };
   const custom = eventFromDataset(el.dataset);
   if (custom) {
-    window.gtag("event", custom.event, { ...base, ...custom.params });
+    const conversion = adsConversionFor(custom.event, ads);
+    if (conversion) window.gtag("event", "conversion", { send_to: conversion });
+    if (measurementId)
+      window.gtag("event", custom.event, { ...base, ...custom.params, send_to: measurementId });
     return;
   }
+  if (!measurementId) return;
   const params: Record<string, string | undefined> = {
     ...base,
     label: clickLabel(el.innerText, el.dataset.gaLabel ?? el.getAttribute("aria-label")),
@@ -84,10 +96,10 @@ function onDocumentClick(event: MouseEvent) {
     const url = new URL(el.href, location.href);
     params.link = url.origin === location.origin ? url.pathname : url.hostname;
   }
-  window.gtag("event", "ui_click", params);
+  window.gtag("event", "ui_click", { ...params, send_to: measurementId });
 }
 
-export function Analytics({ measurementId }: { measurementId: string }) {
+export function Analytics({ measurementId, ads }: { measurementId: string | null; ads: AdsTag | null }) {
   const t = useTranslations("consent");
   const consent = useSyncExternalStore<Consent | "pending">(
     subscribe,
@@ -106,15 +118,38 @@ export function Analytics({ measurementId }: { measurementId: string }) {
 
   useEffect(() => {
     if (consent !== "granted") return;
-    loadGtag(measurementId);
-    document.addEventListener("click", onDocumentClick, true);
-    return () => document.removeEventListener("click", onDocumentClick, true);
-  }, [consent, measurementId]);
+    loadGtag(measurementId, ads);
+    const onClick = (e: MouseEvent) => onDocumentClick(e, measurementId, ads);
+    const onTrack = (e: Event) => {
+      const { event, params } = (e as CustomEvent<TrackDetail>).detail;
+      if (!window.gtag) return;
+      const conversion = adsConversionFor(event, ads);
+      if (conversion) window.gtag("event", "conversion", { send_to: conversion });
+      if (measurementId) {
+        const page = pageInfo(location.pathname, location.search);
+        window.gtag("event", event, {
+          section: page.section,
+          subcategory: page.subcategory,
+          ...params,
+          send_to: measurementId,
+        });
+      }
+    };
+    document.addEventListener("click", onClick, true);
+    window.addEventListener(TRACK_EVENT, onTrack);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener(TRACK_EVENT, onTrack);
+    };
+  }, [consent, measurementId, ads]);
 
   useEffect(() => {
     if (consent !== "granted" || !window.gtag) return;
     const page = pageInfo(pathname, search ? `?${search}` : "");
+    // Google Ads counts its own page view from its config; this one is for GA4.
+    if (!measurementId) return;
     window.gtag("event", "page_view", {
+      send_to: measurementId,
       page_location: `${location.origin}${page.path}`,
       page_path: page.path,
       page_title: document.title,
@@ -122,14 +157,14 @@ export function Analytics({ measurementId }: { measurementId: string }) {
       section: page.section,
       subcategory: page.subcategory,
     });
-  }, [consent, pathname, search]);
+  }, [consent, pathname, search, measurementId]);
 
   const choose = (value: "granted" | "denied") => {
     const wasGranted = consent === "granted";
     writeConsent(value);
     setReopened(false);
     if (value === "denied" && wasGranted) {
-      // Withdrawing consent: remove the GA cookies and drop the loaded script.
+      // Withdrawing consent: remove the Google cookies and drop the loaded script.
       deleteAnalyticsCookies();
       location.reload();
     }

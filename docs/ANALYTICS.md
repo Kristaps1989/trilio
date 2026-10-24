@@ -71,6 +71,14 @@ after "Atļaut", and then grants `analytics_storage`, `ad_storage` and
 `ad_user_data`. `ad_personalization` stays denied, so nobody is put on a
 remarketing list.
 
+The **Google Ads tag** (`GOOGLE_ADS_TAG_ID`, `AW-…`) rides on the same
+consent and the same gtag.js. It is configured with ad personalisation off
+and receives only two events as conversions: `select_offer` (a shop click,
+`GOOGLE_ADS_CONVERSION_SHOP_CLICK`) and `save_item` (a save the server
+confirmed, `GOOGLE_ADS_CONVERSION_SAVE`). All other events carry
+`send_to` GA4 only. Its cookies (`_gcl_au`, `_gcl_aw`) are deleted with the
+GA cookies when consent is withdrawn.
+
 Trilio's own attribution needs no cookie. A visit that arrives with a
 `gclid` or `utm_*` parameter is stored in `ad_landings` under the same
 daily visitor hash as the first-party statistics. A shop click or a save by
@@ -89,6 +97,7 @@ after 90 days.
 | `price_alert_off` / `price_alert_on` | "Nesūtīt" / "Tomēr sūtīt" under a heart just tapped | `section`, `subcategory` |
 | `offers_ask_yes` / `offers_ask_no` | The one-time offers question under the first heart | `section`, `subcategory` |
 | `confidence_answer` | "Jā" / "Nē, kaut kā pietrūka" under the results | `answer`, `section`, `subcategory` |
+| `save_item` | A heart, once the server has saved the item | `item` (`product` or `search`), `section`, `subcategory` |
 | `select_offer` | "Pirkt …" on a result card (leaves to the shop) | `store`, `tier`, `recommended`, `refurbished`, `price_eur`, `section`, `subcategory` |
 
 Never sent: query strings (answers, free text, search), typed text, email

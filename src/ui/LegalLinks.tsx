@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
-import { analyticsId } from "@/config/analytics";
+import { trackingEnabled } from "@/config/analytics";
 import type { UiLocale } from "@/i18n/routing";
 import { ConsentSettingsButton } from "./analytics/Analytics";
 
@@ -28,7 +28,7 @@ export async function LegalLinks({ locale }: { locale: UiLocale }) {
             </Link>
           </li>
         ))}
-        {analyticsId() ? (
+        {trackingEnabled() ? (
           <li>
             <ConsentSettingsButton label={consent("settings")} />
           </li>

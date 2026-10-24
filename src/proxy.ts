@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ANALYTICS_HOSTS, analyticsId } from "@/config/analytics";
+import { trackingHosts } from "@/config/analytics";
 import { LANG_COOKIE } from "@/i18n/routing";
 
 // Two jobs on every request:
@@ -25,8 +25,9 @@ const YEAR_S = 365 * 24 * 3600;
 
 function csp(nonce: string): string {
   const isDev = process.env.NODE_ENV === "development";
-  // Google Analytics hosts only when it is configured; it still loads only after consent.
-  const ga = analyticsId() ? ` ${ANALYTICS_HOSTS.join(" ")}` : "";
+  // Google Analytics and Google Ads hosts only when configured; both still load only after consent.
+  const hosts = trackingHosts();
+  const ga = hosts.length ? ` ${hosts.join(" ")}` : "";
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${ga}${isDev ? " 'unsafe-eval'" : ""}`,
@@ -35,6 +36,7 @@ function csp(nonce: string): string {
     `img-src 'self' data: blob:${ga}`,
     "font-src 'self'",
     `connect-src 'self'${ga}`,
+    ...(ga ? ["frame-src 'self' https://www.googletagmanager.com"] : []),
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",

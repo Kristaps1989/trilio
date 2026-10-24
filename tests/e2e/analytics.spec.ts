@@ -11,7 +11,9 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://www.googletagmanager.com/**", (r) =>
     r.fulfill({ contentType: "application/javascript", body: "" }),
   );
-  await page.route(/google-analytics\.com/, (r) => r.fulfill({ status: 204 }));
+  await page.route(/google-analytics\.com|googleadservices\.com|doubleclick\.net/, (r) =>
+    r.fulfill({ status: 204 }),
+  );
 });
 
 type GaEvent = { name: string; params: Record<string, string | undefined> };
@@ -84,4 +86,41 @@ test("page views never include the query string", async ({ page }) => {
 test("the CSP allows Google Analytics hosts when it is configured", async ({ page }) => {
   const res = await page.goto("/");
   expect(res!.headers()["content-security-policy"]).toContain("https://*.google-analytics.com");
+});
+
+test("the Google Ads tag loads only after consent and a shop click is its conversion", async ({ page }) => {
+  test.skip(!process.env.GOOGLE_ADS_TAG_ID, "GOOGLE_ADS_TAG_ID is not set for the test server");
+  const configs = () =>
+    page.evaluate(() =>
+      (window.dataLayer ?? [])
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .filter((a) => a[0] === "config")
+        .map((a) => a[1] as string),
+    );
+  await page.goto("/rezultati?sub=kettle");
+  expect(await page.evaluate(() => typeof window.gtag)).toBe("undefined");
+  await banner(page).getByRole("button", { name: "Atļaut", exact: true }).click();
+  await expect.poll(configs).toContain(process.env.GOOGLE_ADS_TAG_ID);
+  expect(await configs()).toContain("G-TEST12345");
+
+  // Stay on the page: the shop link would leave it.
+  await page.evaluate(() =>
+    document.addEventListener("click", (e) => (e.target as Element).closest("a") && e.preventDefault()),
+  );
+  await page
+    .getByRole("region", { name: "Ieteiktie varianti" })
+    .getByRole("link", { name: /^Pirkt/ })
+    .first()
+    .click();
+  await expect
+    .poll(async () => (await events(page)).find((e) => e.name === "conversion")?.params.send_to)
+    .toBe(`${process.env.GOOGLE_ADS_TAG_ID}/shopClickTest`);
+  // GA4 events go to GA4 only, not to Google Ads.
+  expect((await events(page)).find((e) => e.name === "select_offer")?.params.send_to).toBe("G-TEST12345");
+});
+
+test("the CSP allows the Google Ads hosts when the tag is configured", async ({ page }) => {
+  test.skip(!process.env.GOOGLE_ADS_TAG_ID, "GOOGLE_ADS_TAG_ID is not set for the test server");
+  const res = await page.goto("/");
+  expect(res!.headers()["content-security-policy"]).toContain("https://www.googleadservices.com");
 });
