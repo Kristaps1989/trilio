@@ -1,3 +1,4 @@
+import { cleanName } from "@/domain/catalog/naming";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -17,6 +18,8 @@ import { Button, ButtonLink, buttonClass } from "@/ui/Button";
 import { InfoBox, Kicker, Page, PageTitle, Panel, Screen } from "@/ui/layout";
 import { ProductImage } from "@/ui/ProductImage";
 import { OffersConsent } from "@/ui/OffersConsent";
+import { PriceAlertsSwitch } from "@/ui/PriceAlertsSwitch";
+import { priceAlertsOn } from "@/services/wishlist/alerts";
 import { SaveButton } from "@/ui/SaveButton";
 import { offersOptIn } from "@/services/offers/offers";
 import { cardMedia } from "../rezultati/card-media";
@@ -61,12 +64,13 @@ export default async function WishlistPage({ searchParams }: Props) {
     );
   }
 
-  const [items, sub, threshold, account, offersOn] = await Promise.all([
+  const [items, sub, threshold, account, offersOn, alertsOn] = await Promise.all([
     listSaved(db, userId),
     currentSubscription(db, userId),
     getThreshold(db, userId),
     db.select({ provider: accounts.provider }).from(accounts).where(eq(accounts.userId, userId)).limit(1),
     offersOptIn(db, userId),
+    priceAlertsOn(db, userId),
   ]);
   const plan = sub ? (await db.select().from(plans).where(eq(plans.id, sub.planId)))[0] : undefined;
   const subscribed = hasAccess(sub);
@@ -184,8 +188,10 @@ export default async function WishlistPage({ searchParams }: Props) {
                       <>
                         <p className="text-sm text-stone">{t("searchBest")}</p>
                         <p className="text-base text-mist">
-                          <strong lang="lv">{top.product.name}</strong> — {formatEur(top.offer.priceCents)} (
-                          {top.offer.storeName})
+                          <strong lang="lv">
+                            {cleanName(top.product.name, top.product.brand, top.product.modelCode)}
+                          </strong>{" "}
+                          — {formatEur(top.offer.priceCents)} ({top.offer.storeName})
                         </p>
                         <p className="text-sm text-stone">
                           {t("searchCount", { count: proposal.matchingCount })}
@@ -217,22 +223,18 @@ export default async function WishlistPage({ searchParams }: Props) {
             {productCards.map(({ item, product, offer, history }) => {
               const diff = change(item.baselinePriceCents, offer?.priceCents ?? null);
               const { image } = cardMedia(product);
+              const name = cleanName(product.name, product.brand, product.modelCode);
               return (
                 <li key={item.id}>
                   <article
-                    aria-label={product.name}
+                    aria-label={name}
                     className="flex flex-col gap-3 rounded-card border-[1.5px] border-line-40 p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <ProductImage
-                        src={image.src}
-                        alt={product.name}
-                        fallback={image.fallback}
-                        size="thumb"
-                      />
+                      <ProductImage src={image.src} alt={name} fallback={image.fallback} size="thumb" />
                       <div className="min-w-0 flex-1">
                         <h3 className="font-body text-lg leading-snug font-bold text-mist" lang="lv">
-                          {product.name}
+                          {name}
                         </h3>
                         <p className="text-sm text-stone">
                           {tr("model", { code: product.modelCode, ean: product.ean ?? "—" })}
@@ -241,7 +243,7 @@ export default async function WishlistPage({ searchParams }: Props) {
                       <SaveButton
                         target={{ kind: "product", productId: product.id }}
                         saved
-                        name={product.name}
+                        name={name}
                         variant="icon"
                       />
                     </div>
@@ -286,24 +288,10 @@ export default async function WishlistPage({ searchParams }: Props) {
         </section>
       ) : null}
 
-      <Panel tone={subscribed ? "line" : "lime"} className="flex flex-col gap-[14px]">
-        {subscribed ? (
-          <>
-            <h2 className="font-heading text-xl font-semibold text-mist">{t("notifyTitle")}</h2>
-            <p className="text-base text-stone">{t("notifyOn", { email })}</p>
-            <ThresholdPicker value={threshold} />
-          </>
-        ) : (
-          <>
-            <h2 className="font-heading text-xl font-semibold text-mist">{t("notifyOffTitle")}</h2>
-            <p className="text-base text-stone">{t("notifyOffBody")}</p>
-            <div>
-              <ButtonLink href="/velmju-saraksts/pazinojumi">
-                {t("notifyCta", { price: tr("radarMonthly") })}
-              </ButtonLink>
-            </div>
-          </>
-        )}
+      <Panel className="flex flex-col gap-[14px]">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("notifyTitle")}</h2>
+        <PriceAlertsSwitch initial={alertsOn} email={email} />
+        {alertsOn ? <ThresholdPicker value={threshold} /> : null}
       </Panel>
 
       <Panel className="flex flex-col gap-[14px]">
@@ -311,7 +299,8 @@ export default async function WishlistPage({ searchParams }: Props) {
         <OffersConsent initial={offersOn} />
       </Panel>
 
-      {subscription && subscription.status !== "pending" ? (
+      {/* Subscriptions bought before the plan was retired can still be seen and cancelled. */}
+      {subscription && subscription.status !== "pending" && subscription.status !== "expired" ? (
         <Panel className="flex flex-col gap-[14px]">
           <h2 className="font-heading text-xl font-semibold text-mist">{t("subscription")}</h2>
           <SubscriptionPanel subscription={subscription} />

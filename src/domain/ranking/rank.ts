@@ -1,4 +1,5 @@
 import { fitAttributes } from "@/domain/catalog/attributes";
+import { reviewSummary } from "@/domain/catalog/reviews";
 import type { OfferView, ProductView, Urgency } from "@/domain/catalog/types";
 import type { Answers, Subcategory } from "@/domain/questions/schema";
 import {
@@ -155,13 +156,33 @@ export function dominates(a: Candidate, b: Candidate): boolean {
   return a !== b && a.price <= b.price && a.score >= b.score;
 }
 
+/** Brand reliability alone may lift a pick at most this far above a cheaper one (docs/TRUST_POLISH_PLAN.md §6). */
+export const BRAND_ONLY_PREMIUM = 0.15;
+
+/**
+ * Whether the dearer of two candidates earns its price over the cheaper:
+ * better on its own specs and answers (brand aside), or the shops'
+ * reviews back a better brand, or the brand alone at most 15 % dearer.
+ */
+export function earnsPrice(cheaper: Candidate, dearer: Candidate): boolean {
+  if (dearer.price <= cheaper.price) return true;
+  const brandOf = (c: Candidate) => c.quality?.brand ?? 0;
+  if (dearer.score - brandOf(dearer) > cheaper.score - brandOf(cheaper)) return true;
+  if (brandOf(dearer) <= brandOf(cheaper)) return false;
+  if (dearer.price <= cheaper.price * (1 + BRAND_ONLY_PREMIUM)) return true;
+  const rd = reviewSummary(dearer.product);
+  const rc = reviewSummary(cheaper.product);
+  return !!rd && (!rc || rd.x10 > rc.x10);
+}
+
 /**
  * Three picks that span the range (§2.3): the best overall, the best in the
  * lower third of the prices on offer and the best in the upper third. The
  * cheapest product is never picked just for being cheap, so a €89 mini fridge
  * cannot appear in a €350–500 search.
- * No pick is dominated by another (docs/UPGRADE_REASONS_PLAN.md): when no
- * product in a third is better than the cheaper picks, fewer picks are shown.
+ * No pick is dominated by another (docs/UPGRADE_REASONS_PLAN.md) and a
+ * dearer pick earns its price beyond the brand (`earnsPrice`): when no
+ * product in a third qualifies, fewer picks are shown.
  */
 export function pickThree(candidates: Candidate[]): Candidate[] {
   const sorted = byValue(candidates);
@@ -172,7 +193,11 @@ export function pickThree(candidates: Candidate[]): Candidate[] {
   const picks: Candidate[] = [];
   // A pricier pick must be better than every cheaper one, so the shopper can see why to pay more.
   const fits = (c: Candidate) =>
-    !picks.includes(c) && picks.every((p) => !dominates(p, c) && !dominates(c, p));
+    !picks.includes(c) &&
+    picks.every(
+      (p) =>
+        !dominates(p, c) && !dominates(c, p) && (c.price > p.price ? earnsPrice(p, c) : earnsPrice(c, p)),
+    );
   const take = (pred: (c: Candidate) => boolean) => {
     const c = sorted.find((x) => fits(x) && pred(x));
     if (c) picks.push(c);

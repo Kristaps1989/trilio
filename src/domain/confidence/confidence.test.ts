@@ -5,15 +5,19 @@ import { offer, product } from "@/domain/testing/builders";
 import {
   argumentTargets,
   assignRoles,
+  bucketOption,
   catchFor,
   coverage,
+  gainsOf,
   goodness,
   passesQualityFloor,
   priceConfidence,
   priorityTarget,
   reviewSummary,
+  targetIn,
   targetOf,
   verdictFor,
+  verdictsFor,
   whyNot,
   type VerdictContext,
 } from "./confidence";
@@ -169,6 +173,59 @@ describe("verdict", () => {
   });
 });
 
+describe("verdicts for the picks together (docs/TRUST_POLISH_PLAN.md §2)", () => {
+  const table = {
+    reviewed: true,
+    note: "",
+    ungraded: [],
+    brands: { Dreame: { grade: 4 } },
+  } as unknown as VerdictContext["table"];
+  const products = [
+    f("Tristar T9", 540, { volume_l: 380, noise_db: 39 }),
+    f("Dreame AF30", 790, { volume_l: 300, noise_db: 37 }),
+    f("Dreame DZ30", 1068, { volume_l: 420, noise_db: 37 }),
+  ];
+  const inp = input(products, { household: "2" });
+  const cands = products.map((p) => byId(candidatePool({ ...inp, budget: null }), p.id));
+  const ctx: VerdictContext = {
+    sub: fridge,
+    answers: inp.answers,
+    picks: cands,
+    pool: cands,
+    targets: [],
+    decides: ["volume_l", "noise_db"],
+    roles: [],
+    energyPriceCentsPerKwh: 25,
+    answerPhrases: {},
+    table,
+  };
+  const v = verdictsFor(ctx, () => []);
+  const keyOf = (id: string) => JSON.stringify(v.byId.get(id));
+
+  it("says a brand grade shared by two picks once, above the cards", () => {
+    expect(v.sharedBrand).toMatchObject({ brand: "Dreame", grade: 4, count: 2 });
+    for (const parts of v.byId.values()) expect(parts.some((p) => p.kind === "reliable")).toBe(false);
+  });
+
+  it("gives every pick its own claim", () => {
+    const all = products.map((p) => keyOf(p.id));
+    expect(new Set(all).size).toBe(3);
+    expect(v.byId.get("Dreame DZ30")![0]).toMatchObject({ kind: "leads", attr: "volume_l", value: 420 });
+    expect(v.byId.get("Tristar T9")!.some((p) => p.kind === "cheaper")).toBe(true);
+  });
+});
+
+describe("bucketOption", () => {
+  it("names the size the product is, not only the one asked for", () => {
+    const q = fridge.questions.find((x) => x.id === "household")!;
+    const big = f("Big", 500, { volume_l: 420 });
+    const b = bucketOption(q, big);
+    expect(b?.attr).toBe("volume_l");
+    const small = bucketOption(q, f("Small", 500, { volume_l: 150 }));
+    expect(small === null || small.option.value !== b!.option.value).toBe(true);
+  });
+});
+
 describe("the catch", () => {
   const products = [
     f("Bosch A", 500, { noise_db: 39 }),
@@ -225,6 +282,7 @@ describe("why not", () => {
     urgency: "two_weeks",
     picks: r.picks,
     scored: candidatePool({ ...inp, showUnknown: true }),
+    decides: DECIDES,
   });
   const reasonOf = (id: string) => lines.find((l) => l.product.id === id)?.reason;
 
@@ -243,10 +301,65 @@ describe("why not", () => {
       urgency: "two_weeks",
       picks: r.picks,
       scored: candidatePool({ ...inp, showUnknown: true }),
+      decides: DECIDES,
     });
     const reason = (id: string) => all.find((l) => l.product.id === id)?.reason;
     expect(reason("Samsung Tall")).toMatchObject({ kind: "fit", questionId: "size", value: 186 });
     expect(reason("Indesit Same")).toMatchObject({ kind: "dominated" });
+  });
+
+  it("names what the dearer pick gives, with both values, and skips a product with no such reason", () => {
+    const quietPick = f("Bosch Quiet", 520, { noise_db: 34 });
+    const loud = f("Beko Loud", 480, { noise_db: 40 });
+    const same = f("Beko Twin", 515, { noise_db: 34 });
+    const prods = [loud, same, quietPick];
+    const ri = input(prods);
+    const rr = rank(ri);
+    const out = whyNot({
+      products: prods,
+      sub: fridge,
+      answers: ri.answers,
+      budget: { min: 40000, max: 80000 },
+      urgency: "two_weeks",
+      picks: rr.picks.filter((p) => p.product.id === "Bosch Quiet"),
+      scored: candidatePool({ ...ri, showUnknown: true }),
+      decides: DECIDES,
+    });
+    const reason = out.find((l) => l.product.id === "Beko Loud")?.reason;
+    expect(reason).toMatchObject({
+      kind: "weaker",
+      byId: "Bosch Quiet",
+      extraCents: 4000,
+      gains: [{ attr: "noise_db", theirs: 34, mine: 40 }],
+    });
+  });
+
+  it("leaves out colour variants of a pick", () => {
+    const pick = f("Dreame AF30-WH", 600);
+    const black = f("Dreame AF30-BK", 600);
+    const prods = [pick, black];
+    const ri = input(prods);
+    const out = whyNot({
+      products: prods,
+      sub: fridge,
+      answers: ri.answers,
+      budget: { min: 40000, max: 80000 },
+      urgency: "two_weeks",
+      picks: rank(ri).picks.filter((p) => p.product.id === pick.id),
+      scored: candidatePool({ ...ri, showUnknown: true }),
+      decides: DECIDES,
+    });
+    expect(out.map((l) => l.product.id)).not.toContain(black.id);
+  });
+
+  it("never counts power as a gain where the category says it is none", () => {
+    const a = product({ name: "Tristar A", attrs: { power_w: 1800, volume_l: 9 } });
+    const b = product({ name: "Dreame B", attrs: { power_w: 3000, volume_l: 7 } });
+    expect(gainsOf(b, a, ["power_w", "volume_l"], "airfryer")).toEqual([]);
+    expect(gainsOf(a, b, ["power_w", "volume_l"], "airfryer")).toEqual([
+      { attr: "volume_l", theirs: 9, mine: 7 },
+    ]);
+    expect(targetIn("power_w", "airfryer")).toBeNull();
   });
 
   it("never lists a pick", () => {

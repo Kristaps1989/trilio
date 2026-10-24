@@ -34,5 +34,6 @@ export function wishlistTexts(lang: UiLocale = "lv"): WishlistTexts {
     productLine: (v) => fill(email.wishlistProductLine, v),
     searchLine: (v) => fill(email.wishlistSearchLine, v),
     view: email.wishlistView,
+    unsubscribe: email.wishlistUnsubscribe,
   };
 }

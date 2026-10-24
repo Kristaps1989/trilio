@@ -1,3 +1,4 @@
+import { cleanName } from "@/domain/catalog/naming";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
@@ -110,7 +111,7 @@ export default async function ModelPage({ searchParams }: Props) {
     const d = dims(p);
     return {
       productId: p.id,
-      name: p.name,
+      name: cleanName(p.name, p.brand, p.modelCode),
       modelCode: p.modelCode,
       ean: p.ean,
       specs: [p.specs, d ? t("dimensions", { dims: d }) : null].filter(Boolean).join(" · ") || null,
@@ -121,9 +122,7 @@ export default async function ModelPage({ searchParams }: Props) {
       verdict: null,
       catchText: null,
       priceNote: null,
-      facts: factLines(p, reviewSummary(p), (k, v) => tr(k as "title", v as Record<string, string>), {
-        ungraded: false,
-      }),
+      facts: factLines(p, reviewSummary(p), (k, v) => tr(k as "title", v as Record<string, string>)),
       best: {
         id: best.id,
         storeName: best.storeName,

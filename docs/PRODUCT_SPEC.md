@@ -278,7 +278,9 @@ Since 24 Oct 2026 (docs/CONFIDENCE_PLAN.md) a pick opens with its role pills and
 
 ## 5. Wishlist ("Vēlmju saraksts") and price e-mails
 
-Owner decision, 20 Oct 2026: the wishlist replaces the price radar. Saving is one tap and free; e-mails about price drops are the paid extra (the plans in `src/db/seed.ts`). Old `/radars` links redirect to `/velmju-saraksts`; the radar tables stay in the database, unused.
+Owner decision, 20 Oct 2026: the wishlist replaces the price radar. Saving is one tap and free. Old `/radars` links redirect to `/velmju-saraksts`; the radar tables stay in the database, unused.
+
+Owner decision, 24 Oct 2026 (docs/TRUST_POLISH_PLAN.md §1): **price-drop e-mails are free and on by default**, because saving is the request. The paid plan is retired: `/velmju-saraksts/pazinojumi` redirects to the wishlist; subscriptions bought earlier can still be seen and cancelled. Trilio's own personal offers stay a separate, explicit opt-in.
 
 Why (evaluated from the shopper's side): the radar asked three questions and showed a payment screen on the first tap. A heart is one tap that everyone knows, shoppers see the value (today's best offer and the price history) before paying, and a saved search fits how appliances are bought: "fridge, ~186 cm, one door" rather than one model.
 
@@ -287,17 +289,19 @@ Why (evaluated from the shopper's side): the radar asked three questions and sho
 - **A search:** "Saglabāt meklējumu" under the results heading and in the panel below the picks. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
 - **Signed out:** the tap goes through sign-in (Google or e-mail) and saves on the way back to the same page (`/velmju-saraksts/pievienot`).
 - One save per product or search per user. The price at saving is the baseline for "cheaper than when saved".
+- **Under the heart, after saving a product:** "Saglabāts. Nosūtīsim e-pastu, ja cena samazināsies. · Nesūtīt" ("Tomēr sūtīt" turns it back on).
+- **The first save only:** "Vai drīkstam reizēm piedāvāt pašu izdevīgāku cenu?" with two equal buttons, "Jā, sūtiet" and "Nē, paldies". Showing it counts as asked (`users.offers_asked_at`); it never returns on a card, and the checkbox stays in the wishlist and account pages.
 
 ### 5.2 The wishlist page (`/velmju-saraksts`, header heart)
 - **Saved searches:** the name, today's recommended pick for those answers (ranked exactly like the results page) with price and shop, how many products match, the change since saving, "Skatīt rezultātus" (reopens the saved results) and a heart to remove.
 - **Saved products:** today's best new in-stock offer and shop, the change since saving, a link to the shop, a 90-day price history (lowest price per day, with the lowest and highest written out) and a heart to remove. "Pašlaik nav pieejams" when no shop has it.
-- **E-mail notifications panel:** without the service, what it does and "Ieslēgt paziņojumus · 1,99 €/mēn." (plan screen and hosted checkout at `/velmju-saraksts/pazinojumi`). With it, the address and "Par kādiem kritumiem ziņot?" (any drop, at least 5 % (default), at least 10 %).
-- Subscription block (cancel in two taps, resume), account line and sign-out, as before.
+- **"Cenu e-pasti" panel:** one checkbox (on by default), the address, and while on "Par kādiem kritumiem ziņot?" (any drop, at least 5 % (default), at least 10 %). The same checkbox is on `/konts`.
+- Account line and sign-out, as before.
 
-### 5.3 E-mails (paid)
-- After each ingestion, one digest per subscriber at most, listing the saved items whose price dropped by the threshold: a product's best offer, or a saved search's recommended pick. Each item at most once a day; the reported price becomes the new baseline.
+### 5.3 E-mails (free)
+- After each ingestion, one digest per user with alerts on at most, listing the saved items whose price dropped by the threshold: a product's best offer, or a saved search's recommended pick. Each item at most once a day; the reported price becomes the new baseline.
 - E-mail only: a web app cannot rely on push (owner, 19 Oct 2026).
-- No marketing, no countdowns; the e-mail links to the wishlist.
+- No marketing, no countdowns; the e-mail links to the wishlist and ends with "Nesūtīt vairs cenu e-pastus" (a no-login page with one button, `/velmju-saraksts/atteikties/{token}`) plus RFC 8058 one-click headers (`/api/wishlist/unsubscribe/{token}`).
 
 ## 6. Identity of products
 - The card shows the manufacturer model code and EAN, so the same name never hides different products.

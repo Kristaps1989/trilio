@@ -128,14 +128,39 @@ for (const { group, sub } of all) {
         price: Number(e.querySelector("[data-price-cents]")?.getAttribute("data-price-cents")),
         verdict: e.querySelector("[data-verdict]")?.textContent?.trim() ?? "",
         proofs: e.querySelectorAll("[data-proofs] li").length,
+        lines: [...e.querySelectorAll("[data-proofs] li")].map((li) => li.textContent?.trim() ?? ""),
         roles: (e.getAttribute("data-roles") ?? "").split(" ").filter(Boolean),
         pills: e.querySelectorAll("[data-role-pill]").length,
       })),
     );
+    // What every card would say alike is said once above them (docs/TRUST_POLISH_PLAN.md §2).
+    const shared = (await page.locator("[data-shared-facts]").count()) > 0;
     for (const c of story) {
       expect(c.verdict.length, `${sub.id}: every pick has a verdict`).toBeGreaterThan(10);
-      expect(c.proofs, `${sub.id}: every pick has proof`).toBeGreaterThan(0);
+      expect(c.proofs > 0 || shared, `${sub.id}: every pick has proof`).toBe(true);
       expect(c.pills, `${sub.id}: one pill per earned role`).toBe(c.roles.length);
+    }
+    expect(new Set(story.map((c) => c.verdict)).size, `${sub.id}: no two verdicts alike`).toBe(story.length);
+    if (story.length > 1)
+      for (const line of story[0]!.lines)
+        expect(
+          story.every((c) => c.lines.includes(line)),
+          `${sub.id}: "${line}" is on every card instead of once`,
+        ).toBe(false);
+
+    // "Kāpēc ne šie?": clean names, one sentence each, no variant of a pick.
+    const whyNot = await page.locator("[data-why-not-item]").evaluateAll((els) =>
+      els.map((e) => ({
+        name: e.querySelector("[data-why-not-name]")?.textContent?.trim() ?? "",
+        reason: e.querySelector("[data-why-not-reason]")?.textContent?.trim() ?? "",
+      })),
+    );
+    expect(new Set(whyNot.map((w) => w.name)).size, `${sub.id}: why-not names tell rows apart`).toBe(
+      whyNot.length,
+    );
+    for (const w of whyNot) {
+      expect(w.name, `${sub.id}: clean why-not name`).not.toMatch(/\||\(\d{8,14}\)|\b(\w{3,}) \1\b/i);
+      expect(w.reason, `${sub.id}: a sentence`).toMatch(/^[A-ZĀČĒĢĪĶĻŅŠŪŽ0-9].*\.$/u);
     }
     for (const role of ["sensible", "priority", "lasting", "cheapest_good"])
       expect(

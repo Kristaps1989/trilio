@@ -33,6 +33,10 @@ export type CardModel = {
   priceNote: string | null;
   /** Evidence: reviews, warranty, model year (B1–B3). */
   facts: string[];
+  /** What we could not check (no independent reliability data), shown apart from the evidence. */
+  caveats?: string[];
+  /** False when another card already says the price history is still being collected. */
+  historyNote?: boolean;
   name: string;
   modelCode: string;
   ean: string | null;
@@ -205,13 +209,15 @@ export async function ResultCard({ card }: { card: CardModel }) {
             {card.priceNote}
           </p>
         ) : null}
-        <p className="text-sm text-muted">
-          {card.priceLine.kind === "lowest_now"
-            ? t("lowest30Now")
-            : card.priceLine.kind === "was_lower"
-              ? t("lowest30Was", { amount: formatEur(card.priceLine.lowestCents) })
-              : t("noHistory")}
-        </p>
+        {card.priceLine.kind === "no_history" && card.historyNote === false ? null : (
+          <p className="text-sm text-muted">
+            {card.priceLine.kind === "lowest_now"
+              ? t("lowest30Now")
+              : card.priceLine.kind === "was_lower"
+                ? t("lowest30Was", { amount: formatEur(card.priceLine.lowestCents) })
+                : t("noHistory")}
+          </p>
+        )}
       </div>
 
       {card.upgrade ? (
@@ -272,6 +278,16 @@ export async function ResultCard({ card }: { card: CardModel }) {
             ))}
           </ul>
         </div>
+      ) : null}
+      {card.caveats?.length ? (
+        <ul className="flex flex-col gap-1 text-sm text-muted" data-caveats>
+          {card.caveats.map((c) => (
+            <li key={c} className="flex gap-2">
+              <span aria-hidden="true">–</span>
+              <span>{c}</span>
+            </li>
+          ))}
+        </ul>
       ) : null}
 
       {card.unconfirmed.length ? (

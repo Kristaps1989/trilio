@@ -18,14 +18,14 @@ const PUBLIC = [
   "/cits",
   "/ienakt",
   "/velmju-saraksts",
-  "/velmju-saraksts/pazinojumi",
+  "/velmju-saraksts/atteikties/e2e-not-a-real-token-000000",
   "/noteikumi",
   "/pirkuma-noteikumi",
   "/privatums",
   "/sikdatnes",
   "/kontakti",
 ];
-const SIGNED_IN = ["/konts", "/konts/pasutijumi", "/velmju-saraksts", "/velmju-saraksts/pazinojumi"];
+const SIGNED_IN = ["/konts", "/konts/pasutijumi", "/velmju-saraksts"];
 
 const withLang = (path: string, lang: "lv" | "en") =>
   lang === "lv" ? path : path === "/" ? "/en" : `/en${path}`;

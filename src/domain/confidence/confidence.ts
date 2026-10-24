@@ -1,6 +1,9 @@
+import { directionIn } from "@/domain/catalog/attributes";
+import { sameModel } from "@/domain/catalog/naming";
+import { reviewSummary } from "@/domain/catalog/reviews";
 import type { ProductView } from "@/domain/catalog/types";
 import { numberAttr } from "@/domain/catalog/types";
-import { numberRule } from "@/domain/delta/delta";
+import { minStep, numberRule } from "@/domain/delta/delta";
 import { energyCost10yCents } from "@/domain/energy/energy";
 import { activeOptions } from "@/domain/questions/engine";
 import type { Answers, Question, Subcategory } from "@/domain/questions/schema";
@@ -34,6 +37,14 @@ export function targetOf(attr: string): Target | null {
   if (FEATURES.has(attr)) return { attr, kind: "bool" };
   const dir = betterDirection(attr);
   return dir ? { attr, kind: dir } : null;
+}
+
+/** `targetOf` with the category's own direction (power is no gain in an air fryer; docs/TRUST_POLISH_PLAN.md §4). */
+export function targetIn(attr: string, subcategoryId: string | undefined): Target | null {
+  const dir = directionIn(attr, subcategoryId);
+  if (dir === "none") return null;
+  if (dir) return { attr, kind: dir };
+  return targetOf(attr);
 }
 
 /** Higher is better; null when the product does not state it. */
@@ -83,7 +94,7 @@ export function argumentTargets(sub: Subcategory, answers: Answers, decides: str
     if (t && !out.some((x) => x.attr === t.attr)) out.push(t);
   };
   add(priorityTarget(sub, answers)?.target ?? null);
-  for (const a of decides) add(targetOf(a));
+  for (const a of decides) add(targetIn(a, sub.id));
   return out;
 }
 
@@ -115,7 +126,7 @@ export function passesQualityFloor(
   if (grade !== null && grade < 3) return false;
   if (grade === null && graded && !decides.every((a) => known(c.product, a))) return false;
   for (const attr of decides) {
-    const t = targetOf(attr);
+    const t = targetIn(attr, sub.id);
     if (!t) continue;
     const mine = goodness(c.product, t);
     if (mine === null) continue;
@@ -211,25 +222,7 @@ export function assignRoles(
 
 // ---------------------------------------------------------------- reviews
 
-export type ReviewSummary = { x10: number; count: number; shops: number };
-
-/** At least this many shop reviews in total before a star line is shown (§3 B1). */
-export const MIN_REVIEWS = 10;
-
-/** The shops' review scores for a product, weighted by their counts; null with fewer than 10 reviews. */
-export function reviewSummary(p: ProductView): ReviewSummary | null {
-  let weight = 0;
-  let sum = 0;
-  let shops = 0;
-  for (const o of p.offers) {
-    if (o.condition !== "new" || !o.ratingX10 || !o.ratingCount) continue;
-    weight += o.ratingCount;
-    sum += o.ratingX10 * o.ratingCount;
-    shops++;
-  }
-  if (weight < MIN_REVIEWS) return null;
-  return { x10: Math.round(sum / weight), count: weight, shops };
-}
+export { MIN_REVIEWS, reviewSummary, type ReviewSummary } from "@/domain/catalog/reviews";
 
 // ---------------------------------------------------------------- verdict
 
@@ -249,7 +242,9 @@ export type VerdictPart =
   /** Nothing to say with confidence: names what the shop does not state. */
   | { kind: "thin"; attrs: string[] }
   /** Fallback: the best quality for its price among the matching products. */
-  | { kind: "value"; matching: number };
+  | { kind: "value"; matching: number }
+  /** Nothing of its own to say: this much cheaper than the next dearer pick. */
+  | { kind: "cheaper"; byId: string; savedCents: number };
 
 export type VerdictContext = {
   sub: Subcategory;
@@ -264,15 +259,36 @@ export type VerdictContext = {
   table?: BrandTable;
 };
 
-/** One or two claims about a pick, strongest first, each backed by its data (§3 A3). Never empty. */
-export function verdictFor(pick: Candidate, ctx: VerdictContext): VerdictPart[] {
+/**
+ * The option of a numeric question that best describes the product itself:
+ * the tightest threshold its value meets ("11 L" meets "6 porcijas", not just
+ * the "4 porcijas" the shopper chose; docs/TRUST_POLISH_PLAN.md §2).
+ */
+export function bucketOption(
+  q: Question,
+  p: ProductView,
+): { option: Question["options"][number]; attr: string; value: number } | null {
+  let best: { option: Question["options"][number]; attr: string; value: number; edge: number } | null = null;
+  for (const o of q.options ?? []) {
+    const cond = o.match?.find((m) => m.gte !== undefined || m.lte !== undefined);
+    if (!cond || (o.match?.length ?? 0) !== 1) continue;
+    const value = numberAttr(p, cond.attr);
+    if (value === null) continue;
+    if ((cond.gte !== undefined && value < cond.gte) || (cond.lte !== undefined && value > cond.lte))
+      continue;
+    // A higher floor or a lower ceiling describes the product more closely.
+    const edge = cond.gte !== undefined ? cond.gte : -cond.lte!;
+    if (!best || edge > best.edge) best = { option: o, attr: cond.attr, value, edge };
+  }
+  return best ? { option: best.option, attr: best.attr, value: best.value } : null;
+}
+
+/** Every claim the data supports about a pick, strongest first (§3 A3); the caller picks one or two. */
+function verdictCandidates(pick: Candidate, ctx: VerdictContext): VerdictPart[] {
   const table = ctx.table ?? brandTable;
   const parts: VerdictPart[] = [];
-  const push = (p: VerdictPart) => {
-    if (parts.length < 2) parts.push(p);
-  };
 
-  // 1. The shopper's own answer, in their words, with the product's number.
+  // 1. The shopper's own answer, with the product's number and the size it really is.
   for (const q of ctx.sub.questions) {
     if (!ctx.answerPhrases[q.id]) continue;
     const o = activeOptions(q, ctx.answers)[0];
@@ -282,50 +298,157 @@ export function verdictFor(pick: Candidate, ctx: VerdictContext): VerdictPart[] 
     if (value === null) continue;
     if ((cond.gte !== undefined && value < cond.gte) || (cond.lte !== undefined && value > cond.lte))
       continue;
-    push({ kind: "answer_fit", questionId: q.id, answer: o.label, attr: cond.attr, value });
+    const bucket = bucketOption(q, pick.product);
+    const answer = bucket && bucket.attr === cond.attr ? bucket.option.label : o.label;
+    parts.push({ kind: "answer_fit", questionId: q.id, answer, attr: cond.attr, value });
     break;
   }
 
   // 2. Leads on what matters most: the priority, then the deciding attributes.
   for (const t of ctx.targets) {
-    if (parts.some((p) => p.kind === "leads")) break;
     if (!leadsOn(pick, ctx.picks, ctx.pool, t)) continue;
     const best = Math.max(...ctx.pool.map((c) => goodness(c.product, t) ?? -Infinity));
-    push({
+    parts.push({
       kind: "leads",
       attr: t.attr,
       value: pick.product.attributes[t.attr],
       ofPool: goodness(pick.product, t) === best && ctx.pool.length > ctx.picks.length,
     });
+    break;
   }
 
   // 3. Reliability, stated positively, when the evidence is strong.
   const graded = table.reviewed && !ungradedSubcategory(table, ctx.sub.id);
   const grade = graded ? gradeOf(table, pick.product.brand, ctx.sub.id) : null;
-  if (grade !== null && grade >= 4) push({ kind: "reliable", brand: pick.product.brand, grade });
+  if (grade !== null && grade >= 4) parts.push({ kind: "reliable", brand: pick.product.brand, grade });
 
   // 4. Cost of ownership against the cheapest pick.
   const cheapest = [...ctx.picks].sort((a, b) => a.price - b.price)[0];
-  if (cheapest && cheapest !== pick && pick.price > cheapest.price) {
+  if (cheapest && cheapest.product.id !== pick.product.id && pick.price > cheapest.price) {
     const mine = energyCost10yCents(pick.product.kwhYear, ctx.energyPriceCentsPerKwh);
     const theirs = energyCost10yCents(cheapest.product.kwhYear, ctx.energyPriceCentsPerKwh);
     if (mine !== null && theirs !== null) {
       const extra = pick.price - cheapest.price;
       const saved = theirs - mine;
-      if (saved > extra) push({ kind: "tco", extraCents: extra, savedCents: saved });
+      if (saved > extra) parts.push({ kind: "tco", extraCents: extra, savedCents: saved });
     }
   }
 
-  if (ctx.roles.includes("cheapest_good")) push({ kind: "cheapest_sound" });
+  if (ctx.roles.includes("cheapest_good")) parts.push({ kind: "cheapest_sound" });
 
   const reviews = reviewSummary(pick.product);
-  if (reviews && reviews.x10 >= 45) push({ kind: "reviews", x10: reviews.x10, count: reviews.count });
-
-  if (parts.length === 0) {
-    const missing = ctx.decides.filter((a) => !known(pick.product, a)).slice(0, 2);
-    push(missing.length ? { kind: "thin", attrs: missing } : { kind: "value", matching: ctx.pool.length });
-  }
+  if (reviews && reviews.x10 >= 45) parts.push({ kind: "reviews", x10: reviews.x10, count: reviews.count });
   return parts;
+}
+
+function fallbackPart(pick: Candidate, ctx: VerdictContext): VerdictPart {
+  const missing = ctx.decides.filter((a) => !known(pick.product, a)).slice(0, 2);
+  return missing.length ? { kind: "thin", attrs: missing } : { kind: "value", matching: ctx.pool.length };
+}
+
+/** One or two claims about a pick, strongest first, each backed by its data (§3 A3). Never empty. */
+export function verdictFor(pick: Candidate, ctx: VerdictContext): VerdictPart[] {
+  const parts = verdictCandidates(pick, ctx).slice(0, 2);
+  return parts.length ? parts : [fallbackPart(pick, ctx)];
+}
+
+/** Two parts that would read the same on two cards. */
+function partKey(p: VerdictPart): string {
+  switch (p.kind) {
+    case "reliable":
+      return `reliable:${p.brand.toLowerCase()}:${p.grade}`;
+    case "answer_fit":
+      return `answer:${p.questionId}:${p.answer}:${p.value}`;
+    case "thin":
+      return `thin:${p.attrs.join(",")}`;
+    case "value":
+    case "cheapest_sound":
+      return p.kind;
+    default:
+      return JSON.stringify(p);
+  }
+}
+
+/**
+ * Where a pick is best of the picks on a deciding or compared attribute,
+ * by a clear step over each of the others: "Lielākais no šiem variantiem: 11 L".
+ */
+function contrastFor(pick: Candidate, ctx: VerdictContext, keys: string[]): VerdictPart | null {
+  const others = ctx.picks.filter((p) => p.product.id !== pick.product.id);
+  if (others.length === 0) return null;
+  for (const attr of keys) {
+    const t = targetIn(attr, ctx.sub.id);
+    if (!t) continue;
+    const mine = goodness(pick.product, t);
+    if (mine === null) continue;
+    const rule = t.kind === "min" || t.kind === "max" ? numberRule(attr, ctx.sub.id) : undefined;
+    const ahead = others.every((o) => {
+      const v = goodness(o.product, t);
+      return v !== null && mine - v >= (rule ? minStep(rule, mine, v) : minLead(t));
+    });
+    if (ahead) return { kind: "leads", attr, value: pick.product.attributes[attr], ofPool: false };
+  }
+  return null;
+}
+
+export type Verdicts = {
+  /** One or two parts per pick id; no part reads the same on two cards. */
+  byId: Map<string, VerdictPart[]>;
+  /** A graded brand two or more picks share: said once above the cards, not on each. */
+  sharedBrand: { brand: string; grade: number; count: number } | null;
+};
+
+/**
+ * Verdicts for the picks together (docs/TRUST_POLISH_PLAN.md §2): each card
+ * says what this pick has that the others do not. A claim used on one card
+ * is not repeated on another; a brand grade shared by several picks is said
+ * once for all; a pick with nothing of its own says how much less it costs.
+ */
+export function verdictsFor(ctx: VerdictContext, rolesOf: (id: string) => Role[]): Verdicts {
+  const table = ctx.table ?? brandTable;
+  const graded = table.reviewed && !ungradedSubcategory(table, ctx.sub.id);
+  const brands = new Map<string, { brand: string; grade: number; count: number }>();
+  for (const p of ctx.picks) {
+    const grade = graded ? gradeOf(table, p.product.brand, ctx.sub.id) : null;
+    if (grade === null || grade < 4) continue;
+    const key = p.product.brand.toLowerCase();
+    const e = brands.get(key) ?? { brand: p.product.brand, grade, count: 0 };
+    e.count++;
+    brands.set(key, e);
+  }
+  const shared =
+    [...brands.values()].filter((b) => b.count >= 2).sort((a, b) => b.count - a.count)[0] ?? null;
+
+  const keys = [...new Set([...ctx.targets.map((t) => t.attr), ...ctx.decides, ...ctx.sub.compare])];
+  const used = new Set<string>();
+  const byId = new Map<string, VerdictPart[]>();
+  const sorted = [...ctx.picks].sort((a, b) => a.price - b.price);
+  for (const pick of sorted) {
+    const own = { ...ctx, roles: rolesOf(pick.product.id) };
+    const candidates = verdictCandidates(pick, own).filter(
+      (p) => !(p.kind === "reliable" && shared && p.brand.toLowerCase() === shared.brand.toLowerCase()),
+    );
+    const contrast = contrastFor(pick, own, keys);
+    if (contrast && !candidates.some((c) => c.kind === "leads")) {
+      // The answer first when there is one, then what sets this pick apart.
+      candidates.splice(candidates[0]?.kind === "answer_fit" ? 1 : 0, 0, contrast);
+    }
+    const dearer = sorted.filter((o) => o.price > pick.price);
+    const next = dearer[0];
+    if (next)
+      candidates.push({ kind: "cheaper", byId: next.product.id, savedCents: next.price - pick.price });
+
+    const parts: VerdictPart[] = [];
+    for (const c of candidates) {
+      if (parts.length === 2) break;
+      const key = partKey(c);
+      if (used.has(key)) continue;
+      used.add(key);
+      parts.push(c);
+    }
+    byId.set(pick.product.id, parts.length ? parts : [fallbackPart(pick, own)]);
+  }
+  return { byId, sharedBrand: shared };
 }
 
 // ---------------------------------------------------------------- the catch
@@ -388,7 +511,11 @@ export type WhyNotReason =
   | { kind: "over_budget"; overCents: number }
   | { kind: "discontinued" }
   | { kind: "dominated"; byId: string; extraCents: number }
-  | { kind: "weaker"; byId: string; extraCents: number };
+  /** A pick costs `extraCents` more and is measurably better on `gains` (never empty). */
+  | { kind: "weaker"; byId: string; extraCents: number; gains: Gain[] };
+
+/** One measurable advantage, with both values: "tilpums 9 L (šim 2,5 L)". */
+export type Gain = { attr: string; theirs: unknown; mine: unknown };
 
 export type WhyNot = {
   product: ProductView;
@@ -407,6 +534,8 @@ export type WhyNotInput = {
   picks: Candidate[];
   /** Every scored candidate at any price (rank's candidatePool, unknown fit included). */
   scored: Candidate[];
+  /** The category's deciding attributes (knowledge.json), compared before the compare list. */
+  decides: string[];
   table?: BrandTable;
 };
 
@@ -436,11 +565,13 @@ function fitReason(p: ProductView, q: Question, answers: Answers): WhyNotReason 
 export function whyNot(input: WhyNotInput): WhyNot[] {
   const table = input.table ?? brandTable;
   const picked = new Set(input.picks.map((p) => p.product.id));
+  // A colour or finish variant of a pick is the same choice, not an alternative (docs/TRUST_POLISH_PLAN.md §3).
+  const variantOfPick = (p: ProductView) => input.picks.some((k) => sameModel(k.product, p));
   const max = input.budget?.max;
   const stretch = max === undefined ? Infinity : Math.round(max * 1.25);
   const min = input.budget?.min ?? 0;
   const offered = input.products
-    .filter((p) => !picked.has(p.id))
+    .filter((p) => !picked.has(p.id) && !variantOfPick(p))
     .map((p) => ({ p, offer: bestOffer(eligibleOffers(p, "new", input.urgency)) }))
     .filter((x): x is { p: ProductView; offer: NonNullable<typeof x.offer> } => !!x.offer)
     .filter((x) => x.offer.priceCents >= min);
@@ -504,9 +635,30 @@ function reasonFor(
     .sort((a, b) => b.score - a.score)[0];
   if (dominator)
     return { kind: "dominated", byId: dominator.product.id, extraCents: price - dominator.price };
-  const better = [...input.picks].filter((k) => k.score > me.score).sort((a, b) => a.price - b.price)[0];
-  if (better) return { kind: "weaker", byId: better.product.id, extraCents: better.price - price };
+  // A pick that is better on something the shopper can see, cheapest first; "better overall" alone is no reason.
+  const keys = [...input.decides, ...input.sub.compare];
+  for (const k of [...input.picks].filter((x) => x.score > me.score).sort((a, b) => a.price - b.price)) {
+    const gains = gainsOf(k.product, p, keys, input.sub.id);
+    if (gains.length) return { kind: "weaker", byId: k.product.id, extraCents: k.price - price, gains };
+  }
   return null;
+}
+
+/** Where `by` is measurably better than `p` on `keys`, in order, at most two. */
+export function gainsOf(by: ProductView, p: ProductView, keys: string[], subcategoryId: string): Gain[] {
+  const out: Gain[] = [];
+  for (const attr of new Set(keys)) {
+    const t = targetIn(attr, subcategoryId);
+    if (!t) continue;
+    const a = goodness(by, t);
+    const b = goodness(p, t);
+    if (a === null || b === null) continue;
+    const rule = t.kind === "min" || t.kind === "max" ? numberRule(attr, subcategoryId) : undefined;
+    if (a - b < (rule ? minStep(rule, a, b) : minLead(t))) continue;
+    out.push({ attr, theirs: by.attributes[attr], mine: p.attributes[attr] });
+    if (out.length === 2) break;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- price

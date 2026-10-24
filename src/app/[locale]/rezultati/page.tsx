@@ -6,7 +6,7 @@ import { db, searchSessions } from "@/db";
 import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
 import { subcategoryAttrs } from "@/domain/catalog/attributes";
-import { canonicalBrand, displayName } from "@/domain/catalog/naming";
+import { canonicalBrand, displayName, shortName } from "@/domain/catalog/naming";
 import type { OfferView, ProductView } from "@/domain/catalog/types";
 import { deliveryDate, urgencyDate, workingDaysUntil } from "@/domain/delivery/delivery";
 import { upgradeDelta } from "@/domain/delta/delta";
@@ -24,7 +24,8 @@ import {
   priceConfidence,
   priorityTarget,
   reviewSummary,
-  verdictFor,
+  bucketOption,
+  verdictsFor,
   whyNot,
 } from "@/domain/confidence/confidence";
 import { decidingAttrs, glossaryLine, knowledgeOf, watchOutFor } from "@/domain/knowledge/knowledge";
@@ -70,6 +71,7 @@ import { ConfidenceQuestion } from "./ConfidenceQuestion";
 import {
   catchText,
   factLines,
+  sharedLines,
   priceNoteText,
   roleLabel,
   verdictText,
@@ -108,6 +110,9 @@ const DETAIL_ROWS = [
   "cleaning_program",
   "cup_height_cm",
   "auto_off",
+  "dual_basket",
+  "dishwasher_safe",
+  "window",
   "noise_class",
   "repairability",
   "warranty_months",
@@ -157,7 +162,7 @@ export default async function ResultsPage({ searchParams }: Props) {
   const attrLabel = (key: string) => (ta.has(key as "width_cm") ? ta(key as "width_cm") : key);
   const enumLabel = (key: string, value: string) => enums[key]?.[value] ?? value;
   const typeLabel = tp.has(sub.id as "fridge") ? tp(sub.id as "fridge") : "";
-  const nameOf = (p: ProductView) => displayName(p.name, p.brand, sub.id, typeLabel);
+  const nameOf = (p: ProductView) => displayName(p.name, p.brand, sub.id, typeLabel, p.modelCode);
 
   const products = await loadCandidates(db, sub.id);
   const input = {
@@ -234,7 +239,33 @@ export default async function ResultsPage({ searchParams }: Props) {
       const p = products.find((x) => x.id === id);
       return p ? nameOf(p) : id;
     },
+    shortNameOf: (id) => {
+      const p = products.find((x) => x.id === id);
+      return p ? shortName(p.name, p.brand, p.modelCode) : id;
+    },
   };
+  const verdicts = verdictsFor(
+    {
+      sub,
+      answers: state.answers,
+      picks: pickCands,
+      pool: inBudgetPool,
+      targets,
+      decides,
+      roles: [],
+      energyPriceCentsPerKwh: energyPrice,
+      answerPhrases: know.answerPhrases,
+    },
+    (id) => roles.get(id) ?? [],
+  );
+  // A size line says the size the product really is, not the bucket the shopper tapped (TRUST_POLISH_PLAN §2).
+  const sizedReasons = (pick: Pick) =>
+    pick.reasons.map((r) => {
+      const q = sub.questions.find((x) => x.id === r.questionId);
+      const bucket = q ? bucketOption(q, pick.product) : null;
+      const sameAttr = r.option.match?.some((m) => m.attr === bucket?.attr);
+      return bucket && sameAttr && bucket.option.card_reason ? { ...r, option: bucket.option } : r;
+    });
   const firstRole = (id: string | undefined) => (id ? roleNames(id)[0] : undefined);
   const basePath = `/izvelies/${group.id}/${sub.id}`;
 
@@ -276,7 +307,10 @@ export default async function ResultsPage({ searchParams }: Props) {
   // Brand reliability earns a "why" line only when it lifted the pick (grade 4–5 with solid evidence).
   const brandLine = (pick: Pick): string[] => {
     const grade = gradeOf(brandTable, pick.product.brand, sub!.id);
-    return (pick.quality?.brand ?? 0) >= 8 && grade !== null ? [t("brandReliable", { grade })] : [];
+    const sharedBrand = verdicts.sharedBrand?.brand.toLowerCase() === pick.product.brand.toLowerCase();
+    return (pick.quality?.brand ?? 0) >= 8 && grade !== null && !sharedBrand
+      ? [t("brandReliable", { grade })]
+      : [];
   };
 
   function toCard(pick: Pick, story = false): CardModel {
@@ -312,22 +346,9 @@ export default async function ResultsPage({ searchParams }: Props) {
     }
     const cand = { ...pick, price: pick.offer.priceCents };
     const pickRoles = story ? (roles.get(pick.product.id) ?? []) : [];
-    const verdict = story
-      ? verdictText(
-          verdictFor(cand, {
-            sub: sub!,
-            answers: state.answers,
-            picks: pickCands,
-            pool: inBudgetPool,
-            targets,
-            decides,
-            roles: pickRoles,
-            energyPriceCentsPerKwh: energyPrice,
-            answerPhrases: know.answerPhrases,
-          }),
-          textCtx,
-        )
-      : null;
+    const parts = story ? verdicts.byId.get(pick.product.id) : undefined;
+    const verdict = parts ? verdictText(parts, textCtx) : null;
+    const ungraded = graded && gradeOf(brandTable, pick.product.brand, sub!.id) === null;
     const flaw = story ? catchFor(cand, inBudgetPool, targets) : null;
     const confidence = story
       ? priceConfidence(pick.product, pick.offer.priceCents, histories.get(pick.product.id) ?? [], now)
@@ -339,9 +360,8 @@ export default async function ResultsPage({ searchParams }: Props) {
       verdict,
       catchText: flaw ? catchText(flaw, textCtx) : null,
       priceNote: confidence ? priceNoteText(confidence, pick.offer.priceCents, t) : null,
-      facts: factLines(pick.product, reviewSummary(pick.product), t, {
-        ungraded: graded && gradeOf(brandTable, pick.product.brand, sub!.id) === null,
-      }),
+      facts: factLines(pick.product, reviewSummary(pick.product), t),
+      caveats: ungraded ? [t("factUngraded")] : [],
       name: nameOf(pick.product),
       modelCode: pick.product.modelCode,
       ean: pick.product.ean,
@@ -351,7 +371,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       best: cardOffer(pick.offer, now),
       overBudgetByCents: pick.overBudgetByCents,
       priceLine: priceLine(pick.offer.priceCents, pick.offer.lowest30dCents),
-      whyFits: [...brandLine(pick), ...whyItFits(pick.reasons)].slice(0, 3),
+      whyFits: [...brandLine(pick), ...whyItFits(sizedReasons(pick))].slice(0, 3),
       unconfirmed: pick.fitUnknown ? [] : pick.unconfirmed.map((k) => attrLabel(k).toLowerCase()),
       unknownData: pick.fitUnknown ? unknownText(pick.unconfirmed) : null,
       energy: energyFor(pick.product, pick.offer.priceCents),
@@ -390,7 +410,23 @@ export default async function ResultsPage({ searchParams }: Props) {
     };
   }
 
-  const cards = result.picks.map((p) => toCard(p, true));
+  const storyCards = result.picks.map((p) => toCard(p, true));
+  // What every card would say alike is said once, above them (TRUST_POLISH_PLAN §2).
+  const shared = sharedLines(storyCards);
+  const cards = storyCards.map((c, i) => ({
+    ...c,
+    whyFits: c.whyFits.filter((l) => !shared.includes(l)),
+    facts: c.facts.filter((l) => !shared.includes(l)),
+    historyNote: i === 0 || storyCards.slice(0, i).every((x) => x.priceLine.kind !== "no_history"),
+  }));
+  const sharedBrandLine = verdicts.sharedBrand
+    ? t("sharedBrand", {
+        count: verdicts.sharedBrand.count,
+        total: storyCards.length,
+        brand: canonicalBrand(verdicts.sharedBrand.brand),
+        grade: verdicts.sharedBrand.grade,
+      })
+    : null;
   const extraCards = result.extras.map((p) => toCard(p));
   // Everything else in range, best value first, on request (the shopper decides how far to look).
   const moreShown = Math.min(result.more.length, Math.max(0, Math.floor(Number(vairak) || 0)));
@@ -868,6 +904,18 @@ export default async function ResultsPage({ searchParams }: Props) {
   })();
 
   // "Kāpēc ne šie?" (§3 A4).
+  // Two rows with the same name would read as a mistake: such names carry their model code.
+  const whyNotName = (p: ProductView) => {
+    const name = nameOf(p);
+    const clash = [...products.filter((x) => x.id !== p.id)].some(
+      (x) =>
+        nameOf(x) === name &&
+        (whyNots.some((w) => w.product.id === x.id) || pickCands.some((c) => c.product.id === x.id)),
+    );
+    return clash && p.modelCode && !name.toLowerCase().includes(p.modelCode.toLowerCase())
+      ? `${name} ${p.modelCode}`
+      : name;
+  };
   const whyNots = whyNot({
     products,
     sub,
@@ -876,19 +924,8 @@ export default async function ResultsPage({ searchParams }: Props) {
     urgency,
     picks: pickCands,
     scored: candidatePool({ ...input, showUnknown: true }),
+    decides,
   });
-  const gainsOver = (from: ProductView, fromPrice: number) => (byId: string) => {
-    const by = pickCands.find((p) => p.product.id === byId);
-    if (!by) return [];
-    const d = upgradeDelta(
-      { product: from, priceCents: fromPrice },
-      { product: by.product, priceCents: by.price, reasons: by.reasons },
-      energyPrice,
-      sub.compare,
-      sub.id,
-    );
-    return d.status === "differs" ? deltaLines(d.gains, td, attrLabel, enumLabel) : [];
-  };
 
   // What a saved search is called in the wishlist: the subcategory and the answers that narrow it.
   const flowIds = new Set(sub.questions.filter((q) => q.stage === "flow").map((q) => q.id));
@@ -1002,6 +1039,14 @@ export default async function ResultsPage({ searchParams }: Props) {
           <h2 id="picks-title" className="sr-only">
             {t("picksLabel")}
           </h2>
+          {sharedBrandLine || shared.length ? (
+            <div className="mb-3 flex flex-col gap-1 text-[15px] text-mist" data-shared-facts>
+              {sharedBrandLine ? <p>{sharedBrandLine}</p> : null}
+              {shared.length ? (
+                <p>{t("sharedFacts", { total: storyCards.length, facts: shared.join(" · ") })}</p>
+              ) : null}
+            </div>
+          ) : null}
           <CardRow>
             {cards.map((c) => (
               <ResultCard key={c.productId} card={c} />
@@ -1019,18 +1064,23 @@ export default async function ResultsPage({ searchParams }: Props) {
             {t("whyNotTitle")}
           </summary>
           <p className="mt-1 text-[15px] text-stone">{t("whyNotLead")}</p>
-          <ul className="mt-3 flex flex-col gap-3">
+          <ul className="mt-3 flex flex-col divide-y divide-line-25">
             {whyNots.map((w) => (
               <li
                 key={w.product.id}
-                className="flex flex-col gap-0.5 text-[15px] text-mist"
+                className="flex flex-col gap-1 py-3 text-[15px] first:pt-0 last:pb-0"
                 data-why-not-item={w.reason.kind}
               >
-                <span className="font-semibold">
-                  <span lang="lv">{nameOf(w.product)}</span> · {formatEur(w.priceCents)}
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-mist" lang="lv" data-why-not-name>
+                    {whyNotName(w.product)}
+                  </span>
+                  <span className="shrink-0 font-semibold text-mist tabular-nums">
+                    {formatEur(w.priceCents)}
+                  </span>
                 </span>
-                <span className="text-stone">
-                  {whyNotText(w, textCtx, gainsOver(w.product, w.priceCents))}
+                <span className="text-stone" data-why-not-reason>
+                  {whyNotText(w, textCtx)}
                 </span>
               </li>
             ))}

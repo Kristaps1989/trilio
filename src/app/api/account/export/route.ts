@@ -34,6 +34,8 @@ export async function GET() {
       locale: users.locale,
       offersOptIn: users.offersOptIn,
       offersOptInAt: users.offersOptInAt,
+      offersAskedAt: users.offersAskedAt,
+      priceAlerts: users.priceAlerts,
       adminNote: users.adminNote,
       createdAt: users.createdAt,
     })

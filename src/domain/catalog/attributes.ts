@@ -41,6 +41,8 @@ const SubcategoryAttrsSchema = z
       z.object({ values: z.array(z.string()), rules: z.array(EnumRuleSchema) }).strict(),
     ),
     defaultFalse: z.array(z.string()),
+    /** Which way is better for a number in this category, where it differs from the default ("none": neither). */
+    better: z.record(z.string(), z.enum(["max", "min", "none"])).optional(),
     sanity: z
       .object({
         stems: z.array(z.string()).min(1),
@@ -81,6 +83,14 @@ export const catalogVersion: string = (() => {
 
 export function subcategoryAttrs(subcategoryId: string): SubcategoryAttrs | undefined {
   return attributeCatalog.subcategories[subcategoryId];
+}
+
+/** The category's own direction for a number (power is no gain in an air fryer), or undefined for the default. */
+export function directionIn(
+  key: string,
+  subcategoryId: string | undefined,
+): "max" | "min" | "none" | undefined {
+  return subcategoryId ? subcategoryAttrs(subcategoryId)?.better?.[key] : undefined;
 }
 
 /** Attributes whose absence keeps a product out of the picks for that subcategory. */

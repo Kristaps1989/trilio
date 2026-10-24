@@ -7,6 +7,8 @@ import { Kicker, Page, PageTitle, Panel } from "@/ui/layout";
 import { db } from "@/db";
 import { offersOptIn } from "@/services/offers/offers";
 import { OffersConsent } from "@/ui/OffersConsent";
+import { PriceAlertsSwitch } from "@/ui/PriceAlertsSwitch";
+import { priceAlertsOn } from "@/services/wishlist/alerts";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { setEmailLanguageAction } from "./actions";
@@ -59,6 +61,14 @@ export default async function AccountPage({ searchParams }: Props) {
             {t("openOrders")}
           </ButtonLink>
         </div>
+      </Panel>
+
+      <Panel className="flex flex-col gap-3">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("alertsTitle")}</h2>
+        <PriceAlertsSwitch
+          initial={await priceAlertsOn(db, session.user.id)}
+          email={session.user.email ?? ""}
+        />
       </Panel>
 
       <Panel className="flex flex-col gap-3">
