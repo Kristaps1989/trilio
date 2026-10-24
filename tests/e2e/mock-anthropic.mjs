@@ -44,7 +44,9 @@ function wrapped(user) {
 // search-term labels; creative copy.
 function adsAnswer(system, user) {
   if (/weekly strategy memo/.test(system))
-    return JSON.stringify({ memo: "## Kas strādāja\n- e2e: meklēšanas kampaņas atved klikšķus uz veikaliem.\n\n## Ko apturēt\n- Nekas." });
+    return JSON.stringify({
+      memo: "## Kas strādāja\n- e2e: meklēšanas kampaņas atved klikšķus uz veikaliem.\n\n## Ko apturēt\n- Nekas.",
+    });
   if (system.startsWith("You manage the Google Search ads of Trilio")) {
     const account = JSON.parse(wrapped(user));
     const group = account.adGroups.find((g) => g.keywords.length > 0);
@@ -132,7 +134,8 @@ createServer((req, res) => {
       cache_creation_input_tokens: prefix && !hit ? prefixTokens : 0,
       cache_read_input_tokens: hit ? prefixTokens : 0,
     };
-    const answer = adsAnswer(systemText(body), user) ??
+    const answer =
+      adsAnswer(systemText(body), user) ??
       (/e2e-washer/.test(user)
         ? JSON.stringify({ subcategory: "washer", out_of_scope: false, confidence: 90, prefilled: [] })
         : "(mock: no answer)");

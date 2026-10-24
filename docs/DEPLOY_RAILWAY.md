@@ -27,6 +27,10 @@ Open the web service → **Variables** → add:
 | `GOOGLE_SITE_VERIFICATION` | from Search Console (HTML tag method) | Optional; adds the verification meta tag. |
 | `COMPANY_NAME`, `COMPANY_REG_NO`, `COMPANY_ADDRESS`, `COMPANY_EMAIL` | your company's registry details | Shown on the legal pages and on Trilio's invoices; required by Latvian law. `COMPANY_VAT_NO` only once VAT-registered: invoices then show 21 % VAT automatically. `COMPANY_EMAIL` also receives order notes (new order, withdrawal, problem). |
 | `GA_MEASUREMENT_ID` | `G-…` from Google Analytics | Optional. Turns on the consent banner and opt-in analytics (`docs/ANALYTICS.md`). |
+| `FEATURE_ADS` | `0` | `1` turns on the admin section "Reklāma" and the daily ads optimiser (`docs/GROWTH_PLAN.md`). Needs `ANTHROPIC_API_KEY` for the Claude parts. |
+| `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_CUSTOMER_ID`, `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | from the Google Ads manager account and Google Cloud | The refresh token needs the `adwords` and `webmasters.readonly` scopes. Customer ids without dashes. |
+| `GOOGLE_ADS_API_VERSION` | `v25` | Optional; change only after checking Google's sunset dates. |
+| `SEARCH_CONSOLE_SITE` | `sc-domain:trilio.lv` | Optional; fills the SEO page from Search Console. |
 | `ADMIN_EMAILS` | the e-mail you sign in with | Who may open `/admin` (comma-separated). Empty = nobody (`docs/ADMIN_AND_OFFERS_PLAN.md`). |
 | `OFFERS_SENDER_NAME` | `Kristaps` | Optional; personal-offer e-mails are signed "Kristaps no Trilio". Default "Trilio". |
 | `OMNIVA_API_URL`, `OMNIVA_USERNAME`, `OMNIVA_PASSWORD` | from your Omniva account manager | Optional; automatic delivery tracking for Omniva parcels. Without them the admin or the buyer marks delivery. |
@@ -37,7 +41,7 @@ Open the web service → **Variables** → add:
 | `PAYSERA_MAC_ID` / `PAYSERA_MAC_KEY` / `PAYSERA_BUSINESS_ID` | from Paysera after approval | Recurring billing (`docs/PAYMENTS.md`). |
 | `PAYMENT_TOKEN_KEY` | `openssl rand -hex 32` | Encrypts stored billing tokens. |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys` | Web push. |
-| `AUTH_DEV_LOGIN`, `PAYMENTS_PROVIDER=mock`, `ALLOW_INSECURE_TEST_FEATURES` | **never set on Railway** | Dev/CI only. |
+| `AUTH_DEV_LOGIN`, `PAYMENTS_PROVIDER=mock`, `ADS_PROVIDER=mock`, `ALLOW_INSECURE_TEST_FEATURES` | **never set on Railway** | Dev/CI only. |
 | `NODE_ENV` | `production` | Railway sets this during build; set it explicitly for runtime too. |
 
 Every integration is optional: a provider whose variables are missing is simply not offered (no Google button without Google credentials, no payments without Paysera credentials, no email without Resend).

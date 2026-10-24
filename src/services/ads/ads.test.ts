@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import {
+  adAds,
   adAgentRuns,
   adCampaigns,
   adChanges,
@@ -18,8 +19,18 @@ import { adParams } from "@/domain/growth/attribution";
 import type { StructuredCaller } from "@/services/llm/client";
 import { adLandingFor, purgeAdLandings, recordAdLanding } from "@/services/growth/landings";
 import { mockSearchConsole } from "@/services/seo/search-console";
-import { buildCampaigns, getSettings, syncAccount, updateSettings } from "./account";
-import { createCreatives, templateCopy } from "./creatives";
+import {
+  applyProposal,
+  buildCampaigns,
+  getSettings,
+  paceBudgets,
+  setCampaignsStatus,
+  syncAccount,
+  updateSettings,
+} from "./account";
+import { approveCreative, createCreatives, createPmax, templateCopy, writeCopy } from "./creatives";
+import type { AdsProvider } from "./provider";
+import type { Proposal } from "@/domain/ads/guardrails";
 import { mockProvider } from "./mock";
 import { decideProposal, OptimiserOutput, runDaily } from "./optimiser";
 
@@ -32,6 +43,7 @@ const run = url ? describe : describe.skip;
 async function wipe(db: Db) {
   for (const t of [
     adChanges,
+    adAds,
     adProposals,
     adAgentRuns,
     adSearchTerms,
@@ -208,6 +220,116 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     const rows = await createCreatives(db, "fridge", templateCopy("fridge"), "template");
     expect(rows.filter((r) => r.kind === "image")).toHaveLength(3);
     expect(rows.find((r) => r.kind === "video_script")?.script?.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("carries out every kind of proposal, and records a platform failure", async () => {
+    const [g] = await db
+      .select()
+      .from(adGroups)
+      .where(sql`${adGroups.googleId} is not null`)
+      .limit(1);
+    const campaigns = await db.select().from(adCampaigns);
+    const [c1, c2] = campaigns;
+    const [k] = await db
+      .select()
+      .from(adKeywords)
+      .where(sql`${adKeywords.adGroupId} = ${g!.id} and not ${adKeywords.negative}`)
+      .limit(1);
+    const failing: AdsProvider = { ...provider, apply: async () => ({ ok: false, error: "nope" }) };
+    const row = async (p: Proposal) =>
+      (
+        await db
+          .insert(adProposals)
+          .values({ action: p.action, params: p as unknown as Record<string, unknown>, reason: "r" })
+          .returning()
+      )[0]!;
+    const proposals: Proposal[] = [
+      { action: "flag_landing", adGroupId: g!.id, note: "lēna lapa" },
+      { action: "add_negative", campaignId: c1!.id, text: "bez maksas", match: "phrase" },
+      { action: "pause_keyword", keywordId: k!.id },
+      { action: "enable_keyword", keywordId: k!.id },
+      { action: "add_keyword", adGroupId: g!.id, text: "ledusskapis ar saldētavu", match: "phrase" },
+      { action: "set_cpc", adGroupId: g!.id, cpcCapCents: 32 },
+      { action: "move_budget", fromCampaignId: c1!.id, toCampaignId: c2!.id, cents: 10 },
+      {
+        action: "new_ad",
+        adGroupId: g!.id,
+        headlines: ["Ledusskapji", "3 piemērotākie", "Salīdzini cenas"],
+        descriptions: ["Atbildi uz dažiem jautājumiem.", "Salīdzini cenas veikalos."],
+      },
+    ];
+    for (const p of proposals) {
+      expect((await applyProposal(db, provider, await row(p), p, "owner")).ok).toBe(true);
+    }
+    for (const p of proposals.slice(1)) {
+      const r = await applyProposal(db, failing, await row(p), p, "owner");
+      expect(r).toEqual({ ok: false, error: "nope" });
+    }
+    expect((await db.select().from(adAds)).length).toBeGreaterThanOrEqual(1);
+    expect((await db.select().from(adProposals)).some((p) => p.status === "failed")).toBe(true);
+  });
+
+  it("switches campaigns on and off, and paces the budget by the rule", async () => {
+    const all = await db.select().from(adCampaigns);
+    expect(await setCampaignsStatus(db, provider, "enabled")).toBe(all.length);
+    expect(await setCampaignsStatus(db, provider, "paused", all[0]!.id)).toBe(1);
+    await updateSettings(db, { targetCostCents: 1 });
+    const paced = await paceBudgets(db, provider);
+    expect(paced.cents).toBeGreaterThan(0);
+    await updateSettings(db, { targetCostCents: null });
+    await setCampaignsStatus(db, provider, "paused");
+  });
+
+  it("writes Claude's copy only when it is honest, and builds PMax from approved images", async () => {
+    const reply = (headline: string, onScreen = "Dažas atbildes") =>
+      (async (req) => ({
+        ok: true,
+        value: req.schema.parse({
+          headline,
+          body: "Atbildi uz dažiem jautājumiem.",
+          video: [1, 2, 3].map((i) => ({ seconds: 3, onScreen: `${onScreen} ${i}`, visual: "Kadrs" })),
+        }),
+        usage: { inputTokens: 1, outputTokens: 1 },
+      })) as StructuredCaller;
+    expect((await writeCopy(db, reply("Ledusskapji bez minēšanas"), "fridge")).headline).toBe(
+      "Ledusskapji bez minēšanas",
+    );
+    expect((await writeCopy(db, reply("Lētākie ledusskapji tikai šodien!"), "fridge")).headline).toBe(
+      templateCopy("fridge").headline,
+    );
+    expect((await writeCopy(db, null, "fridge")).headline).toBe(templateCopy("fridge").headline);
+    expect((await writeCopy(db, async () => ({ ok: false, reason: "disabled" }), "fridge")).headline).toBe(
+      templateCopy("fridge").headline,
+    );
+
+    const fridgeGroup = (await db.select().from(adCampaigns)).find(
+      (c) => c.groupId && c.groupId !== "competitors",
+    )!;
+    expect((await createPmax(db, provider, "competitors", 500)).ok).toBe(false);
+    expect((await createPmax(db, provider, "no-such-group", 500)).ok).toBe(false);
+    expect((await createPmax(db, provider, fridgeGroup.groupId!, 500)).error).toMatch(/approve/);
+
+    const rows = await db
+      .select()
+      .from(adCreatives)
+      .where(sql`${adCreatives.subcategoryId} = 'fridge'`);
+    const failing: AdsProvider = { ...provider, apply: async () => ({ ok: false, error: "nope" }) };
+    const image = rows.find((r) => r.kind === "image")!;
+    expect(await approveCreative(db, failing, image)).toEqual({ ok: false, error: "nope" });
+    for (const r of rows) expect((await approveCreative(db, provider, r)).ok).toBe(true);
+    const after = await db
+      .select()
+      .from(adCreatives)
+      .where(sql`${adCreatives.subcategoryId} = 'fridge'`);
+    expect(after.filter((r) => r.status === "uploaded")).toHaveLength(3);
+    expect(after.find((r) => r.kind === "video_script")!.status).toBe("approved");
+    const groupOfFridge = (await db.select().from(adGroups)).find((g) => g.subcategoryId === "fridge")!;
+    const [camp] = await db
+      .select()
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.id} = ${groupOfFridge.campaignId}`);
+    expect((await createPmax(db, failing, camp!.groupId!, 500)).ok).toBe(false);
+    expect(await createPmax(db, provider, camp!.groupId!, 500)).toEqual({ ok: true });
   });
 
   it("links a later action of the same visitor the same day, and forgets after 90 days", async () => {

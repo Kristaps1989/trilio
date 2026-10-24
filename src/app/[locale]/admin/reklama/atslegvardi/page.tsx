@@ -50,7 +50,11 @@ export default async function AdsKeywords({ searchParams }: Props) {
     .innerJoin(adGroups, eq(adGroups.id, adSearchTerms.adGroupId))
     .where(gte(adSearchTerms.day, since))
     .groupBy(adSearchTerms.term, adGroups.name)
-    .orderBy(desc(sql`sum(${adSearchTerms.costMicros})`))
+    // What is worth a negative first: irrelevant terms, then by spend.
+    .orderBy(
+      desc(sql`max(${adSearchTerms.label}) = 'irrelevant'`),
+      desc(sql`sum(${adSearchTerms.costMicros})`),
+    )
     .limit(100);
   const positive = keywords.filter((r) => !r.k.negative);
   const negatives = keywords.filter((r) => r.k.negative);

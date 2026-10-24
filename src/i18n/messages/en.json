@@ -711,9 +711,7 @@
         },
         {
           "h": "Who we share data with",
-          "p": [
-            "Data is processed only by these service providers and only as far as their task requires:"
-          ],
+          "p": ["Data is processed only by these service providers and only as far as their task requires:"],
           "items": [
             "Railway: server and database hosting.",
             "Cloudflare: domain name system (DNS).",
@@ -766,15 +764,11 @@
         },
         {
           "h": "Children",
-          "p": [
-            "The service is not intended for children under 13."
-          ]
+          "p": ["The service is not intended for children under 13."]
         },
         {
           "h": "Changes",
-          "p": [
-            "We'll e-mail account holders about significant changes to this policy."
-          ]
+          "p": ["We'll e-mail account holders about significant changes to this policy."]
         }
       ]
     },
@@ -860,9 +854,7 @@
         },
         {
           "h": "Changes to the terms",
-          "p": [
-            "We'll e-mail account holders about significant changes at least 30 days in advance."
-          ]
+          "p": ["We'll e-mail account holders about significant changes at least 30 days in advance."]
         }
       ]
     },
@@ -925,9 +917,7 @@
         },
         {
           "h": "Shop pages",
-          "p": [
-            "When you open a shop's page, the shop's cookie policy applies."
-          ]
+          "p": ["When you open a shop's page, the shop's cookie policy applies."]
         },
         {
           "h": "How to manage cookies",
@@ -950,9 +940,7 @@
       "sections": [
         {
           "h": "Contact",
-          "p": [
-            "For questions, withdrawals and data requests write to {email}. We answer on working days."
-          ]
+          "p": ["For questions, withdrawals and data requests write to {email}. We answer on working days."]
         },
         {
           "h": "For shops",

@@ -125,7 +125,9 @@ async function labelTerms(db: Db, caller: StructuredCaller, since: string): Prom
     .innerJoin(adGroups, eq(adGroups.id, adSearchTerms.adGroupId))
     .where(and(isNull(adSearchTerms.label), gte(adSearchTerms.day, since)))
     .groupBy(adSearchTerms.term, adGroups.name)
-    .limit(150);
+    // The ones that cost most first: they are the ones worth a negative.
+    .orderBy(desc(sql`sum(${adSearchTerms.costMicros})`))
+    .limit(200);
   if (rows.length === 0) return 0;
   const res = await caller({
     purpose: "ads_terms",

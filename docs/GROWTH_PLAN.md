@@ -2,7 +2,14 @@
 
 Owner request, 24 Oct 2026: bring more visitors; Google Search ads as the first idea, open to better ones. The owner sets a daily budget and nothing else. Claude evaluates results every day, adjusts keywords and strategy, and writes the display and video creatives. Everything is managed from the admin panel.
 
-Status: **plan, awaiting the owner's decisions in §10.**
+Status: **built (24 Oct 2026), with every §10 decision as recommended.** Off until `FEATURE_ADS=1` and the Google credentials are set; campaigns are created paused, so nothing is spent until the owner switches them on in `/admin/reklama/kampanas`.
+
+What shipped and what did not:
+
+- **Built:** Consent Mode v2 and cookieless ad attribution (§5 Phase 0), Search campaigns from the category data (Phase 1), the daily optimiser in Approve mode with guardrails, honesty lint and the weekly memo (Phase 2), the creatives gallery with Claude copy, brand-template images and video storyboards (Phase 3), Performance Max per category group (Phase 4), Search Console ingestion and the SEO page, and the admin section "Reklāma".
+- **Competitor campaign (owner request, 24 Oct 2026):** "Search · Konkurenti" bids on price-comparison searches, mainly kurpirkt.lv and salidzini.lv (`competitors` in `data/keywords.lv.json`). Bidding on a competitor's name is lawful in the EU when the ad does not suggest a connection (CJEU C-236/08 Google France, C-323/09 Interflora). So the ad text never names them: the honesty lint blocks competitor names in any ad, and the guardrails stop Claude from adding a negative that would block these keywords.
+- **Deferred:** Demand Gen needs real YouTube videos, and Meta retargeting needs a pixel and an audience of at least 1 000 people. Both wait until there is traffic. Video is a storyboard for Google's Asset Studio or a human editor, not a rendered file.
+- **Not yet verified live:** the Google Ads and Search Console clients follow the REST documentation and are unit-tested against recorded shapes, but they have not run against a real account. Run "Sinhronizēt" once with the account connected and check `/admin/reklama` before switching campaigns on.
 
 ---
 

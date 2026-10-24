@@ -1,13 +1,19 @@
 # Claude API usage in Trilio
 
-Claude is used in exactly two places at runtime. Rankings, picks, tiers, prices, deltas, energy costs, the "Vērts zināt" advice and the "Vērts apsvērt" card are deterministic code (`src/domain/**`) and are never influenced by a model. This is what makes the "Kā mēs izvēlamies un prioritizējam?" panel truthful. The rule from `docs/FILTERS_PLAN.md` holds: AI provides data, code does the choosing.
+Claude is used in two places in the shopper-facing app, plus the ads optimiser in the admin (below). Rankings, picks, tiers, prices, deltas, energy costs, the "Vērts zināt" advice and the "Vērts apsvērt" card are deterministic code (`src/domain/**`) and are never influenced by a model. This is what makes the "Kā mēs izvēlamies un prioritizējam?" panel truthful. The rule from `docs/FILTERS_PLAN.md` holds: AI provides data, code does the choosing.
 
 | Purpose | Where | When it runs | Cost shape |
 |---|---|---|---|
 | **Free-text routing** — "Kaut kas cits" text → subcategory + pre-filled answers (choices, numbers, and `{min, max}` for range questions) | `src/services/llm/router.ts`, `POST /api/free-text` | Synchronously, only when the regex table (`free_text_detection` in `categories.json`) finds nothing | A few hundred input tokens (system prompt cached) + ~50 output tokens per request; only for shoppers who type free text |
 | **Attribute extraction** — shop title, spec table, specs and description → missing `attributes` from the subcategory's attribute catalogue | `src/services/llm/extract.ts`, `extract-job.ts`, `catalog-prompt.ts` | In the background after ingestion, once per product that has no `extracted_at` | One call per new product; a few hundred products is single-digit euros |
 
-Both go through `callStructured` in `src/services/llm/client.ts`, which is the only file that imports the Anthropic SDK.
+| **Ads optimiser** — reads the last days of ad results and proposes bounded changes; a weekly memo | `src/services/ads/optimiser.ts` (purpose `ads_optimiser`, `claude-opus-5-5`) | Once a day after 06:30 Riga time, only with `FEATURE_ADS=1` | One call a day plus one a week; cents |
+| **Search-term labels** — relevant / irrelevant / competitor for the costliest search terms | same file (purpose `ads_terms`, `claude-haiku-5-5`) | Inside the daily run, up to 200 terms | Fractions of a cent |
+| **Ad copy** — headline, body and a video storyboard for one category | `src/services/ads/creatives.tsx` (purpose `ads_copy`, `claude-opus-5-5`) | When the owner presses "Ģenerēt" | One call per category |
+
+The ads purposes pass their own model per call (`model` in the request), so `LLM_MODEL` does not change them. Code checks every proposal against fixed limits and the honesty lint before it can reach Google, and budgets are paced by a rule in code, never by the model (`docs/GROWTH_PLAN.md`).
+
+All of them go through `callStructured` in `src/services/llm/client.ts`, which is the only file that imports the Anthropic SDK.
 
 ## Attribute extraction
 

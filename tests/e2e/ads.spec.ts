@@ -31,9 +31,8 @@ test.beforeEach(() => {
 
 test("an ad visit is credited with the shop click that follows it", async ({ page, browser }) => {
   const camp = `e2e-camp-${Date.now()}`;
-  const beacon = page.waitForRequest(
-    (r) => r.url().endsWith("/api/visit") && (r.postData() ?? "").includes("gclid"),
-  );
+  // sendBeacon bodies are not visible to Playwright: wait for the request itself.
+  const beacon = page.waitForRequest((r) => r.url().endsWith("/api/visit"));
   await page.goto(
     `/rezultati?sub=kettle&gclid=e2e-gclid-${Date.now()}&utm_source=google&utm_medium=cpc&utm_campaign=${camp}`,
   );

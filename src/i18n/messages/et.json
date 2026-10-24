@@ -757,15 +757,11 @@
         },
         {
           "h": "Bērni",
-          "p": [
-            "Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."
-          ]
+          "p": ["Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."]
         },
         {
           "h": "Izmaiņas",
-          "p": [
-            "Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."
-          ]
+          "p": ["Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."]
         }
       ],
       "summary": [
@@ -852,9 +848,7 @@
         },
         {
           "h": "Izmaiņas noteikumos",
-          "p": [
-            "Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."
-          ]
+          "p": ["Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."]
         }
       ],
       "summary": [
@@ -922,9 +916,7 @@
         },
         {
           "h": "Veikalu lapas",
-          "p": [
-            "Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."
-          ]
+          "p": ["Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."]
         },
         {
           "h": "Kā pārvaldīt sīkdatnes",
@@ -947,9 +939,7 @@
       "sections": [
         {
           "h": "Saziņa",
-          "p": [
-            "Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."
-          ]
+          "p": ["Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."]
         },
         {
           "h": "Veikaliem",
