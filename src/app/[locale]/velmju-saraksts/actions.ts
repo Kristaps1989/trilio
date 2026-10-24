@@ -9,7 +9,8 @@ import { db, users } from "@/db";
 import { cancelAtPeriodEnd, resumeSubscription, startSubscription } from "@/services/billing/engine";
 import { appBaseUrl, paymentsProvider } from "@/services/payments";
 import { removeSaved, setThreshold } from "@/db/queries/wishlist";
-import { offersOptIn, setOffersOptIn } from "@/services/offers/offers";
+import { setOffersOptIn } from "@/services/offers/offers";
+import { priceAlertsOn, setPriceAlerts, takeOffersAsk } from "@/services/wishlist/alerts";
 import { keyOf, saveTarget, type SaveTarget } from "./save";
 import { localPath } from "@/i18n/path";
 
@@ -29,7 +30,10 @@ const Target = z.discriminatedUnion("kind", [
 export async function toggleSavedAction(
   raw: SaveTarget,
   save: boolean,
-): Promise<{ ok: true; saved: boolean; askOffers: boolean } | { ok: false; reason: "auth" | "invalid" }> {
+): Promise<
+  | { ok: true; saved: boolean; alerts: boolean; askOffers: boolean }
+  | { ok: false; reason: "auth" | "invalid" }
+> {
   const userId = await currentUserId();
   if (!userId) return { ok: false, reason: "auth" };
   const target = Target.safeParse(raw);
@@ -40,12 +44,25 @@ export async function toggleSavedAction(
     await removeSaved(db, userId, keyOf(target.data));
   }
   revalidatePath("/velmju-saraksts");
-  // Saving a product is the moment to ask about personal offers (docs/ADMIN_AND_OFFERS_PLAN.md §11.7).
-  const askOffers = save && target.data.kind === "product" && !(await offersOptIn(db, userId));
-  return { ok: true, saved: save, askOffers };
+  // Saving a product means "tell me when it is cheaper" (free, on by default), and the
+  // first save is the one moment to ask about Trilio's own offers (docs/TRUST_POLISH_PLAN.md §1).
+  const product = save && target.data.kind === "product";
+  const alerts = product ? await priceAlertsOn(db, userId) : false;
+  const askOffers = product ? await takeOffersAsk(db, userId) : false;
+  return { ok: true, saved: save, alerts, askOffers };
 }
 
-/** The personal-offers consent: a checkbox the shopper ticks (never pre-ticked), withdrawn the same way. */
+/** Price-drop e-mails on or off: the "Nesūtīt" under the heart and the switch in the account. */
+export async function setPriceAlertsAction(on: boolean): Promise<boolean> {
+  const userId = await currentUserId();
+  if (!userId || typeof on !== "boolean") return false;
+  await setPriceAlerts(db, userId, on);
+  revalidatePath("/velmju-saraksts");
+  revalidatePath("/konts");
+  return true;
+}
+
+/** The personal-offers consent: a "Jā" the shopper taps or a box they tick (never pre-ticked), withdrawn the same way. */
 export async function setOffersOptInAction(optIn: boolean): Promise<boolean> {
   const userId = await currentUserId();
   if (!userId || typeof optIn !== "boolean") return false;

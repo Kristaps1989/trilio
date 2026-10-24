@@ -8,6 +8,7 @@ import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { memoryEmailSender } from "@/services/notify/email";
 import { upsertOffers } from "@/services/ingestion/upsert";
 import { wishlistTexts } from "@/services/texts";
+import { setPriceAlerts, unsubscribeAlertsByToken } from "./alerts";
 import { runWishlistJob } from "./job";
 
 // Integration: a saved product whose price fell below its baseline goes into
@@ -76,20 +77,8 @@ run("runWishlistJob", () => {
       .returning();
     subscriber = u1!.id;
     freeUser = u2!.id;
-    await db
-      .insert(plans)
-      .values({ id: "wj-plan", name: "T", priceCents: 199, interval: "month" })
-      .onConflictDoNothing();
-    const periodEnd = new Date(Date.now() + 30 * 86_400_000);
-    await db.insert(subscriptions).values({
-      userId: subscriber,
-      planId: "wj-plan",
-      status: "active",
-      provider: "mock",
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: periodEnd,
-      nextBillingAt: periodEnd,
-    });
+    // Alerts are free and on by default; the second user turned them off.
+    await setPriceAlerts(db, freeUser, false);
   });
 
   afterAll(async () => {
@@ -110,13 +99,22 @@ run("runWishlistJob", () => {
       baseUrl: "https://trilio.example",
       texts: wishlistTexts,
     });
-    expect(res.skippedNoAccess).toBeGreaterThanOrEqual(1);
+    expect(res.skippedAlertsOff).toBeGreaterThanOrEqual(1);
     const mine = email.sent.filter((m) => m.to.startsWith("wishlist-job-"));
     expect(mine).toHaveLength(1);
     expect(mine[0]!.to).toContain("wishlist-job-a-");
     expect(mine[0]!.subject).toMatch(/^Cena kritusi: WishBrand WB-1 tējkanna tagad 50\s€$/);
     expect(mine[0]!.text).toMatch(/bija 60\s€/);
     expect(mine[0]!.text).toContain("https://trilio.example/velmju-saraksts");
+    // One-click unsubscribe (RFC 8058) and a link in the text.
+    const [u] = await db.select().from(users).where(eq(users.id, subscriber));
+    expect(u!.alertsToken).toMatch(/^[A-Za-z0-9_-]{20,64}$/);
+    expect(mine[0]!.headers?.["List-Unsubscribe"]).toBe(
+      `<https://trilio.example/api/wishlist/unsubscribe/${u!.alertsToken}>`,
+    );
+    expect(mine[0]!.text).toContain(
+      `Nesūtīt vairs cenu e-pastus: https://trilio.example/velmju-saraksts/atteikties/${u!.alertsToken}`,
+    );
 
     const [item] = await db.select().from(savedItems).where(eq(savedItems.userId, subscriber));
     expect(item!.baselinePriceCents).toBe(5000);
@@ -125,6 +123,20 @@ run("runWishlistJob", () => {
     const again = memoryEmailSender();
     await runWishlistJob(db, { email: again, baseUrl: "https://trilio.example", texts: wishlistTexts });
     expect(again.sent.filter((m) => m.to.startsWith("wishlist-job-"))).toHaveLength(0);
+  });
+
+  it("stops after a one-click unsubscribe", async () => {
+    const [u] = await db.select().from(users).where(eq(users.id, subscriber));
+    expect(await unsubscribeAlertsByToken(db, "not-a-token")).toBe(false);
+    expect(await unsubscribeAlertsByToken(db, u!.alertsToken!)).toBe(true);
+    await db
+      .update(savedItems)
+      .set({ baselinePriceCents: 9000, lastNotifiedAt: null })
+      .where(eq(savedItems.userId, subscriber));
+    const email = memoryEmailSender();
+    await runWishlistJob(db, { email, baseUrl: "https://trilio.example", texts: wishlistTexts });
+    expect(email.sent.filter((m) => m.to.startsWith("wishlist-job-"))).toHaveLength(0);
+    await setPriceAlerts(db, subscriber, true);
   });
 
   it("skips a drop smaller than the user's threshold", async () => {

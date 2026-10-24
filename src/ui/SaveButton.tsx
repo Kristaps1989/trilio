@@ -7,7 +7,8 @@ import { useState, useTransition } from "react";
 import { toggleSavedAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
-import { OffersConsent } from "./OffersConsent";
+import { OffersAsk } from "./OffersAsk";
+import { SavedAlertNote } from "./SavedAlertNote";
 
 // The heart (owner, 20 Oct 2026): one tap saves a product or a whole search
 // to the wishlist, a second tap removes it. Signed out, the tap goes through
@@ -63,7 +64,7 @@ export function SaveButton({
   const router = useRouter();
   const [saved, setSaved] = useState(initial);
   const [pending, start] = useTransition();
-  const [ask, setAsk] = useState(false);
+  const [note, setNote] = useState<{ alerts: boolean; askOffers: boolean } | null>(null);
   // Another heart for the same item (and the refresh after a tap) brings the server's state.
   const [prevInitial, setPrevInitial] = useState(initial);
   if (initial !== prevInitial) {
@@ -83,7 +84,7 @@ export function SaveButton({
         if (r.reason === "auth") window.location.href = signInUrl(target, isUiLocale(locale) ? locale : "lv");
         return;
       }
-      setAsk(r.askOffers && variant === "card");
+      setNote(variant === "card" && r.saved ? { alerts: r.alerts, askOffers: r.askOffers } : null);
       router.refresh();
     });
   }
@@ -107,11 +108,12 @@ export function SaveButton({
       {variant === "icon" ? null : <span>{text}</span>}
     </button>
   );
-  if (!ask || !saved) return button;
+  if (!note || !saved || (!note.alerts && !note.askOffers)) return button;
   return (
     <div className="flex flex-col gap-2">
       {button}
-      <OffersConsent initial={false} compact />
+      {note.alerts ? <SavedAlertNote /> : null}
+      {note.askOffers ? <OffersAsk /> : null}
     </div>
   );
 }

@@ -600,7 +600,8 @@
     "languageLv": "Latviešu",
     "languageEn": "English",
     "languageSaved": "Saved.",
-    "languageSave": "Save"
+    "languageSave": "Save",
+    "alertsTitle": "Price e-mails"
   },
   "email": {
     "dropSubject": "Price drop: {name} now {price}",
@@ -617,7 +618,8 @@
     "wishlistSubjectMany": "Prices dropped for {count} saved products",
     "wishlistProductLine": "{name} — {price} ({shop}), was {old}",
     "wishlistSearchLine": "{label}: the best option is now {name} — {price} ({shop}), was {old}",
-    "wishlistView": "View the wishlist"
+    "wishlistView": "View the wishlist",
+    "wishlistUnsubscribe": "Stop price e-mails"
   },
   "landing": {
     "title": "The best {category}",
@@ -683,7 +685,7 @@
             "Searching without an account: answers to the questions (category, budget, requirements) are kept without a name or e-mail, to show results and understand demand. Basis: legitimate interests.",
             "Clicks on shop links: we record which offer was opened and when, without your identity, to account for partner commissions. Basis: legitimate interests.",
             "Account: e-mail address. If you sign in with Google, also the name, profile picture link and access tokens issued by Google. Basis: performance of a contract.",
-            "Wishlist: the products and searches you save and notification settings. For browser notifications we keep the subscription address and keys issued by the browser. Basis: performance of a contract.",
+            "Wishlist: the products and searches you save and notification settings (whether price e-mails are on). For browser notifications we keep the subscription address and keys issued by the browser. Basis: performance of a contract; by saving a product you ask to be told when its price drops.",
             "Subscription and payments: plan, status, payment amounts and dates and a payment token issued by Paysera, kept encrypted. Card data is processed only by Paysera; Trilio never sees or stores it. Basis: performance of a contract and a legal obligation.",
             "Waiting list: if you leave an e-mail under “Something else”, we keep the e-mail and the request text to tell you when the category is available. Basis: your consent, which you can withdraw at any time.",
             "Technical logs: the hosting service briefly records IP addresses and requests for security and fixing errors. Basis: legitimate interests.",
@@ -753,9 +755,7 @@
         },
         {
           "h": "Children",
-          "p": [
-            "The service is not intended for children under 13. Only adults can take out a paid subscription."
-          ]
+          "p": ["The service is not intended for children under 13."]
         },
         {
           "h": "Changes",
@@ -765,12 +765,12 @@
     },
     "terms": {
       "title": "Terms of use",
-      "description": "Terms of the Trilio service and the price alerts subscription.",
-      "intro": "These terms apply to the use of {site} and the price alerts subscription. Please read them before creating an account or paying.",
+      "description": "Terms of the Trilio service, the wishlist and price e-mails.",
+      "intro": "These terms apply to the use of {site}, the wishlist and price e-mails. Please read them before creating an account.",
       "summary": [
         "Trilio helps you choose; you buy from the shop, under the shop's terms. Personal offers are the exception: there Trilio is the seller.",
         "Shop commissions never affect the order of products.",
-        "The price alerts subscription can be cancelled at any time; within 14 days of the first payment you get a full refund."
+        "The wishlist and price e-mails are free; you can turn the e-mails off with one click."
       ],
       "sections": [
         {
@@ -798,31 +798,29 @@
           "p": [
             "Some links to shops are partner links. If you buy a product after following one, the shop may pay us a commission. It costs you nothing.",
             "The commission does not affect the order of products. The order depends only on your answers, the price and the product's properties, as described in “How do we choose and rank?”.",
-            "The second source of income is the price alerts subscription."
+            "The second source of income is personal offers: products Trilio sells itself to people who have allowed it."
           ]
         },
         {
           "h": "Account",
           "p": [
-            "An account is needed for the wishlist and price alerts. You are responsible for the security of your e-mail or Google account. You can delete the account at any time on the Account page."
+            "An account is needed for the wishlist and price e-mails. You are responsible for the security of your e-mail or Google account. You can delete the account at any time on the Account page."
           ]
         },
         {
-          "h": "Price alerts subscription",
+          "h": "Wishlist and price e-mails",
           "items": [
-            "The price and the period (month or year) are shown before payment. Prices are in euros.",
-            "The subscription renews automatically every period, and the fee is charged to the same card until you cancel.",
-            "You can cancel at any time under “Wishlist”, “Subscription and payment”. Alerts keep working until the end of the paid period, and the next payment is not charged. A started period is not refunded, except under the right of withdrawal.",
-            "If a renewal payment fails, we try again after 1, 3 and 5 days. If it still fails, the subscription ends.",
-            "We'll announce price changes at least 30 days in advance. The new price applies only to the next period, and you can cancel before it starts.",
-            "Payments are processed by Paysera LT, UAB. Trilio never sees or stores card details."
+            "The wishlist and price e-mails are free.",
+            "By saving a product or a search you ask us to tell you when its price drops. We write at most once a day and only about price drops, with no advertising.",
+            "You can turn the e-mails off at any time: with “Don't send” under the saved product, in the wishlist, on the Account page or with the link at the end of every e-mail.",
+            "We send personal offers from Trilio only if you allow them separately. That is a different consent and can be withdrawn the same way."
           ]
         },
         {
           "h": "Right of withdrawal (14 days)",
           "p": [
-            "As a consumer you have the right to withdraw from the subscription within 14 days of the first payment without giving a reason. Write to {email} from the account's e-mail address. No form is required; a clear statement is enough.",
-            "We'll refund the full amount paid within 14 days to the same card. You can stop further periods at any time as described above."
+            "Trilio's services are free, so there is nothing to refund for them.",
+            "Products Trilio sells in personal offers come with a 14-day right of withdrawal, as described in the Purchase terms."
           ]
         },
         {
@@ -835,7 +833,7 @@
           "h": "Liability",
           "p": [
             "We collect the information carefully but do not guarantee that it is always complete and current. We are not responsible for the shops' products, delivery or services.",
-            "Our liability to you does not exceed the subscription fees paid in the last 12 months, except where the law does not allow liability to be limited. These terms do not limit your consumer rights."
+            "Our liability to you is limited as far as the law allows. These terms do not limit your consumer rights."
           ]
         },
         {
@@ -1134,7 +1132,7 @@
     "saved": "Saved",
     "saveSearch": "Save search",
     "searchSaved": "Search saved",
-    "notifyTitle": "E-mail alerts",
+    "notifyTitle": "Price e-mails",
     "notifyOffTitle": "Get an e-mail when prices drop",
     "notifyOffBody": "Once a day, one summary of price drops for your saved products and searches. No advertising.",
     "notifyCta": "Switch alerts on · {price}/month",
@@ -1153,7 +1151,14 @@
     "feature3": "Switch off at any time",
     "account": "Account",
     "accountLine": "Signed in as {email} · {provider}",
-    "offersTitle": "Personal offers"
+    "offersTitle": "Personal offers",
+    "alertNote": "Saved. We'll e-mail you if the price drops. ·",
+    "alertNoteOff": "Saved. We won't send price e-mails. ·",
+    "alertStop": "Don't send",
+    "alertResume": "Send after all",
+    "alertsLabel": "E-mail me when the price of a saved product or search drops",
+    "alertsOn": "Free. We send to {email} at most once a day, only about price drops.",
+    "alertsOff": "We don't send price e-mails. The wishlist and price history work without them."
   },
   "offerEmail": {
     "subject": "{name} from Trilio: {product} for {price}",
@@ -1190,11 +1195,15 @@
     "feedbackProblem": "There is a problem: {url}"
   },
   "offersConsent": {
-    "ask": "If I find it cheaper, tell you by e-mail?",
     "label": "I'd like personal offers for the products I've saved",
     "hint": "If we can offer one of your saved products for less than the shops, we'll write. Only about that product, no advertising. You can unsubscribe at any time.",
     "on": "Thank you! We'll write only about products you saved.",
-    "off": "We won't send personal offers any more."
+    "off": "We won't send personal offers any more.",
+    "askTitle": "May we sometimes offer you a better price ourselves?",
+    "askBody": "If we can sell one of your saved products for less than the shops, we'll write to you. Only about your products, no advertising.",
+    "askYes": "Yes, send them",
+    "askNoButton": "No, thanks",
+    "askNo": "Fine, we won't. If you change your mind, turn it on in the wishlist."
   },
   "offer": {
     "kicker": "Personal offer",
@@ -1390,5 +1399,13 @@
       "system": "system",
       "carrier": "carrier"
     }
+  },
+  "alertsUnsubscribe": {
+    "kicker": "Trilio",
+    "title": "Stop price e-mails?",
+    "body": "We'll stop e-mailing you about price drops on saved products. Your wishlist and account stay.",
+    "confirm": "Stop sending",
+    "doneTitle": "Done",
+    "doneBody": "We won't send price e-mails any more. If you change your mind, turn them on in the wishlist."
   }
 }

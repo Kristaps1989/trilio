@@ -253,6 +253,15 @@ export const users = pgTable("users", {
   offersOptInAt: timestamp("offers_opt_in_at", { withTimezone: true }),
   /** One-click unsubscribe token for offer e-mails; set when the first offer is sent. */
   offersToken: text("offers_token").unique(),
+  /** When the one-time offers question was shown under a heart (docs/TRUST_POLISH_PLAN.md §1). */
+  offersAskedAt: timestamp("offers_asked_at", { withTimezone: true }),
+  /**
+   * Price-drop e-mails about saved items: free and on by default, because
+   * saving is the request (owner, 24 Oct 2026); off with one tap or one click.
+   */
+  priceAlerts: boolean("price_alerts").notNull().default(true),
+  /** One-click unsubscribe token for price-drop e-mails; set with the first e-mail. */
+  alertsToken: text("alerts_token").unique(),
   /** The admin's private notes about this customer (shown in the GDPR export). */
   adminNote: text("admin_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

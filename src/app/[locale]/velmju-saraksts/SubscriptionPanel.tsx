@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useUiLocale } from "@/i18n/useUiLocale";
 import { useState, useTransition } from "react";
 import { formatDateNominative } from "@/i18n/format";
-import { Button, ButtonLink } from "@/ui/Button";
+import { Button } from "@/ui/Button";
 import { cancelSubscriptionAction, resumeSubscriptionAction } from "./actions";
 
 // Spec §5 subscription block: current method, cancel with confirmation
@@ -33,9 +33,6 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
         <p className="text-base text-stone">
           {subscription?.status === "expired" ? t("expired") : t("noSubscription")}
         </p>
-        <ButtonLink href="/velmju-saraksts/pazinojumi" size="sm">
-          {t("subscribe")}
-        </ButtonLink>
       </div>
     );
   }

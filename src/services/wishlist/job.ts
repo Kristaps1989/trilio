@@ -10,12 +10,13 @@ import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer, evaluateItem, searchProposal, type WishlistEvent } from "@/domain/wishlist/wishlist";
 import { formatEur } from "@/i18n/format";
 import { isUiLocale, localizedPath, type UiLocale } from "@/i18n/routing";
-import { currentSubscription, hasAccess } from "@/services/billing/engine";
+import { ensureAlertsToken, priceAlertsOn } from "@/services/wishlist/alerts";
 import { createEmailSender, type EmailSender } from "@/services/notify/email";
 
-// Runs after each ingestion: for every user with the paid e-mail service,
-// one digest of the saved items whose price dropped enough (each item at
-// most once a day), then the dropped price becomes the new baseline.
+// Runs after each ingestion: for every user with price alerts on (free and
+// on by default; docs/TRUST_POLISH_PLAN.md §1), one digest of the saved items
+// whose price dropped enough (each item at most once a day), then the dropped
+// price becomes the new baseline. Every e-mail carries a one-click unsubscribe.
 
 export type WishlistTexts = {
   subjectOne: (v: { name: string; price: string }) => string;
@@ -23,9 +24,10 @@ export type WishlistTexts = {
   productLine: (v: { name: string; price: string; shop: string; old: string }) => string;
   searchLine: (v: { label: string; name: string; price: string; shop: string; old: string }) => string;
   view: string;
+  unsubscribe: string;
 };
 
-export type WishlistJobResult = { evaluated: number; emailed: number; skippedNoAccess: number };
+export type WishlistJobResult = { evaluated: number; emailed: number; skippedAlertsOff: number };
 
 type Current = {
   productId: string;
@@ -39,7 +41,7 @@ export async function runWishlistJob(
 ): Promise<WishlistJobResult> {
   const now = opts.now ?? new Date();
   const email = opts.email ?? createEmailSender();
-  const result: WishlistJobResult = { evaluated: 0, emailed: 0, skippedNoAccess: 0 };
+  const result: WishlistJobResult = { evaluated: 0, emailed: 0, skippedAlertsOff: 0 };
 
   const rows = await itemsForEvaluation(db);
   if (rows.length === 0) return result;
@@ -51,7 +53,7 @@ export async function runWishlistJob(
 
   for (const { item, threshold } of rows) {
     if (!access.has(item.userId)) {
-      access.set(item.userId, hasAccess(await currentSubscription(db, item.userId), now));
+      access.set(item.userId, await priceAlertsOn(db, item.userId));
     }
     let current: Current | null = null;
     if (item.kind === "product" && item.productId) {
@@ -72,7 +74,7 @@ export async function runWishlistJob(
       continue;
     }
     if (!access.get(item.userId)) {
-      result.skippedNoAccess++;
+      result.skippedAlertsOff++;
       continue;
     }
     result.evaluated++;
@@ -110,10 +112,16 @@ export async function runWishlistJob(
             price: formatEur(first.event.newPriceCents, lang),
           })
         : texts.subjectMany({ count: list.length });
+    const unsub = await ensureAlertsToken(db, userId);
+    const unsubscribeUrl = `${opts.baseUrl}${localizedPath(`/velmju-saraksts/atteikties/${unsub}`, lang)}`;
     const sent = await email.send({
       to: user.email,
       subject,
-      text: `${lines.join("\n")}\n\n${texts.view}: ${opts.baseUrl}${localizedPath("/velmju-saraksts", lang)}`,
+      text: `${lines.join("\n")}\n\n${texts.view}: ${opts.baseUrl}${localizedPath("/velmju-saraksts", lang)}\n\n${texts.unsubscribe}: ${unsubscribeUrl}`,
+      headers: {
+        "List-Unsubscribe": `<${opts.baseUrl}/api/wishlist/unsubscribe/${unsub}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
     if (!sent.ok) continue;
     for (const { event } of list) await markNotified(db, event.itemId, event.newPriceCents, now);

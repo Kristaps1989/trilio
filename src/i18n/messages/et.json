@@ -259,6 +259,9 @@
     "verdictReviews": "Veikalu pircēji to vērtē ar {score} ★ ({count, plural, one {# atsauksme} other {# atsauksmes}}).",
     "verdictThin": "Par šo zinām mazāk: veikals nenorāda {attrs}.",
     "verdictValue": "Labākā kvalitāte par savu cenu starp {count, plural, one {# atbilstošo preci} other {# atbilstošajām precēm}}.",
+    "verdictCheaper": "Par {amount} lētāks nekā {name}.",
+    "sharedBrand": "{count} no {total} variantiem ir {brand} — zīmola uzticamība šajā kategorijā {grade}/5 neatkarīgos patērētāju pētījumos.",
+    "sharedFacts": "{total, plural, =2 {Abiem variantiem} other {Visiem variantiem}}: {facts}",
     "catch": "Bet: {text}",
     "catchAttr": "{label} {mine}; labākais pieejamais ({best}) {cost}.",
     "catchFeature": "nav: {feature}; ar to {cost}.",
@@ -280,13 +283,15 @@
     "whyNotLead": "Preces, ko varētu redzēt citur, un kāpēc tās neieteicām.",
     "whyFitRange": "{label} {value}; tavs maksimums {max}",
     "whyFitChoice": "neatbilst tavai atbildei «{chosen}»",
+    "whyFitValue": "{label} {value} — neatbilst tavai izvēlei: {chosen}.",
+    "whyGain": "{label} {theirs} (šim {mine})",
+    "whyGainFeature": "{feature} (šim nav)",
     "whyUnknown": "veikals nenorāda: {attrs}",
     "whyOver": "virs budžeta par {amount}",
     "whyDiscontinued": "modelis vairs netiek ražots",
     "whyDominated": "par {amount} dārgāks nekā «{name}» un nevienā parametrā labāks",
     "whyDominatedSame": "tāda pati cena kā «{name}», bet nevienā parametrā labāks",
     "whyWeaker": "«{name}» par +{amount} ir labāks: {gains}",
-    "whyWeakerPlain": "«{name}» par +{amount} ir kopumā labāks",
     "prioritiesTitle": "Kas tev svarīgāk?",
     "prioritiesAny": "Vienalga",
     "howStepsTitle": "Kā izvēlējāmies šos variantus",
@@ -596,7 +601,8 @@
     "languageHint": "Šajā valodā tev rakstām e-pastus.",
     "languageLv": "Latviešu",
     "languageSaved": "Saglabāts.",
-    "languageSave": "Saglabāt"
+    "languageSave": "Saglabāt",
+    "alertsTitle": "Cenu e-pasti"
   },
   "email": {
     "dropSubject": "Cena kritusi: {name} tagad {price}",
@@ -613,7 +619,8 @@
     "wishlistSubjectMany": "Cenas kritušas {count} saglabātajām precēm",
     "wishlistProductLine": "{name} — {price} ({shop}), bija {old}",
     "wishlistSearchLine": "{label}: labākais variants tagad {name} — {price} ({shop}), bija {old}",
-    "wishlistView": "Skatīt vēlmju sarakstu"
+    "wishlistView": "Skatīt vēlmju sarakstu",
+    "wishlistUnsubscribe": "Nesūtīt vairs cenu e-pastus"
   },
   "landing": {
     "title": "Labākie {category}",
@@ -669,7 +676,7 @@
             "Meklēšana bez konta: atbildes uz jautājumiem (kategorija, budžets, prasības) glabājam bez vārda un e-pasta, lai parādītu rezultātus un saprastu pieprasījumu. Pamats: leģitīmās intereses.",
             "Klikšķi uz veikalu saitēm: reģistrējam, kurš piedāvājums atvērts un kad, bez tavas identitātes, lai uzskaitītu partneru komisijas. Pamats: leģitīmās intereses.",
             "Konts: e-pasta adrese. Ja ienāc ar Google, arī vārds, profila attēla saite un Google izsniegtie piekļuves marķieri. Pamats: līguma izpilde.",
-            "Vēlmju saraksts: preces un meklējumi, ko saglabā, un paziņojumu iestatījumi. Pārlūka paziņojumiem glabājam pārlūka izsniegto abonēšanas adresi un atslēgas. Pamats: līguma izpilde.",
+            "Vēlmju saraksts: preces un meklējumi, ko saglabā, un paziņojumu iestatījumi (vai cenu e-pasti ieslēgti). Pārlūka paziņojumiem glabājam pārlūka izsniegto abonēšanas adresi un atslēgas. Pamats: līguma izpilde — saglabājot preci, tu lūdz paziņot, kad tās cena samazinās.",
             "Abonements un maksājumi: plāns, statuss, maksājumu summas un datumi un Paysera izsniegts maksājuma marķieris, ko glabājam šifrētu. Kartes datus apstrādā tikai Paysera, Trilio tos neredz un neglabā. Pamats: līguma izpilde un juridisks pienākums.",
             "Gaidītāju saraksts: ja atstāj e-pastu sadaļā “Kaut kas cits”, glabājam e-pastu un pieprasījuma tekstu, lai paziņotu, kad kategorija būs pieejama. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī.",
             "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses.",
@@ -741,9 +748,7 @@
         },
         {
           "h": "Bērni",
-          "p": [
-            "Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam. Maksas abonementu var noformēt pilngadīgas personas."
-          ]
+          "p": ["Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."]
         },
         {
           "h": "Izmaiņas",
@@ -787,31 +792,29 @@
           "p": [
             "Daļa saišu uz veikaliem ir partneru saites. Ja pēc tām nopirksi preci, veikals var mums samaksāt komisiju. Tev tas neko nemaksā.",
             "Komisija neietekmē preču secību. Secību nosaka tikai tavas atbildes, cena un preces īpašības, kā aprakstīts sadaļā “Kā mēs izvēlamies un prioritizējam?”.",
-            "Otrs ienākumu avots ir cenu paziņojumu abonements."
+            "Otrs ienākumu avots ir personīgie piedāvājumi: preces, ko Trilio pārdod pats tiem, kas to atļāvuši."
           ]
         },
         {
           "h": "Konts",
           "p": [
-            "Konts vajadzīgs vēlmju sarakstam un cenu paziņojumiem. Tu atbildi par sava e-pasta vai Google konta drošību. Kontu vari dzēst jebkurā brīdī sadaļā “Konts”."
+            "Konts vajadzīgs vēlmju sarakstam un cenu e-pastiem. Tu atbildi par sava e-pasta vai Google konta drošību. Kontu vari dzēst jebkurā brīdī sadaļā “Konts”."
           ]
         },
         {
-          "h": "Cenu paziņojumu abonements",
+          "h": "Vēlmju saraksts un cenu e-pasti",
           "items": [
-            "Cena un abonēšanas periods (mēnesis vai gads) ir norādīti pirms maksājuma. Cenas ir eiro.",
-            "Abonements atjaunojas automātiski katru periodu, un maksa tiek iekasēta no tās pašas kartes, līdz tu atsakies.",
-            "Atteikties var jebkurā brīdī sadaļā “Vēlmju saraksts”, “Abonements un maksājums”. Paziņojumi darbojas līdz apmaksātā perioda beigām, un nākamais maksājums vairs netiek iekasēts. Par iesāktu periodu nauda netiek atgriezta, izņemot atteikuma tiesību gadījumu.",
-            "Ja atjaunošanas maksājums neizdodas, mēģinām vēlreiz pēc 1, 3 un 5 dienām. Ja arī tad neizdodas, abonements beidzas.",
-            "Par cenas izmaiņām paziņosim vismaz 30 dienas iepriekš. Jaunā cena attiecas tikai uz nākamo periodu, un tu vari atteikties pirms tā sākuma.",
-            "Maksājumus apstrādā Paysera LT, UAB. Kartes datus Trilio neredz un neglabā."
+            "Vēlmju saraksts un cenu e-pasti ir bez maksas.",
+            "Saglabājot preci vai meklējumu, tu lūdz mums paziņot, kad tās cena samazinās. Sūtām ne biežāk kā reizi dienā un tikai par cenu kritumiem, bez reklāmām.",
+            "E-pastus vari atslēgt jebkurā brīdī: ar “Nesūtīt” pie saglabātās preces, vēlmju sarakstā, sadaļā “Konts” vai ar saiti katra e-pasta beigās.",
+            "Personīgus piedāvājumus no Trilio sūtām tikai tad, ja to atsevišķi atļauj. Tā ir cita piekrišana, un to var atsaukt tāpat."
           ]
         },
         {
           "h": "Atteikuma tiesības (14 dienas)",
           "p": [
-            "Kā patērētājam tev ir tiesības 14 dienu laikā pēc pirmā maksājuma atteikties no abonementa bez iemesla. Uzraksti uz {email} no konta e-pasta adreses. Veidlapa nav obligāta, pietiek ar skaidru paziņojumu.",
-            "Visu samaksāto summu atmaksāsim 14 dienu laikā uz to pašu karti. Turpmākos periodus vari pārtraukt jebkurā brīdī, kā aprakstīts iepriekš."
+            "Trilio pakalpojumi ir bez maksas, tāpēc par tiem nekas nav jāatmaksā.",
+            "Precēm, ko Trilio pārdod personīgos piedāvājumos, ir 14 dienu atteikuma tiesības, kā aprakstīts Pirkuma noteikumos."
           ]
         },
         {
@@ -824,7 +827,7 @@
           "h": "Atbildība",
           "p": [
             "Informāciju apkopojam rūpīgi, bet negarantējam, ka tā vienmēr ir pilnīga un aktuāla. Neatbildam par veikalu precēm, piegādi vai pakalpojumiem.",
-            "Mūsu atbildība pret tevi nepārsniedz pēdējos 12 mēnešos samaksāto abonementa maksu, izņemot gadījumus, kad likums neļauj atbildību ierobežot. Šie noteikumi neierobežo tavas patērētāja tiesības."
+            "Mūsu atbildība pret tevi ir ierobežota tiktāl, ciktāl to atļauj likums. Šie noteikumi neierobežo tavas patērētāja tiesības."
           ]
         },
         {
@@ -842,7 +845,7 @@
       "summary": [
         "Trilio palīdz izvēlēties; pērc tu no veikala, pēc veikala noteikumiem. Izņēmums ir personīgie piedāvājumi: tur pārdevējs ir Trilio.",
         "Veikalu komisija nekad neietekmē preču secību.",
-        "Cenu paziņojumu abonementu vari atcelt jebkurā brīdī; 14 dienu laikā pēc pirmā maksājuma atmaksājam visu summu."
+        "Vēlmju saraksts un cenu e-pasti ir bez maksas; e-pastus vari atslēgt ar vienu klikšķi."
       ]
     },
     "cookies": {
@@ -1151,7 +1154,14 @@
     "feature3": "Atslēgt vari jebkurā brīdī",
     "account": "Konts",
     "accountLine": "Ienācis kā {email} · {provider}",
-    "offersTitle": "Personīgi piedāvājumi"
+    "offersTitle": "Personīgi piedāvājumi",
+    "alertNote": "Saglabāts. Nosūtīsim e-pastu, ja cena samazināsies. ·",
+    "alertNoteOff": "Saglabāts. Cenu e-pastus nesūtīsim. ·",
+    "alertStop": "Nesūtīt",
+    "alertResume": "Tomēr sūtīt",
+    "alertsLabel": "Sūtīt e-pastu, kad saglabātās preces vai meklējuma cena samazinās",
+    "alertsOn": "Bez maksas. Sūtām uz {email} ne biežāk kā reizi dienā, tikai par cenu kritumiem.",
+    "alertsOff": "Cenu e-pastus nesūtām. Vēlmju saraksts un cenu vēsture darbojas arī bez tiem."
   },
   "offerEmail": {
     "subject": "{name} no Trilio: {product} par {price}",
@@ -1188,11 +1198,15 @@
     "feedbackProblem": "Ir problēma: {url}"
   },
   "offersConsent": {
-    "ask": "Ja atradīšu lētāk, pastāstīt pa e-pastu?",
     "label": "Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm",
     "hint": "Ja kādu no tavām saglabātajām precēm varēsim piedāvāt lētāk nekā veikalos, uzrakstīsim. Ne biežāk kā par konkrētu preci, bez reklāmām. Atteikties var jebkurā brīdī.",
     "on": "Paldies! Rakstīsim tikai par precēm, ko saglabāji.",
-    "off": "Personīgus piedāvājumus vairs nesūtīsim."
+    "off": "Personīgus piedāvājumus vairs nesūtīsim.",
+    "askTitle": "Vai drīkstam reizēm piedāvāt pašu izdevīgāku cenu?",
+    "askBody": "Ja kādu no tavām saglabātajām precēm varēsim pārdot lētāk nekā veikali, uzrakstīsim. Tikai par tavām precēm, bez reklāmām.",
+    "askYes": "Jā, sūtiet",
+    "askNoButton": "Nē, paldies",
+    "askNo": "Labi, nesūtīsim. Ja pārdomāsi, to var ieslēgt vēlmju sarakstā."
   },
   "offer": {
     "kicker": "Personīgs piedāvājums",
@@ -1785,5 +1799,13 @@
       "target": "Kam",
       "noAudit": "Darbību vēl nav."
     }
+  },
+  "alertsUnsubscribe": {
+    "kicker": "Trilio",
+    "title": "Nesūtīt vairs cenu e-pastus?",
+    "body": "Vairs nesūtīsim e-pastus par saglabāto preču cenu kritumiem. Vēlmju saraksts un konts paliek.",
+    "confirm": "Nesūtīt",
+    "doneTitle": "Gatavs",
+    "doneBody": "Cenu e-pastus vairs nesūtīsim. Ja pārdomāsi, tos var ieslēgt vēlmju sarakstā."
   }
 }
