@@ -3,6 +3,7 @@ import type { Db } from "@/db/client";
 import { adAgentRuns, adDailyStats } from "@/db/schema";
 import { costPerConversion } from "@/domain/ads/budget";
 import { dayOffset, getSettings, performance } from "./account";
+import { nextReviewDay } from "./optimiser";
 
 /** The numbers on Reklāma → Pārskats. */
 export async function adsOverview(db: Db, now = new Date()) {
@@ -35,5 +36,14 @@ export async function adsOverview(db: Db, now = new Date()) {
       .orderBy(desc(adAgentRuns.startedAt))
       .limit(1),
   ]);
-  return { settings, week, month, perf, cpa: costPerConversion(perf, settings), lastRun: lastRun ?? null };
+  const ranToday = lastRun?.day === dayOffset(now, 0);
+  return {
+    settings,
+    week,
+    month,
+    perf,
+    cpa: costPerConversion(perf, settings),
+    lastRun: lastRun ?? null,
+    nextReview: nextReviewDay(settings, now, ranToday),
+  };
 }

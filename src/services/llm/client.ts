@@ -161,8 +161,13 @@ export function createCaller(
         usage: { inputTokens: log.inputTokens, outputTokens: log.outputTokens },
       };
     } catch (err) {
-      const detail =
-        err instanceof Anthropic.APIError ? `${err.status ?? "net"} ${err.name}` : (err as Error).name;
+      // The API's own message (e.g. "model not found", "credit balance too low") says what to fix;
+      // it never contains the prompt. Only the admin sees it.
+      const detail = (
+        err instanceof Anthropic.APIError
+          ? `${err.status ?? "net"} ${err.name}: ${err.message}`
+          : `${(err as Error).name}: ${(err as Error).message}`
+      ).slice(0, 300);
       log.error = detail;
       return { ok: false, reason: "error", detail };
     } finally {

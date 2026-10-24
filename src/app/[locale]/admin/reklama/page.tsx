@@ -149,6 +149,34 @@ export default async function AdsOverview({ searchParams }: Props) {
               </label>
             ))}
           </fieldset>
+          <fieldset className="flex flex-col gap-1">
+            <legend className="mb-1 text-[15px] font-semibold text-mist">{t("reviewCadence")}</legend>
+            {(["weekly", "daily"] as const).map((c) => (
+              <label key={c} className="flex min-h-11 items-center gap-3 text-[15px] text-mist">
+                <input
+                  type="radio"
+                  name="reviewCadence"
+                  value={c}
+                  defaultChecked={s.reviewCadence === c}
+                  className="h-5 w-5 accent-lime"
+                />
+                {t(c === "weekly" ? "reviewWeekly" : "reviewDaily")}
+              </label>
+            ))}
+          </fieldset>
+          <label className={labelClass}>
+            {t("reviewWeekday")}
+            <select name="reviewWeekday" defaultValue={s.reviewWeekday} className={inputClass}>
+              {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                <option key={d} value={d}>
+                  {t(`weekday${d}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="text-[15px] text-stone sm:col-span-2" data-next-review={o.nextReview}>
+            {t("reviewNote", { date: o.nextReview.split("-").reverse().join(".") })}
+          </p>
           <div className="sm:col-span-2">
             <Button type="submit" size="sm">
               {t("saveSettings")}
