@@ -26,6 +26,10 @@ const SECTION_BY_FIRST_SEGMENT: Record<string, string> = {
   privatums: "legal",
   sikdatnes: "legal",
   kontakti: "legal",
+  "pirkuma-noteikumi": "legal",
+  piedavajums: "offer",
+  piedavajumi: "offer",
+  pasutijums: "offer",
 };
 
 const ID = /^[a-z][a-z0-9_-]{0,40}$/;

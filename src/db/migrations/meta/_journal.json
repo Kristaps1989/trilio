@@ -64,6 +64,13 @@
       "when": 1792495716201,
       "tag": "0008_eprel_lookups",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792823451581,
+      "tag": "0009_admin_offers",
+      "breakpoints": true
     }
   ]
 }

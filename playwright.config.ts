@@ -55,6 +55,12 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
+      // Omniva's public parcel-locker list (tests/e2e/mock-carriers.mjs).
+      command: "node tests/e2e/mock-carriers.mjs",
+      url: "http://127.0.0.1:4011/health",
+      reuseExistingServer: !process.env.CI,
+    },
+    {
       command: "npm run build && npm run start",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
@@ -65,6 +71,10 @@ export default defineConfig({
         FEATURE_FREE_TEXT_LLM: "1",
         ANTHROPIC_API_KEY: "e2e-mock-key",
         ANTHROPIC_BASE_URL: "http://127.0.0.1:4010",
+        // The admin section and personal offers (tests/e2e/admin.spec.ts, offers.spec.ts).
+        ADMIN_EMAILS: "e2e-admin@example.invalid",
+        OFFERS_SENDER_NAME: "Kristaps",
+        OMNIVA_LOCATIONS_URL: "http://127.0.0.1:4011/locations.json",
       },
     },
   ],

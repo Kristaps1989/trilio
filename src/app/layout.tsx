@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { analyticsId } from "@/config/analytics";
 import { appBaseUrl } from "@/services/payments";
 import { Analytics } from "@/ui/analytics/Analytics";
+import { VisitBeacon } from "@/ui/analytics/VisitBeacon";
 import { Footer } from "@/ui/shell/Footer";
 import { Header } from "@/ui/shell/Header";
 import { OG_IMAGE, OPEN_GRAPH } from "./seo";
@@ -102,6 +103,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </main>
           <Footer />
+          <Suspense fallback={null}>
+            <VisitBeacon />
+          </Suspense>
           {measurementId ? (
             <Suspense fallback={null}>
               <Analytics measurementId={measurementId} />

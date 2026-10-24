@@ -15,7 +15,9 @@ import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { Button, ButtonLink, buttonClass } from "@/ui/Button";
 import { InfoBox, Kicker, Page, PageTitle, Panel, Screen } from "@/ui/layout";
 import { ProductImage } from "@/ui/ProductImage";
+import { OffersConsent } from "@/ui/OffersConsent";
 import { SaveButton } from "@/ui/SaveButton";
+import { offersOptIn } from "@/services/offers/offers";
 import { cardMedia } from "../rezultati/card-media";
 import { PriceHistory } from "./PriceHistory";
 import { SubscriptionPanel, type SubscriptionModel } from "./SubscriptionPanel";
@@ -57,11 +59,12 @@ export default async function WishlistPage({ searchParams }: Props) {
     );
   }
 
-  const [items, sub, threshold, account] = await Promise.all([
+  const [items, sub, threshold, account, offersOn] = await Promise.all([
     listSaved(db, userId),
     currentSubscription(db, userId),
     getThreshold(db, userId),
     db.select({ provider: accounts.provider }).from(accounts).where(eq(accounts.userId, userId)).limit(1),
+    offersOptIn(db, userId),
   ]);
   const plan = sub ? (await db.select().from(plans).where(eq(plans.id, sub.planId)))[0] : undefined;
   const subscribed = hasAccess(sub);
@@ -297,6 +300,11 @@ export default async function WishlistPage({ searchParams }: Props) {
             </div>
           </>
         )}
+      </Panel>
+
+      <Panel className="flex flex-col gap-[14px]">
+        <h2 className="font-heading text-xl font-semibold text-mist">{t("offersTitle")}</h2>
+        <OffersConsent initial={offersOn} />
       </Panel>
 
       {subscription && subscription.status !== "pending" ? (

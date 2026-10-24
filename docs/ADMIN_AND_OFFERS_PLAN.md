@@ -216,3 +216,44 @@ Coupons and discount codes, loyalty points, a chat widget, in-app notification c
 - PR 2: the consent line in the save confirmation (heart tap) and the wishlist.
 - PR 3: sign-in through the offer link; the single-screen checkout with the delivery promise, the parcel-locker option for small appliances and the carry-in question for large ones; the receipt-style order page; the seven-day "Viss kārtībā?" e-mail.
 - PR 4: the paid-to-sent ratio and the lost-parcel list on Šodien.
+
+## 12. As built (24 Oct 2026)
+
+All four phases are implemented in one change. Where the build differs from the text above, this section is what the code does.
+
+**Where things are**
+- Rules (pure, unit-tested): `src/domain/offers/offers.ts` (claims, VAT, margin, offer and order steps, withdrawal, late parcels, delivery promise, carriers, numbering), `src/domain/offers/checkout.ts` (order form), `src/domain/admin/stats.ts` (ranges, quartiles, answers, CSV), `src/domain/analytics/visits.ts` (cookie-less counting).
+- Services: `src/services/offers/` (offers, orders and invoices, e-mails, the job, lockers, tracking, privacy), `src/services/admin/` (audit log, flags, statistics), `src/services/visits/`, `src/services/jobs/housekeeping.ts`.
+- Pages: `/admin/**`; `/piedavajums/[token]` and `/pasutit`; `/konts/pasutijumi/**`; `/rekins/[id]`; `/pasutijums/[token]` (feedback); `/piedavajumi/atteikties/[token]`; `/pirkuma-noteikumi`.
+- Migration `0009_admin_offers.sql`. Carriers and their tracking links are configuration: `data/carriers.json`.
+
+**Differences from the plan**
+- **Timeline:** one table, `offer_events`, serves as the offer's and the order's timeline (instead of a separate `offer_order_events`). The buyer sees only the order steps; the admin also sees sign-ins, reminders and notes.
+- **Offer-link sign-in is single-use.** The first "Pieņemt" signs the recipient in for the normal session length. A second use of the same link (for example, a forwarded one) goes to the normal sign-in. The admin opening the link does not count as "opened".
+- **No bank transfer** (owner decision 3). Without a payment provider, "Pieņemt" records the order as waiting for payment. The buyer sees "Maksājumu pieņemšana tiek sagatavota", and the inbox gets a note.
+- **Delivered e-mail dates and the withdrawal deadline** are counted from `delivered_at`. `delivered_at` is set by the carrier, the admin ("Piegādāts") or the buyer ("Saņēmu preci"). The admin can correct it, and the correction is logged.
+- **Carrier polling:** only Omniva, because it is the only carrier with a documented tracking API (`developer.omniva.ee`, Track and Trace).
+  - It is on when the `OMNIVA_*` variables are set.
+  - It makes at most 5 requests per run (Omniva's rate limit) and checks each parcel at most every 10 hours.
+  - Omniva does not document which event means delivered. `OMNIVA_DELIVERED_EVENT_CODES` holds the codes Omniva's integration team gives; until then the event name is matched.
+  - DPD and Venipak need business accounts first. Until then their parcels are marked delivered by hand or by the buyer.
+- **Parcel lockers** come from Omniva's public `locations.json`, cached for a day. If the file cannot be fetched, checkout asks for the locker in words. DPD lockers need an API account and are not listed.
+- **Unsubscribe:**
+  - Mail clients use RFC 8058 one-click: a `POST` to `/api/offers/unsubscribe/{token}`.
+  - The link in the e-mail text opens a page with one button, so link scanners cannot unsubscribe anyone.
+  - Unsubscribing also cancels that person's open offers.
+- **Reminder:** exactly one per offer, two days before expiry, never on the day the offer was sent, and only to people who have not accepted and are still opted in. The kill switch stops offers and reminders, not order e-mails.
+- **Header:** the admin sees an "Admin" link. Every admin page and action still checks `ADMIN_EMAILS` on the server.
+- **Visits:** the beacon (`/api/visit`) counts only after the page has loaded in a real browser. Bots and headless browsers are dropped before the rate limit. The Statistika table shows the top 25 pages; the CSV has all of them.
+
+**Tests**
+- Unit:
+  - every rule above;
+  - the full offer→order→invoice→refund flow against Postgres;
+  - the job (expiry, reminder, feedback, tracking with a fake carrier);
+  - statistics, visits and audit.
+- E2E (`tests/e2e/admin.spec.ts`, `offers.spec.ts`, mobile-360 and desktop):
+  - admin access, every section, visits and CSV, the kill switch;
+  - the whole journey from the heart to the refund;
+  - the single-use link sign-in, and a company buyer with a parcel locker;
+  - consent withdrawal, data export and account deletion.

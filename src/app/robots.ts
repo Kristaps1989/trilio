@@ -15,6 +15,10 @@ const PRIVATE = [
   "/maksajums/",
   "/rezultati",
   "/cits",
+  "/admin",
+  "/piedavajums/",
+  "/piedavajumi/",
+  "/pasutijums/",
 ];
 
 const AI_CRAWLERS = [

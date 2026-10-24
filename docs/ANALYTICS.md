@@ -10,6 +10,11 @@ withdrawing it deletes the GA cookies.
 Only visitors who accept are counted, so treat the numbers as a sample:
 compare shares and trends, not absolute totals.
 
+For totals, the admin's **Statistika** page (`/admin/statistika`) has Trilio's own
+counts. They need no consent because they use no cookies: a daily-rotating hash
+of IP and browser, raw rows kept for 35 days, then daily totals only
+(docs/ADMIN_AND_OFFERS_PLAN.md §3).
+
 ## 1. Create the property
 
 1. Open [analytics.google.com](https://analytics.google.com) with the

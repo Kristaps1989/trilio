@@ -11,6 +11,7 @@ import {
 } from "@/db/schema";
 import { decryptSecret, encryptSecret } from "@/services/crypto";
 import type { PaymentEvent, PaymentProvider } from "@/services/payments/types";
+import { orderPaymentCaptured } from "@/services/offers/orders";
 import { addInterval, MAX_FAILED_ATTEMPTS, nextRetryAt } from "./dates";
 
 // Subscription lifecycle (spec §5): we own plans, billing dates, renewals,
@@ -104,7 +105,7 @@ export async function startSubscription(
   return { subscriptionId: sub!.id, redirectUrl: created.redirectUrl };
 }
 
-export type ProcessOutcome = "activated" | "renewed" | "canceled" | "duplicate" | "ignored";
+export type ProcessOutcome = "activated" | "renewed" | "order_paid" | "canceled" | "duplicate" | "ignored";
 
 /** Step 3: a verified provider event. Idempotent by notification id and by order id. */
 export async function processPaymentEvent(
@@ -121,6 +122,17 @@ export async function processPaymentEvent(
 
   const [payment] = await db.select().from(payments).where(eq(payments.orderId, event.orderId));
   if (!payment) return "ignored";
+  // A personal offer bought from Trilio (services/offers/orders.ts), not the e-mail service.
+  if (payment.offerOrderId) {
+    if (event.status === "canceled") {
+      if (payment.status === "pending")
+        await db.update(payments).set({ status: "canceled" }).where(eq(payments.id, payment.id));
+      return "canceled";
+    }
+    if (event.status !== "captured" || payment.status === "captured") return "ignored";
+    return orderPaymentCaptured(db, payment, event);
+  }
+  if (!payment.subscriptionId) return "ignored";
   const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, payment.subscriptionId));
   const [plan] = sub ? await db.select().from(plans).where(eq(plans.id, sub.planId)) : [];
   if (!sub || !plan) return "ignored";
