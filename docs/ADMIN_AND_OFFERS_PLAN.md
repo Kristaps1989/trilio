@@ -143,11 +143,25 @@ Each PR has unit tests for the domain logic and Playwright e2e on mobile-360 and
 - **Markets:** LT/EE addresses and delivery rules when those markets open; free delivery is an LV rule, the others get their own.
 - **Accounting integration:** push invoices to the owner's accounting software when it is chosen.
 
-## 8. Owner decisions before PR 3
+## 8. Owner decisions (24 Oct 2026)
 
-1. Seller details for invoices and purchase terms (`COMPANY_*` variables exist; VAT registration status decides the invoice layout).
-2. Return shipping: paid by Trilio (recommended) or the shopper.
-3. Warranty handling: Trilio forwards to the distributor, or the distributor's service network directly.
-4. Bank-transfer payments allowed before Paysera goes live? (Recommended yes; manual, audited.)
-5. Reminder before expiry: one, only if never opened (recommended), or none.
-6. First-party visit counting (cookie-less, 35-day raw retention) is acceptable in the privacy policy.
+1. **Return shipping is paid by Trilio.** The withdrawal flow issues a prepaid return label or arranges courier pick-up; the shopper never pays to send goods back.
+2. **Trilio is the seller.** The invoice comes from Trilio; Trilio buys from the distributor afterwards. The order and invoice records are therefore Trilio's sales ledger (accounting CSV in PR 4). Warranty claims come to Trilio, which handles them with the distributor; the shopper has one contact.
+3. **Payments only through Paysera Checkout.** No bank-transfer path. PR 3 ships with the mock provider for development and CI and goes live when Paysera approves the project (task #31). The order form is not shown to shoppers until `PAYMENTS_PROVIDER=paysera` is configured; until then an accepted offer ends with "Maksājumu pieņemšana tiek sagatavota, mēs rakstīsim" and the admin sees the acceptance.
+4. **Reminder: always one**, two days before expiry, to every recipient who has not accepted or unsubscribed, in Trilio's voice (brand awareness). Exactly one per offer, never more; the e-mail says it is the last message about this offer.
+5. **Cookie-less visit counting is accepted.** It follows the practice of Plausible, Fathom and Simple Analytics: no cookie, daily-rotating hash, 35-day raw retention, aggregated counts kept. One sentence in the privacy policy under legitimate interest.
+6. **Not VAT-registered yet; registration is planned.** Invoices show "PVN nav piemērojams (nav reģistrēts PVN maksātājs)" until `COMPANY_VAT_NO` is set; from then on the invoice shows the net amount, 21 % VAT and the total, and the offer form shows the net/VAT split for the admin. The shopper's price is always the full amount to pay. The switch is configuration (the existing `COMPANY_VAT_NO` variable), no code change.
+
+## 9. Private and business buyers
+
+Both kinds of buyer accept the same offer, but the contract and the invoice differ, so the order form asks first: **"Pērku kā" → "Privātpersona" / "Uzņēmums"**.
+
+| | Privātpersona (B2C) | Uzņēmums (B2B) |
+|---|---|---|
+| Form fields | name, phone, e-mail, delivery address | plus company name, registration number (11 digits, checked), VAT number (optional, `LV` + 11 digits), legal address if different from delivery |
+| Invoice | name and address | company name, registration and VAT numbers, legal address; "Rēķins" with the payment reference |
+| Withdrawal | 14 days without a reason (Consumer Rights Protection Law); the order page has the button | none by law; the form says so before payment ("Uzņēmumiem 14 dienu atteikuma tiesības nav piemērojamas") |
+| Guarantee | 2-year legal guarantee against Trilio; claims through Trilio | manufacturer's warranty as stated in the offer (`warranty_months`); terms say claims go through Trilio |
+| Refurbished | grade, warranty and saving shown (rule 1) | same |
+
+Data: `offer_orders.buyer_kind` (`person` / `company`), `company_name`, `company_reg_no`, `company_vat_no`, `legal_address`. The purchase terms page has a B2C and a B2B section. The admin order list shows the buyer kind, and the accounting CSV exports both the invoice number series and the buyer details.
