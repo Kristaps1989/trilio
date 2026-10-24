@@ -85,7 +85,7 @@ export default async function AdminOrder({ params, searchParams }: Props) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <div className="flex flex-col gap-5">
           <Section title={t("buyer")} id="buyer">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[15px] text-mist">
+            <dl className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[15px] text-mist">
               <dt className="text-stone">{t("name")}</dt>
               <dd>{order.fullName}</dd>
               {order.buyerKind === "company" ? (

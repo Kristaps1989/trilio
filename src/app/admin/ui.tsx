@@ -129,7 +129,7 @@ const TONES = {
 export function Chip({ children, tone = "neutral" }: { children: ReactNode; tone?: keyof typeof TONES }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[13px] leading-none font-bold whitespace-nowrap ${TONES[tone]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[13px] leading-tight font-bold ${TONES[tone]}`}
     >
       {children}
     </span>

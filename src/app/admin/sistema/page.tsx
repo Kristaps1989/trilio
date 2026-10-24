@@ -151,7 +151,7 @@ export default async function AdminSystem({ searchParams }: Props) {
       </Section>
 
       <Section title={t("config")} id="config">
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[15px] text-mist">
+        <dl className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[15px] text-mist">
           <dt className="text-stone">{t("payments")}</dt>
           <dd>{provider ? <Chip tone="lime">{provider.name}</Chip> : <Chip>{t("paymentsOff")}</Chip>}</dd>
           <dt className="text-stone">{t("email")}</dt>
