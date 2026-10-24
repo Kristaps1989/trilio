@@ -2,6 +2,9 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { affiliateClicks, db, offers, products, stores } from "@/db";
+import { isBot } from "@/domain/analytics/visits";
+import { adLandingFor } from "@/services/growth/landings";
+import { clientKey } from "@/services/rate-limit";
 
 // "Pirkt — {Shop}" affiliate link. The target is built from the database
 // only (store template + stored offer URL), never from the request, so this
@@ -37,11 +40,18 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
   if (!row || !row.active) return new NextResponse(null, { status: 404 });
 
   const sessionId = new URL(request.url).searchParams.get("s");
+  // Credited to today's ad visit of the same visitor, if any (docs/GROWTH_PLAN.md, Phase 0).
+  const adLandingId = isBot(request.headers.get("user-agent"))
+    ? null
+    : await adLandingFor(db, { ip: clientKey(request), userAgent: request.headers.get("user-agent") }).catch(
+        () => null,
+      );
   await db
     .insert(affiliateClicks)
     .values({
       offerId: parsed.data.offerId,
       searchSessionId: z.string().uuid().safeParse(sessionId).success ? sessionId : null,
+      adLandingId,
     })
     .catch(() => undefined);
 

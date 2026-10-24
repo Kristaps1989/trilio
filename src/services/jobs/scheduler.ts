@@ -2,6 +2,7 @@ import type { Db } from "@/db/client";
 import { eprelClientFromEnv } from "@/services/eprel/client";
 import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
+import { runAdsJob } from "@/services/ads/job";
 import { runAllJobs } from "./all";
 import { eventful, runHousekeeping } from "./housekeeping";
 
@@ -36,6 +37,12 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
     // Visit counts and offers run every tick, also when no shop is due.
     const housekeeping = await runHousekeeping(db);
     if (eventful(housekeeping)) log.log("housekeeping:", JSON.stringify(housekeeping));
+    // The ads optimiser, once a day after 06:30 Riga time (docs/GROWTH_PLAN.md, Phase 2).
+    const ads = await runAdsJob(db).catch((err) => {
+      log.error("ads optimiser:", err);
+      return null;
+    });
+    if (ads) log.log("ads optimiser:", JSON.stringify(ads));
     const result = await runAllJobs(db);
     if (!result) return false;
     log.log(

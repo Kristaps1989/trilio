@@ -63,6 +63,20 @@ one per row:
 
 Data appears in reports about a day after registering.
 
+## Google Ads measurement
+
+Since the growth work (`docs/GROWTH_PLAN.md`) the banner also covers Google
+Ads measurement. Consent Mode v2 runs in its basic form: gtag loads only
+after "Atļaut", and then grants `analytics_storage`, `ad_storage` and
+`ad_user_data`. `ad_personalization` stays denied, so nobody is put on a
+remarketing list.
+
+Trilio's own attribution needs no cookie. A visit that arrives with a
+`gclid` or `utm_*` parameter is stored in `ad_landings` under the same
+daily visitor hash as the first-party statistics. A shop click or a save by
+the same visitor on the same day is linked to it. These rows are deleted
+after 90 days.
+
 ## What is sent
 
 | Event | When | Parameters |

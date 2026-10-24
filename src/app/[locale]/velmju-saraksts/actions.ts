@@ -1,11 +1,13 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { currentUserId } from "@/auth";
-import { db, users } from "@/db";
+import { db, savedItems, users } from "@/db";
+import { adLandingFor } from "@/services/growth/landings";
 import { cancelAtPeriodEnd, resumeSubscription, startSubscription } from "@/services/billing/engine";
 import { appBaseUrl, paymentsProvider } from "@/services/payments";
 import { removeSaved, setThreshold } from "@/db/queries/wishlist";
@@ -27,6 +29,18 @@ const Target = z.discriminatedUnion("kind", [
   }),
 ]);
 
+/** A save made the same day as an ad visit counts for that ad (docs/GROWTH_PLAN.md, Phase 0). */
+async function creditAdLanding(userId: string, key: string): Promise<void> {
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  const id = await adLandingFor(db, { ip, userAgent: h.get("user-agent") });
+  if (!id) return;
+  await db
+    .update(savedItems)
+    .set({ adLandingId: id })
+    .where(and(eq(savedItems.userId, userId), eq(savedItems.key, key), isNull(savedItems.adLandingId)));
+}
+
 export async function toggleSavedAction(
   raw: SaveTarget,
   save: boolean,
@@ -40,6 +54,7 @@ export async function toggleSavedAction(
   if (!target.success) return { ok: false, reason: "invalid" };
   if (save) {
     if (!(await saveTarget(userId, target.data))) return { ok: false, reason: "invalid" };
+    await creditAdLanding(userId, keyOf(target.data)).catch(() => undefined);
   } else {
     await removeSaved(db, userId, keyOf(target.data));
   }

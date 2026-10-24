@@ -5,14 +5,21 @@ import type { z } from "zod";
 import type { Db } from "@/db/client";
 import { llmCalls } from "@/db/schema";
 
-// The only place the Claude API is called. Two purposes exist (see
-// docs/LLM.md): routing a shopper's free text to a subcategory, and
-// extracting structured attributes from partner feed text. Both go through
+// The only place the Claude API is called. The purposes (see docs/LLM.md):
+// routing a shopper's free text to a subcategory, extracting structured
+// attributes from partner feed text, and the ads optimiser's daily review,
+// search-term reading and ad copy (docs/GROWTH_PLAN.md). Both go through
 // `callStructured`, which enforces: structured output validated against a
 // Zod schema, a per-purpose daily call cap, a timeout, and a usage log that
 // never stores prompt or user text. Ranking and prices never go near this.
 
-export type LlmPurpose = "free_text_routing" | "attribute_extraction";
+export type LlmPurpose =
+  | "free_text_routing"
+  | "attribute_extraction"
+  /** The daily ads optimiser and its weekly memo (docs/GROWTH_PLAN.md, Phase 2). */
+  | "ads_optimiser"
+  | "ads_terms"
+  | "ads_copy";
 
 /** Small, fast and cheap: reading spec tables and routing short text needs no more (LLM_MODEL overrides). */
 export const DEFAULT_MODEL = "claude-haiku-5-5";
@@ -38,6 +45,8 @@ export function dailyCallCap(): number {
 
 export type StructuredRequest<T> = {
   purpose: LlmPurpose;
+  /** Overrides LLM_MODEL for this call (the ads optimiser reasons on Opus). */
+  model?: string;
   /** Stable text first; it is cached across calls. */
   system: string;
   /** Volatile per-call content. Untrusted text must be wrapped by the caller (see wrapUntrusted). */
@@ -91,8 +100,8 @@ export function createCaller(
   db: Db,
   client = new Anthropic({ timeout: 30_000, maxRetries: 2 }),
 ): StructuredCaller {
-  const model = llmModel();
   return async function callStructured<T>(req: StructuredRequest<T>): Promise<StructuredResult<T>> {
+    const model = req.model ?? llmModel();
     if (!process.env.ANTHROPIC_API_KEY) return { ok: false, reason: "disabled" };
     if (!(await underDailyCap(db, req.purpose))) return { ok: false, reason: "cap" };
 

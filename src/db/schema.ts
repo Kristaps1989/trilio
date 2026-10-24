@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   index,
@@ -8,6 +9,7 @@ import {
   pgEnum,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
   uniqueIndex,
@@ -206,9 +208,14 @@ export const affiliateClicks = pgTable(
       .notNull()
       .references(() => offers.id, { onDelete: "cascade" }),
     searchSessionId: uuid("search_session_id").references(() => searchSessions.id, { onDelete: "set null" }),
+    /** The ad visit that brought this visitor today, if any (docs/GROWTH_PLAN.md, Phase 0). */
+    adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
     clickedAt: timestamp("clicked_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("affiliate_clicks_offer_idx").on(t.offerId)],
+  (t) => [
+    index("affiliate_clicks_offer_idx").on(t.offerId),
+    index("affiliate_clicks_ad_idx").on(t.adLandingId),
+  ],
 );
 
 export type Store = typeof stores.$inferSelect;
@@ -494,6 +501,8 @@ export const savedItems = pgTable(
     /** Price a drop is measured against: at saving, then the last notified price. */
     baselinePriceCents: integer("baseline_price_cents"),
     lastNotifiedAt: timestamp("last_notified_at", { withTimezone: true }),
+    /** The ad visit that brought the saver today, if any (docs/GROWTH_PLAN.md, Phase 0). */
+    adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -777,3 +786,260 @@ export type SpecialOffer = typeof specialOffers.$inferSelect;
 export type OfferOrder = typeof offerOrders.$inferSelect;
 export type OfferEvent = typeof offerEvents.$inferSelect;
 export type Invoice = typeof invoices.$inferSelect;
+
+// ---------------------------------------------------------------- growth (docs/GROWTH_PLAN.md)
+
+/**
+ * A visit that arrived from an ad: the click id and campaign tags with that
+ * day's cookieless visitor hash, so later shop clicks and saves the same day
+ * can be credited to the ad. Kept 90 days.
+ */
+export const adLandings = pgTable(
+  "ad_landings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    day: date("day").notNull(),
+    visitorHash: text("visitor_hash").notNull(),
+    gclid: text("gclid"),
+    utmSource: text("utm_source"),
+    utmMedium: text("utm_medium"),
+    utmCampaign: text("utm_campaign"),
+    utmTerm: text("utm_term"),
+    path: text("path").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("ad_landings_visitor_idx").on(t.day, t.visitorHash), index("ad_landings_day_idx").on(t.day)],
+);
+
+export const adModeEnum = pgEnum("ad_mode", ["observe", "approve", "auto"]);
+
+/** The owner's controls: one row (id 1). Money in cents. */
+export const adSettings = pgTable("ad_settings", {
+  id: integer("id").primaryKey().default(1),
+  dailyBudgetCents: integer("daily_budget_cents").notNull().default(1500),
+  floorCents: integer("floor_cents").notNull().default(500),
+  /** Cost per weighted conversion the optimiser must stay under; null until Phase 0 data exists. */
+  targetCostCents: integer("target_cost_cents"),
+  clickWeight: integer("click_weight").notNull().default(1),
+  saveWeight: integer("save_weight").notNull().default(3),
+  mode: adModeEnum("mode").notNull().default("approve"),
+  /** Proposal actions applied without asking in "auto" mode. */
+  autoActions: jsonb("auto_actions").$type<string[]>().notNull().default(["add_negative", "pause_keyword"]),
+  paused: boolean("paused").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const adCampaignKindEnum = pgEnum("ad_campaign_kind", ["search", "pmax"]);
+export const adStatusEnum = pgEnum("ad_status", ["draft", "enabled", "paused", "removed"]);
+
+export const adCampaigns = pgTable("ad_campaigns", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  /** Google's resource name once synced ("customers/1/campaigns/2"). */
+  googleId: text("google_id"),
+  budgetGoogleId: text("budget_google_id"),
+  name: text("name").notNull().unique(),
+  kind: adCampaignKindEnum("kind").notNull().default("search"),
+  /** The category group it serves (categories.json group id). */
+  groupId: text("group_id").notNull(),
+  status: adStatusEnum("status").notNull().default("draft"),
+  budgetCents: integer("budget_cents").notNull().default(0),
+  syncedAt: timestamp("synced_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const adGroups = pgTable(
+  "ad_groups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => adCampaigns.id, { onDelete: "cascade" }),
+    googleId: text("google_id"),
+    subcategoryId: text("subcategory_id").notNull(),
+    name: text("name").notNull(),
+    landingPath: text("landing_path").notNull(),
+    cpcCapCents: integer("cpc_cap_cents").notNull().default(30),
+    status: adStatusEnum("status").notNull().default("draft"),
+  },
+  (t) => [uniqueIndex("ad_groups_campaign_sub_idx").on(t.campaignId, t.subcategoryId)],
+);
+
+export const adMatchEnum = pgEnum("ad_match", ["exact", "phrase", "broad"]);
+
+/** Keywords and negatives. A negative with no ad group applies to the whole campaign. */
+export const adKeywords = pgTable(
+  "ad_keywords",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => adCampaigns.id, { onDelete: "cascade" }),
+    adGroupId: uuid("ad_group_id").references(() => adGroups.id, { onDelete: "cascade" }),
+    googleId: text("google_id"),
+    text: text("text").notNull(),
+    match: adMatchEnum("match").notNull().default("phrase"),
+    negative: boolean("negative").notNull().default(false),
+    status: adStatusEnum("status").notNull().default("draft"),
+    /** "seed", "agent" or "owner". */
+    source: text("source").notNull().default("seed"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("ad_keywords_unique_idx").on(t.campaignId, t.adGroupId, t.text, t.match, t.negative)],
+);
+
+/** Responsive search ads; PMax text assets live on the campaign's creatives. */
+export const adAds = pgTable("ad_ads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  adGroupId: uuid("ad_group_id")
+    .notNull()
+    .references(() => adGroups.id, { onDelete: "cascade" }),
+  googleId: text("google_id"),
+  headlines: jsonb("headlines").$type<string[]>().notNull(),
+  descriptions: jsonb("descriptions").$type<string[]>().notNull(),
+  finalPath: text("final_path").notNull(),
+  status: adStatusEnum("status").notNull().default("draft"),
+  source: text("source").notNull().default("seed"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const adCreativeStatusEnum = pgEnum("ad_creative_status", [
+  "draft",
+  "approved",
+  "rejected",
+  "uploaded",
+]);
+
+/** Display images (rendered from a template with live data) and video scripts. */
+export const adCreatives = pgTable("ad_creatives", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  /** "image" or "video_script". */
+  kind: text("kind").notNull(),
+  subcategoryId: text("subcategory_id").notNull(),
+  /** "1200x628", "1080x1080", "1080x1920", "300x250" … (images only). */
+  size: text("size"),
+  headline: text("headline").notNull(),
+  body: text("body").notNull(),
+  /** Video scripts: scenes with on-screen text and seconds. */
+  script: jsonb("script").$type<{ seconds: number; onScreen: string; visual: string }[]>(),
+  status: adCreativeStatusEnum("status").notNull().default("draft"),
+  googleAssetId: text("google_asset_id"),
+  source: text("source").notNull().default("template"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Google's numbers per day and entity (our id), pulled by the daily job. */
+export const adDailyStats = pgTable(
+  "ad_daily_stats",
+  {
+    day: date("day").notNull(),
+    /** "campaign", "ad_group", "keyword". */
+    level: text("level").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    impressions: integer("impressions").notNull().default(0),
+    clicks: integer("clicks").notNull().default(0),
+    costMicros: bigint("cost_micros", { mode: "number" }).notNull().default(0),
+    conversions: real("conversions").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.level, t.entityId] })],
+);
+
+export const adSearchTerms = pgTable(
+  "ad_search_terms",
+  {
+    day: date("day").notNull(),
+    adGroupId: uuid("ad_group_id")
+      .notNull()
+      .references(() => adGroups.id, { onDelete: "cascade" }),
+    term: text("term").notNull(),
+    impressions: integer("impressions").notNull().default(0),
+    clicks: integer("clicks").notNull().default(0),
+    costMicros: bigint("cost_micros", { mode: "number" }).notNull().default(0),
+    conversions: real("conversions").notNull().default(0),
+    /** Claude's reading: "relevant", "irrelevant" or "unsure"; null until classified. */
+    label: text("label"),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.adGroupId, t.term] })],
+);
+
+export const adAgentRuns = pgTable(
+  "ad_agent_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** "daily" or "weekly". */
+    kind: text("kind").notNull(),
+    day: date("day").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    ok: boolean("ok").notNull().default(false),
+    summary: text("summary"),
+    /** The weekly strategy memo, Markdown. */
+    memo: text("memo"),
+    proposals: integer("proposals").notNull().default(0),
+    applied: integer("applied").notNull().default(0),
+    blocked: integer("blocked").notNull().default(0),
+    error: text("error"),
+    /** The owner's reply to a memo, read into next week's context. */
+    ownerNote: text("owner_note"),
+  },
+  (t) => [uniqueIndex("ad_agent_runs_kind_day_idx").on(t.kind, t.day)],
+);
+
+export const adProposalStatusEnum = pgEnum("ad_proposal_status", [
+  "proposed",
+  "applied",
+  "rejected",
+  "blocked",
+  "failed",
+]);
+
+export const adProposals = pgTable(
+  "ad_proposals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id").references(() => adAgentRuns.id, { onDelete: "set null" }),
+    action: text("action").notNull(),
+    params: jsonb("params").$type<Record<string, unknown>>().notNull(),
+    reason: text("reason").notNull(),
+    expectedEffect: text("expected_effect"),
+    confidence: integer("confidence"),
+    status: adProposalStatusEnum("status").notNull().default("proposed"),
+    blockReason: text("block_reason"),
+    decidedBy: text("decided_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => [index("ad_proposals_status_idx").on(t.status, t.createdAt)],
+);
+
+/** What was sent to Google and what came back: the audit trail of the account. */
+export const adChanges = pgTable("ad_changes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  proposalId: uuid("proposal_id").references(() => adProposals.id, { onDelete: "set null" }),
+  operation: jsonb("operation").$type<Record<string, unknown>>().notNull(),
+  ok: boolean("ok").notNull(),
+  response: text("response"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Search Console performance per day, query and page. */
+export const seoQueries = pgTable(
+  "seo_queries",
+  {
+    day: date("day").notNull(),
+    query: text("query").notNull(),
+    page: text("page").notNull(),
+    clicks: integer("clicks").notNull().default(0),
+    impressions: integer("impressions").notNull().default(0),
+    position: real("position").notNull().default(0),
+    done: boolean("done").notNull().default(false),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.query, t.page] })],
+);
+
+export type AdSettings = typeof adSettings.$inferSelect;
+export type AdCampaign = typeof adCampaigns.$inferSelect;
+export type AdGroup = typeof adGroups.$inferSelect;
+export type AdKeyword = typeof adKeywords.$inferSelect;
+export type AdAd = typeof adAds.$inferSelect;
+export type AdCreative = typeof adCreatives.$inferSelect;
+export type AdProposal = typeof adProposals.$inferSelect;
