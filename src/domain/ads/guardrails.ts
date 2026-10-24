@@ -99,6 +99,10 @@ export function checkProposal(raw: unknown, state: AccountState): Verdict & { pr
         if (!state.campaigns.has(p.campaignId)) return { ok: false, reason: "unknown campaign" };
         const hit = state.convertingTerms.find((t) => containsPhrase(t, p.text));
         if (hit) return { ok: false, reason: `would block a converting search: "${hit}"` };
+        const own = [...state.keywords.values()].find(
+          (k) => k.campaignId === p.campaignId && !k.negative && k.status !== "removed" && containsPhrase(k.text, p.text),
+        );
+        if (own) return { ok: false, reason: `would block the campaign's own keyword "${own.text}"` };
         return { ok: true };
       }
       case "pause_keyword":

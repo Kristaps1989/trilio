@@ -125,6 +125,7 @@ describe("guardrails", () => {
       /converting/,
     );
     expect(why({ action: "pause_keyword", keywordId: "k2" })).toMatch(/conversions/);
+    expect(why({ action: "add_negative", campaignId: "c1", text: "kluss", match: "phrase" })).toMatch(/own keyword/);
     expect(why({ action: "add_keyword", adGroupId: "g1", text: "fridge <b>", match: "phrase" })).toMatch(
       /invalid/,
     );
