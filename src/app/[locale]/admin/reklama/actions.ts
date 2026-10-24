@@ -66,6 +66,8 @@ export async function saveAdSettingsAction(formData: FormData): Promise<void> {
       clickWeight: z.coerce.number().int().min(0).max(100),
       saveWeight: z.coerce.number().int().min(0).max(100),
       mode: z.enum(["observe", "approve", "auto"]),
+      reviewCadence: z.enum(["weekly", "daily"]).default("weekly"),
+      reviewWeekday: z.coerce.number().int().min(1).max(7).default(1),
     })
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) back("/admin/reklama", { err: "settings" });
@@ -77,6 +79,8 @@ export async function saveAdSettingsAction(formData: FormData): Promise<void> {
     clickWeight: v.clickWeight,
     saveWeight: v.saveWeight,
     mode: v.mode,
+    reviewCadence: v.reviewCadence,
+    reviewWeekday: v.reviewWeekday,
   });
   await log(a, "ads.settings", "settings", { ...v });
   // The owner's new number reaches the campaigns now, not tomorrow.

@@ -812,6 +812,8 @@ export const adLandings = pgTable(
 );
 
 export const adModeEnum = pgEnum("ad_mode", ["observe", "approve", "auto"]);
+/** How often Claude reviews the account; reports and budget pacing run daily regardless. */
+export const adReviewCadenceEnum = pgEnum("ad_review_cadence", ["weekly", "daily"]);
 
 /** The owner's controls: one row (id 1). Money in cents. */
 export const adSettings = pgTable("ad_settings", {
@@ -826,6 +828,10 @@ export const adSettings = pgTable("ad_settings", {
   /** Proposal actions applied without asking in "auto" mode. */
   autoActions: jsonb("auto_actions").$type<string[]>().notNull().default(["add_negative", "pause_keyword"]),
   paused: boolean("paused").notNull().default(false),
+  /** Weekly by default (owner, 24 Oct 2026): at 15 € a day one day's data is mostly noise. */
+  reviewCadence: adReviewCadenceEnum("review_cadence").notNull().default("weekly"),
+  /** ISO weekday of the weekly review: 1 = Monday … 7 = Sunday. */
+  reviewWeekday: integer("review_weekday").notNull().default(1),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

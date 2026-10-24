@@ -11,8 +11,12 @@ import AxeBuilder from "@axe-core/playwright";
 const ADMIN = "e2e-admin@example.invalid";
 
 async function expectNoAxeViolations(page: Page) {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  // After a form action the page refreshes in place (body, then the streamed <title>); retry
+  // until it settles. A real violation stays and still fails.
+  await expect(async () => {
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  }).toPass({ timeout: 10_000 });
 }
 
 async function signIn(page: Page, callbackUrl: string) {
@@ -81,6 +85,13 @@ test("the owner builds, syncs, runs the optimiser and decides", async ({ page })
   const settings = page.locator("[data-ads-settings]");
   await settings.getByLabel("Dienas budžets, €").fill("15");
   await settings.getByLabel("Apstiprināt — es apstiprinu katru").check();
+  // Claude reviews weekly by default; the next review day is shown.
+  await expect(settings.getByLabel(/Reizi nedēļā/)).toBeChecked();
+  await expect(settings.getByLabel("Pārskata diena")).toHaveValue("1");
+  await expect(settings.locator("[data-next-review]")).toHaveAttribute(
+    "data-next-review",
+    /^\d{4}-\d{2}-\d{2}$/,
+  );
   await settings.getByRole("button", { name: "Saglabāt iestatījumus" }).click();
   await expect(page.locator("[data-outcome=ok]")).toBeVisible();
 

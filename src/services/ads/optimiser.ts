@@ -37,12 +37,13 @@ import {
 } from "./account";
 import type { AdsProvider } from "./provider";
 
-// The daily optimiser (docs/GROWTH_PLAN.md §5, Phase 2). Every morning after
-// 06:30 Riga time: pull Google's numbers and Search Console, read new search
-// terms with Haiku, pace the budget by rule, then one Opus call proposes
-// changes from a closed set. Code checks each proposal; the owner's mode
-// decides whether it is applied, waits for approval, or is only shown.
-// Mondays add a strategy memo.
+// The optimiser (docs/GROWTH_PLAN.md §5, Phase 2). Every morning after 06:30
+// Riga time, code pulls Google's numbers and Search Console and paces the
+// budget by rule. On the review day (weekly by default, the owner's choice:
+// at a small budget one day's data is noise) Haiku reads the search terms and
+// one Opus call proposes changes from a closed set. Code checks each
+// proposal; the owner's mode decides whether it is applied, waits for
+// approval, or is only shown. The weekly review adds a strategy memo.
 
 export const OPTIMISER_MODEL = "claude-opus-5-5";
 export const TERMS_MODEL = "claude-haiku-5-5";
@@ -50,7 +51,7 @@ export const RUN_AFTER = { hour: 6, minute: 30 };
 
 const SYSTEM = `You manage the Google Search ads of Trilio (trilio.lv), a Latvian site that helps shoppers choose a household appliance: a few questions, then the three best options from partner shops' live inventory, ranked by deterministic code. Trilio earns a commission when a visitor buys after clicking through to a shop, and sells some products itself to people who saved them. Ads must bring visitors who click through to a shop or save a product.
 
-Each day you get the account as JSON: the owner's settings, Trilio's own conversions per campaign (shop clicks and saves credited to ad visits, weighted as the settings say), Google's numbers for campaigns, ad groups and keywords over 7 and 28 days, search terms with Claude Haiku's relevance label, and the current ads.
+At each review (weekly by default, daily if the owner chose so) you get the account as JSON: the owner's settings, Trilio's own conversions per campaign (shop clicks and saves credited to ad visits, weighted as the settings say), Google's numbers for campaigns, ad groups and keywords over 7 and 28 days, search terms with Claude Haiku's relevance label, and the current ads.
 
 Propose changes that lower the cost per weighted conversion or find more converting searches. Use only these actions, with the ids given in the data:
 - add_negative {campaignId, text, match: phrase|exact}: a search term that spends without converting and is not about buying that appliance (repairs, parts, manuals, jobs, second-hand, other products).
@@ -61,9 +62,9 @@ Propose changes that lower the cost per weighted conversion or find more convert
 - new_ad {adGroupId, headlines[3–15], descriptions[2–4]}: Latvian, headlines at most ${HEADLINE_MAX} characters, descriptions at most ${DESCRIPTION_MAX}.
 - flag_landing {adGroupId, note}: a landing page that gets clicks but almost no shop clicks or saves; nothing is changed, the owner reads the note.
 
-Rules that code enforces and you must follow too: at most ${MAX_CHANGES_PER_DAY} changes a day; never block a search that converted; ad text is honest: no "cheapest", "guaranteed", discounts, percentages, urgency ("tikai šodien", "pēdējā iespēja"), superlatives or numbers that the landing page does not show; no shop or brand names in ad text. You cannot change campaign status, geography, language, conversion settings or the total budget; the budget follows a rule in code.
+Rules that code enforces and you must follow too: at most ${MAX_CHANGES_PER_DAY} changes per review; never block a search that converted; ad text is honest: no "cheapest", "guaranteed", discounts, percentages, urgency ("tikai šodien", "pēdējā iespēja"), superlatives or numbers that the landing page does not show; no shop or brand names in ad text. You cannot change campaign status, geography, language, conversion settings or the total budget; the budget follows a rule in code.
 
-Prefer few, well-founded changes over many small ones. With little data (fewer than about 30 clicks in an ad group over 28 days) propose nothing for it except clear negatives. Give each proposal a one-sentence reason with the numbers behind it, the expected effect, and your confidence 0–100. Then a summary of the day in two or three Latvian sentences for the owner.`;
+Prefer few, well-founded changes over many small ones. With little data (fewer than about 30 clicks in an ad group over 28 days) propose nothing for it except clear negatives. Give each proposal a one-sentence reason with the numbers behind it, the expected effect, and your confidence 0–100. Then a summary of the period since the last review in two or three Latvian sentences for the owner.`;
 
 const ProposalOut = z.object({
   action: z.enum(ACTIONS as [string, ...string[]]),
@@ -100,6 +101,27 @@ export type OptimiserDeps = {
   /** Run even before 06:30 or when today's run exists ("Palaist tagad"). */
   force?: boolean;
 };
+
+/** True when Claude reviews today: every day, or on the owner's weekday. */
+export function reviewDue(
+  settings: { reviewCadence: string; reviewWeekday: number },
+  weekday: number,
+): boolean {
+  return settings.reviewCadence === "daily" || weekday === settings.reviewWeekday;
+}
+
+/** The Riga day (YYYY-MM-DD) of the next review, today included when it has not run yet. */
+export function nextReviewDay(
+  settings: { reviewCadence: string; reviewWeekday: number },
+  now: Date,
+  ranToday: boolean,
+): string {
+  for (let i = ranToday ? 1 : 0; i <= 7; i++) {
+    const d = new Date(now.getTime() + i * 86_400_000);
+    if (reviewDue(settings, rigaClock(d).weekday)) return rigaDay(d);
+  }
+  return rigaDay(now);
+}
 
 function rigaClock(d: Date): { hour: number; minute: number; weekday: number } {
   const parts = Object.fromEntries(
@@ -317,8 +339,24 @@ export async function runDaily(db: Db, deps: OptimiserDeps) {
       await pullSearchConsole(db, deps.searchConsole, dayOffset(now, 28), dayOffset(now, 3)).catch((err) =>
         console.error("search console:", (err as Error).message),
       );
-    await labelTerms(db, deps.caller, dayOffset(now, 28));
     const paced = settings.paused ? { cents: 0, why: "paused" } : await paceBudgets(db, deps.provider, now);
+    const budgetLine = `Budžets rītdienai: ${(paced.cents / 100).toFixed(2)} € (${paced.why}).`;
+    if (!deps.force && !reviewDue(settings, clock.weekday)) {
+      await finish({
+        ok: true,
+        summary: `Dati atjaunināti; Claude pārskats ${nextReviewDay(settings, now, true)}. ${budgetLine}`,
+      });
+      return { ok: true as const, reviewed: false, proposals: 0, applied: 0, blocked: 0 };
+    }
+    const [{ n: campaigns } = { n: 0 }] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.status} <> 'removed'`);
+    if (campaigns === 0) {
+      await finish({ ok: true, summary: "Nav kampaņu: vispirms “Izveidot kampaņas no kategorijām”." });
+      return { ok: true as const, reviewed: false, proposals: 0, applied: 0, blocked: 0 };
+    }
+    await labelTerms(db, deps.caller, dayOffset(now, 28));
 
     const context = await optimiserContext(db, now);
     const res = await deps.caller({
@@ -333,7 +371,14 @@ export async function runDaily(db: Db, deps: OptimiserDeps) {
       maxRetries: 1,
     });
     if (!res.ok) {
-      await finish({ ok: false, error: `claude: ${res.reason}`, summary: `Budžets: ${paced.why}.` });
+      await finish({
+        ok: false,
+        error: `claude: ${res.reason}${"detail" in res && res.detail ? ` — ${res.detail}` : ""}`.slice(
+          0,
+          500,
+        ),
+        summary: budgetLine,
+      });
       return { ok: false as const, reason: res.reason };
     }
     let applied = 0;
@@ -369,10 +414,12 @@ export async function runDaily(db: Db, deps: OptimiserDeps) {
         state = await accountState(db, now);
       }
     }
-    const summary = `${res.value.summary.slice(0, 1200)} Budžets rītdienai: ${(paced.cents / 100).toFixed(2)} € (${paced.why}).`;
+    const summary = `${res.value.summary.slice(0, 1200)} ${budgetLine}`;
     await finish({ ok: true, summary, proposals: res.value.proposals.length, applied, blocked });
-    if (clock.weekday === 1 || deps.force) await runWeeklyMemo(db, deps, now).catch(() => undefined);
-    return { ok: true as const, proposals: res.value.proposals.length, applied, blocked };
+    // The memo comes with the weekly review, or on Mondays when the owner chose daily reviews.
+    if (deps.force || settings.reviewCadence === "weekly" || clock.weekday === 1)
+      await runWeeklyMemo(db, deps, now).catch(() => undefined);
+    return { ok: true as const, reviewed: true, proposals: res.value.proposals.length, applied, blocked };
   } catch (err) {
     await finish({ ok: false, error: (err as Error).message.slice(0, 500) });
     return { ok: false as const, reason: "error" };

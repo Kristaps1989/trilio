@@ -210,6 +210,35 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     await updateSettings(db, { paused: false, mode: "approve" });
   });
 
+  it("reviews weekly: other days only refresh data and pace the budget, without Claude", async () => {
+    const calls: string[] = [];
+    const caller: StructuredCaller = async (req) => {
+      calls.push(req.purpose);
+      return (req.schema as unknown) === OptimiserOutput
+        ? {
+            ok: true,
+            value: req.schema.parse({ summary: "Nedēļa.", proposals: [] }),
+            usage: { inputTokens: 1, outputTokens: 1 },
+          }
+        : { ok: false, reason: "disabled" };
+    };
+    expect((await getSettings(db)).reviewCadence).toBe("weekly");
+    const tuesday = new Date("2026-10-27T08:00:00Z");
+    expect(await runDaily(db, { provider, caller, now: tuesday })).toMatchObject({
+      ok: true,
+      reviewed: false,
+    });
+    expect(calls).toEqual([]);
+    const [tue] = await db
+      .select()
+      .from(adAgentRuns)
+      .where(sql`${adAgentRuns.day} = '2026-10-27'`);
+    expect(tue!.summary).toMatch(/Claude pārskats 2026-11-02/);
+    const monday = new Date("2026-11-02T08:00:00Z");
+    expect(await runDaily(db, { provider, caller, now: monday })).toMatchObject({ ok: true, reviewed: true });
+    expect(calls).toContain("ads_optimiser");
+  });
+
   it("does not run before 06:30 Riga time unless asked", async () => {
     const early = new Date("2026-10-26T03:00:00Z"); // 05:00 in Riga
     const caller: StructuredCaller = async () => ({ ok: false, reason: "disabled" });
