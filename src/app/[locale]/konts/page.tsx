@@ -63,7 +63,7 @@ export default async function AccountPage({ searchParams }: Props) {
         </div>
       </Panel>
 
-      <Panel className="flex flex-col gap-3" data-price-alerts>
+      <Panel className="flex flex-col gap-3">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("alertsTitle")}</h2>
         <PriceAlertsSwitch
           initial={await priceAlertsOn(db, session.user.id)}

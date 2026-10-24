@@ -2,7 +2,7 @@
 
 Owner review of the first confidence release (24 Oct 2026, air fryers on trilio.lv, phone). Three complaints, each with its root cause in the code, the fix, the copy, the tests and the decision the owner has to make. Points 4–6 are things the same screenshots show that the owner did not name but that would undo the fix if left.
 
-Status: **plan, awaiting the owner's decisions in §7.**
+Status: **implemented** (owner, 24 Oct 2026: "agree", D1 = A + A1, the rest as recommended; copy corrected to "Nosūtīsim e-pastu, ja cena samazināsies"). Delivered as one PR rather than four. Brand-only premium is 15 % (`BRAND_ONLY_PREMIUM`); a difference counts at a tenth of the larger value when that is smaller than the rule's step (`minStep`).
 
 ---
 

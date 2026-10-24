@@ -72,6 +72,8 @@ Data appears in reports about a day after registering.
 | `answer_question` | An answer option in the question flow | `question`, `option`, `section`, `subcategory` |
 | `priority_tapped` | A pill in "Kas tev svarīgāk?" on the results page | `priority` (option value or `any`), `section`, `subcategory` |
 | `why_not_opened` | Opening "Kāpēc ne šie?" | `section`, `subcategory` |
+| `price_alert_off` / `price_alert_on` | "Nesūtīt" / "Tomēr sūtīt" under a heart just tapped | `section`, `subcategory` |
+| `offers_ask_yes` / `offers_ask_no` | The one-time offers question under the first heart | `section`, `subcategory` |
 | `confidence_answer` | "Jā" / "Nē, kaut kā pietrūka" under the results | `answer`, `section`, `subcategory` |
 | `select_offer` | "Pirkt …" on a result card (leaves to the shop) | `store`, `tier`, `recommended`, `refurbished`, `price_eur`, `section`, `subcategory` |
 

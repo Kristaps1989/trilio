@@ -904,6 +904,18 @@ export default async function ResultsPage({ searchParams }: Props) {
   })();
 
   // "Kāpēc ne šie?" (§3 A4).
+  // Two rows with the same name would read as a mistake: such names carry their model code.
+  const whyNotName = (p: ProductView) => {
+    const name = nameOf(p);
+    const clash = [...products.filter((x) => x.id !== p.id)].some(
+      (x) =>
+        nameOf(x) === name &&
+        (whyNots.some((w) => w.product.id === x.id) || pickCands.some((c) => c.product.id === x.id)),
+    );
+    return clash && p.modelCode && !name.toLowerCase().includes(p.modelCode.toLowerCase())
+      ? `${name} ${p.modelCode}`
+      : name;
+  };
   const whyNots = whyNot({
     products,
     sub,
@@ -1061,7 +1073,7 @@ export default async function ResultsPage({ searchParams }: Props) {
               >
                 <span className="flex items-baseline justify-between gap-3">
                   <span className="font-semibold text-mist" lang="lv" data-why-not-name>
-                    {nameOf(w.product)}
+                    {whyNotName(w.product)}
                   </span>
                   <span className="shrink-0 font-semibold text-mist tabular-nums">
                     {formatEur(w.priceCents)}

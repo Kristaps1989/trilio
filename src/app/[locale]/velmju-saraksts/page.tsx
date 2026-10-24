@@ -288,7 +288,7 @@ export default async function WishlistPage({ searchParams }: Props) {
         </section>
       ) : null}
 
-      <Panel className="flex flex-col gap-[14px]" data-price-alerts>
+      <Panel className="flex flex-col gap-[14px]">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("notifyTitle")}</h2>
         <PriceAlertsSwitch initial={alertsOn} email={email} />
         {alertsOn ? <ThresholdPicker value={threshold} /> : null}

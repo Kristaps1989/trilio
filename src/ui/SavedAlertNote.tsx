@@ -27,7 +27,7 @@ export function SavedAlertNote() {
         type="button"
         disabled={pending}
         onClick={() => change(!on)}
-        className="inline-flex min-h-11 items-center font-semibold underline underline-offset-2"
+        className="-my-3 inline-flex min-h-11 items-center align-middle font-semibold underline underline-offset-2"
         data-ga-event={on ? "price_alert_off" : "price_alert_on"}
       >
         {on ? t("alertStop") : t("alertResume")}

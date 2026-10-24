@@ -22,7 +22,7 @@ export function PriceAlertsSwitch({ initial, email }: { initial: boolean; email:
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-price-alerts>
       <label className="flex min-h-11 items-start gap-3 text-[15px] text-mist">
         <input
           type="checkbox"

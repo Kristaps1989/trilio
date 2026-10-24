@@ -68,7 +68,7 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
   const shopper = `e2e-offer-${test.info().project.name}-${Date.now()}@example.invalid`;
   let product = "";
 
-  await test.step("the shopper saves a kettle and says yes to offers under the heart", async () => {
+  await test.step("the shopper saves a kettle and says yes when asked about offers, once", async () => {
     await devLogin(page, shopper, "/");
     await page.goto("/izvelies/kitchensmall/kettle");
     await page.getByRole("button", { name: "Tālāk", exact: true }).click();
@@ -76,10 +76,12 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     const first = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").first();
     product = (await first.getAttribute("aria-label")) ?? "";
     await first.getByRole("button", { name: "Saglabāt", exact: true }).click();
-    const ask = first.getByRole("checkbox", { name: "Ja atradīšu lētāk, pastāstīt pa e-pastu?" });
-    await expect(ask).not.toBeChecked();
-    await ask.check();
-    await expect(first.getByRole("status")).toHaveText("Paldies! Rakstīsim tikai par precēm, ko saglabāji.");
+    const ask = first.getByRole("group", { name: "Vai drīkstam reizēm piedāvāt pašu izdevīgāku cenu?" });
+    await expect(ask.getByRole("button", { name: "Nē, paldies" })).toBeVisible();
+    await ask.getByRole("button", { name: "Jā, sūtiet" }).click();
+    await expect(
+      first.getByRole("status").filter({ hasText: "Paldies! Rakstīsim tikai par precēm, ko saglabāji." }),
+    ).toBeVisible();
   });
 
   const admin = await newPage(browser);
