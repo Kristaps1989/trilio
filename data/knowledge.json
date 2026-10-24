@@ -121,6 +121,18 @@
     "ionic": {
       "lv": "Jonizācija mazina statisko elektrību — mati mazāk pūkojas.",
       "en": "Ionisation reduces static, so hair frizzes less."
+    },
+    "dual_basket": {
+      "lv": "Divi atsevišķi grozi: divi ēdieni reizē, katrs savā temperatūrā un laikā.",
+      "en": "Two separate baskets: two dishes at once, each at its own temperature and time."
+    },
+    "dishwasher_safe": {
+      "lv": "Grozu un režģi var mazgāt trauku mazgājamajā mašīnā.",
+      "en": "The basket and rack can go in the dishwasher."
+    },
+    "window": {
+      "lv": "Caurspīdīgs lodziņš, pa kuru redz ēdienu, neatverot grozu.",
+      "en": "A clear window to see the food without opening the basket."
     }
   },
   "subcategories": {
@@ -343,69 +355,86 @@
       }
     },
     "iron": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
-        {
-          "attr": "iron_type",
-          "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
         {
           "attr": "steam_gmin",
           "why": {
-            "lv": "Vairāk tvaika — ātrāk izgludina.",
-            "en": "More steam irons faster."
+            "lv": "Tvaika plūsma nosaka, cik ātri izgludinās biezi audumi un krokas.",
+            "en": "Steam output decides how quickly thick fabrics and creases come out."
           }
         },
         {
           "attr": "anti_calc",
           "why": {
-            "lv": "Cietā ūdenī kaļķis ir biežākais bojājuma iemesls.",
-            "en": "In hard water, scale is the most common cause of failure."
+            "lv": "Ar cietu krāna ūdeni bez atkaļķošanas tvaiks gada laikā kļūst vājāks.",
+            "en": "With hard tap water, steam weakens within a year without anti-calc."
           }
         },
         {
           "attr": "weight_kg",
           "why": {
-            "lv": "Vieglāks — mazāk nogurdina roku.",
-            "en": "Lighter is less tiring for the arm."
+            "lv": "Vieglāks gludeklis mazāk nogurdina roku; smagāks gludina ar mazāku spiedienu.",
+            "en": "A lighter iron tires your arm less; a heavier one needs less pressing."
+          }
+        },
+        {
+          "attr": "auto_off",
+          "why": {
+            "lv": "Izslēdzas pats, ja aizmirsti.",
+            "en": "It switches itself off if you forget."
+          }
+        },
+        {
+          "attr": "iron_type",
+          "why": {
+            "lv": "Tvaika ģenerators gludina ātrāk, bet aizņem vairāk vietas.",
+            "en": "A steam generator irons faster but takes more space."
           }
         }
       ],
-      "watchOut": [],
+      "watchOut": [
+        {
+          "attr": "anti_calc",
+          "eq": false,
+          "text": {
+            "lv": "Nav atkaļķošanas sistēmas — ar cietu krāna ūdeni lieto filtrētu ūdeni.",
+            "en": "No anti-calc system; with hard tap water, use filtered water."
+          }
+        },
+        {
+          "attr": "auto_off",
+          "eq": false,
+          "text": {
+            "lv": "Nav automātiskās izslēgšanās — jāatceras izslēgt pašam.",
+            "en": "No automatic switch-off; remember to turn it off yourself."
+          }
+        }
+      ],
       "answerPhrases": {}
     },
     "steamer": {
       "lifeYears": 5,
       "decides": [
         {
-          "attr": "steamer_type",
-          "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
           "attr": "steam_gmin",
           "why": {
-            "lv": "Vairāk tvaika — ātrāk izgludina.",
-            "en": "More steam irons faster."
+            "lv": "Lielāka tvaika plūsma ātrāk iztaisno krokas.",
+            "en": "More steam straightens creases faster."
           }
         },
         {
           "attr": "tank_l",
           "why": {
-            "lv": "Lielāka tvertne — ilgāk bez uzpildes.",
-            "en": "A larger tank lasts longer between refills."
+            "lv": "Lielāka tvertne — retāk jāuzpilda.",
+            "en": "A larger tank needs refilling less often."
           }
         },
         {
-          "attr": "power_w",
+          "attr": "steamer_type",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Rokas tvaicētājs ir ceļojumiem un ātrai atsvaidzināšanai, statīva — lielākiem darbiem.",
+            "en": "A handheld steamer suits travel and quick touch-ups; a standing one bigger jobs."
           }
         }
       ],
@@ -672,22 +701,15 @@
         {
           "attr": "steam_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
+            "lv": "Tvaika mops ir grīdām; rokas tvaika tīrītājs — flīžu šuvēm, plītij un stūriem.",
+            "en": "A steam mop is for floors; a handheld steam cleaner for tile joints, hobs and corners."
           }
         },
         {
           "attr": "tank_l",
           "why": {
-            "lv": "Lielāka tvertne — ilgāk bez uzpildes.",
-            "en": "A larger tank lasts longer between refills."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Tvertnes tilpums nosaka, cik ilgi var strādāt bez uzpildes.",
+            "en": "The tank size decides how long it works between refills."
           }
         }
       ],
@@ -730,20 +752,13 @@
       "answerPhrases": {}
     },
     "grinder": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
         {
           "attr": "grinder_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Dzirnaviņas ar dzirnakmeņiem maļ vienmērīgāk nekā ar asmeņiem — kafija garšo labāk.",
+            "en": "Burr grinders grind more evenly than blade grinders, so the coffee tastes better."
           }
         }
       ],
@@ -751,69 +766,78 @@
       "answerPhrases": {}
     },
     "kettle": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
+        {
+          "attr": "volume_l",
+          "why": {
+            "lv": "1,7 L pietiek ģimenei; 1 L — vienam vai diviem.",
+            "en": "1.7 L is enough for a family; 1 L for one or two."
+          }
+        },
         {
           "attr": "material",
           "why": {
-            "lv": "Materiāls nosaka izturību un izskatu.",
-            "en": "The material decides durability and looks."
+            "lv": "Stikla tējkannā katlakmens redzams; nerūsējošais tērauds ir izturīgāks; plastmasa — vieglāka.",
+            "en": "Limescale shows in a glass kettle; stainless steel lasts longer; plastic is lighter."
           }
         },
         {
           "attr": "temp_control",
           "why": {
-            "lv": "Temperatūras izvēle tējai un kafijai.",
-            "en": "Temperature control for tea and coffee."
+            "lv": "Temperatūras izvēle noder zaļajai tējai un kafijai, kam vajag 70–90 °C.",
+            "en": "Temperature control helps with green tea and coffee, which need 70–90 °C."
           }
         },
         {
-          "attr": "volume_l",
+          "attr": "auto_off",
           "why": {
-            "lv": "Ietilpība nosaka, cik daudz vienā reizē.",
-            "en": "Capacity decides how much in one go."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Izslēdzas, kad ūdens uzvārījies vai tējkannā nav ūdens.",
+            "en": "It switches off when the water boils or the kettle is empty."
           }
         }
       ],
-      "watchOut": [],
+      "watchOut": [
+        {
+          "attr": "auto_off",
+          "eq": false,
+          "text": {
+            "lv": "Nav automātiskās izslēgšanās — pārbaudi, vai tā izslēdzas, kad ūdens uzvārījies.",
+            "en": "No automatic switch-off; check that it stops when the water boils."
+          }
+        }
+      ],
       "answerPhrases": {}
     },
     "blender": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
         {
           "attr": "blender_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Stacionārais blenderis ir smūtijiem un zupām; personīgais — vienai porcijai līdzņemšanai.",
+            "en": "A jug blender suits smoothies and soups; a personal one a single portion to go."
           }
         },
         {
           "attr": "volume_l",
           "why": {
-            "lv": "Ietilpība nosaka, cik daudz vienā reizē.",
-            "en": "Capacity decides how much in one go."
+            "lv": "Krūzes tilpums nosaka, cik porcijas vienā reizē.",
+            "en": "The jug size decides how many portions at once."
+          }
+        },
+        {
+          "attr": "power_w",
+          "why": {
+            "lv": "Ledum un riekstiem vajag ap 1000 W; smūtijiem pietiek ar mazāk.",
+            "en": "Ice and nuts need about 1000 W; smoothies need less."
           }
         },
         {
           "attr": "heating",
           "why": {
-            "lv": "Var gatavot arī zupas.",
-            "en": "It can make soups too."
+            "lv": "Ar sildīšanu var pagatavot karstu zupu tieši krūzē.",
+            "en": "With heating you can make hot soup in the jug."
           }
         }
       ],
@@ -821,20 +845,20 @@
       "answerPhrases": {}
     },
     "handblender": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
-        {
-          "attr": "cordless",
-          "why": {
-            "lv": "Bez vada ērtāk.",
-            "en": "Easier without a cord."
-          }
-        },
         {
           "attr": "power_w",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Jaudīgāks blenderis ātrāk sasmalcina cietākus produktus.",
+            "en": "A more powerful blender gets through harder food faster."
+          }
+        },
+        {
+          "attr": "cordless",
+          "why": {
+            "lv": "Bezvadu ērtāk pie plīts, bet akumulators kalpo īsāk nekā motors.",
+            "en": "Cordless is handier at the hob, but the battery wears out before the motor."
           }
         }
       ],
@@ -847,22 +871,22 @@
         {
           "attr": "foodproc_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Virtuves kombains sagriež, sarīvē un mīca; mini kombains tikai sasmalcina.",
+            "en": "A food processor slices, grates and kneads; a mini chopper only chops."
           }
         },
         {
           "attr": "volume_l",
           "why": {
-            "lv": "Ietilpība nosaka, cik daudz vienā reizē.",
-            "en": "Capacity decides how much in one go."
+            "lv": "Bļodas tilpums nosaka, cik daudz var apstrādāt vienā reizē.",
+            "en": "The bowl size decides how much it handles at once."
+          }
+        },
+        {
+          "attr": "power_w",
+          "why": {
+            "lv": "Mīklai un cietiem dārzeņiem vajag jaudīgāku motoru.",
+            "en": "Dough and hard vegetables need a stronger motor."
           }
         }
       ],
@@ -870,20 +894,20 @@
       "answerPhrases": {}
     },
     "mixer": {
-      "lifeYears": 7,
+      "lifeYears": 8,
       "decides": [
         {
           "attr": "mixer_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
+            "lv": "Planetārais mikseris mīca biezu mīklu pats; rokas mikseris ir vieglākiem darbiem.",
+            "en": "A stand mixer kneads heavy dough on its own; a hand mixer suits lighter jobs."
           }
         },
         {
           "attr": "power_w",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Rauga mīklai vajag jaudīgāku motoru, lai tas nepārkarstu.",
+            "en": "Yeast dough needs a stronger motor so it does not overheat."
           }
         }
       ],
@@ -896,15 +920,8 @@
         {
           "attr": "volume_l",
           "why": {
-            "lv": "Ietilpība nosaka, cik daudz vienā reizē.",
-            "en": "Capacity decides how much in one go."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Trauka tilpums nosaka, cik daudz sasmalcina vienā reizē.",
+            "en": "The bowl size decides how much it chops at once."
           }
         }
       ],
@@ -912,13 +929,13 @@
       "answerPhrases": {}
     },
     "mincer": {
-      "lifeYears": 7,
+      "lifeYears": 8,
       "decides": [
         {
           "attr": "power_w",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Jaudīgāka gaļasmašīna retāk iestrēgst ar cīpslainu gaļu.",
+            "en": "A more powerful mincer jams less with sinewy meat."
           }
         }
       ],
@@ -926,20 +943,20 @@
       "answerPhrases": {}
     },
     "scale": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
         {
           "attr": "precision_g",
           "why": {
-            "lv": "Precizitāte garšvielām un kafijai.",
-            "en": "Precision for spices and coffee."
+            "lv": "Raugam un garšvielām vajag precizitāti 1 g vai labāku.",
+            "en": "Yeast and spices need 1 g precision or better."
           }
         },
         {
           "attr": "max_kg",
           "why": {
-            "lv": "Maksimālā svara robeža.",
-            "en": "The maximum weight it can take."
+            "lv": "Maksimālais svars nosaka, vai var nosvērt lielu bļodu ar mīklu.",
+            "en": "The maximum decides whether a big bowl of dough can be weighed."
           }
         }
       ],
@@ -952,15 +969,8 @@
         {
           "attr": "cordless",
           "why": {
-            "lv": "Bez vada ērtāk.",
-            "en": "Easier without a cord."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Bezvadu nazis ir ērtāks pie galda; ar vadu tas nekad neizlādējas.",
+            "en": "A cordless knife is handier at the table; a corded one never runs flat."
           }
         }
       ],
@@ -973,15 +983,8 @@
         {
           "attr": "grill_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Kontaktgrils cep no abām pusēm ātri; atklātais grils cep vairāk kā uz ogles.",
+            "en": "A contact grill cooks both sides fast; an open grill cooks more like charcoal."
           }
         }
       ],
@@ -989,20 +992,13 @@
       "answerPhrases": {}
     },
     "toaster": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
         {
           "attr": "slots",
           "why": {
-            "lv": "Šķēļu skaits ģimenei.",
-            "en": "How many slices for a family."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Četras šķēles vienlaikus ietaupa laiku ģimenei no rīta.",
+            "en": "Four slices at once saves a family time in the morning."
           }
         }
       ],
@@ -1015,15 +1011,8 @@
         {
           "attr": "interchangeable_plates",
           "why": {
-            "lv": "Vairāki ēdieni ar vienu ierīci.",
-            "en": "Several dishes from one appliance."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Maināmas plātnes ļauj cept arī vafeles un grilēt, un tās ir vieglāk notīrīt.",
+            "en": "Interchangeable plates also make waffles and grill, and are easier to clean."
           }
         }
       ],
@@ -1034,45 +1023,66 @@
       "lifeYears": 5,
       "decides": [
         {
-          "attr": "fryer_type",
-          "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
           "attr": "volume_l",
           "why": {
-            "lv": "Ietilpība nosaka, cik daudz vienā reizē.",
-            "en": "Capacity decides how much in one go."
+            "lv": "Ietilpība nosaka porcijas: 2–3 L vienam, 4–5 L diviem līdz četriem, 6 L un vairāk ģimenei.",
+            "en": "Capacity decides the portions: 2–3 L for one, 4–5 L for two to four, 6 L or more for a family."
           }
         },
         {
-          "attr": "power_w",
+          "attr": "dual_basket",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Divi grozi ļauj gatavot divus ēdienus reizē, katru savā temperatūrā.",
+            "en": "Two baskets cook two dishes at once, each at its own temperature."
+          }
+        },
+        {
+          "attr": "dishwasher_safe",
+          "why": {
+            "lv": "Groza tīrīšana ir lielākā ikdienas neērtība; trauku mašīnā tā ir vieglāka.",
+            "en": "Cleaning the basket is the biggest daily chore; a dishwasher makes it easy."
+          }
+        },
+        {
+          "attr": "window",
+          "why": {
+            "lv": "Pa lodziņu var redzēt, kā gatavojas, neatverot grozu.",
+            "en": "A window lets you watch the food without opening the basket."
+          }
+        },
+        {
+          "attr": "fryer_type",
+          "why": {
+            "lv": "Karstā gaisa friteris gatavo ar karoti eļļas; klasiskais friteris — eļļā.",
+            "en": "An air fryer cooks with a spoonful of oil; a deep fryer in oil."
           }
         }
       ],
-      "watchOut": [],
-      "answerPhrases": {}
+      "watchOut": [
+        {
+          "attr": "dishwasher_safe",
+          "eq": false,
+          "text": {
+            "lv": "Grozu nevar mazgāt trauku mazgājamajā mašīnā — būs jāmazgā ar rokām.",
+            "en": "The basket is not dishwasher-safe; it has to be washed by hand."
+          }
+        }
+      ],
+      "answerPhrases": {
+        "portions": {
+          "lv": "{value} — pietiek {answer} porcijām",
+          "en": "{value} is enough for {answer} portions"
+        }
+      }
     },
     "breadmaker": {
-      "lifeYears": 5,
+      "lifeYears": 7,
       "decides": [
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
-          }
-        },
         {
           "attr": "programs",
           "why": {
-            "lv": "Programmas dažādiem darbiem.",
-            "en": "Programmes for different jobs."
+            "lv": "Vairāk programmu — arī bezglutēna maize, ievārījums un mīkla.",
+            "en": "More programmes cover gluten-free bread, jam and dough too."
           }
         }
       ],
@@ -1080,34 +1090,27 @@
       "answerPhrases": {}
     },
     "minioven": {
-      "lifeYears": 5,
+      "lifeYears": 7,
       "decides": [
-        {
-          "attr": "hotplates",
-          "why": {
-            "lv": "Riņķi virsū aizstāj plīti.",
-            "en": "Hotplates on top stand in for a hob."
-          }
-        },
         {
           "attr": "volume_l",
           "why": {
-            "lv": "Ietilpība nosaka, cik daudz vienā reizē.",
-            "en": "Capacity decides how much in one go."
+            "lv": "Ietilpība nosaka, vai iederas vesela vista (30 L un vairāk) vai tikai pica.",
+            "en": "Capacity decides whether a whole chicken fits (30 L or more) or only a pizza."
           }
         },
         {
           "attr": "convection",
           "why": {
-            "lv": "Karstais gaiss cep vienmērīgāk.",
-            "en": "Hot air bakes more evenly."
+            "lv": "Ventilators cep vienmērīgāk un ātrāk.",
+            "en": "A fan bakes more evenly and faster."
           }
         },
         {
-          "attr": "power_w",
+          "attr": "hotplates",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Ar sildvirsmām mini krāsns aizstāj arī plīti.",
+            "en": "With hotplates the mini oven replaces a hob too."
           }
         }
       ],
@@ -1115,20 +1118,13 @@
       "answerPhrases": {}
     },
     "juicer": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
         {
           "attr": "juicer_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Lēnā sulu spiede saglabā vairāk garšas un tiek galā ar zaļumiem; centrbēdzes ir ātrāka un lētāka.",
+            "en": "A slow juicer keeps more flavour and handles greens; a centrifugal one is faster and cheaper."
           }
         }
       ],
@@ -1136,20 +1132,13 @@
       "answerPhrases": {}
     },
     "dehydrator": {
-      "lifeYears": 5,
+      "lifeYears": 6,
       "decides": [
         {
           "attr": "trays",
           "why": {
-            "lv": "Paplāšu skaits nosaka, cik vienā reizē.",
-            "en": "The number of trays decides how much at once."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Paplāšu skaits nosaka, cik daudz vienā reizē var izžāvēt.",
+            "en": "The number of trays decides how much dries at once."
           }
         }
       ],
@@ -1162,8 +1151,8 @@
         {
           "attr": "power_w",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Jaudīgāks sūknis ātrāk izsūc gaisu.",
+            "en": "A stronger pump removes the air faster."
           }
         }
       ],
@@ -1176,29 +1165,29 @@
         {
           "attr": "shaver_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
+            "lv": "Rotācijas skuveklis labāk tiek galā ar vairāku dienu bārdu; folijas skuj tuvāk ikdienā.",
+            "en": "A rotary shaver copes better with a few days' growth; a foil shaver shaves closer every day."
           }
         },
         {
           "attr": "wet_dry",
           "why": {
-            "lv": "Lietojams arī ar ūdeni.",
-            "en": "Usable with water too."
+            "lv": "Var skūties arī dušā vai ar putām — maigāk jutīgai ādai.",
+            "en": "It can shave in the shower or with foam, gentler on sensitive skin."
           }
         },
         {
           "attr": "run_min",
           "why": {
-            "lv": "Akumulatoram jāpietiek vairākām reizēm.",
-            "en": "The battery should last several sessions."
+            "lv": "Ilgāks akumulators — ceļojumā nav jāņem lādētājs.",
+            "en": "A longer battery means no charger on a trip."
           }
         },
         {
           "attr": "clean_station",
           "why": {
-            "lv": "Ērtāka tīrīšana.",
-            "en": "Easier cleaning."
+            "lv": "Tīrīšanas stacija tīra un ieeļļo pati, bet kasetnes jāpērk regulāri.",
+            "en": "A cleaning station cleans and oils it for you, but cartridges must be bought regularly."
           }
         }
       ],
@@ -1211,22 +1200,22 @@
         {
           "attr": "trimmer_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
+            "lv": "Bārdas, matu vai universālais — izvēlies pēc tā, ko griezīsi visbiežāk.",
+            "en": "Beard, hair or all-in-one: choose by what you cut most often."
           }
         },
         {
           "attr": "run_min",
           "why": {
-            "lv": "Akumulatoram jāpietiek vairākām reizēm.",
-            "en": "The battery should last several sessions."
+            "lv": "Ilgāks akumulators — viss matu griezums ar vienu uzlādi.",
+            "en": "A longer battery gets a whole haircut done on one charge."
           }
         },
         {
           "attr": "wet_dry",
           "why": {
-            "lv": "Lietojams arī ar ūdeni.",
-            "en": "Usable with water too."
+            "lv": "Ūdensizturīgu var mazgāt zem krāna.",
+            "en": "A waterproof one can be rinsed under the tap."
           }
         }
       ],
@@ -1239,29 +1228,29 @@
         {
           "attr": "power_w",
           "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Gariem un bieziem matiem 2000 W un vairāk saīsina žāvēšanu.",
+            "en": "For long or thick hair, 2000 W or more shortens drying."
           }
         },
         {
           "attr": "ionic",
           "why": {
-            "lv": "Mazāk pūkaini mati.",
-            "en": "Less frizzy hair."
-          }
-        },
-        {
-          "attr": "foldable",
-          "why": {
-            "lv": "Der ceļojumiem.",
-            "en": "Good for travel."
+            "lv": "Jonizācija mazina matu elektrizēšanos.",
+            "en": "Ionic drying reduces static."
           }
         },
         {
           "attr": "weight_kg",
           "why": {
-            "lv": "Vieglāks — mazāk nogurdina roku.",
-            "en": "Lighter is less tiring for the arm."
+            "lv": "Vieglāks fēns mazāk nogurdina roku.",
+            "en": "A lighter dryer tires your arm less."
+          }
+        },
+        {
+          "attr": "foldable",
+          "why": {
+            "lv": "Saliekams fēns ir ērtāks ceļojumā.",
+            "en": "A folding dryer is handier for travel."
           }
         }
       ],
@@ -1274,29 +1263,22 @@
         {
           "attr": "styler_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
+            "lv": "Taisnotājs, lokšķēres vai fēnsuka — izvēlies pēc frizūras, ko veido visbiežāk.",
+            "en": "Straightener, curler or hot brush: choose by the style you make most often."
           }
         },
         {
           "attr": "temp_control",
           "why": {
-            "lv": "Temperatūras izvēle tējai un kafijai.",
-            "en": "Temperature control for tea and coffee."
+            "lv": "Regulējama temperatūra saudzē plānus vai krāsotus matus.",
+            "en": "Adjustable heat protects fine or coloured hair."
           }
         },
         {
           "attr": "ionic",
           "why": {
-            "lv": "Mazāk pūkaini mati.",
-            "en": "Less frizzy hair."
-          }
-        },
-        {
-          "attr": "power_w",
-          "why": {
-            "lv": "Lielāka jauda — ātrāk un vieglāk ar cietiem produktiem.",
-            "en": "More power works faster and copes with tougher food."
+            "lv": "Jonizācija mazina matu elektrizēšanos.",
+            "en": "Ionic styling reduces static."
           }
         }
       ],
@@ -1307,35 +1289,44 @@
       "lifeYears": 5,
       "decides": [
         {
-          "attr": "brush_type",
-          "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
-          }
-        },
-        {
           "attr": "pressure_sensor",
           "why": {
-            "lv": "Sargā smaganas.",
-            "en": "Protects the gums."
+            "lv": "Spiediena sensors brīdina, ja spied par stipru, un sargā smaganas.",
+            "en": "A pressure sensor warns when you press too hard and protects your gums."
           }
         },
         {
-          "attr": "app",
+          "attr": "brush_type",
           "why": {
-            "lv": "Lietotne rāda, kur notīrīts.",
-            "en": "The app shows where you have brushed."
+            "lv": "Oscilējošā un skaņas birste abas tīra labi; svarīgāk ir tīrīt divas minūtes.",
+            "en": "Oscillating and sonic brushes both clean well; brushing for two minutes matters more."
           }
         },
         {
           "attr": "programs",
           "why": {
-            "lv": "Programmas dažādiem darbiem.",
-            "en": "Programmes for different jobs."
+            "lv": "Programmas jutīgiem zobiem un smaganām.",
+            "en": "Modes for sensitive teeth and gums."
+          }
+        },
+        {
+          "attr": "app",
+          "why": {
+            "lv": "Lietotne rāda, kur netīrīji — noderīgi, bet nav obligāti.",
+            "en": "An app shows where you missed; useful but not essential."
           }
         }
       ],
-      "watchOut": [],
+      "watchOut": [
+        {
+          "attr": "pressure_sensor",
+          "eq": false,
+          "text": {
+            "lv": "Nav spiediena sensora — nespied birsti pārāk stipri.",
+            "en": "No pressure sensor; take care not to press too hard."
+          }
+        }
+      ],
       "answerPhrases": {}
     },
     "epilator": {
@@ -1344,22 +1335,22 @@
         {
           "attr": "epilator_type",
           "why": {
-            "lv": "Veids nosaka, kam ierīce der vislabāk.",
-            "en": "The type decides what the appliance suits best."
+            "lv": "Epilators, skuveklis vai komplekts — izvēlies pēc tā, kā vēlies noņemt matiņus.",
+            "en": "Epilator, shaver or set: choose by how you want to remove hair."
           }
         },
         {
           "attr": "wet_dry",
           "why": {
-            "lv": "Lietojams arī ar ūdeni.",
-            "en": "Usable with water too."
+            "lv": "Ar ūdeni epilācija ir mazāk sāpīga.",
+            "en": "Epilating in water hurts less."
           }
         },
         {
           "attr": "cordless",
           "why": {
-            "lv": "Bez vada ērtāk.",
-            "en": "Easier without a cord."
+            "lv": "Bezvadu ir ērtāks vannas istabā.",
+            "en": "Cordless is handier in the bathroom."
           }
         }
       ],

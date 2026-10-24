@@ -394,7 +394,10 @@
       "self_empty": "pašiztukšošanās stacija",
       "cleaning_program": "automātiskā tīrīšana",
       "auto_off": "automātiska izslēgšanās",
-      "discontinued": "vairs neražo"
+      "discontinued": "vairs neražo",
+      "dual_basket": "divi grozi",
+      "dishwasher_safe": "grozs mazgājams trauku mazgājamajā mašīnā",
+      "window": "skata lodziņš"
     },
     "airflow_m3h": "{delta} m³/h nosūkšanas jauda",
     "tank_l": "{delta} L ūdens tvertne",
@@ -541,7 +544,10 @@
     "mapping_lidar": "Lidar kartēšana",
     "mapping_camera": "Kameras kartēšana",
     "mapping_gyro": "Giroskops",
-    "unitMonths": "mēn."
+    "unitMonths": "mēn.",
+    "dual_basket": "Divi grozi",
+    "dishwasher_safe": "Grozs mazgājams trauku mazgājamajā mašīnā",
+    "window": "Skata lodziņš"
   },
   "model": {
     "title": "Es jau zinu modeli",

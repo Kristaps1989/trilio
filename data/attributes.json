@@ -1560,6 +1560,90 @@
         "automātisk\\S* izslēg",
         "auto[- ]?off"
       ]
+    },
+    "dual_basket": {
+      "type": "boolean",
+      "labels": [
+        "divi grozi",
+        "divas zonas",
+        "dubultais grozs",
+        "grozu skaits"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes",
+        "^2"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$",
+        "^1$"
+      ],
+      "text": [
+        "dual",
+        "divi grozi",
+        "2 grozi",
+        "divas zonas",
+        "divām zonām",
+        "dubult\\S* groz",
+        "double basket",
+        "2 atvilkt",
+        "divas atvilkt"
+      ]
+    },
+    "dishwasher_safe": {
+      "type": "boolean",
+      "labels": [
+        "var mazgāt trauku mazgājamajā mašīnā",
+        "drīkst mazgāt trauku mazgājamajā mašīnā",
+        "mazgājams trauku mazgājamajā mašīnā",
+        "dishwasher safe"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "mazgāt trauku mazgājam",
+        "mazgājam\\S* trauku mazgājam",
+        "dishwasher[- ]safe"
+      ]
+    },
+    "window": {
+      "type": "boolean",
+      "labels": [
+        "skata lodziņš",
+        "lodziņš",
+        "caurspīdīgs lodziņš",
+        "skatu logs"
+      ],
+      "true": [
+        "^jā",
+        "^ir$",
+        "^ir\\b",
+        "^yes"
+      ],
+      "false": [
+        "^nē",
+        "^nav",
+        "^no$"
+      ],
+      "text": [
+        "skata lodziņ",
+        "caurspīdīg\\S* lodziņ",
+        "skatu log",
+        "viewing window"
+      ]
     }
   },
   "accessory": [
@@ -3417,6 +3501,9 @@
       "key": [
         "fryer_type",
         "volume_l",
+        "dual_basket",
+        "dishwasher_safe",
+        "window",
         "power_w",
         "warranty_months"
       ],

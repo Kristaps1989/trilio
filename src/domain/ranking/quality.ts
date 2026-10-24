@@ -80,6 +80,9 @@ export const FEATURES = new Set([
   "self_empty",
   "cleaning_program",
   "auto_off",
+  "dual_basket",
+  "dishwasher_safe",
+  "window",
 ]);
 
 const ENERGY_ORDER = ["A", "B", "C", "D", "E", "F", "G"];

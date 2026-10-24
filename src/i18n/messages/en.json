@@ -394,7 +394,10 @@
       "self_empty": "self-emptying station",
       "cleaning_program": "automatic cleaning",
       "auto_off": "auto-off",
-      "discontinued": "discontinued"
+      "discontinued": "discontinued",
+      "dual_basket": "two baskets",
+      "dishwasher_safe": "dishwasher-safe basket",
+      "window": "viewing window"
     },
     "airflow_m3h": "{delta} m³/h extraction",
     "tank_l": "{delta} L water tank",
@@ -541,7 +544,10 @@
     "mapping_lidar": "Lidar mapping",
     "mapping_camera": "Camera mapping",
     "mapping_gyro": "Gyroscope",
-    "unitMonths": "months"
+    "unitMonths": "months",
+    "dual_basket": "Two baskets",
+    "dishwasher_safe": "Dishwasher-safe basket",
+    "window": "Viewing window"
   },
   "model": {
     "title": "I already know the model",

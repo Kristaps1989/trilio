@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { eq, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { plans, products, savedItems, stores, subscriptions, users } from "@/db/schema";
+import { products, savedItems, stores, users } from "@/db/schema";
 import { saveProduct, setThreshold } from "@/db/queries/wishlist";
 import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { memoryEmailSender } from "@/services/notify/email";
