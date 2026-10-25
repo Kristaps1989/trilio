@@ -35,7 +35,8 @@ export type AdsChange =
 export type ApplyResult = { ok: true; id?: string; budget?: string } | { ok: false; error: string };
 
 export type StatRow = {
-  level: "campaign" | "ad_group" | "keyword";
+  /** "account": the whole Google Ads account, as the Google Ads overview shows it. */
+  level: "account" | "campaign" | "ad_group" | "keyword";
   /** The platform's resource name. */
   resource: string;
   day: string;

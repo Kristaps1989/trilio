@@ -7,6 +7,7 @@ import {
   adCampaigns,
   adChanges,
   adCreatives,
+  adDailyStats,
   adGroups,
   adKeywords,
   adLandings,
@@ -23,11 +24,15 @@ import {
   applyProposal,
   buildCampaigns,
   getSettings,
+  ACCOUNT_ENTITY,
   paceBudgets,
   setCampaignsStatus,
+  syncReports,
   syncAccount,
   updateSettings,
+  dayOffset,
 } from "./account";
+import { adsOverview } from "./overview";
 import { approveCreative, createCreatives, createPmax, templateCopy, writeCopy } from "./creatives";
 import type { AdsProvider } from "./provider";
 import type { Proposal } from "@/domain/ads/guardrails";
@@ -208,6 +213,46 @@ run("ads pipeline", { timeout: 60_000 }, () => {
       blocked: 1,
     });
     await updateSettings(db, { paused: false, mode: "approve" });
+  });
+
+  it("syncs Google's numbers hourly, today included, with the account total", async () => {
+    const now = new Date();
+    const first = await syncReports(db, provider, { now, force: true });
+    expect(first).toMatchObject({ ok: true });
+    expect(first.skipped).toBeUndefined();
+    // Not again within the hour, unless asked; after an hour it pulls by itself.
+    expect(
+      (await syncReports(db, provider, { now: new Date(now.getTime() + 61 * 60_000) })).skipped,
+    ).toBeUndefined();
+    expect(await syncReports(db, provider, { now: new Date(now.getTime() + 70 * 60_000) })).toEqual({
+      ok: true,
+      skipped: true,
+    });
+    expect((await syncReports(db, provider, { now, force: true })).skipped).toBeUndefined();
+    const today = dayOffset(now, 0);
+    const account = await db
+      .select()
+      .from(adDailyStats)
+      .where(sql`${adDailyStats.level} = 'account' and ${adDailyStats.day} = ${today}`);
+    expect(account).toHaveLength(1);
+    expect(account[0]!.entityId).toBe(ACCOUNT_ENTITY);
+    const o = await adsOverview(db, now);
+    expect(o.today.micros).toBe(account[0]!.costMicros);
+    expect(o.week.micros).toBeGreaterThanOrEqual(o.today.micros);
+    expect(o.week.outsideMicros).toBe(0);
+    expect((await getSettings(db)).reportsSyncedAt?.getTime()).toBe(now.getTime());
+
+    const broken: AdsProvider = {
+      ...provider,
+      report: async () => {
+        throw new Error("google ads 403: CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION");
+      },
+    };
+    const failed = await syncReports(db, broken, { force: true });
+    expect(failed).toMatchObject({ ok: false, error: expect.stringMatching(/NOT_APPROVED/) });
+    expect((await getSettings(db)).reportsError).toMatch(/NOT_APPROVED/);
+    await syncReports(db, provider, { force: true });
+    expect((await getSettings(db)).reportsError).toBeNull();
   });
 
   it("reviews weekly: other days only refresh data and pace the budget, without Claude", async () => {

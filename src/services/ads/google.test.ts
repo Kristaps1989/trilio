@@ -26,6 +26,16 @@ function fake() {
         return json({ results: [{ geoTargetConstant: { resourceName: "geoTargetConstants/2428" } }] });
       if (q.includes("language_constant"))
         return json({ results: [{ languageConstant: { resourceName: "languageConstants/1028" } }] });
+      if (q.includes("FROM customer"))
+        return json({
+          results: [
+            {
+              segments: { date: "2026-10-20" },
+              customer: { resourceName: "customers/1234567890" },
+              metrics: { impressions: "120", clicks: "8", costMicros: "1500000", conversions: 1 },
+            },
+          ],
+        });
       if (q.includes("FROM campaign"))
         return json({
           results: [
@@ -110,13 +120,23 @@ describe("Google Ads client", () => {
     const { fetchImpl } = fake();
     const p = googleAdsProvider(cfg, fetchImpl);
     const rep = await p.report("2026-10-20", "2026-10-20", { campaigns: [], adGroups: [], keywords: [] });
-    expect(rep.stats[0]).toEqual({
+    expect(rep.stats.find((r) => r.level === "campaign")).toEqual({
       level: "campaign",
       resource: "customers/1/campaigns/9",
       day: "2026-10-20",
       impressions: 100,
       clicks: 7,
       costMicros: 1_230_000,
+      conversions: 1,
+    });
+    // The account total, as the Google Ads overview shows it.
+    expect(rep.stats.find((r) => r.level === "account")).toEqual({
+      level: "account",
+      resource: "customers/1234567890",
+      day: "2026-10-20",
+      impressions: 120,
+      clicks: 8,
+      costMicros: 1_500_000,
       conversions: 1,
     });
     expect(rep.terms[0]).toMatchObject({

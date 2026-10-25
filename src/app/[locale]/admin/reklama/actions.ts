@@ -17,7 +17,7 @@ import {
   updateSettings,
 } from "@/services/ads/account";
 import { approveCreative, createCreatives, createPmax, writeCopy } from "@/services/ads/creatives";
-import { runAdsJob } from "@/services/ads/job";
+import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { decideProposal } from "@/services/ads/optimiser";
 import { createCaller } from "@/services/llm/client";
 import { markSeoDone } from "@/services/seo/search-console";
@@ -132,6 +132,16 @@ export async function runOptimiserAction(): Promise<void> {
   if (!r || !r.ok) back("/admin/reklama", { err: `run:${r && !r.ok ? r.reason : "off"}` });
   const ok = r as { proposals: number; applied: number; blocked: number };
   back("/admin/reklama", { ran: `${ok.proposals}/${ok.applied}/${ok.blocked}` });
+}
+
+/** "Atjaunināt datus no Google": the last days' numbers now, not at the next hourly sync. */
+export async function refreshReportsAction(): Promise<void> {
+  const a = await admin();
+  provider();
+  const r = await runAdsReportSync(db, { force: true });
+  await log(a, "ads.reports", "reports", r ?? {});
+  if (!r || !r.ok) back("/admin/reklama", { err: `reports:${r?.error ?? "off"}` });
+  back("/admin/reklama", { ok: "refreshed" });
 }
 
 export async function decideProposalAction(formData: FormData): Promise<void> {

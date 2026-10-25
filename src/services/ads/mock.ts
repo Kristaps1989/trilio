@@ -43,7 +43,18 @@ export function mockProvider(): AdsProvider {
             conversions: n(`${resource}|${day}|v`, 10) > 7 ? 1 : 0,
           };
         };
-        for (const c of known.campaigns) stats.push(row("campaign", c, 10));
+        const campaignRows = known.campaigns.map((c) => row("campaign", c, 10));
+        stats.push(...campaignRows);
+        // The account total is the sum of its campaigns, as in Google.
+        stats.push({
+          level: "account",
+          resource: "mock/account",
+          day,
+          impressions: campaignRows.reduce((a, r) => a + r.impressions, 0),
+          clicks: campaignRows.reduce((a, r) => a + r.clicks, 0),
+          costMicros: campaignRows.reduce((a, r) => a + r.costMicros, 0),
+          conversions: campaignRows.reduce((a, r) => a + r.conversions, 0),
+        });
         for (const g of known.adGroups) stats.push(row("ad_group", g, 3));
         for (const k of known.keywords) {
           stats.push(row("keyword", k.resource, 1));

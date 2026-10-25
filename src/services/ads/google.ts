@@ -426,7 +426,9 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
     async report(from: string, to: string) {
       const where = `segments.date BETWEEN '${from}' AND '${to}'`;
       const m = "metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions";
-      const [campaigns, groups, keywords, terms] = await Promise.all([
+      const [account, campaigns, groups, keywords, terms] = await Promise.all([
+        // The account total, so the admin matches the Google Ads overview, also for campaigns made there.
+        search(`SELECT segments.date, customer.resource_name, ${m} FROM customer WHERE ${where}`),
         search(`SELECT segments.date, campaign.resource_name, ${m} FROM campaign WHERE ${where}`),
         search(`SELECT segments.date, ad_group.resource_name, ${m} FROM ad_group WHERE ${where}`),
         search(
@@ -438,6 +440,12 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
       ]);
       const day = (r: Row) => String(r.segments?.date ?? "");
       const stats: StatRow[] = [
+        ...account.map((r) => ({
+          level: "account" as const,
+          resource: String(r.customer?.resourceName ?? `customers/${cfg.customerId}`),
+          day: day(r),
+          ...metrics(r),
+        })),
         ...campaigns.map((r) => ({
           level: "campaign" as const,
           resource: String(r.campaign?.resourceName),

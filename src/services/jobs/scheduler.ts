@@ -2,7 +2,7 @@ import type { Db } from "@/db/client";
 import { eprelClientFromEnv } from "@/services/eprel/client";
 import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
-import { runAdsJob } from "@/services/ads/job";
+import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { runAllJobs } from "./all";
 import { eventful, runHousekeeping } from "./housekeeping";
 
@@ -65,7 +65,27 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
   }
 }
 
+let adsBusy = false;
+
+/** The ads report sync, on its own clock: a shop ingestion can hold the main tick for an hour or more. */
+export async function adsSyncTick(db: Db, log: Pick<Console, "log" | "error"> = console): Promise<void> {
+  if (adsBusy) return;
+  adsBusy = true;
+  try {
+    const r = await runAdsReportSync(db);
+    if (r && !r.skipped) log.log("ads reports:", JSON.stringify(r));
+  } catch (err) {
+    log.error("ads reports:", err);
+  } finally {
+    adsBusy = false;
+  }
+}
+
 export function startIngestScheduler(db: Db): void {
+  const ads = setTimeout(function adsLoop() {
+    void adsSyncTick(db).finally(() => setTimeout(adsLoop, CHECK_EVERY_MS).unref());
+  }, FIRST_CHECK_MS * 2);
+  ads.unref();
   // A minute after boot, so the health check and first requests come first.
   const timer = setTimeout(function loop() {
     void tick(db).finally(() => setTimeout(loop, CHECK_EVERY_MS).unref());

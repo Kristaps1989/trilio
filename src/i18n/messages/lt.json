@@ -1979,7 +1979,15 @@
       "colPosition": "Vieta",
       "markDone": "Izdarīts",
       "done": "izdarīts",
-      "noSeo": "Search Console dati vēl nav ielasīti."
+      "noSeo": "Search Console dati vēl nav ielasīti.",
+      "statSpendToday": "Tēriņi šodien",
+      "refreshReports": "Atjaunināt datus no Google",
+      "refreshed": "Dati no Google atjaunināti.",
+      "reportsFailed": "Datus no Google neizdevās ielādēt: {reason}",
+      "reportsSynced": "Dati no Google: atjaunināti {time}. Tie atjaunojas katru stundu; Google pats tos precizē dažu stundu laikā.",
+      "reportsError": "Dati no Google: pēdējais mēģinājums {time} neizdevās: {reason}",
+      "reportsNever": "Dati no Google vēl nav ielādēti.",
+      "outsideSpend": "No tiem {amount} pēdējās 7 dienās iztērēja kampaņas, kuras Trilio nepārvalda (izveidotas Google Ads tieši)."
     }
   },
   "alertsUnsubscribe": {
