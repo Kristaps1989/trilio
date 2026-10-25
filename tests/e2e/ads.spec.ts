@@ -100,6 +100,16 @@ test("the owner builds, syncs, runs the optimiser and decides", async ({ page })
   await page.getByRole("button", { name: "Nosūtīt uz Google (apturētas)" }).click();
   await expect(page.locator("[data-outcome=ok]")).toContainText(/neizdevās: 0/);
 
+  // Google's numbers, today included, on demand and with the time they were pulled.
+  await page.getByRole("button", { name: "Atjaunināt datus no Google" }).click();
+  await expect(page.locator("[data-outcome=ok]")).toHaveText("Dati no Google atjaunināti.");
+  await expect(page.locator("[data-reports-synced]")).toHaveAttribute("data-reports-synced", /^\d{4}-/);
+  await expect(page.locator("[data-reports-synced]")).toContainText("Dati no Google: atjaunināti");
+  expect(Number(await page.locator("[data-spend-today]").getAttribute("data-spend-today"))).toBeGreaterThan(
+    0,
+  );
+  await expect(page.getByText("Tēriņi šodien")).toBeVisible();
+
   await page.getByRole("link", { name: "Kampaņas", exact: true }).click();
   await expect(page.locator('[data-campaign="Search · Konkurenti"]')).toBeVisible();
   await expect(page.locator('[data-campaign="Search · Ledusskapji un saldētavas"]')).toBeVisible();

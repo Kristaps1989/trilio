@@ -9,6 +9,7 @@ import { requireAdmin } from "../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Stat, Stats } from "../ui";
 import {
   buildCampaignsAction,
+  refreshReportsAction,
   runOptimiserAction,
   saveAdSettingsAction,
   setCampaignStatusAction,
@@ -37,7 +38,9 @@ export default async function AdsOverview({ searchParams }: Props) {
   const s = o.settings;
   const split = (v?: string) => (v ?? "").split("/");
   const ok = sp.ok
-    ? t("saved")
+    ? sp.ok === "refreshed"
+      ? t("refreshed")
+      : t("saved")
     : sp.built
       ? t("built", {
           campaigns: split(sp.built)[0]!,
@@ -55,7 +58,19 @@ export default async function AdsOverview({ searchParams }: Props) {
                 blocked: split(sp.ran)[2]!,
               })
             : null;
-  const err = sp.err?.startsWith("run:") ? t("ranFailed", { reason: sp.err.slice(4) }) : (sp.err ?? null);
+  const err = sp.err?.startsWith("run:")
+    ? t("ranFailed", { reason: sp.err.slice(4) })
+    : sp.err?.startsWith("reports:")
+      ? t("reportsFailed", { reason: sp.err.slice(8) })
+      : (sp.err ?? null);
+  const riga = (d: Date) =>
+    new Intl.DateTimeFormat("lv-LV", {
+      timeZone: "Europe/Riga",
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(d);
 
   return (
     <>
@@ -67,14 +82,36 @@ export default async function AdsOverview({ searchParams }: Props) {
           ? t("provider", { name: provider.name === "google" ? t("providerGoogle") : t("providerMock") })
           : t("providerOff")}
       </p>
+      {provider ? (
+        <p
+          className={`text-[15px] ${s.reportsError ? "text-warning" : "text-stone"}`}
+          data-reports-synced={s.reportsSyncedAt?.toISOString() ?? ""}
+        >
+          {s.reportsSyncedAt
+            ? s.reportsError
+              ? t("reportsError", { time: riga(s.reportsSyncedAt), reason: s.reportsError })
+              : t("reportsSynced", { time: riga(s.reportsSyncedAt) })
+            : t("reportsNever")}
+        </p>
+      ) : null}
+      {o.week.outsideMicros > 0 ? (
+        <p className="text-[15px] text-stone" data-outside-spend>
+          {t("outsideSpend", { amount: eurFromMicros(o.week.outsideMicros) })}
+        </p>
+      ) : null}
       {s.paused ? (
         <p className="font-semibold text-warning" data-ads-paused>
           {t("paused")}
         </p>
       ) : null}
 
-      <div data-ad-conversions={`${o.perf.shopClicks7d}/${o.perf.saves7d}`} className="contents">
+      <div
+        data-ad-conversions={`${o.perf.shopClicks7d}/${o.perf.saves7d}`}
+        data-spend-today={o.today.micros}
+        className="contents"
+      >
         <Stats>
+          <Stat label={t("statSpendToday")} value={eurFromMicros(o.today.micros)} />
           <Stat label={t("statSpend7")} value={eurFromMicros(o.week.micros)} />
           <Stat label={t("statSpendMonth")} value={eurFromMicros(o.month.micros)} />
           <Stat label={t("statClicks7")} value={formatInt(o.week.clicks)} />
@@ -201,6 +238,11 @@ export default async function AdsOverview({ searchParams }: Props) {
             <input type="hidden" name="status" value="enabled" />
             <Button type="submit" variant="outline" size="sm" disabled={!provider || s.paused}>
               {t("enableAll")}
+            </Button>
+          </form>
+          <form action={refreshReportsAction}>
+            <Button type="submit" variant="outline" size="sm" disabled={!provider}>
+              {t("refreshReports")}
             </Button>
           </form>
           <form action={runOptimiserAction}>

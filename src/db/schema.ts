@@ -832,6 +832,9 @@ export const adSettings = pgTable("ad_settings", {
   reviewCadence: adReviewCadenceEnum("review_cadence").notNull().default("weekly"),
   /** ISO weekday of the weekly review: 1 = Monday … 7 = Sunday. */
   reviewWeekday: integer("review_weekday").notNull().default(1),
+  /** When Google's numbers were last pulled, and the error if that pull failed. */
+  reportsSyncedAt: timestamp("reports_synced_at", { withTimezone: true }),
+  reportsError: text("reports_error"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -938,7 +941,7 @@ export const adDailyStats = pgTable(
   "ad_daily_stats",
   {
     day: date("day").notNull(),
-    /** "campaign", "ad_group", "keyword". */
+    /** "account" (entity ACCOUNT_ENTITY), "campaign", "ad_group", "keyword". */
     level: text("level").notNull(),
     entityId: uuid("entity_id").notNull(),
     impressions: integer("impressions").notNull().default(0),

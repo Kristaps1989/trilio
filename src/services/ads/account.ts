@@ -280,13 +280,16 @@ async function known(
   };
 }
 
+/** The entity id of the account-level rows in ad_daily_stats (one Google Ads account per deployment). */
+export const ACCOUNT_ENTITY = "00000000-0000-0000-0000-000000000000";
+
 /** Pulls the platform's numbers for [from, to] into ad_daily_stats and ad_search_terms. */
 export async function pullReports(db: Db, provider: AdsProvider, from: string, to: string) {
   const { known: k, byResource } = await known(db);
   if (k.campaigns.length === 0) return { stats: 0, terms: 0 };
   const { stats, terms } = await provider.report(from, to, k);
   const statRows = stats.flatMap((r) => {
-    const own = byResource.get(r.resource);
+    const own = r.level === "account" ? { level: "account", id: ACCOUNT_ENTITY } : byResource.get(r.resource);
     if (!own || !r.day) return [];
     return [
       {
@@ -344,6 +347,35 @@ export async function pullReports(db: Db, provider: AdsProvider, from: string, t
   const s = statRows.length;
   const t = termRows.length;
   return { stats: s, terms: t };
+}
+
+/** Pulls between reviews: Google's numbers arrive within a few hours and recent days are revised. */
+export const REPORT_SYNC_EVERY_MS = 55 * 60_000;
+export const REPORT_SYNC_DAYS = 2;
+
+/**
+ * Brings Google's numbers for the last few days, today included, into the
+ * admin. At most once an hour unless forced ("Atjaunināt datus no Google").
+ * Records when it ran and why it failed, for the overview.
+ */
+export async function syncReports(
+  db: Db,
+  provider: AdsProvider,
+  opts: { now?: Date; force?: boolean } = {},
+): Promise<{ ok: boolean; skipped?: boolean; stats?: number; error?: string }> {
+  const now = opts.now ?? new Date();
+  const settings = await getSettings(db);
+  const last = settings.reportsSyncedAt?.getTime() ?? 0;
+  if (!opts.force && now.getTime() - last < REPORT_SYNC_EVERY_MS) return { ok: true, skipped: true };
+  try {
+    const r = await pullReports(db, provider, dayOffset(now, REPORT_SYNC_DAYS), dayOffset(now, 0));
+    await updateSettings(db, { reportsSyncedAt: now, reportsError: null });
+    return { ok: true, stats: r.stats };
+  } catch (err) {
+    const error = (err as Error).message.slice(0, 500);
+    await updateSettings(db, { reportsSyncedAt: now, reportsError: error });
+    return { ok: false, error };
+  }
 }
 
 export const dayOffset = (now: Date, days: number) => rigaDay(new Date(now.getTime() - days * 86_400_000));

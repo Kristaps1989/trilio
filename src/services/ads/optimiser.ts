@@ -34,6 +34,7 @@ import {
   paceBudgets,
   performance,
   pullReports,
+  updateSettings,
 } from "./account";
 import type { AdsProvider } from "./provider";
 
@@ -334,7 +335,9 @@ export async function runDaily(db: Db, deps: OptimiserDeps) {
       .where(eq(adAgentRuns.id, run.id));
   try {
     const settings = await getSettings(db);
-    await pullReports(db, deps.provider, dayOffset(now, 28), dayOffset(now, 1));
+    // Up to today: Google's numbers for today are partial but real, and the admin shows them.
+    await pullReports(db, deps.provider, dayOffset(now, 28), dayOffset(now, 0));
+    await updateSettings(db, { reportsSyncedAt: now, reportsError: null });
     if (deps.searchConsole)
       await pullSearchConsole(db, deps.searchConsole, dayOffset(now, 28), dayOffset(now, 3)).catch((err) =>
         console.error("search console:", (err as Error).message),
