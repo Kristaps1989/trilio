@@ -2,7 +2,7 @@
 
 Owner's request, 26 Oct 2026: Google sent an e-mail about "critical issues" in Page indexing. Review and plan the fixes.
 
-Status: **plan, awaiting the owner's go.**
+Status: **built (26 Oct 2026).** §2A–2D are in the code; §2E is for the owner after the deploy. §2C was built as the count of models within the budget, the price span of the picks and how many models the step adds over the budget below; naming what those models add (capacity, controls) is left for later.
 
 ## 1. What the report says
 

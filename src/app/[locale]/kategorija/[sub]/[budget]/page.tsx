@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { categoryGender, formatEur } from "@/i18n/format";
 import { pageMetadata } from "../../../seo";
+import { landingCanonicalPath } from "@/domain/seo/landing-index";
+import { cachedLandingIndex } from "../../landing-index";
 import { LandingPage } from "../../LandingPage";
 import { activeLocale } from "@/i18n/active";
 import { initLocale } from "@/i18n/init";
@@ -43,10 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     budget: formatEur(r.budgetCents),
     year: new Date().getFullYear(),
   });
+  // A page with the same picks as the base page or a lower budget names that page as canonical.
+  const index = await cachedLandingIndex(r.sub.id);
   return pageMetadata(
     `/kategorija/${r.sub.id}/${budget}`,
     title,
     t("descriptionBudget", { category, gender, budget: formatEur(r.budgetCents) }),
+    landingCanonicalPath(r.sub.id, r.budgetCents / 100, index?.decision ?? null),
   );
 }
 

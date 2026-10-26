@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { cleanName, displayName, modelStem, nameHasType, sameModel, shortName } from "./naming";
+import {
+  cleanName,
+  displayName,
+  modelStem,
+  nameHasType,
+  repairMojibake,
+  sameModel,
+  shortName,
+} from "./naming";
 
 describe("displayName (§2.8: the name says what the product is)", () => {
   it("adds the type after the brand when the shop's name has none", () => {
@@ -46,6 +54,23 @@ describe("cleanName (docs/TRUST_POLISH_PLAN.md §3)", () => {
     const long =
       "Bosch Serie 6 veļas mašīna ar priekšējo ielādi 9 kg 1400 apgr./min balta ar tvaika funkciju";
     expect(cleanName(long, "Bosch", "WGG2440MSN")).toBe("Bosch WGG2440MSN");
+  });
+});
+
+describe("names that say nothing alone (docs/SEO_INDEXING_PLAN.md §2B)", () => {
+  it("repairs UTF-8 a feed read as Windows-1252, and leaves real text alone", () => {
+    expect(repairMojibake("Xiaomi Portable Blender EU biaÅ‚y")).toBe("Xiaomi Portable Blender EU biały");
+    expect(repairMojibake("Ä¶Ä«mija")).toBe("Ķīmija");
+    expect(repairMojibake("Gorenje Maizes gatavotājs BM910WII")).toBe("Gorenje Maizes gatavotājs BM910WII");
+    expect(repairMojibake("Å")).toBe("Å");
+  });
+  it("turns a bare model code or a bare brand into brand and model", () => {
+    expect(cleanName("AF1409DW", "Ariete", "AF1409DW")).toBe("Ariete AF1409DW");
+    expect(cleanName("Caso", "CASO", "AF 600")).toBe("Caso AF 600");
+    expect(cleanName("Caso", "Caso", "")).toBe("Caso");
+    expect(displayName("AF1409DW", "Ariete", "airfryer", "karstā gaisa friteris", "AF1409DW")).toBe(
+      "Ariete karstā gaisa friteris AF1409DW",
+    );
   });
 });
 

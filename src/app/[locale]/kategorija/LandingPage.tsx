@@ -1,8 +1,7 @@
-import { cleanName } from "@/domain/catalog/naming";
+import { displayName } from "@/domain/catalog/naming";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { loadCandidates } from "@/db/queries/catalog";
 import { deliveryDate, workingDaysUntil } from "@/domain/delivery/delivery";
 import {
   ENERGY_SUBCATEGORIES,
@@ -13,8 +12,8 @@ import {
 import { priceLine } from "@/domain/pricing/omnibus";
 import { getGroupOfSubcategory } from "@/domain/questions/catalog";
 import type { Subcategory } from "@/domain/questions/schema";
-import { bestOffer, eligibleOffers, withinBudget } from "@/domain/ranking/filters";
-import { candidatePool, mainstreamCeilingCents, rank, type Pick } from "@/domain/ranking/rank";
+import type { Pick } from "@/domain/ranking/rank";
+import { landingCards } from "@/services/seo/landing";
 import { whyItFits } from "@/domain/ranking/score";
 import { categoryGender, formatDateDative, formatDateNominative, formatEur } from "@/i18n/format";
 import { currentMarket } from "@/i18n/market";
@@ -24,47 +23,12 @@ import { Kicker, Page, PageTitle, Panel, SectionTitle } from "@/ui/layout";
 import { cardMedia } from "../rezultati/card-media";
 import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 import { factLines, roleLabel } from "../rezultati/confidence-text";
-import { argumentTargets, assignRoles, reviewSummary, type Role } from "@/domain/confidence/confidence";
-import { decidingAttrs } from "@/domain/knowledge/knowledge";
+import { reviewSummary, type Role } from "@/domain/confidence/confidence";
 import { activeLocale } from "@/i18n/active";
 
 // Phase 3 SEO landing pages: "Labākie ledusskapji līdz 800 €". Server-rendered
 // from the same ranking as the guided flow, with no answers (stock + budget
 // only), structured data for search engines, and a call to the guided flow.
-
-export async function landingCards(sub: Subcategory, budgetCents: number | null) {
-  const products = await loadCandidates(db, sub.id);
-  // Without a budget: the usual price range, not the whole market up to the most expensive model.
-  const ceilingCents =
-    budgetCents === null
-      ? mainstreamCeilingCents(
-          products.flatMap((p) => {
-            const best = bestOffer(eligibleOffers(p, "new", "two_weeks"));
-            return best ? [best.priceCents] : [];
-          }),
-        )
-      : null;
-  const input = {
-    products,
-    sub,
-    answers: {},
-    budget: budgetCents ?? ceilingCents,
-    urgency: "two_weeks" as const,
-  };
-  const result = rank({ ...input, includeRefurbished: false });
-  // The same earned roles as the results page (docs/CONFIDENCE_PLAN.md A2).
-  const pool = candidatePool(input).filter((c) => withinBudget(c.price, input.budget));
-  const decides = decidingAttrs(sub.id);
-  const target = argumentTargets(sub, {}, decides)[0] ?? null;
-  const roles = assignRoles(
-    result.picks.map((p) => ({ ...p, price: p.offer.priceCents })),
-    pool,
-    sub,
-    target,
-    decides,
-  );
-  return { result, products, ceilingCents, roles, target };
-}
 
 function toCard(
   pick: Pick,
@@ -72,6 +36,7 @@ function toCard(
   now: Date,
   energyPrice: number,
   story: { roles: Role[]; label: (r: Role) => string; facts: string[] },
+  typeLabel: string,
 ): CardModel {
   const date = deliveryDate(pick.offer, now, currentMarket().country);
   const cost = ENERGY_SUBCATEGORIES.has(sub.id)
@@ -80,7 +45,8 @@ function toCard(
   const total = cost !== null ? tcoCents(pick.offer.priceCents, pick.product.kwhYear, energyPrice) : null;
   return {
     productId: pick.product.id,
-    name: cleanName(pick.product.name, pick.product.brand, pick.product.modelCode),
+    // Brand, type and model, as on the results page (docs/SEO_INDEXING_PLAN.md §2B).
+    name: displayName(pick.product.name, pick.product.brand, sub.id, typeLabel, pick.product.modelCode),
     modelCode: pick.product.modelCode,
     ean: pick.product.ean,
     specs: pick.product.specs,
@@ -122,7 +88,18 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
   const group = getGroupOfSubcategory(sub.id, activeLocale());
   const now = new Date();
   const energyPrice = energyPriceFromEnv();
-  const { result, products, ceilingCents, roles, target } = await landingCards(sub, budgetCents);
+  const { result, products, ceilingCents, roles, target, fits } = await landingCards(db, sub, budgetCents);
+  const tp = await getTranslations("productType");
+  const typeLabel = tp.has(sub.id as "fridge") ? tp(sub.id as "fridge") : "";
+  const nameOf = (p: Pick) =>
+    displayName(p.product.name, p.product.brand, sub.id, typeLabel, p.product.modelCode);
+  // One sentence only this budget page can say, from the data (§2C).
+  const lowerEur =
+    budgetCents === null
+      ? null
+      : ([...sub.budget_steps_eur].reverse().find((e) => e * 100 < budgetCents) ?? null);
+  const lowerFits = lowerEur === null ? null : (await landingCards(db, sub, lowerEur * 100, products)).fits;
+  const prices = result.picks.map((p) => p.offer.priceCents);
   const tr = await getTranslations("results");
   const ta = await getTranslations("attr");
   const targetLabel =
@@ -130,11 +107,18 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
   const tt = (k: string, v?: Record<string, string | number>) =>
     tr(k as "title", v as Record<string, string>);
   const cards = result.picks.map((p) =>
-    toCard(p, sub, now, energyPrice, {
-      roles: roles.get(p.product.id) ?? [],
-      label: (r) => roleLabel(r, targetLabel, tt),
-      facts: factLines(p.product, reviewSummary(p.product), tt),
-    }),
+    toCard(
+      p,
+      sub,
+      now,
+      energyPrice,
+      {
+        roles: roles.get(p.product.id) ?? [],
+        label: (r) => roleLabel(r, targetLabel, tt),
+        facts: factLines(p.product, reviewSummary(p.product), tt),
+      },
+      typeLabel,
+    ),
   );
   const label = sub.label.toLowerCase();
   const gender = categoryGender(sub.label);
@@ -168,13 +152,13 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
       position: i + 1,
       item: {
         "@type": "Product",
-        name: p.product.name,
+        name: nameOf(p),
         sku: p.product.modelCode,
         ...(p.product.ean ? { gtin13: p.product.ean } : {}),
         brand: { "@type": "Brand", name: p.product.brand },
         ...photo(p),
         description:
-          p.product.specs || t("productDescription", { name: p.product.name, shops: shopsOf(p).length }),
+          p.product.specs || t("productDescription", { name: nameOf(p), shops: shopsOf(p).length }),
         // Trilio compares shops and sells nothing itself: an AggregateOffer (Google's
         // product snippets for comparison pages), not a merchant Offer that would need
         // our own return policy and shipping details.
@@ -226,6 +210,17 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
           {t("lead", { count: products.length, date: formatDateNominative(now) })}
           {ceilingCents !== null ? ` ${t("leadMainstream", { max: formatEur(ceilingCents) })}` : ""}
         </p>
+        {budgetCents !== null && fits > 0 ? (
+          <p className="max-w-[760px] text-[17px] leading-[1.45] text-mist" data-budget-summary>
+            {t("budgetFits", { fits, budget: formatEur(budgetCents) })}
+            {prices.length >= 2
+              ? ` ${t("budgetSpan", { min: formatEur(Math.min(...prices)), max: formatEur(Math.max(...prices)) })}`
+              : ""}
+            {lowerEur !== null && lowerFits !== null && fits > lowerFits
+              ? ` ${t("budgetAdds", { added: fits - lowerFits, lower: formatEur(lowerEur * 100) })}`
+              : ""}
+          </p>
+        ) : null}
       </div>
 
       <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">

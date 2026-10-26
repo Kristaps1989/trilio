@@ -48,6 +48,10 @@ test("budget landing page keeps every card within the budget and links the other
   for (const cents of prices) expect(cents).toBeLessThanOrEqual(80000);
   await expect(page.getByRole("link", { name: /līdz 800\s€/ })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("link", { name: /līdz 1\s200\s€/ })).toBeVisible();
+  // A sentence only this budget page can say, from the data (docs/SEO_INDEXING_PLAN.md §2C).
+  await expect(page.locator("[data-budget-summary]")).toContainText(
+    /^Līdz 800\s€ partneru veikalos ir \d+ model/,
+  );
   expect((await page.goto("/kategorija/fridge/lidz-999"))!.status()).toBe(404);
   expect((await page.goto("/kategorija/nope"))!.status()).toBe(404);
 });
@@ -70,8 +74,8 @@ test("sitemap and robots are served", async ({ request }) => {
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.status()).toBe(200);
   const xml = await sitemap.text();
-  expect(xml).toContain("/kategorija/fridge/lidz-800");
-  expect(xml).toContain("/kategorija/kettle");
+  expect(xml).toContain("/kategorija/fridge</loc>");
+  expect(xml).toContain("/kategorija/kettle</loc>");
   const robots = await request.get("/robots.txt");
   expect(robots.status()).toBe(200);
   const txt = await robots.text();
@@ -116,4 +120,63 @@ test("search and question pages stay out of the index; entry pages carry a canon
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${path}$`));
   }
   expect((await page.request.get("/og.png")).headers()["content-type"]).toBe("image/png");
+});
+
+// docs/SEO_INDEXING_PLAN.md §2A: one address per distinct set of picks.
+test("a budget page that repeats a page below names it as canonical and leaves the sitemap", async ({
+  page,
+  request,
+}) => {
+  const xml = await (await request.get("/sitemap.xml")).text();
+  const listed = new Set([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname));
+  let folded = 0;
+  let kept = 0;
+  for (const sub of ["fridge", "freezer", "washer", "kettle", "vacuum"]) {
+    await page.goto(`/kategorija/${sub}`);
+    const steps = await page
+      .getByRole("navigation", { name: "Pēc budžeta" })
+      .getByRole("link")
+      .evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
+    for (const path of steps) {
+      await page.goto(path);
+      const canonical = new URL((await page.locator('link[rel="canonical"]').getAttribute("href"))!).pathname;
+      const en = new URL((await page.locator('link[rel="alternate"][hreflang="en"]').getAttribute("href"))!)
+        .pathname;
+      expect(en).toBe(`/en${canonical}`);
+      if (canonical === path) {
+        kept++;
+        expect(listed.has(path), `${path} is distinct and listed`).toBe(true);
+        expect(listed.has(`/en${path}`)).toBe(true);
+      } else {
+        folded++;
+        expect(listed.has(path), `${path} folds into ${canonical}`).toBe(false);
+        expect(listed.has(canonical)).toBe(true);
+        // The English page follows the Latvian decision.
+        await page.goto(`/en${path}`);
+        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+          "href",
+          new RegExp(`/en${canonical}$`),
+        );
+      }
+    }
+  }
+  expect(folded).toBeGreaterThan(0);
+  expect(kept).toBeGreaterThan(0);
+  // Dates come from price changes, never later than now; pages without prices carry none.
+  const home = /<url>\s*<loc>[^<]*\/<\/loc>([\s\S]*?)<\/url>/.exec(xml)![1]!;
+  expect(home).not.toContain("<lastmod>");
+  for (const m of xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g))
+    expect(new Date(m[1]!).getTime()).toBeLessThanOrEqual(Date.now());
+});
+
+test("landing cards name the brand and say what the product is", async ({ page }) => {
+  await page.goto("/kategorija/fridge");
+  const names = await page.getByRole("article").locator("h3").allTextContents();
+  expect(names.length).toBeGreaterThan(0);
+  for (const n of names) expect(n).toMatch(/ledusskap|saldētav/i);
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).flatMap((b) =>
+    JSON.parse(b),
+  );
+  const list = ld.find((x: { "@type": string }) => x["@type"] === "ItemList");
+  for (const el of list.itemListElement) expect(el.item.name).toMatch(/ledusskap|saldētav/i);
 });
