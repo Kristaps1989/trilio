@@ -18,7 +18,14 @@ describe("schedulerEnabled", () => {
 describe("adsSyncTick", () => {
   it("never throws: a failing ads sync is logged, the scheduler keeps running", async () => {
     const errors: unknown[] = [];
-    const broken = new Proxy({}, { get: () => () => Promise.reject(new Error("db down")) }) as never;
+    // A query builder that chains like Drizzle's and fails only when awaited, like a real
+    // database that is down; the fake db itself is not a promise.
+    const query: unknown = new Proxy(function () {}, {
+      get: (_t, key) =>
+        key === "then" ? (_ok: unknown, fail: (e: Error) => void) => fail(new Error("db down")) : query,
+      apply: () => query,
+    });
+    const broken = new Proxy({}, { get: (_t, key) => (key === "then" ? undefined : query) }) as never;
     await expect(
       adsSyncTick(broken, { log: () => undefined, error: (...a: unknown[]) => errors.push(a) }),
     ).resolves.toBeUndefined();

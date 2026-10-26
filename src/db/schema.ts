@@ -828,6 +828,51 @@ export const adLandings = pgTable(
   (t) => [index("ad_landings_visitor_idx").on(t.day, t.visitorHash), index("ad_landings_day_idx").on(t.day)],
 );
 
+/**
+ * Addressable TV campaigns (Go3) measured by Trilio's own impression pixel
+ * (/px/<slug>) and short link (/tv/<slug>). The salt makes viewer hashes
+ * unlinkable across campaigns; it is deleted with them.
+ */
+export const tvCampaigns = pgTable("tv_campaigns", {
+  slug: text("slug").primaryKey(),
+  name: text("name").notNull(),
+  /** Where the short link leads, e.g. "/izvelies" or "/kategorija/fridge". */
+  landingPath: text("landing_path").notNull().default("/"),
+  salt: text("salt").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Daily counts per campaign: "impression" (pixel hits) and "link" (short-link opens). */
+export const tvDaily = pgTable(
+  "tv_daily",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    kind: text("kind").notNull(),
+    hits: integer("hits").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.slug, t.day, t.kind] })],
+);
+
+/**
+ * One row per campaign, day and viewer: a hash of the platform's device id
+ * (or, without one, the forwarded IP and user agent) with the campaign's salt.
+ * Never the id, IP or user agent itself. Deleted 90 days after the day.
+ */
+export const tvViewers = pgTable(
+  "tv_viewers",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    viewerHash: text("viewer_hash").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.slug, t.day, t.viewerHash] })],
+);
+
 export const adModeEnum = pgEnum("ad_mode", ["observe", "approve", "auto"]);
 /** How often Claude reviews the account; reports and budget pacing run daily regardless. */
 export const adReviewCadenceEnum = pgEnum("ad_review_cadence", ["weekly", "daily"]);

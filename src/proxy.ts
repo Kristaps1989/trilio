@@ -15,9 +15,9 @@ import { LANG_COOKIE } from "@/i18n/routing";
 //    `unsafe-inline` is needed for scripts in production. In development the
 //    React refresh runtime needs `unsafe-eval`.
 
-/** Addresses outside the localised pages: APIs, the affiliate redirect, files. */
+/** Addresses outside the localised pages: APIs, the affiliate redirect, the TV tracker and short link, files. */
 const UNLOCALISED =
-  /^\/(api|_next|go)(\/|$)|^\/(robots\.txt|sitemap\.xml|llms\.txt|favicon\.ico|icon\.svg)$|\.[a-z0-9]{2,5}$/i;
+  /^\/(api|_next|go|px|tv)(\/|$)|^\/(robots\.txt|sitemap\.xml|llms\.txt|favicon\.ico|icon\.svg)$|\.[a-z0-9]{2,5}$/i;
 
 /** Next.js and next-intl read the request's language from this header. */
 const LOCALE_HEADER = "X-NEXT-INTL-LOCALE";

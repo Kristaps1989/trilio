@@ -692,6 +692,7 @@
             "Lietošanas statistika: tikai ja to atļauj sīkdatņu logā, Google Analytics reģistrē apmeklētās lapas, sadaļas un nospiestās pogas, kā arī ierīces un pārlūka veidu un aptuveno atrašanās vietu (valsts, pilsēta). Tava ievadītā teksta, atbilžu un e-pasta tur nav. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā.",
             "Apmeklējumu statistika bez sīkdatnēm: Trilio pats saskaita lapu skatījumus. No IP adreses, pārlūka un katru dienu jaunas nejaušas vērtības veidojam anonīmu kodu, ko nevar sasaistīt ar tevi vai ar citām dienām; pašu IP adresi neglabājam. Pamats: leģitīmās intereses.",
             "Atnākšana no reklāmas: ja atnāc, uzklikšķinot uz reklāmas, reģistrējam reklāmas klikšķa identifikatoru (gclid) un kampaņas nosaukumu kopā ar tās dienas apmeklējuma kodu (bez sīkdatnēm, kā apmeklējumu statistikai), lai saskaitītu, cik klikšķu uz veikaliem un saglabājumu atveda katra reklāma. Pamats: leģitīmās intereses.",
+            "TV reklāmas mērījumi: kad adresējamā TV platforma (Go3) parāda Trilio reklāmu, tās reklāmas serveris izsauc Trilio parādījumu skaitītāju un nodod ierīces identifikatoru. Mēs to uzreiz pārvēršam neatgriezeniskā kodā (hash) ar katrai kampaņai atsevišķu sāli un glabājam tikai šo kodu, lai saskaitītu, cik dažādas ierīces reklāmu redzējušas. Pašu identifikatoru, IP adresi un pārlūka nosaukumu neglabājam, un kodu nevar sasaistīt ar tavu Trilio apmeklējumu. Pamats: leģitīmās intereses izmērīt reklāmas sasniedzamību.",
             "Personīgi piedāvājumi: ja to atļauj, e-pastā sūtām piedāvājumus par precēm, ko saglabāji. Glabājam piekrišanu, nosūtītos piedāvājumus un to, vai piedāvājuma lapa atvērta (e-pastos izsekošanas nav). Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti e-pastā vai vēlmju sarakstā.",
             "Pirkumi no Trilio: vārds, telefons, piegādes adrese vai pakomāts, uzņēmuma rekvizīti (ja pērc uzņēmumam), maksājuma statuss, sūtījuma numurs un rēķini. Pamats: līguma izpilde un juridisks pienākums (grāmatvedība)."
           ]
@@ -741,6 +742,7 @@
             "Ienākšanas saites e-pastā: 15 minūtes.",
             "Apmeklējumu statistika: neapstrādāti ieraksti 35 dienas, pēc tam tikai kopsummas pa dienām un lapām.",
             "Atnākšana no reklāmas: 90 dienas, pēc tam tikai kopsummas pa dienām un kampaņām.",
+            "TV reklāmas mērījumi: ierīču kodi 90 dienas, pēc tam tikai parādījumu skaits pa dienām.",
             "Pirkumi un rēķini: rēķinus glabājam likumā noteikto laiku (5 gadus), arī pēc konta dzēšanas; dzēšot kontu, tālruni un piegādes piezīmes izdzēšam."
           ]
         },
@@ -1832,7 +1834,8 @@
         "keywords": "Atslēgvārdi",
         "creatives": "Reklāmas",
         "strategy": "Stratēģija",
-        "seo": "SEO"
+        "seo": "SEO",
+        "tv": "TV"
       },
       "title": "Reklāma",
       "sub": "Google meklēšanas reklāmas ar ikdienas Claude optimizētāju. Tu nosaki budžetu; kods sargā robežas.",
@@ -1996,7 +1999,40 @@
       "reportsSynced": "Dati no Google: atjaunināti {time}. Tie atjaunojas katru stundu; Google pats tos precizē dažu stundu laikā.",
       "reportsError": "Dati no Google: pēdējais mēģinājums {time} neizdevās: {reason}",
       "reportsNever": "Dati no Google vēl nav ielādēti.",
-      "outsideSpend": "No tiem {amount} pēdējās 7 dienās iztērēja kampaņas, kuras Trilio nepārvalda (izveidotas Google Ads tieši)."
+      "outsideSpend": "No tiem {amount} pēdējās 7 dienās iztērēja kampaņas, kuras Trilio nepārvalda (izveidotas Google Ads tieši).",
+      "tv": {
+        "title": "TV reklāma",
+        "sub": "Adresējamā TV (Go3): parādījumi un sasniedzamība no Trilio pikseļa, apmeklējumi no īsās saites.",
+        "new": "Jauna TV kampaņa",
+        "name": "Nosaukums",
+        "slug": "Īsais nosaukums saitē (neobligāti)",
+        "landing": "Lapa, uz kuru ved īsā saite",
+        "create": "Izveidot TV kampaņu",
+        "how": "Pikseļa saiti iedod Go3 kā trešās puses parādījumu izsekotāju (impression tracker). Go3 reklāmas serveris to izsauc katram parādījumam un aizpilda ierīces identifikatoru; Trilio glabā tikai tā sajaukumu (hash) ar kampaņas sāli, ne pašu identifikatoru, IP vai pārlūku, un dzēš to pēc 90 dienām. Īso saiti rādi ekrānā vai QR kodā: apmeklējumi un klikšķi uz veikaliem pēc tās tiek pieskaitīti šai kampaņai.",
+        "none": "Vēl nav nevienas TV kampaņas.",
+        "impressions": "Parādījumi",
+        "reach": "Sasniedzamība",
+        "reachHint": "unikālas ierīces visā kampaņā",
+        "reachDay": "Unikālas ierīces",
+        "linkOpens": "Īsās saites atvēršanas",
+        "visits": "Apmeklējumi no TV",
+        "shopClicks": "Klikšķi uz veikaliem",
+        "pixel": "Pikseļa saite Go3 (parādījumu izsekotājs)",
+        "short": "Īsā saite ekrānam vai QR kodam",
+        "leadsTo": "Ved uz {path} ar utm_source=go3, utm_medium=tv.",
+        "perDay": "Pa dienām",
+        "day": "Diena",
+        "noData": "Datu vēl nav: Go3 vēl nav izsaucis pikseli.",
+        "delete": "Dzēst kampaņu un tās datus",
+        "created": "TV kampaņa izveidota.",
+        "deleted": "TV kampaņa un tās dati dzēsti.",
+        "err": {
+          "name": "Ievadi nosaukumu.",
+          "slug": "Īsajā nosaukumā drīkst būt mazie burti, cipari un domuzīmes (2–48).",
+          "taken": "Šāds īsais nosaukums jau ir.",
+          "landing": "Lapai jāsākas ar /, piemēram /izvelies."
+        }
+      }
     }
   },
   "alertsUnsubscribe": {
