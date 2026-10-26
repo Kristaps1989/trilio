@@ -80,7 +80,8 @@ export const CLICK_DEDUP_MS = 30 * 60_000;
 
 /**
  * Records a click through to a shop, unless the same visitor (the day's
- * anonymous hash) clicked the same offer in the last 30 minutes. Returns
+ * anonymous hash) clicked the same offer in the last 30 minutes; such a
+ * repeat still credits the earlier click with an ad visit it lacked. Returns
  * whether it was counted. Bots are filtered by the caller.
  */
 export async function recordShopClick(
@@ -97,7 +98,7 @@ export async function recordShopClick(
   const now = input.now ?? new Date();
   const hash = visitorHash(await saltFor(db, rigaDay(now)), input.ip, input.userAgent ?? "");
   const [recent] = await db
-    .select({ id: affiliateClicks.id })
+    .select({ id: affiliateClicks.id, adLandingId: affiliateClicks.adLandingId })
     .from(affiliateClicks)
     .where(
       and(
@@ -107,7 +108,15 @@ export async function recordShopClick(
       ),
     )
     .limit(1);
-  if (recent) return false;
+  if (recent) {
+    // Not counted again, but an ad visit recorded since the first click is credited to it.
+    if (!recent.adLandingId && input.adLandingId)
+      await db
+        .update(affiliateClicks)
+        .set({ adLandingId: input.adLandingId })
+        .where(eq(affiliateClicks.id, recent.id));
+    return false;
+  }
   await db.insert(affiliateClicks).values({
     offerId: input.offerId,
     searchSessionId: input.searchSessionId,

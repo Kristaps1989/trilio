@@ -42,6 +42,47 @@ function wrapped(user) {
 // from the ids in the account it is given, one of them deliberately against
 // the honesty rules so the e2e can see a blocked proposal; the weekly memo;
 // search-term labels; creative copy.
+// A proposal's unused fields, as the real schema requires them (every field required).
+const EMPTY = {
+  campaignId: "",
+  adGroupId: "",
+  keywordId: "",
+  fromCampaignId: "",
+  toCampaignId: "",
+  text: "",
+  match: "none",
+  cpcCapCents: 0,
+  cents: 0,
+  headlines: [],
+  descriptions: [],
+  note: "",
+};
+
+// The real API refuses an output schema whose grammar grows too large ("Schema
+// is too complex"); every optional field roughly doubles it. Production refused
+// the optimiser's 12; the schemas that work have at most 2. Stricter than the
+// API on purpose, so the e2e suite catches a schema that would be refused.
+const MAX_OPTIONAL = 4;
+const MAX_UNIONS = 4;
+
+// Same rule as src/services/llm/schema-complexity.ts (this file runs as plain Node).
+function schemaComplexity(schema) {
+  let optional = 0;
+  let unions = 0;
+  const walk = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) return n.forEach(walk);
+    if (n.type === "object" && n.properties) {
+      const required = new Set(n.required ?? []);
+      for (const k of Object.keys(n.properties)) if (!required.has(k)) optional++;
+    }
+    if (n.anyOf || Array.isArray(n.type)) unions++;
+    Object.values(n).forEach(walk);
+  };
+  walk(schema);
+  return { optional, unions };
+}
+
 function adsAnswer(system, user) {
   if (/weekly strategy memo/.test(system))
     return JSON.stringify({
@@ -53,6 +94,7 @@ function adsAnswer(system, user) {
     const proposals = [];
     if (group) {
       proposals.push({
+        ...EMPTY,
         action: "add_negative",
         campaignId: group.campaignId,
         text: "bez maksas",
@@ -62,6 +104,7 @@ function adsAnswer(system, user) {
         confidence: 80,
       });
       proposals.push({
+        ...EMPTY,
         action: "set_cpc",
         adGroupId: group.id,
         cpcCapCents: group.cpcCapCents + 5,
@@ -70,6 +113,7 @@ function adsAnswer(system, user) {
         confidence: 60,
       });
       proposals.push({
+        ...EMPTY,
         action: "new_ad",
         adGroupId: group.id,
         headlines: ["Tikai šodien", "3 piemērotākie varianti", "Salīdzini cenas veikalos"],
@@ -123,6 +167,15 @@ createServer((req, res) => {
       return json(404, { error: "not found" });
 
     const body = JSON.parse(raw || "{}");
+    const schema = body.output_config?.format?.schema;
+    if (schema) {
+      const c = schemaComplexity(schema);
+      if (c.optional > MAX_OPTIONAL || c.unions > MAX_UNIONS)
+        return json(400, {
+          type: "error",
+          error: { type: "invalid_request_error", message: "Schema is too complex." },
+        });
+    }
     const prefix = cachedPrefix(body);
     const user = userText(body);
     const prefixTokens = prefix ? tokens(prefix) : 0;

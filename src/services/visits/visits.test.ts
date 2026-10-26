@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { affiliateClicks, botHits, offers, visits } from "@/db/schema";
+import { adLandings, affiliateClicks, botHits, offers, visits } from "@/db/schema";
 import { rigaDay } from "@/domain/analytics/visits";
 import { botStats, clientStats, countBot, recordShopClick, recordVisit } from "./visits";
 
@@ -47,6 +47,26 @@ run("statistics without bots", { timeout: 60_000 }, () => {
       await recordShopClick(db, { ...who, ip: "198.51.100.8", now: new Date(FAR_DAY.getTime() + 60_000) }),
     ).toBe(true);
     expect(await recordShopClick(db, { ...who, now: new Date(FAR_DAY.getTime() + 31 * 60_000) })).toBe(true);
+  });
+
+  it("credits an ad visit recorded after the first click to that click, without counting twice", async () => {
+    const [landing] = await db
+      .insert(adLandings)
+      .values({ day, visitorHash: "e2e-test", path: "/e2e-bots", gclid: "e2e-bots" })
+      .returning();
+    const who = { offerId, ip: "198.51.100.9", userAgent: PHONE, searchSessionId: null };
+    const t0 = new Date(FAR_DAY.getTime() + 40 * 60_000);
+    expect(await recordShopClick(db, { ...who, adLandingId: null, now: t0 })).toBe(true);
+    expect(
+      await recordShopClick(db, { ...who, adLandingId: landing!.id, now: new Date(t0.getTime() + 60_000) }),
+    ).toBe(false);
+    const rows = await db
+      .select()
+      .from(affiliateClicks)
+      .where(sql`${affiliateClicks.adLandingId} = ${landing!.id}`);
+    expect(rows).toHaveLength(1);
+    await db.delete(affiliateClicks).where(sql`${affiliateClicks.adLandingId} = ${landing!.id}`);
+    await db.delete(adLandings).where(sql`${adLandings.id} = ${landing!.id}`);
   });
 
   it("counts bots apart, per kind and day", async () => {
