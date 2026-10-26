@@ -12,8 +12,12 @@ import AxeBuilder from "@axe-core/playwright";
 const ADMIN = "e2e-admin@example.invalid";
 
 async function expectNoAxeViolations(page: Page) {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  // After a form action the page refreshes in place (body, then the streamed <title>); retry
+  // until it settles. A real violation stays and still fails.
+  await expect(async () => {
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  }).toPass({ timeout: 10_000 });
 }
 
 async function devLogin(page: Page, email: string, callbackUrl: string) {

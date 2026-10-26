@@ -39,14 +39,24 @@ export function languageAlternates(path: string): Record<string, string> {
   };
 }
 
-/** Canonical URL in the page's language, hreflang links and Open Graph for an indexable page at `path`. */
-export function pageMetadata(path: string, title: string, description?: string): Metadata {
+/**
+ * Canonical URL in the page's language, hreflang links and Open Graph for an
+ * indexable page at `path`. `canonicalPath` names another page when this one
+ * repeats it (a budget page with the base page's picks): canonical and hreflang
+ * then both point there, as Google asks.
+ */
+export function pageMetadata(
+  path: string,
+  title: string,
+  description?: string,
+  canonicalPath: string = path,
+): Metadata {
   const locale = activeLocale();
-  const url = `${appBaseUrl()}${localizedPath(path, locale)}`;
+  const url = `${appBaseUrl()}${localizedPath(canonicalPath, locale)}`;
   return {
     title,
     ...(description ? { description } : {}),
-    alternates: { canonical: url, languages: languageAlternates(path) },
+    alternates: { canonical: url, languages: languageAlternates(canonicalPath) },
     openGraph: { ...openGraphBase(locale), title, url, ...(description ? { description } : {}) },
   };
 }

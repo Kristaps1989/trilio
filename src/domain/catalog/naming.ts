@@ -25,8 +25,66 @@ const capitalise = (w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLower
  * brand is rebuilt from the brand and the model code. Display only; the
  * stored name is never changed.
  */
+// Windows-1252 code points 0x80–0x9F, for undoing a feed's UTF-8 read as Windows-1252.
+const CP1252: Record<string, number> = {
+  "€": 0x80,
+  "‚": 0x82,
+  ƒ: 0x83,
+  "„": 0x84,
+  "…": 0x85,
+  "†": 0x86,
+  "‡": 0x87,
+  ˆ: 0x88,
+  "‰": 0x89,
+  Š: 0x8a,
+  "‹": 0x8b,
+  Œ: 0x8c,
+  Ž: 0x8e,
+  "‘": 0x91,
+  "’": 0x92,
+  "“": 0x93,
+  "”": 0x94,
+  "•": 0x95,
+  "–": 0x96,
+  "—": 0x97,
+  "˜": 0x98,
+  "™": 0x99,
+  š: 0x9a,
+  "›": 0x9b,
+  œ: 0x9c,
+  ž: 0x9e,
+  Ÿ: 0x9f,
+};
+const MOJIBAKE = /[ÃÄÅÆÐÑ][\u0080-\u00BF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
+
+/**
+ * "biaÅ‚y" → "biały": UTF-8 that a shop's feed decoded as Windows-1252.
+ * Only when the whole string re-encodes to valid UTF-8; anything else is left as it is.
+ */
+export function repairMojibake(text: string): string {
+  if (!MOJIBAKE.test(text)) return text;
+  const bytes: number[] = [];
+  for (const ch of text) {
+    const cp = ch.codePointAt(0)!;
+    const b = cp <= 0xff ? cp : CP1252[ch];
+    if (b === undefined) return text;
+    bytes.push(b);
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bytes));
+  } catch {
+    return text;
+  }
+}
+
 export function cleanName(name: string, brand = "", modelCode = ""): string {
-  const original = name.trim();
+  const original = repairMojibake(name.trim());
+  const b0 = brand.trim();
+  const code0 = modelCode.trim();
+  // A name that is only the brand or only the model code says nothing alone: "Brand Model".
+  const bare = original.toLowerCase();
+  if (b0 && (bare === b0.toLowerCase() || (code0 && bare === code0.toLowerCase())))
+    return code0 ? `${canonicalBrand(b0)} ${code0}` : canonicalBrand(b0);
   let s = original
     .split(/\s+\|\s+/)[0]!
     .replace(/\s*\(\s*\d{8,14}\s*\)/g, "")
