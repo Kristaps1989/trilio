@@ -112,6 +112,36 @@ After the first real visitors accept cookies, the tag status in Google Ads
 changes to "Active" by itself, usually within a day. A conversion action shows
 "Recording conversions" after its first conversion.
 
+## 6. Addressable TV (Go3)
+
+Go3 inserts ads on its servers (server-side ad insertion) and calls third-party
+impression trackers itself, filling FreeWheel macros such as
+`#{request.keyValue("_fw_vcid2")}` (the viewer's device id), as for Adform,
+Google and Gemius trackers. Google Ads cannot receive impressions from Go3, so
+Trilio has its own tracker.
+
+1. **Admin → Reklāma → TV → Jauna TV kampaņa.** Give a name, an optional short
+   name for the link (for example `go3-ledusskapji`) and the page the short link
+   leads to (for example `/izvelies` or `/kategorija/fridge`).
+2. Copy **Pikseļa saite Go3** and give it to Go3 as the third-party impression
+   tracker for that campaign:
+
+   ```
+   https://trilio.lv/px/go3-ledusskapji?ord=[timestamp]&vid=#{request.keyValue("_fw_vcid2")}
+   ```
+
+   Ask Go3 to confirm that `[timestamp]` is their cache-buster macro; if they
+   use another (`[TIMESTAMP]`, `%%ADFRND%%`), replace it. The tracker answers
+   with a 1×1 GIF at once and never fails an ad, also for an unknown campaign.
+3. Show **Īsā saite** (`trilio.lv/tv/go3-ledusskapji`) on screen or as a QR code.
+   It opens the chosen page tagged `utm_source=go3`, `utm_medium=tv`, so the
+   visits, shop clicks and saves after it are credited to the campaign.
+
+The TV tab shows impressions, reach (unique devices over the campaign),
+short-link openings, visits and shop clicks, per day. The device id, IP and user
+agent are never stored: only a hash with the campaign's own salt, deleted after
+90 days. The privacy policy describes this.
+
 ## Alternative: a personal OAuth login
 
 If a service account is not possible, Trilio also accepts an OAuth client of

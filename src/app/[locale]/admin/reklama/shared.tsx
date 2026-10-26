@@ -11,6 +11,7 @@ const TABS = [
   ["creatives", "/admin/reklama/reklamas"],
   ["strategy", "/admin/reklama/strategija"],
   ["seo", "/admin/reklama/seo"],
+  ["tv", "/admin/reklama/tv"],
 ] as const;
 
 export async function AdsNav({ active }: { active: (typeof TABS)[number][0] }) {

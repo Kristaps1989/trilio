@@ -21,6 +21,7 @@ import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { decideProposal } from "@/services/ads/optimiser";
 import { createCaller } from "@/services/llm/client";
 import { markSeoDone } from "@/services/seo/search-console";
+import { createTvCampaign, deleteTvCampaign } from "@/services/growth/tv";
 import { adminOrNull, type Admin } from "../guard";
 
 // Every write in Reklāma (docs/GROWTH_PLAN.md §6): admin-gated, logged in
@@ -262,4 +263,27 @@ export async function seoDoneAction(formData: FormData): Promise<void> {
   await markSeoDone(db, query, page);
   await log(a, "seo.done", query, { page });
   back("/admin/reklama/seo", { ok: "done" });
+}
+
+/** Reklāma → TV: a campaign measured by Trilio's own tracker and short link. */
+export async function createTvCampaignAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) back("/admin/reklama/tv", { err: "name" });
+  const r = await createTvCampaign(db, {
+    name,
+    slug: String(formData.get("slug") ?? ""),
+    landingPath: String(formData.get("landingPath") ?? ""),
+  });
+  if (!r.ok) back("/admin/reklama/tv", { err: r.error });
+  await log(a, "ads.tv_create", r.ok ? r.slug : "", { name });
+  back("/admin/reklama/tv", { ok: "created" });
+}
+
+export async function deleteTvCampaignAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const slug = z.string().min(1).max(48).parse(formData.get("slug"));
+  await deleteTvCampaign(db, slug);
+  await log(a, "ads.tv_delete", slug);
+  back("/admin/reklama/tv", { ok: "deleted" });
 }

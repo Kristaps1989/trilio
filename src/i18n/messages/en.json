@@ -701,6 +701,7 @@
             "Usage statistics: only if you allow it in the cookie window, Google Analytics records the pages and sections visited and the buttons pressed, as well as the device and browser type and approximate location (country, city). Your typed text, answers and e-mail are not there. Basis: your consent, which you can withdraw at any time with the “Cookie settings” link at the bottom of the page.",
             "Visit statistics without cookies: Trilio counts page views itself. From the IP address, the browser and a random value that changes every day we make an anonymous code that cannot be linked to you or to other days; the IP address itself is not stored. Basis: legitimate interests.",
             "Arriving from an ad: if you arrive by clicking an ad, we record the ad click identifier (gclid) and the campaign name with that day's visit code (without cookies, as for visit statistics), to count how many shop clicks and saves each ad brought. Basis: legitimate interests.",
+            "TV ad measurement: when an addressable TV platform (Go3) shows a Trilio ad, its ad server calls Trilio's impression counter and passes a device identifier. We immediately turn it into an irreversible code (hash) with a separate salt per campaign and keep only that code, to count how many different devices saw the ad. We do not store the identifier itself, the IP address or the browser name, and the code cannot be linked to your visit to Trilio. Basis: legitimate interest in measuring the reach of advertising.",
             "Personal offers: if you allow it, we e-mail offers for products you saved. We keep the consent, the offers sent and whether the offer page was opened (the e-mails have no tracking). Basis: your consent, which you can withdraw at any time with the link in the e-mail or in the wishlist.",
             "Purchases from Trilio: name, phone, delivery address or parcel locker, company details (if buying for a company), payment status, parcel number and invoices. Basis: performance of a contract and a legal obligation (accounting)."
           ]
@@ -748,6 +749,7 @@
             "Sign-in links in e-mails: 15 minutes.",
             "Visit statistics: raw records 35 days, then only totals per day and page.",
             "Arriving from an ad: 90 days, then only totals per day and campaign.",
+            "TV ad measurement: device codes for 90 days, then only the number of impressions per day.",
             "Purchases and invoices: invoices are kept for the period required by law (5 years), also after the account is deleted; when the account is deleted, the phone number and delivery notes are erased."
           ]
         },
