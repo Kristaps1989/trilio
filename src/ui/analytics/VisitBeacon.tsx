@@ -10,6 +10,13 @@ import { AD_KEYS } from "@/domain/growth/attribution";
 // A landing from an ad also sends Google's click id and the campaign tags
 // (docs/GROWTH_PLAN.md, Phase 0), so the admin can tell which ads bring
 // shop clicks and saves.
+//
+// A view counts only once the page has been visible for a second: a page
+// rendered in a hidden tab, prerendered, or loaded by a script that leaves at
+// once is not a person reading it (bots that run JavaScript mostly do that).
+
+/** How long a page must be visible before it counts as viewed. */
+export const SHOWN_MS = 1000;
 
 export function VisitBeacon() {
   const pathname = usePathname();
@@ -22,17 +29,39 @@ export function VisitBeacon() {
     const body = JSON.stringify(
       adKey ? { path, ad: Object.fromEntries(new URLSearchParams(adKey)) } : { path },
     );
-    try {
-      if (!navigator.sendBeacon?.("/api/visit", new Blob([body], { type: "application/json" })))
-        void fetch("/api/visit", {
-          method: "POST",
-          body,
-          keepalive: true,
-          headers: { "content-type": "application/json" },
-        });
-    } catch {
-      // Statistics never break a page.
-    }
+    const send = () => {
+      try {
+        if (!navigator.sendBeacon?.("/api/visit", new Blob([body], { type: "application/json" })))
+          void fetch("/api/visit", {
+            method: "POST",
+            body,
+            keepalive: true,
+            headers: { "content-type": "application/json" },
+          });
+      } catch {
+        // Statistics never break a page.
+      }
+    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let sent = false;
+    const arm = () => {
+      if (sent || timer || document.visibilityState !== "visible") return;
+      timer = setTimeout(() => {
+        sent = true;
+        send();
+      }, SHOWN_MS);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") return arm();
+      clearTimeout(timer);
+      timer = undefined;
+    };
+    arm();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [pathname, sub, adKey]);
   return null;
 }

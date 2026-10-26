@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
-import { and, lt, sql } from "drizzle-orm";
+import { and, eq, gte, lt, lte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { visitSalts, visits } from "@/db/schema";
-import { RAW_RETENTION_DAYS, rigaDay, visitOf, visitorHash } from "@/domain/analytics/visits";
+import { affiliateClicks, botHits, visitSalts, visits } from "@/db/schema";
+import { clientFamily, RAW_RETENTION_DAYS, rigaDay, visitOf, visitorHash } from "@/domain/analytics/visits";
 
 // Counting and rolling up first-party page views (docs/ADMIN_AND_OFFERS_PLAN.md §3).
 // One random salt per day lives in the database so every instance hashes
@@ -32,6 +32,88 @@ export async function recordVisit(
     section: info.section,
     subcategory: info.subcategory ?? null,
     visitorHash: visitorHash(salt, input.ip, input.userAgent ?? ""),
+    client: clientFamily(input.userAgent),
+  });
+  return true;
+}
+
+export type BotKind = "visit" | "search" | "click";
+
+/** One request recognised as a bot and left out of the statistics (shown as "Filtrēti roboti"). */
+export async function countBot(db: Db, kind: BotKind, now = new Date()): Promise<void> {
+  await db
+    .insert(botHits)
+    .values({ day: rigaDay(now), kind, hits: 1 })
+    .onConflictDoUpdate({ target: [botHits.day, botHits.kind], set: { hits: sql`${botHits.hits} + 1` } });
+}
+
+/** Bot requests left out per kind between two Riga days, inclusive. */
+export async function botStats(db: Db, from: string, to: string): Promise<Record<BotKind, number>> {
+  const rows = await db
+    .select({ kind: botHits.kind, hits: sql<number>`sum(${botHits.hits})::int` })
+    .from(botHits)
+    .where(and(gte(botHits.day, from), lte(botHits.day, to)))
+    .groupBy(botHits.kind);
+  const out: Record<BotKind, number> = { visit: 0, search: 0, click: 0 };
+  for (const r of rows) if (r.kind in out) out[r.kind as BotKind] = Number(r.hits);
+  return out;
+}
+
+/** Visitors per browser family between two Riga days (raw visits: the last 35 days). */
+export async function clientStats(db: Db, from: string, to: string) {
+  const rows = await db
+    .select({
+      client: sql<string>`coalesce(${visits.client}, '—')`,
+      visitors: sql<number>`count(distinct ${visits.visitorHash} || ${visits.day})::int`,
+      views: sql<number>`count(*)::int`,
+    })
+    .from(visits)
+    .where(and(gte(visits.day, from), lte(visits.day, to)))
+    .groupBy(sql`coalesce(${visits.client}, '—')`);
+  return rows
+    .map((r) => ({ client: r.client, visitors: Number(r.visitors), views: Number(r.views) }))
+    .sort((a, b) => b.visitors - a.visitors || a.client.localeCompare(b.client));
+}
+
+/** A visitor's repeat click on the same product within this window counts once. */
+export const CLICK_DEDUP_MS = 30 * 60_000;
+
+/**
+ * Records a click through to a shop, unless the same visitor (the day's
+ * anonymous hash) clicked the same offer in the last 30 minutes. Returns
+ * whether it was counted. Bots are filtered by the caller.
+ */
+export async function recordShopClick(
+  db: Db,
+  input: {
+    offerId: string;
+    ip: string;
+    userAgent: string | null;
+    searchSessionId: string | null;
+    adLandingId: string | null;
+    now?: Date;
+  },
+): Promise<boolean> {
+  const now = input.now ?? new Date();
+  const hash = visitorHash(await saltFor(db, rigaDay(now)), input.ip, input.userAgent ?? "");
+  const [recent] = await db
+    .select({ id: affiliateClicks.id })
+    .from(affiliateClicks)
+    .where(
+      and(
+        eq(affiliateClicks.visitorHash, hash),
+        eq(affiliateClicks.offerId, input.offerId),
+        gte(affiliateClicks.clickedAt, new Date(now.getTime() - CLICK_DEDUP_MS)),
+      ),
+    )
+    .limit(1);
+  if (recent) return false;
+  await db.insert(affiliateClicks).values({
+    offerId: input.offerId,
+    searchSessionId: input.searchSessionId,
+    adLandingId: input.adLandingId,
+    visitorHash: hash,
+    clickedAt: now,
   });
   return true;
 }

@@ -14,6 +14,41 @@ export function isBot(userAgent: string | null | undefined): boolean {
   return !userAgent || BOT.test(userAgent);
 }
 
+/**
+ * Browser family and system for the statistics ("Chrome Android", "Safari
+ * iOS"): enough to explain a spike, too coarse to recognise anyone.
+ */
+export function clientFamily(userAgent: string | null | undefined): string {
+  const ua = userAgent ?? "";
+  const browser = /Edg(e|A|iOS)?\//.test(ua)
+    ? "Edge"
+    : /SamsungBrowser\//.test(ua)
+      ? "Samsung Internet"
+      : /OPR\/|Opera/.test(ua)
+        ? "Opera"
+        : /Firefox\/|FxiOS\//.test(ua)
+          ? "Firefox"
+          : /Chrome\/|CriOS\//.test(ua)
+            ? "Chrome"
+            : /Safari\//.test(ua)
+              ? "Safari"
+              : "Cits";
+  const system = /Android/.test(ua)
+    ? "Android"
+    : /iPhone|iPad|iPod/.test(ua)
+      ? "iOS"
+      : /Windows/.test(ua)
+        ? "Windows"
+        : /Mac OS X|Macintosh/.test(ua)
+          ? "macOS"
+          : /CrOS/.test(ua)
+            ? "ChromeOS"
+            : /Linux/.test(ua)
+              ? "Linux"
+              : "cita sistēma";
+  return `${browser} ${system}`;
+}
+
 /** Paths that are not pages people read: the admin's own, APIs, files, payment redirects. */
 const SKIP = /^\/(en\/)?(admin|api|_next|go|maksajums)(\/|$)|\.[a-z0-9]{2,5}$/i;
 
