@@ -210,10 +210,13 @@ export const affiliateClicks = pgTable(
     searchSessionId: uuid("search_session_id").references(() => searchSessions.id, { onDelete: "set null" }),
     /** The ad visit that brought this visitor today, if any (docs/GROWTH_PLAN.md, Phase 0). */
     adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    /** The day's anonymous visitor hash, to count one click per visitor and product per 30 minutes. */
+    visitorHash: text("visitor_hash"),
     clickedAt: timestamp("clicked_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("affiliate_clicks_offer_idx").on(t.offerId),
+    index("affiliate_clicks_visitor_idx").on(t.visitorHash, t.offerId),
     index("affiliate_clicks_ad_idx").on(t.adLandingId),
   ],
 );
@@ -561,9 +564,23 @@ export const visits = pgTable(
     section: text("section").notNull(),
     subcategory: text("subcategory"),
     visitorHash: text("visitor_hash").notNull(),
+    /** Browser family and system ("Chrome Android"), never the full user agent. */
+    client: text("client"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("visits_day_idx").on(t.day)],
+);
+
+/** Requests recognised as bots and left out of the statistics, per day and kind. */
+export const botHits = pgTable(
+  "bot_hits",
+  {
+    day: date("day").notNull(),
+    /** "visit", "search" or "click". */
+    kind: text("kind").notNull(),
+    hits: integer("hits").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.kind] })],
 );
 
 /** Today's and yesterday's salt; older ones are deleted, which makes old hashes unlinkable. */

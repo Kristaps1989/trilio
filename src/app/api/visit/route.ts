@@ -2,7 +2,7 @@ import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { isBot } from "@/domain/analytics/visits";
-import { recordVisit } from "@/services/visits/visits";
+import { countBot, recordVisit } from "@/services/visits/visits";
 import { adParams } from "@/domain/growth/attribution";
 import { recordAdLanding } from "@/services/growth/landings";
 import { clientKey, createRateLimiter } from "@/services/rate-limit";
@@ -22,7 +22,10 @@ const Body = z.object({
 export async function POST(request: Request) {
   const userAgent = request.headers.get("user-agent");
   // Bots are dropped before they use up the address's allowance.
-  if (isBot(userAgent)) return new NextResponse(null, { status: 204 });
+  if (isBot(userAgent)) {
+    after(() => countBot(db, "visit").catch(() => undefined));
+    return new NextResponse(null, { status: 204 });
+  }
   const ip = clientKey(request);
   if (!limiter.allow(ip)) return new NextResponse(null, { status: 204 });
   const body = Body.safeParse(await request.json().catch(() => null));

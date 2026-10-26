@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { isBot } from "@/domain/analytics/visits";
+import { countBot } from "@/services/visits/visits";
 import { getTranslations } from "next-intl/server";
 import { db, searchSessions } from "@/db";
 import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
@@ -178,15 +181,20 @@ export default async function ResultsPage({ searchParams }: Props) {
   const result = rank({ ...input, includeRefurbished: state.trailing.refurbished !== "no" });
 
   // Saved requirements (spec DATA_MODEL SearchSession); also the click attribution key.
-  const [session] = await db
-    .insert(searchSessions)
-    .values({
-      subcategoryId: sub.id,
-      answers: { ...state.answers, $trailing: state.trailing },
-      budgetCents: budgetCents(state),
-    })
-    .returning({ id: searchSessions.id })
-    .catch(() => [] as { id: string }[]);
+  // A bot gets the same page, but its visit is not saved as a search, only counted as a bot.
+  const bot = isBot((await headers()).get("user-agent"));
+  if (bot) await countBot(db, "search").catch(() => undefined);
+  const [session] = bot
+    ? []
+    : await db
+        .insert(searchSessions)
+        .values({
+          subcategoryId: sub.id,
+          answers: { ...state.answers, $trailing: state.trailing },
+          budgetCents: budgetCents(state),
+        })
+        .returning({ id: searchSessions.id })
+        .catch(() => [] as { id: string }[]);
   const sessionId = session?.id ?? null;
 
   // Hearts: which of these products, and whether this very search, are in the wishlist.

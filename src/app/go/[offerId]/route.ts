@@ -1,15 +1,17 @@
 import { eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
-import { affiliateClicks, db, offers, products, stores } from "@/db";
+import { db, offers, products, stores } from "@/db";
 import { isBot } from "@/domain/analytics/visits";
 import { adLandingFor } from "@/services/growth/landings";
 import { clientKey } from "@/services/rate-limit";
+import { countBot, recordShopClick } from "@/services/visits/visits";
 
 // "Pirkt — {Shop}" affiliate link. The target is built from the database
 // only (store template + stored offer URL), never from the request, so this
-// cannot be used as an open redirect. Every click is recorded for
-// commission reconciliation.
+// cannot be used as an open redirect. A person's click is recorded for
+// commission reconciliation, once per product per 30 minutes; a bot is
+// redirected the same way but only counted as a filtered bot.
 
 export const dynamic = "force-dynamic";
 
@@ -40,20 +42,23 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
   if (!row || !row.active) return new NextResponse(null, { status: 404 });
 
   const sessionId = new URL(request.url).searchParams.get("s");
-  // Credited to today's ad visit of the same visitor, if any (docs/GROWTH_PLAN.md, Phase 0).
-  const adLandingId = isBot(request.headers.get("user-agent"))
-    ? null
-    : await adLandingFor(db, { ip: clientKey(request), userAgent: request.headers.get("user-agent") }).catch(
-        () => null,
-      );
-  await db
-    .insert(affiliateClicks)
-    .values({
+  const userAgent = request.headers.get("user-agent");
+  // Every requester is sent on to the shop; only people are counted (bots, and a
+  // visitor's repeat click on the same product within 30 minutes, are not).
+  if (isBot(userAgent)) {
+    after(() => countBot(db, "click").catch(() => undefined));
+  } else {
+    const ip = clientKey(request);
+    // Credited to today's ad visit of the same visitor, if any (docs/GROWTH_PLAN.md, Phase 0).
+    const adLandingId = await adLandingFor(db, { ip, userAgent }).catch(() => null);
+    await recordShopClick(db, {
       offerId: parsed.data.offerId,
+      ip,
+      userAgent,
       searchSessionId: z.string().uuid().safeParse(sessionId).success ? sessionId : null,
       adLandingId,
-    })
-    .catch(() => undefined);
+    }).catch(() => undefined);
+  }
 
   const target = buildAffiliateUrl(row.template, row.url, row.ean);
   return NextResponse.redirect(target, {

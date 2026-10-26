@@ -106,6 +106,13 @@
       "when": 1792942101215,
       "tag": "0014_reports_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792995762665,
+      "tag": "0015_bot_filter",
+      "breakpoints": true
     }
   ]
 }

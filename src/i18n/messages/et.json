@@ -1510,7 +1510,13 @@
       "confidenceAnswers": "Atbildes uz jautājumu",
       "confidenceMethod": "Rezultātu skatījumi ir meklēšanas sesijas; klikšķis tiek skaitīts, ja no tās sesijas atvērts kāds veikals. Jautājums ir anonīms.",
       "confidenceNotes": "Ko pietrūka (pēdējās atbildes)",
-      "confidenceNote": "Piezīme"
+      "confidenceNote": "Piezīme",
+      "bots": "Filtrēti roboti",
+      "botsHint": "apmeklējumi {visits} · meklējumi {searches} · klikšķi {clicks}",
+      "botsMethod": "Robotus (Google, Bing, SEO rīki, skripti) atpazīstam pēc pārlūka nosaukuma un neskaitām; lapa skaitās tikai, ja tā vismaz sekundi bijusi redzama; viena apmeklētāja atkārtots klikšķis uz to pašu preci 30 minūšu laikā skaitās vienreiz.",
+      "clients": "Pārlūki",
+      "client": "Pārlūks un sistēma",
+      "clientsMethod": "Tikai pārlūka saime un sistēma, nekad pilns pārlūka nosaukums vai adrese. Pieejams pēdējām 35 dienām."
     },
     "users": {
       "title": "Lietotāji",

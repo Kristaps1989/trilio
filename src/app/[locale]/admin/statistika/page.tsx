@@ -5,6 +5,7 @@ import { change, parseRange, rangeDays, RANGES } from "@/domain/admin/stats";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur, formatInt } from "@/i18n/format";
 import { confidenceStats, searchStats, shopStats, visitStats } from "@/services/admin/stats";
+import { botStats, clientStats } from "@/services/visits/visits";
 import { buttonClass } from "@/ui/Button";
 import { requireAdmin } from "../guard";
 import { AdminTitle, DayBars, FilterLinks, Section, Stat, Stats, Table } from "../ui";
@@ -23,14 +24,18 @@ export default async function AdminStats({ searchParams }: Props) {
   const t = await getTranslations("admin.stats");
   const range = parseRange((await searchParams).periods);
   const r = rangeDays(range, new Date());
-  const [visits, prevVisits, searches, prevSearches, shops, confidence] = await Promise.all([
+  const [visits, prevVisits, searches, prevSearches, shops, confidence, bots, clients] = await Promise.all([
     visitStats(db, r.from, r.to),
     visitStats(db, r.prevFrom, r.prevTo),
     searchStats(db, r.from, r.to),
     searchStats(db, r.prevFrom, r.prevTo),
     shopStats(db, r.from, r.to),
     confidenceStats(db, r.from, r.to),
+    botStats(db, r.from, r.to),
+    clientStats(db, r.from, r.to),
   ]);
+  const botTotal = bots.visit + bots.search + bots.click;
+  const clicks = shops.reduce((n, s) => n + s.clicks, 0);
   const pct = (x: number | null) => (x === null ? "—" : `${formatInt(Math.round(x * 100))} %`);
   const label = (sub: string) => getSubcategory(sub)?.label ?? sub;
   const csv = (table: string) => `/admin/statistika/csv?table=${table}&periods=${range}`;
@@ -69,9 +74,21 @@ export default async function AdminStats({ searchParams }: Props) {
           value={formatInt(searches.total)}
           delta={change(searches.total, prevSearches.total)}
         />
-        <Stat label={t("clicks")} value={formatInt(shops.reduce((n, s) => n + s.clicks, 0))} />
+        <Stat label={t("clicks")} value={formatInt(clicks)} />
+        <Stat
+          label={t("bots")}
+          value={formatInt(botTotal)}
+          hint={t("botsHint", { visits: bots.visit, searches: bots.search, clicks: bots.click })}
+        />
       </Stats>
-      <p className="text-sm text-stone">{t("method")}</p>
+      <p
+        className="text-sm text-stone"
+        data-bot-hits={`${bots.visit}/${bots.search}/${bots.click}`}
+        data-shop-clicks={clicks}
+        data-searches={searches.total}
+      >
+        {t("method")} {t("botsMethod")}
+      </p>
 
       {r.days > 1 ? (
         <div className="grid gap-4 md:grid-cols-2">
@@ -116,6 +133,16 @@ export default async function AdminStats({ searchParams }: Props) {
             formatInt(s.visitors),
           ])}
         />
+      </Section>
+
+      <Section title={t("clients")} id="clients">
+        <Table
+          caption={t("clients")}
+          head={[t("client"), t("visitors"), t("views")]}
+          empty={t("empty")}
+          rows={clients.slice(0, 15).map((c) => [c.client, formatInt(c.visitors), formatInt(c.views)])}
+        />
+        <p className="text-sm text-stone">{t("clientsMethod")}</p>
       </Section>
 
       <Section title={t("paths")} id="paths" action={csvLink("paths")}>

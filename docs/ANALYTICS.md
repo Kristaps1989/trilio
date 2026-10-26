@@ -15,6 +15,20 @@ counts. They need no consent because they use no cookies: a daily-rotating hash
 of IP and browser, raw rows kept for 35 days, then daily totals only
 (docs/ADMIN_AND_OFFERS_PLAN.md §3).
 
+Bots are left out of these counts (owner, 26 Oct 2026). They get the same
+pages and the same shop redirects as people, so search engines are not
+affected; they are only counted apart, as "Filtrēti roboti" per kind:
+- a request whose browser name says bot, crawler, spider, headless and the
+  like is not counted as a visit, a search or a shop click;
+- a page view is sent only after the page has been visible for one second,
+  which leaves out most bots that run JavaScript, prerendered pages and
+  hidden tabs;
+- one visitor's repeat click on the same product within 30 minutes counts
+  once.
+
+The Statistika page also lists visitors per browser family and system
+("Chrome Android"), never the full browser name or the address.
+
 ## 1. Create the property
 
 1. Open [analytics.google.com](https://analytics.google.com) with the
