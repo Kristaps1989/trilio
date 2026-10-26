@@ -29,8 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       });
   }
-  // Only the landing pages that keep their own address: a budget page repeating the base
-  // page or a lower budget, and a base page with nothing in stock, stay out (§2A).
+  // Every base page; budget pages only when they keep their own address (§2A).
   const indexes = await Promise.all(allSubcategories().map((s) => cachedLandingIndex(s.id)));
   allSubcategories().forEach((s, i) => {
     const index = indexes[i] ?? null;
@@ -38,7 +37,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const iso = index?.lastChanged[k];
       return iso ? { lastModified: new Date(iso) } : {};
     };
-    if (index && !index.decision.baseIndexed) return;
     entries.push({
       url: `${base}/kategorija/${s.id}`,
       ...lastModified("base"),

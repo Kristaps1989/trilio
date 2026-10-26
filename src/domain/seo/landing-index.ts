@@ -10,9 +10,11 @@ export type LandingPicks = {
   steps: { eur: number; ids: string[] }[];
 };
 
+// The base page always keeps its address, also with nothing in stock: an empty
+// catalogue (a feed outage, a fresh database) must never take the category pages
+// out of search. Only budget pages fold.
+
 export type LandingDecision = {
-  /** False for a base page with nothing in stock: noindex until stock returns. */
-  baseIndexed: boolean;
   /**
    * Per budget step: null when the page is distinct (its own canonical), else
    * the budget step it folds into, or 0 for the base page.
@@ -42,7 +44,7 @@ export function decideLanding({ base, steps }: LandingPicks): LandingDecision {
       canonicalOf[step.eur] = repeats ?? lastDistinct;
     }
   }
-  return { baseIndexed: base.length > 0, canonicalOf };
+  return { canonicalOf };
 }
 
 /** The address a landing page names as canonical: its own, or the page it repeats. */

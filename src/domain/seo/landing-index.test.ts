@@ -12,7 +12,7 @@ describe("decideLanding", () => {
         { eur: 800, ids: ["a", "e", "f"] },
       ],
     });
-    expect(d).toEqual({ baseIndexed: true, canonicalOf: { 500: null, 800: null } });
+    expect(d).toEqual({ canonicalOf: { 500: null, 800: null } });
   });
   it("folds a page that repeats the base page or a lower budget, in any order", () => {
     const d = decideLanding({
@@ -35,15 +35,22 @@ describe("decideLanding", () => {
       ],
     });
     expect(d.canonicalOf).toEqual({ 50: 0, 100: null, 200: 100 });
-    expect(d.baseIndexed).toBe(true);
   });
-  it("marks an empty base page for noindex", () => {
-    expect(decideLanding({ base: [], steps: [] }).baseIndexed).toBe(false);
+  it("with nothing in stock every budget page folds into the base page, which stays", () => {
+    expect(
+      decideLanding({
+        base: [],
+        steps: [
+          { eur: 50, ids: [] },
+          { eur: 100, ids: [] },
+        ],
+      }).canonicalOf,
+    ).toEqual({ 50: 0, 100: 0 });
   });
 });
 
 describe("landingCanonicalPath", () => {
-  const d = { baseIndexed: true, canonicalOf: { 500: 0, 800: null, 1200: 800 } };
+  const d = { canonicalOf: { 500: 0, 800: null, 1200: 800 } };
   it("names the page itself, or the page it repeats", () => {
     expect(landingCanonicalPath("fridge", null, d)).toBe("/kategorija/fridge");
     expect(landingCanonicalPath("fridge", 800, d)).toBe("/kategorija/fridge/lidz-800");

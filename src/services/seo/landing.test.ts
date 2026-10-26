@@ -27,7 +27,6 @@ run("landing index", { timeout: 60_000 }, () => {
           .sort((a, b) => a - b),
       ).toEqual([...sub.budget_steps_eur].sort((a, b) => a - b));
       const base = (await landingCards(db, sub, null)).result.picks.map((p) => p.product.id).sort();
-      expect(index.decision.baseIndexed).toBe(base.length > 0);
       for (const eur of sub.budget_steps_eur) {
         const ids = (await landingCards(db, sub, eur * 100)).result.picks.map((p) => p.product.id).sort();
         const target = index.decision.canonicalOf[eur];

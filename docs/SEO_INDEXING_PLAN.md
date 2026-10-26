@@ -44,7 +44,7 @@ A second finding on the same pages: 73 product cards carry a name that says noth
 
 - A budget page is **distinct** when it has three picks and its set of products differs from the base page and from every lower budget step of the same category. Pure function in `src/domain/seo/landing-index.ts`, unit-tested.
 - A budget page that is not distinct keeps rendering (its links and chips still work) but carries `rel="canonical"` to the nearest distinct page below it (the base page in most cases) and is left out of the sitemap. Google then folds it into that page instead of judging it thin.
-- A base page with no picks gets `noindex` and is left out of the sitemap until stock returns; with one or two picks it stays indexed (it is still the best page for that category).
+- A base page always keeps its address and its sitemap entry, also with nothing in stock. (The first draft made an empty base page `noindex`; the empty-database check showed that a feed outage would then take every category page out of search.)
 - The English pages follow the Latvian decision for the same category and budget, so hreflang pairs stay consistent.
 - The sitemap already runs per request against the database; the decision is computed once an hour (`unstable_cache`) for all 39 categories and shared by the sitemap and the pages.
 - Stability: picks change with prices, so a page can switch between distinct and folded. With the "at least one different product" rule that is rare, and a switch only moves the canonical, never breaks a link.
