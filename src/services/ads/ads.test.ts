@@ -37,7 +37,7 @@ import { approveCreative, createCreatives, createPmax, templateCopy, writeCopy }
 import type { AdsProvider } from "./provider";
 import type { Proposal } from "@/domain/ads/guardrails";
 import { mockProvider } from "./mock";
-import { decideProposal, OptimiserOutput, runDaily } from "./optimiser";
+import { decideProposal, EMPTY_PROPOSAL_FIELDS, OptimiserOutput, runDaily } from "./optimiser";
 
 // The ads pipeline end to end against the database (docs/GROWTH_PLAN.md):
 // build → sync → daily run with a fake Claude → guardrails → owner's decision.
@@ -115,6 +115,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
           summary: "Tests.",
           proposals: [
             {
+              ...EMPTY_PROPOSAL_FIELDS,
               action: "set_cpc",
               adGroupId: g.id,
               cpcCapCents: 35,
@@ -123,6 +124,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
               confidence: 70,
             },
             {
+              ...EMPTY_PROPOSAL_FIELDS,
               action: "new_ad",
               adGroupId: g.id,
               headlines: ["Tikai šodien", "B variants", "C variants"],
@@ -132,6 +134,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
               confidence: 30,
             },
             {
+              ...EMPTY_PROPOSAL_FIELDS,
               action: "add_negative",
               campaignId: g.campaignId,
               text: "kurpirkt",
@@ -193,6 +196,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
               summary: "Auto.",
               proposals: [
                 {
+                  ...EMPTY_PROPOSAL_FIELDS,
                   action: "set_cpc",
                   adGroupId: g.id,
                   cpcCapCents: 40,

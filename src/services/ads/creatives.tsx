@@ -26,7 +26,7 @@ import type { AdsProvider } from "./provider";
 export const IMAGE_SIZES = ["1200x628", "1200x1200", "300x250"] as const;
 export type ImageSize = (typeof IMAGE_SIZES)[number];
 
-const Copy = z.object({
+export const Copy = z.object({
   headline: z.string(),
   body: z.string(),
   video: z.array(z.object({ seconds: z.number().int(), onScreen: z.string(), visual: z.string() })),

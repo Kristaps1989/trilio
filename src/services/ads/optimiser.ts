@@ -65,34 +65,56 @@ Propose changes that lower the cost per weighted conversion or find more convert
 
 Rules that code enforces and you must follow too: at most ${MAX_CHANGES_PER_DAY} changes per review; never block a search that converted; ad text is honest: no "cheapest", "guaranteed", discounts, percentages, urgency ("tikai šodien", "pēdējā iespēja"), superlatives or numbers that the landing page does not show; no shop or brand names in ad text. You cannot change campaign status, geography, language, conversion settings or the total budget; the budget follows a rule in code.
 
+Every proposal carries every field. Fill the ones its action uses (listed above) and leave the others empty: "" for text and ids, 0 for numbers, [] for lists, "none" for match.
+
 Prefer few, well-founded changes over many small ones. With little data (fewer than about 30 clicks in an ad group over 28 days) propose nothing for it except clear negatives. Give each proposal a one-sentence reason with the numbers behind it, the expected effect, and your confidence 0–100. Then a summary of the period since the last review in two or three Latvian sentences for the owner.`;
 
+// Every field is required: the API compiles the schema into a grammar, and each
+// optional field roughly doubles it. With 12 optional fields the request was
+// refused ("Schema is too complex"). Fields an action does not use come back
+// empty ("", 0, [], "none") and are dropped in toProposal.
 const ProposalOut = z.object({
   action: z.enum(ACTIONS as [string, ...string[]]),
-  campaignId: z.string().optional(),
-  adGroupId: z.string().optional(),
-  keywordId: z.string().optional(),
-  fromCampaignId: z.string().optional(),
-  toCampaignId: z.string().optional(),
-  text: z.string().optional(),
-  match: z.enum(["phrase", "exact"]).optional(),
-  cpcCapCents: z.number().int().optional(),
-  cents: z.number().int().optional(),
-  headlines: z.array(z.string()).optional(),
-  descriptions: z.array(z.string()).optional(),
-  note: z.string().optional(),
+  campaignId: z.string(),
+  adGroupId: z.string(),
+  keywordId: z.string(),
+  fromCampaignId: z.string(),
+  toCampaignId: z.string(),
+  text: z.string(),
+  match: z.enum(["phrase", "exact", "none"]),
+  cpcCapCents: z.number().int(),
+  cents: z.number().int(),
+  headlines: z.array(z.string()),
+  descriptions: z.array(z.string()),
+  note: z.string(),
   reason: z.string(),
   expectedEffect: z.string(),
   confidence: z.number().int(),
 });
 
+/** A proposal's empty fields, for building one by hand (tests, the e2e stand-in for Claude). */
+export const EMPTY_PROPOSAL_FIELDS = {
+  campaignId: "",
+  adGroupId: "",
+  keywordId: "",
+  fromCampaignId: "",
+  toCampaignId: "",
+  text: "",
+  match: "none",
+  cpcCapCents: 0,
+  cents: 0,
+  headlines: [],
+  descriptions: [],
+  note: "",
+} as const;
+
 export const OptimiserOutput = z.object({ summary: z.string(), proposals: z.array(ProposalOut) });
 
-const TermsOutput = z.object({
+export const TermsOutput = z.object({
   terms: z.array(z.object({ term: z.string(), label: z.enum(["relevant", "irrelevant", "unsure"]) })),
 });
 
-const MemoOutput = z.object({ memo: z.string() });
+export const MemoOutput = z.object({ memo: z.string() });
 
 export type OptimiserDeps = {
   provider: AdsProvider;
@@ -313,9 +335,12 @@ export async function optimiserContext(db: Db, now = new Date()) {
   };
 }
 
-function toProposal(p: z.infer<typeof ProposalOut>): Record<string, unknown> {
+/** The proposal's own fields for the guardrails: the empty ones and the explanation dropped. */
+export function toProposal(p: z.infer<typeof ProposalOut>): Record<string, unknown> {
   const meta = new Set(["reason", "expectedEffect", "confidence"]);
-  return Object.fromEntries(Object.entries(p).filter(([k, v]) => v !== undefined && !meta.has(k)));
+  const empty = (v: unknown) =>
+    v === undefined || v === "" || v === 0 || v === "none" || (Array.isArray(v) && v.length === 0);
+  return Object.fromEntries(Object.entries(p).filter(([k, v]) => !meta.has(k) && !empty(v)));
 }
 
 /** One optimiser run. Returns null when it was not due. */
