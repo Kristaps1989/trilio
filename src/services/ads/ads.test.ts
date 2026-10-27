@@ -272,7 +272,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
         : { ok: false, reason: "disabled" };
     };
     expect((await getSettings(db)).reviewCadence).toBe("weekly");
-    const tuesday = new Date("2026-10-27T08:00:00Z");
+    const tuesday = new Date("2030-10-29T08:00:00Z");
     expect(await runDaily(db, { provider, caller, now: tuesday })).toMatchObject({
       ok: true,
       reviewed: false,
@@ -281,9 +281,9 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     const [tue] = await db
       .select()
       .from(adAgentRuns)
-      .where(sql`${adAgentRuns.day} = '2026-10-27'`);
-    expect(tue!.summary).toMatch(/Claude pārskats 2026-11-02/);
-    const monday = new Date("2026-11-02T08:00:00Z");
+      .where(sql`${adAgentRuns.day} = '2030-10-29'`);
+    expect(tue!.summary).toMatch(/Claude pārskats 2030-11-04/);
+    const monday = new Date("2030-11-04T08:00:00Z");
     expect(await runDaily(db, { provider, caller, now: monday })).toMatchObject({ ok: true, reviewed: true });
     expect(calls).toContain("ads_optimiser");
   });
