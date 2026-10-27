@@ -11,6 +11,7 @@ import {
   buildCampaigns,
   getSettings,
   paceBudgets,
+  refreshAds,
   send,
   setCampaignsStatus,
   syncAccount,
@@ -112,6 +113,13 @@ export async function syncAdsAction(): Promise<void> {
   const r = await syncAccount(db, provider());
   await log(a, "ads.sync", "account", r);
   back("/admin/reklama", { synced: `${r.created}/${r.failed}` });
+}
+
+export async function refreshAdsAction(): Promise<void> {
+  const a = await admin();
+  const r = await refreshAds(db, provider());
+  await log(a, "ads.refresh", "ads", r);
+  back("/admin/reklama/kampanas", { refreshed: `${r.created}/${r.paused}/${r.failed}` });
 }
 
 export async function setCampaignStatusAction(formData: FormData): Promise<void> {

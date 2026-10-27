@@ -23,6 +23,7 @@ import { mockSearchConsole } from "@/services/seo/search-console";
 import {
   applyProposal,
   buildCampaigns,
+  refreshAds,
   getSettings,
   ACCOUNT_ENTITY,
   paceBudgets,
@@ -94,6 +95,33 @@ run("ads pipeline", { timeout: 60_000 }, () => {
       .from(adKeywords)
       .where(sql`${adKeywords.text} in ('kurpirkt.lv', 'salidzini.lv')`);
     expect(rivals).toHaveLength(2);
+  });
+
+  it("refreshes every ad group's ad from the template and pauses the old one", async () => {
+    const before = await db.select().from(adAds);
+    expect(before.every((a) => a.status === "enabled")).toBe(true);
+    const r = await refreshAds(db, provider);
+    expect(r).toEqual({ created: before.length, paused: before.length, failed: 0 });
+    const after = await db.select().from(adAds);
+    expect(
+      after
+        .filter((a) => a.status === "paused")
+        .map((a) => a.id)
+        .sort(),
+    ).toEqual(before.map((a) => a.id).sort());
+    const fresh = after.filter((a) => a.status === "enabled");
+    expect(fresh).toHaveLength(before.length);
+    expect(
+      fresh.every((a) => a.source === "template" && a.headlines.length >= 10 && a.descriptions.length === 4),
+    ).toBe(true);
+    // The change log carries the display path Google shows under the headline.
+    const logged = await db
+      .select()
+      .from(adChanges)
+      .where(
+        sql`${adChanges.operation}->>'op' = 'create_ad' and ${adChanges.operation}->>'path2' = 'ledusskapji'`,
+      );
+    expect(logged.length).toBeGreaterThan(0);
   });
 
   it("runs the daily optimiser: checked proposals wait, a dishonest ad is blocked, the owner decides", async () => {

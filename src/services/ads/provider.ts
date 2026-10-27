@@ -10,7 +10,17 @@ export type AdsChange =
   | { op: "create_keyword"; adGroup: string; text: string; match: Match }
   | { op: "create_negative"; campaign: string; text: string; match: Match }
   | { op: "set_keyword_status"; keyword: string; status: "enabled" | "paused" }
-  | { op: "create_ad"; adGroup: string; headlines: string[]; descriptions: string[]; finalUrl: string }
+  | {
+      op: "create_ad";
+      adGroup: string;
+      headlines: string[];
+      descriptions: string[];
+      finalUrl: string;
+      /** Display path segments ("izvelies", "ledusskapji"), at most 15 characters each. */
+      path1?: string;
+      path2?: string;
+    }
+  | { op: "set_ad_status"; ad: string; status: "enabled" | "paused" }
   | { op: "set_budget"; budget: string; cents: number }
   | { op: "set_cpc"; adGroup: string; cents: number }
   | { op: "set_campaign_status"; campaign: string; status: "enabled" | "paused" }

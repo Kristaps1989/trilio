@@ -8,7 +8,7 @@ import { dayOffset } from "@/services/ads/account";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../../ui";
-import { createPmaxAction, setCampaignStatusAction } from "../actions";
+import { createPmaxAction, refreshAdsAction, setCampaignStatusAction } from "../actions";
 import { AdsNav, eurFromCents, eurFromMicros, Outcome } from "../shared";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,15 @@ export default async function AdsCampaigns({ searchParams }: Props) {
     .groupBy(adDailyStats.entityId);
   const st = new Map(stats.map((s) => [s.id, s]));
   const tone = (s: string) => (s === "enabled" ? "lime" : s === "paused" ? "warning" : "neutral");
-  const ok = sp.ok === "pmax" ? t("pmaxDone") : sp.enabled ? t("enabled", { count: sp.enabled }) : null;
+  const refreshed = sp.refreshed?.split("/").map(Number) ?? [];
+  const ok =
+    sp.ok === "pmax"
+      ? t("pmaxDone")
+      : sp.enabled
+        ? t("enabled", { count: sp.enabled })
+        : refreshed.length === 3
+          ? t("adsRefreshed", { created: refreshed[0]!, paused: refreshed[1]!, failed: refreshed[2]! })
+          : null;
 
   return (
     <>
@@ -79,6 +87,15 @@ export default async function AdsCampaigns({ searchParams }: Props) {
           ),
         ])}
       />
+      <Section title={t("adsTitle")} id="ads">
+        <p className="text-[15px] text-stone">{t("adsHint")}</p>
+        <form action={refreshAdsAction}>
+          <Button type="submit" variant="outline" size="sm">
+            {t("refreshAds")}
+          </Button>
+        </form>
+      </Section>
+
       <Section title={t("pmaxTitle")} id="pmax">
         <p className="text-[15px] text-stone">{t("pmaxHint")}</p>
         <form action={createPmaxAction} className="flex flex-wrap items-end gap-3">

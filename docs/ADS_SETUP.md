@@ -112,7 +112,25 @@ After the first real visitors accept cookies, the tag status in Google Ads
 changes to "Active" by itself, usually within a day. A conversion action shows
 "Recording conversions" after its first conversion.
 
-## 6. Addressable TV (Go3)
+## 6. Ad strength ("Reklāmas efektivitāte")
+
+Google rates each responsive search ad from Poor to Excellent by the number of
+headlines, whether the ad group's keywords appear whole inside a headline, how
+unique the headlines are, and the descriptions. The template ad
+(`templateAd` in `src/domain/ads/plan.ts`) therefore gives every ad group up
+to 15 unique headlines (the category name, its seed keywords, two budget
+steps, then what Trilio is), 4 descriptions and a display path
+(`trilio.lv/izvelies/ledusskapji`), all within the honesty lint. Keywords that
+would be a claim ("labākais ledusskapis") stay keywords only.
+
+Ads already in Google do not change by themselves: in **Reklāma → Kampaņas →
+Reklāmu teksti** press **Atjaunot reklāmu tekstus**. Each synced ad group
+gets a new ad from the current template and its older ads are paused (not
+removed, so their history stays readable). Ad strength is Google's estimate,
+not a ranking factor; the competitor campaign stays "Average" at best because
+its keywords are other sites' names, which never appear in the ad text.
+
+## 7. Addressable TV (Go3)
 
 Go3 inserts ads on its servers (server-side ad insertion) and calls third-party
 impression trackers itself, filling FreeWheel macros such as

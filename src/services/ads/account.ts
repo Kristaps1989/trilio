@@ -20,7 +20,15 @@ import seed from "../../../data/keywords.lv.json";
 import { rigaDay } from "@/domain/analytics/visits";
 import { pacedBudget, splitBudget, type Performance } from "@/domain/ads/budget";
 import type { AccountState, Proposal } from "@/domain/ads/guardrails";
-import { buildCampaignPlan } from "@/domain/ads/plan";
+import {
+  buildCampaignPlan,
+  COMPETITOR_GROUP,
+  competitorAd,
+  displayPaths,
+  templateAd,
+  type AdText,
+} from "@/domain/ads/plan";
+import { getSubcategory } from "@/domain/questions/catalog";
 import { catalog } from "@/domain/questions/catalog";
 import type { AdsChange, AdsProvider, ApplyResult, Known } from "./provider";
 
@@ -204,17 +212,18 @@ export async function syncAccount(
         .where(eq(adKeywords.id, k.id));
   }
   const ads = await db
-    .select({ a: adAds, group: adGroups.googleId })
+    .select({ a: adAds, group: adGroups.googleId, subcategoryId: adGroups.subcategoryId })
     .from(adAds)
     .innerJoin(adGroups, eq(adGroups.id, adAds.adGroupId))
     .where(and(isNull(adAds.googleId), isNotNull(adGroups.googleId), eq(adAds.status, "draft")));
-  for (const { a, group } of ads) {
+  for (const { a, group, subcategoryId } of ads) {
     const r = await send(db, provider, {
       op: "create_ad",
       adGroup: group!,
       headlines: a.headlines,
       descriptions: a.descriptions,
       finalUrl: `${siteUrl()}${a.finalPath}`,
+      ...displayPaths(shortOf(subcategoryId)),
     });
     tally(r);
     if (r.ok)
@@ -224,6 +233,84 @@ export async function syncAccount(
         .where(eq(adAds.id, a.id));
   }
   return { created, failed };
+}
+
+const keywordSeed = seed as {
+  subcategories: Record<string, { short: string; keywords: string[] }>;
+};
+
+/** The category's short name for the display path; null for the competitor group. */
+function shortOf(subcategoryId: string): string | null {
+  return keywordSeed.subcategories[subcategoryId]?.short ?? null;
+}
+
+/** The current template ad for an ad group: the category's keywords and budget steps, or the competitor ad. */
+export function adTextFor(subcategoryId: string): AdText {
+  if (subcategoryId === COMPETITOR_GROUP) return competitorAd();
+  const s = keywordSeed.subcategories[subcategoryId];
+  return templateAd(
+    s?.short ?? subcategoryId,
+    s?.keywords ?? [],
+    getSubcategory(subcategoryId)?.budget_steps_eur ?? [],
+  );
+}
+
+/**
+ * Gives every synced ad group a new ad from the current template (Google's
+ * "Ad strength": keywords inside the headlines, up to 15 of them, 4
+ * descriptions, a display path) and pauses the ad group's older ads. Paused,
+ * never removed, so their history stays readable in Google Ads.
+ */
+export async function refreshAds(
+  db: Db,
+  provider: AdsProvider,
+): Promise<{ created: number; paused: number; failed: number }> {
+  const out = { created: 0, paused: 0, failed: 0 };
+  const groups = await db.select().from(adGroups).where(isNotNull(adGroups.googleId));
+  for (const g of groups) {
+    const ad = adTextFor(g.subcategoryId);
+    const r = await send(db, provider, {
+      op: "create_ad",
+      adGroup: g.googleId!,
+      headlines: ad.headlines,
+      descriptions: ad.descriptions,
+      finalUrl: `${siteUrl()}${g.landingPath}`,
+      ...(ad.path1 ? { path1: ad.path1 } : {}),
+      ...(ad.path2 ? { path2: ad.path2 } : {}),
+    });
+    if (!r.ok) {
+      out.failed++;
+      continue;
+    }
+    const older = await db
+      .select()
+      .from(adAds)
+      .where(and(eq(adAds.adGroupId, g.id), eq(adAds.status, "enabled"), isNotNull(adAds.googleId)));
+    const [created] = await db
+      .insert(adAds)
+      .values({
+        adGroupId: g.id,
+        headlines: ad.headlines,
+        descriptions: ad.descriptions,
+        finalPath: g.landingPath,
+        googleId: r.id ?? null,
+        status: "enabled",
+        source: "template",
+      })
+      .returning({ id: adAds.id });
+    out.created++;
+    for (const old of older) {
+      if (old.id === created!.id) continue;
+      const p = await send(db, provider, { op: "set_ad_status", ad: old.googleId!, status: "paused" });
+      if (!p.ok) {
+        out.failed++;
+        continue;
+      }
+      await db.update(adAds).set({ status: "paused" }).where(eq(adAds.id, old.id));
+      out.paused++;
+    }
+  }
+  return out;
 }
 
 /** Switches synced campaigns on or off ("Ieslēgt" / "Apturēt visu"). */
@@ -615,6 +702,7 @@ export async function applyProposal(
             headlines: p.headlines,
             descriptions: p.descriptions,
             finalUrl: `${siteUrl()}${g.landingPath}`,
+            ...displayPaths(shortOf(g.subcategoryId)),
           },
           row.id,
         );
