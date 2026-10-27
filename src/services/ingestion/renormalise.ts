@@ -6,7 +6,8 @@ import { mergeAttributes, normaliseProduct } from "@/domain/catalog/normalise";
 
 // Re-derives product attributes from what is already stored (name,
 // description, spec table) whenever data/attributes.json changes, and for rows
-// ingested before attributes existed. No shop is contacted, so new rules reach
+// ingested before attributes existed, with the same inputs ingestion used
+// (name, shop categories, description, spec table). No shop is contacted, so new rules reach
 // the whole catalogue within one scheduler tick instead of after a full
 // re-crawl. Values only rules and spec tables produce are recomputed; feed,
 // EPREL and extraction values are kept.
@@ -23,6 +24,8 @@ export function renormaliseOne(
     name: string;
     description: string | null;
     specTable: Record<string, string> | null;
+    /** Every shop's category label: ingestion normalised with it, so must this. */
+    shopCategories?: string[];
     attributes: Record<string, unknown>;
     attributeSources: Record<string, string>;
   },
@@ -38,6 +41,7 @@ export function renormaliseOne(
   }
   const derived = normaliseProduct(row.subcategoryId, {
     name: row.name,
+    category: (row.shopCategories ?? []).join(" | "),
     description: row.description,
     specTable: row.specTable,
   });
@@ -63,6 +67,7 @@ export async function renormaliseProducts(db: Db, opts: { batch?: number; versio
         name: products.name,
         description: products.description,
         specTable: products.specTable,
+        shopCategories: products.shopCategories,
         attributes: products.attributes,
         attributeSources: products.attributeSources,
       })

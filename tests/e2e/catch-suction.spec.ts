@@ -102,3 +102,21 @@ test("a cordless stick is judged by air watts; a corded vacuum is never asked ab
   // No carpet question: input watts say nothing about suction, so it would only guess.
   await expect(h1(page)).toHaveText("Cik vēlies tērēt?");
 });
+
+test("choosing a cordless stick shows only sticks, also among the products a catch names", async ({
+  page,
+}) => {
+  await page.goto("/izvelies/clean/vacuum");
+  await choose(page, /^Vertikālais bezvadu/);
+  for (let i = 0; i < 4 && (await h1(page).textContent()) !== "Cik vēlies tērēt?"; i++) await next(page);
+  await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
+  await expect(page).toHaveURL(/\/rezultati\?sub=vacuum/);
+  const cards = page.locator("main article");
+  await expect(cards.first()).toBeVisible();
+  // Every card on the page (picks, extras, products a "Bet:" names) is a stick: its spec line says so.
+  for (const card of await cards.all()) {
+    if (await card.getByText(/ATJAUNOTA PRECE/).count()) continue;
+    await expect(card).toContainText(/Vertikālais/);
+    await expect(card).not.toContainText(/Robots/);
+  }
+});

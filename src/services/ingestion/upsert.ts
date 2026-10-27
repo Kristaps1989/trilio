@@ -3,6 +3,7 @@ import type { Db } from "@/db/client";
 import { offers, priceSnapshots, products, type Store } from "@/db/schema";
 import { modelKey } from "@/domain/catalog/ean";
 import { mergeAttributes } from "@/domain/catalog/normalise";
+import { VERSION_KEY } from "./renormalise";
 import type { UpsertRow } from "./types";
 
 export type UpsertStats = { productsCreated: number; offersUpserted: number; snapshots: number };
@@ -34,6 +35,7 @@ export async function upsertOffers(
         name: products.name,
         attributes: products.attributes,
         attributeSources: products.attributeSources,
+        shopCategories: products.shopCategories,
       })
       .from(products)
       .where(
@@ -45,7 +47,10 @@ export async function upsertOffers(
     const byKey = new Map(existing.map((p) => [p.modelKey, p.id]));
     // What each product already knows, updated as rows of this batch are merged in.
     const known = new Map(
-      existing.map((p) => [p.id, { name: p.name, attributes: p.attributes, sources: p.attributeSources }]),
+      existing.map((p) => [
+        p.id,
+        { name: p.name, attributes: p.attributes, sources: p.attributeSources, categories: p.shopCategories },
+      ]),
     );
 
     const productIdFor = new Map<number, string>();
@@ -65,6 +70,7 @@ export async function upsertOffers(
             attributes: row.attributes,
             attributeSources: sourcesOf(row),
             specTable: row.specTable ?? null,
+            shopCategories: row.shopCategory ? [row.shopCategory] : [],
             tags: row.tags,
             specs: row.specs,
             description: row.description,
@@ -75,18 +81,27 @@ export async function upsertOffers(
           })
           .returning({ id: products.id });
         id = created!.id;
-        known.set(id, { name: row.name, attributes: row.attributes, sources: sourcesOf(row) });
+        known.set(id, {
+          name: row.name,
+          attributes: row.attributes,
+          sources: sourcesOf(row),
+          categories: row.shopCategory ? [row.shopCategory] : [],
+        });
         stats.productsCreated++;
         if (row.ean) byEan.set(row.ean, id);
         byKey.set(key, id);
       } else if (row.condition === "new") {
         // Refurbished rows never overwrite the product's descriptive data. Attributes
         // merge by source strength, so each shop's spec table fills the others' gaps.
-        const before = known.get(id) ?? { name: row.name, attributes: {}, sources: {} };
+        const before = known.get(id) ?? { name: row.name, attributes: {}, sources: {}, categories: [] };
         const merged = mergeAttributes(before, { attributes: row.attributes, sources: sourcesOf(row) });
         // The more descriptive name wins: some shops list only the model code.
         const name = row.name.length >= before.name.length ? row.name : before.name;
-        known.set(id, { name, attributes: merged.attributes, sources: merged.sources });
+        // A shop category not seen before is new evidence (a robot vacuum's "roboti-…"):
+        // mark the product stale so the next renormalise pass re-derives it with all of them.
+        const categories = withCategory(before.categories, row.shopCategory);
+        if (categories.length !== before.categories.length) merged.sources[VERSION_KEY] = "";
+        known.set(id, { name, attributes: merged.attributes, sources: merged.sources, categories });
         await tx
           .update(products)
           .set({
@@ -94,6 +109,7 @@ export async function upsertOffers(
             attributes: merged.attributes,
             attributeSources: merged.sources,
             specTable: row.specTable ?? sql`${products.specTable}`,
+            shopCategories: categories,
             tags: row.tags,
             specs: row.specs,
             description: row.description,
@@ -178,6 +194,13 @@ export async function markUnseenOutOfStock(
     .where(and(eq(offers.storeId, store.id), lt(offers.lastSeenAt, cutoff), sql`${offers.stock} <> 'out'`))
     .returning({ id: offers.id });
   return updated.length;
+}
+
+/** The product's shop categories with this row's added (case-insensitive, at most 8). */
+export function withCategory(current: string[], category: string | null | undefined): string[] {
+  const c = category?.trim();
+  if (!c || current.some((x) => x.toLowerCase() === c.toLowerCase())) return current;
+  return [...current, c].slice(-8);
 }
 
 /** Provenance for a row's attributes; feed rows without explicit sources count as "feed". */

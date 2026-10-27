@@ -21,6 +21,8 @@ export const NormalisedOfferSchema = z.object({
   attributeSources: z.record(z.string(), z.string()).default({}),
   /** The shop's spec table as read (label → value), kept for re-normalising and extraction. */
   specTable: z.record(z.string(), z.string()).nullable().default(null),
+  /** The shop's own category label(s) for the product, kept so re-normalising sees what ingestion saw. */
+  shopCategory: z.string().nullable().default(null),
   tags: z.array(z.string()).default([]),
   specs: z.string().nullable().default(null),
   kwhYear: z.number().int().nonnegative().nullable().default(null),
@@ -53,9 +55,14 @@ export type NormalisedOffer = z.infer<typeof NormalisedOfferSchema>;
 /** What upsertOffers accepts: provenance and the spec table are optional (sample data, tests). */
 export type UpsertRow = Omit<
   NormalisedOffer,
-  "attributeSources" | "specTable" | "eprelId" | "ratingX10" | "ratingCount"
+  "attributeSources" | "specTable" | "shopCategory" | "eprelId" | "ratingX10" | "ratingCount"
 > &
-  Partial<Pick<NormalisedOffer, "attributeSources" | "specTable" | "eprelId" | "ratingX10" | "ratingCount">>;
+  Partial<
+    Pick<
+      NormalisedOffer,
+      "attributeSources" | "specTable" | "shopCategory" | "eprelId" | "ratingX10" | "ratingCount"
+    >
+  >;
 
 export type Rejected = { reason: string; raw: unknown };
 

@@ -120,6 +120,13 @@
       "when": 1793012474266,
       "tag": "0016_tv_measurement",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793119777315,
+      "tag": "0017_shop_categories",
+      "breakpoints": true
     }
   ]
 }
