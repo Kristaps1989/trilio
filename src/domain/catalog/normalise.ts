@@ -150,12 +150,21 @@ function labelledSegments(name: string): Record<string, string> {
   return out;
 }
 
+/**
+ * A spec row that says the feature is absent or unknown ("Noņemams rokas putekļu
+ * sūcējs: Nav", "Sūkšanas jauda (W): Ražotājs informāciju nav norādījis"). Shops
+ * like tet.lv list the same rows on every product, so the label alone is no evidence.
+ */
+export const NOT_THERE = /^(nav|nē|ne|no|none|false|[-–—]|0)\.?$|nav norād|informāciju nav|nav pieejam/i;
+
 function haystack(t: ProductText, includeCategory: boolean): string {
   return [
     t.name,
     includeCategory ? t.category : null,
     t.description,
-    ...Object.entries(t.specTable ?? {}).flat(),
+    ...Object.entries(t.specTable ?? {})
+      .filter(([, value]) => !NOT_THERE.test(value.trim()))
+      .flat(),
   ]
     .filter(Boolean)
     .join(" | ")

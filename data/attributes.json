@@ -2828,9 +2828,35 @@
               ]
             },
             {
+              "value": "robot",
+              "spec": {
+                "navigācijas tips": ".",
+                "telpas kartes izveide": ".",
+                "augstuma pārvarēšanas slieksnis": "."
+              }
+            },
+            {
+              "value": "stick",
+              "spec": {
+                "putekļu sūcēja tips": "slota|vertikāl"
+              }
+            },
+            {
+              "value": "handheld",
+              "spec": {
+                "putekļu sūcēja tips": "rokas|portatīv"
+              }
+            },
+            {
+              "value": "corded",
+              "spec": {
+                "putekļu sūcēja tips": "klasisk|cilindr|maisiņ|mazgājoš|mucas"
+              }
+            },
+            {
               "value": "handheld",
               "text": [
-                "rokas putekļ",
+                "(?<!noņemams )rokas putekļ",
                 "handheld",
                 "auto putekļ",
                 "automašīnas putekļ",
@@ -2842,7 +2868,8 @@
               "text": [
                 "vertikāl",
                 "bezvadu",
-                "akumulator",
+                "akumulatora putekļ",
+                "akumulatora vertikāl",
                 "stick",
                 "cordless"
               ]

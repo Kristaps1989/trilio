@@ -72,6 +72,15 @@ export const products = pgTable(
     attributeSources: jsonb("attribute_sources").$type<Record<string, string>>().notNull().default({}),
     /** The shop spec table as last read (label → value); re-normalised when the catalogue changes. */
     specTable: jsonb("spec_table").$type<Record<string, string>>(),
+    /**
+     * Every shop's category label for the product ("roboti-puteklu-suceji"). Ingestion
+     * normalises with it, so re-normalising must too, or "robot" from a shop's
+     * category is lost and a robot vacuum becomes a stick.
+     */
+    shopCategories: text("shop_categories")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /** Option values from the question schema this product satisfies (soft-answer matching). */
     tags: text("tags")
       .array()

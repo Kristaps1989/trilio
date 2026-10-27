@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "shop_categories" text[] DEFAULT '{}'::text[] NOT NULL;

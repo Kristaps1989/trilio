@@ -154,6 +154,7 @@ export function recordToOffer(
       attributes: normalised.attributes,
       attributeSources: normalised.sources,
       specTable: record.spec_table && Object.keys(record.spec_table).length ? record.spec_table : null,
+      shopCategory: text.category || null,
       tags: [],
       specs: null,
       kwhYear,

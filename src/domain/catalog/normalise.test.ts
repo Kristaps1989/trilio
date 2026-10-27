@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fixtures from "@/services/ingestion/specs/__fixtures__/pages.json";
 import {
+  NOT_THERE,
   STRONG_SUCTION,
   strongSuction,
   excludedByName,
@@ -296,5 +297,55 @@ describe("strong suction for vacuums", () => {
     const corded = vac("Bosch BGLS2BU2 putekļsūcējs ar maisiņu", { "maksimālā ieejas jauda": "900 W" });
     expect(corded).toMatchObject({ vacuum_type: "corded", power_w: 900 });
     expect(corded.strong_suction).toBeUndefined();
+  });
+});
+
+describe("vacuum type from tet.lv spec tables (robots shown as sticks, 27 Oct 2026)", () => {
+  // Rows as tet.lv prints them on every vacuum page, with "Ir"/"Nav" answers.
+  const tet = (rows: Record<string, string>) => ({
+    "noņemams rokas putekļu sūcējs": "Nav",
+    "akumulatora tips": "Li-lon",
+    ...rows,
+  });
+  const type = (name: string, specTable: Record<string, string>, category?: string) =>
+    normaliseProduct("vacuum", { name, specTable, category }).attributes.vacuum_type;
+
+  it("knows a robot by its robot-only rows, even without 'robot' in the name or category", () => {
+    const robot = tet({
+      "navigācijas tips": "RGB AI,",
+      "telpas kartes izveide": "Ir",
+      "augstuma pārvarēšanas slieksnis": "6 cm",
+    });
+    expect(type("Mova V50 Ultra White", robot)).toBe("robot");
+    expect(type("Philips HomeRun 2000. sērija XU2100/15", robot)).toBe("robot");
+    // A battery is no sign of a stick: robots have one too.
+    expect(type("Mova V50 Ultra White", tet({}))).toBeUndefined();
+  });
+
+  it("reads tet's own type row and ignores the 'detachable handheld' row", () => {
+    expect(
+      type(
+        "Dyson V16 Piston Animal",
+        tet({ "putekļu sūcēja tips": "Putekļsūcējs-slota", "noņemams rokas putekļu sūcējs": "Ir" }),
+      ),
+    ).toBe("stick");
+    expect(type("Bosch ProHygienic BGL6HYG1 White", tet({ "putekļu sūcēja tips": "Klasiskais" }))).toBe(
+      "corded",
+    );
+    expect(type("Karcher WD 3 V-15/4/20", tet({ "putekļu sūcēja tips": "Klasiskais" }))).toBe("corded");
+    expect(type("Dreame H12 rokas putekļsūcējs", {})).toBe("handheld");
+  });
+
+  it("does not count a feature row answered 'Nav' or 'not stated' as evidence", () => {
+    for (const v of [
+      "Nav",
+      "nē",
+      "-",
+      "Ražotājs informāciju nav norādījis",
+      "Ražotājs nav norādījis šādu informāciju",
+    ])
+      expect(NOT_THERE.test(v)).toBe(true);
+    for (const v of ["Ir", "Putekļsūcējs-slota", "Nav pieejams krāsā", "0,5 l"])
+      expect(NOT_THERE.test(v) && v !== "Nav pieejams krāsā").toBe(false);
   });
 });

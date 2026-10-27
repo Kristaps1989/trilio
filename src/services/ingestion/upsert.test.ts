@@ -3,7 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import { offers, priceSnapshots, products, stores } from "@/db/schema";
 import { gtinCheckDigit } from "@/domain/catalog/ean";
-import { markUnseenOutOfStock, upsertOffers } from "./upsert";
+import { VERSION_KEY } from "./renormalise";
+import { markUnseenOutOfStock, upsertOffers, withCategory } from "./upsert";
 import type { UpsertRow } from "./types";
 
 // Integration test against the database in DATABASE_URL (CI starts Postgres).
@@ -115,6 +116,34 @@ run("upsertOffers", () => {
     expect(all.filter((o) => o.condition === "refurbished")).toHaveLength(1);
     const tbProducts = await db.select().from(products).where(like(products.brand, "TestBrand%"));
     expect(tbProducts).toHaveLength(1);
+  });
+
+  it("keeps every shop's category and marks the product for re-deriving when a new one arrives", async () => {
+    await upsertOffers(db, { id: storeId }, [row({ externalId: "test:c1", shopCategory: "tējkannas" })]);
+    const [p1] = await db.select().from(products).where(eq(products.ean, EAN));
+    expect(p1!.shopCategories).toContain("tējkannas");
+    await db
+      .update(products)
+      .set({ attributeSources: { ...p1!.attributeSources, [VERSION_KEY]: "v-test" } })
+      .where(eq(products.id, p1!.id));
+    // The same category again changes nothing.
+    await upsertOffers(db, { id: storeId }, [row({ externalId: "test:c1", shopCategory: "Tējkannas" })]);
+    const [p2] = await db.select().from(products).where(eq(products.ean, EAN));
+    expect(p2!.attributeSources[VERSION_KEY]).toBe("v-test");
+    // A new one is new evidence: the product is stale until renormalise re-derives it.
+    await upsertOffers(db, { id: storeId }, [
+      row({ externalId: "test:c2", shopCategory: "elektriskās tējkannas" }),
+    ]);
+    const [p3] = await db.select().from(products).where(eq(products.ean, EAN));
+    expect(p3!.shopCategories).toEqual(expect.arrayContaining(["tējkannas", "elektriskās tējkannas"]));
+    expect(p3!.attributeSources[VERSION_KEY]).toBe("");
+  });
+
+  it("adds a category once, case-insensitively, and keeps at most eight", () => {
+    expect(withCategory(["a"], "A")).toEqual(["a"]);
+    expect(withCategory(["a"], " ")).toEqual(["a"]);
+    expect(withCategory(["a"], null)).toEqual(["a"]);
+    expect(withCategory(["1", "2", "3", "4", "5", "6", "7", "8"], "9")).toHaveLength(8);
   });
 
   it("refurbished rows do not overwrite product data", async () => {

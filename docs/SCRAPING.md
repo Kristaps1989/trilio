@@ -61,6 +61,21 @@ per-shop code. A new shop label is usually a one-line data change. See
 from several shops are merged by EAN. Saved real pages for the parser tests
 are in `src/services/ingestion/specs/__fixtures__/pages.json`.
 
+Two rules keep type detection honest (fixed 27 Oct 2026, after robot vacuums
+showed up among cordless sticks):
+
+- **A row answered "Nav" is not evidence.** tet.lv prints the same feature rows
+  on every product of a category ("Noņemams rokas putekļu sūcējs: Nav"). Rows
+  whose value says absent or not stated (`NOT_THERE` in
+  `src/domain/catalog/normalise.ts`) are left out of the text the type and
+  feature rules search. Prefer a shop's own type row (tet.lv "Putekļu sūcēja
+  tips") or labels only one type has (robots: "Navigācijas tips") over words
+  that any product may mention ("akumulators").
+- **Re-normalising sees what ingestion saw.** Each shop's category label is
+  stored on the product (`products.shop_categories`), and
+  `renormaliseProducts` passes it to the normaliser. A category not seen
+  before marks the product for re-deriving on the next scheduler tick.
+
 ## Rejected rows
 
 Every rejected row is counted in the run's `rowsRejected`, and up to 20

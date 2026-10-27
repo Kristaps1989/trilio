@@ -34,4 +34,21 @@ describe("renormaliseOne", () => {
     expect(next.attributes.noise_db).toBe(37);
     expect(next.sources.noise_db).toBe("feed");
   });
+
+  it("re-derives with the shop categories ingestion saw, so a robot stays a robot", () => {
+    const robot = {
+      subcategoryId: "vacuum",
+      name: "Mova V50 Ultra White",
+      description: null,
+      specTable: { "akumulatora tips": "Li-lon" },
+      attributes: { vacuum_type: "robot" },
+      attributeSources: { vacuum_type: "rule" },
+    };
+    expect(
+      renormaliseOne({ ...robot, shopCategories: ["roboti-puteklu-suceji"] }).attributes.vacuum_type,
+    ).toBe("robot");
+    // Without the category (rows stored before 0017) nothing in the text says robot,
+    // and nothing turns it into a stick either.
+    expect(renormaliseOne(robot).attributes.vacuum_type).toBeUndefined();
+  });
 });
