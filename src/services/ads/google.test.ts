@@ -116,6 +116,50 @@ describe("Google Ads client", () => {
     expect(calls.filter((c) => c.url.includes("oauth2"))).toHaveLength(1);
   });
 
+  it("creates Performance Max with the business name and logo linked to the campaign (brand guidelines)", async () => {
+    const { calls, fetchImpl } = fake();
+    const p = googleAdsProvider(cfg, fetchImpl);
+    const r = await p.apply({
+      op: "create_pmax",
+      name: "PMax · Ledusskapji",
+      budgetCents: 500,
+      finalUrl: "https://trilio.lv/izvelies/fridges",
+      businessName: "Trilio",
+      headlines: ["A", "B", "C"],
+      longHeadline: "Garš virsraksts",
+      descriptions: ["D1", "D2"],
+      logo: "customers/1/assets/71",
+      landscape: "customers/1/assets/72",
+      square: "customers/1/assets/73",
+      searchThemes: ["ledusskapis"],
+    });
+    expect(r.ok).toBe(true);
+    const ops = (
+      calls.find((c) => c.url.endsWith("googleAds:mutate"))!.body as {
+        mutateOperations: Record<string, { create: Record<string, string> }>[];
+      }
+    ).mutateOperations;
+    const linked = (kind: string) => ops.filter((o) => o[kind]).map((o) => o[kind]!.create.fieldType);
+    expect(linked("campaignAssetOperation").sort()).toEqual(["BUSINESS_NAME", "LOGO"]);
+    expect(linked("assetGroupAssetOperation")).not.toContain("BUSINESS_NAME");
+    expect(linked("assetGroupAssetOperation")).not.toContain("LOGO");
+    expect(linked("assetGroupAssetOperation")).toEqual(
+      expect.arrayContaining([
+        "HEADLINE",
+        "LONG_HEADLINE",
+        "DESCRIPTION",
+        "MARKETING_IMAGE",
+        "SQUARE_MARKETING_IMAGE",
+      ]),
+    );
+    const name = ops.find((o) => o.campaignAssetOperation?.create.fieldType === "BUSINESS_NAME")!;
+    const created = ops.map((o) => o.assetOperation?.create.resourceName);
+    expect(created.indexOf(name.campaignAssetOperation!.create.asset)).toBeGreaterThan(-1);
+    // Temporary ids must be created before they are referenced.
+    const at = (pred: (o: (typeof ops)[number]) => boolean) => ops.findIndex(pred);
+    expect(at((o) => !!o.campaignOperation)).toBeLessThan(at((o) => !!o.campaignAssetOperation));
+  });
+
   it("maps report rows back and turns API errors into a failed result", async () => {
     const { fetchImpl } = fake();
     const p = googleAdsProvider(cfg, fetchImpl);

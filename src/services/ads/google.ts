@@ -361,8 +361,12 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
       HEADLINE: c.headlines.map(text),
       LONG_HEADLINE: [text(c.longHeadline)],
       DESCRIPTION: c.descriptions.map(text),
-      BUSINESS_NAME: [text(c.businessName)],
     };
+    // Brand guidelines are on by default for new Performance Max campaigns
+    // (API v21+): the business name and the logo are linked to the campaign,
+    // not to the asset group, or the request fails with
+    // REQUIRED_BUSINESS_NAME_ASSET_NOT_LINKED.
+    const businessName = text(c.businessName);
     const ops: unknown[] = [
       {
         campaignBudgetOperation: {
@@ -387,9 +391,13 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
           },
         },
       },
-      ...Object.values(texts)
-        .flat()
-        .map((a) => ({ assetOperation: { create: a } })),
+      ...[...Object.values(texts).flat(), businessName].map((a) => ({ assetOperation: { create: a } })),
+      ...(
+        [
+          [businessName.resourceName, "BUSINESS_NAME"],
+          [c.logo, "LOGO"],
+        ] as const
+      ).map(([asset, fieldType]) => ({ campaignAssetOperation: { create: { campaign, asset, fieldType } } })),
       {
         assetGroupOperation: {
           create: { resourceName: group, campaign, name: c.name, finalUrls: [c.finalUrl], status: "ENABLED" },
@@ -402,7 +410,6 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
       ),
       ...(
         [
-          [c.logo, "LOGO"],
           [c.landscape, "MARKETING_IMAGE"],
           [c.square, "SQUARE_MARKETING_IMAGE"],
         ] as const
