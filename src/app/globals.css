@@ -214,3 +214,16 @@ h3,
 .range-input:focus {
   outline: none;
 }
+
+/* A card reached by a "Bet:" link flashes its lime ring, so a jump to a card higher up is noticed. */
+@keyframes card-landed {
+  from {
+    box-shadow: 0 0 0 6px var(--color-lime);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+article:target {
+  animation: card-landed 2.5s ease-out;
+}

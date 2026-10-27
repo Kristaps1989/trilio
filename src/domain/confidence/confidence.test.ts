@@ -8,6 +8,7 @@ import {
   bucketOption,
   catchFor,
   catchesFor,
+  cheaperAndBetter,
   coverage,
   gainsOf,
   goodness,
@@ -230,37 +231,41 @@ describe("bucketOption", () => {
 describe("the catch", () => {
   const products = [
     f("Bosch A", 500, { noise_db: 39 }),
-    f("Bosch B", 670, { noise_db: 34 }),
+    f("Bosch B", 600, { noise_db: 34 }),
     f("Bosch C", 560, { noise_db: 39, no_frost: false }),
   ];
   const pool = candidatePool(input(products));
   const targets = argumentTargets(fridge, { priorities: ["quiet"] }, DECIDES);
 
-  it("names the best available on the priority and what it costs", () => {
+  it("names the nearest fair step up on the priority and what it costs", () => {
     expect(catchFor(byId(pool, "Bosch A"), pool, targets)).toEqual({
       kind: "attr",
       attr: "noise_db",
       mine: 39,
       best: 34,
-      extraCents: 17000,
+      extraCents: 10000,
       productId: "Bosch B",
     });
   });
 
-  it("names a missing feature with the cheapest product that has it, or nothing when it is best", () => {
+  it("names a missing feature with the cheapest dearer product that has it; a cheaper one is a 'why not'", () => {
     const featureOnly = [{ attr: "no_frost", kind: "bool" as const }];
     expect(catchFor(byId(pool, "Bosch C"), pool, featureOnly)).toEqual({
       kind: "feature",
       attr: "no_frost",
-      extraCents: -6000,
-      productId: "Bosch A",
+      extraCents: 4000,
+      productId: "Bosch B",
     });
+    expect(cheaperAndBetter([byId(pool, "Bosch C")], pool, featureOnly).map((c) => c.product.id)).toEqual([
+      "Bosch A",
+    ]);
     expect(catchFor(byId(pool, "Bosch B"), pool, [{ attr: "noise_db", kind: "min" }])).toBeNull();
   });
 });
 
 describe("the catch is the nearest fair step up", () => {
   const products = [
+    f("Cheaper 34", 450, { noise_db: 34 }),
     f("Cheap 39", 480, { noise_db: 39 }),
     f("Mid 36", 520, { noise_db: 36 }),
     f("Quiet 34", 600, { noise_db: 34 }),
@@ -269,39 +274,41 @@ describe("the catch is the nearest fair step up", () => {
   const pool = candidatePool(input(products));
   const noise = [{ attr: "noise_db", kind: "min" as const }];
 
-  it("names the cheapest clearly better product, not the best one at the top of the budget", () => {
+  it("names the cheapest clearly better product that costs more, never a cheaper one", () => {
     expect(catchFor(byId(pool, "Cheap 39"), pool, noise)).toMatchObject({
       best: 36,
       extraCents: 4000,
       productId: "Mid 36",
     });
+    // Cheaper and quieter: not a "but" (the shopper would ask "then why not this one?").
+    expect(catchFor(byId(pool, "Mid 36"), pool, noise, new Set(["Quiet 34", "Top 33"]))).toBeNull();
+    expect(cheaperAndBetter([byId(pool, "Mid 36")], pool, noise).map((c) => c.product.id)).toEqual([
+      "Cheaper 34",
+    ]);
   });
 
-  it("moves on to the next attribute when the step costs more than half the price", () => {
+  it("moves on to the next attribute when the step costs more than a quarter of the price", () => {
     const tiny = candidatePool(
-      input(
-        [
-          f("Small 39", 410, { noise_db: 39, volume_l: 300 }),
-          f("Big 33", 790, { noise_db: 33, volume_l: 330 }),
-        ],
-        {},
-      ),
+      input([
+        f("Small 39", 410, { noise_db: 39, volume_l: 300 }),
+        f("Big 33", 540, { noise_db: 33, volume_l: 330 }),
+      ]),
     );
     const two = [
       { attr: "noise_db", kind: "min" as const },
       { attr: "volume_l", kind: "max" as const },
     ];
-    // 790 is more than 1,5 × 410, so neither noise nor volume makes a fair "but".
+    // 540 is more than 1,25 × 410, so neither noise nor volume makes a fair "but".
     expect(catchFor(byId(tiny, "Small 39"), tiny, two)).toBeNull();
   });
 
-  it("never names the same product on two cards", () => {
+  it("never names another pick, nor the same product on two cards", () => {
     const picks = [byId(pool, "Cheap 39"), byId(pool, "Mid 36")];
     const catches = catchesFor(picks, pool, noise);
-    expect(catches.get("Cheap 39")?.productId).toBe("Mid 36");
-    expect(catches.get("Mid 36")?.productId).toBe("Quiet 34");
-    const again = catchesFor([byId(pool, "Cheap 39"), byId(pool, "Cheap 39")], pool, noise);
-    expect(again.size).toBe(1);
+    // Mid 36 would be Cheap 39's step up, but it is a pick itself: the next fair step is Quiet 34.
+    expect(catches.get("Cheap 39")?.productId).toBe("Quiet 34");
+    // Quiet 34 is already named; Top 33 costs more than a quarter over Mid 36: nothing fair is left.
+    expect(catches.get("Mid 36")).toBeUndefined();
   });
 });
 
@@ -353,6 +360,28 @@ describe("why not", () => {
     const reason = (id: string) => all.find((l) => l.product.id === id)?.reason;
     expect(reason("Samsung Tall")).toMatchObject({ kind: "fit", questionId: "size", value: 186 });
     expect(reason("Indesit Same")).toMatchObject({ kind: "dominated" });
+  });
+
+  it("lists a product cheaper than a pick and better on an argued point first, as a 'better' entry", () => {
+    const quietPick = f("Bosch Quiet", 520, { noise_db: 36 });
+    const cheaperQuieter = f("Beko Hush", 480, { noise_db: 33, no_frost: false });
+    const prods = [cheaperQuieter, quietPick];
+    const ri = input(prods, { priorities: ["quiet"] });
+    const picks = [byId(candidatePool(ri), "Bosch Quiet")];
+    const better = cheaperAndBetter(picks, candidatePool(ri), argumentTargets(fridge, ri.answers, DECIDES));
+    expect(better.map((c) => c.product.id)).toEqual(["Beko Hush"]);
+    const out = whyNot({
+      products: prods,
+      sub: fridge,
+      answers: ri.answers,
+      budget: { min: 40000, max: 80000 },
+      urgency: "two_weeks",
+      picks,
+      scored: candidatePool({ ...ri, showUnknown: true }),
+      decides: DECIDES,
+      better: better.map((c) => c.product),
+    });
+    expect(out[0]).toMatchObject({ product: { id: "Beko Hush" }, because: "better" });
   });
 
   it("names what the dearer pick gives, with both values, and skips a product with no such reason", () => {

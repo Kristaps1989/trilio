@@ -23,6 +23,7 @@ import {
   argumentTargets,
   assignRoles,
   catchesFor,
+  cheaperAndBetter,
   coverage,
   priceConfidence,
   priorityTarget,
@@ -239,11 +240,17 @@ export default async function ResultsPage({ searchParams }: Props) {
     td.has(`feature.${key}` as "feature.no_frost")
       ? td(`feature.${key}` as "feature.no_frost")
       : attrLabel(key).toLowerCase();
+  const phrase = (form: "featureWith" | "featureWithout", key: string) =>
+    td.has(`${form}.${key}` as "featureWith.no_frost")
+      ? td(`${form}.${key}` as "featureWith.no_frost")
+      : `${form === "featureWith" ? "ar" : "bez"} ${attrLabel(key).toLowerCase()}`;
   const textCtx: TextContext = {
     t: (key, values) => t(key as "title", values as Record<string, string>),
     attrLabel,
     attrValue: (key, value) => formatAttr(key, value, (k) => ta(k as "yes"), enums),
     featureName,
+    featureWithout: (key) => phrase("featureWithout", key),
+    featureWith: (key) => phrase("featureWith", key),
     answerPhrase: (questionId) => know.answerPhrases[questionId]?.[lang] ?? null,
     nameOf: (id) => {
       const p = products.find((x) => x.id === id);
@@ -336,13 +343,14 @@ export default async function ResultsPage({ searchParams }: Props) {
       );
       // §2.8: say nothing rather than guess when the specs are not known on both sides.
       if (d.status !== "unknown") {
-        const lines = (items: typeof d.items) => deltaLines(items, td, attrLabel, enumLabel);
+        const lines = (items: typeof d.items, lose = false) =>
+          deltaLines(items, td, attrLabel, enumLabel, { lose });
         upgrade = {
           priceDeltaCents: d.priceDeltaCents,
           tierLabel: firstRole(cheapest.product.id) ?? t("cheapestOption"),
           gains: lines(d.gains),
           other: lines(d.other),
-          tradeoffs: lines(d.tradeoffs),
+          tradeoffs: lines(d.tradeoffs, true),
           note:
             d.status === "same"
               ? d.brandsDiffer
@@ -950,6 +958,8 @@ export default async function ResultsPage({ searchParams }: Props) {
     picks: pickCands,
     scored: candidatePool({ ...input, showUnknown: true }),
     decides,
+    // "Then why not this one?": cheaper than a pick and better on a point the cards argue about.
+    better: cheaperAndBetter(pickCands, inBudgetPool, targets).map((c) => c.product),
   });
 
   // What a saved search is called in the wishlist: the subcategory and the answers that narrow it.

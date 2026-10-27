@@ -460,15 +460,17 @@ export type Catch =
   | { kind: "feature"; attr: string; extraCents: number; productId: string };
 
 /** A step up may cost at most this share of the pick's price; dearer ones are no fair "but". */
-export const CATCH_MAX_SHARE = 0.5;
+export const CATCH_MAX_SHARE = 0.25;
 
 /**
- * What this pick is not (§3 A5), on the shopper's priority first, then the
- * deciding attributes: the nearest real step up, i.e. the cheapest product in
- * budget that is clearly better on that attribute, not the very best one at
- * the top of the budget. A step dearer than CATCH_MAX_SHARE of the pick's
- * price moves on to the next attribute. Products in `avoid` (already named on
- * another card) are not named again. Null when nothing fair can be said.
+ * What this pick is not (§3 A5, revised 27 Oct 2026): the nearest fair step up
+ * on the shopper's priority first, then the deciding attributes. The step is
+ * the cheapest product in budget that is clearly better on that attribute and
+ * costs the same or more: a cheaper product that wins on one number is a
+ * "why not this one", not a "but" (see whyNot). A step dearer than
+ * CATCH_MAX_SHARE of the pick's price moves on to the next attribute.
+ * Products in `avoid` (the other picks, products already named on another
+ * card) are never named. Null when nothing fair can be said.
  */
 export function catchFor(
   pick: Candidate,
@@ -481,9 +483,9 @@ export function catchFor(
     if (mine === null) continue;
     const step = pool
       .filter((c) => c !== pick && c.product.id !== pick.product.id && !avoid.has(c.product.id))
+      .filter((c) => c.price >= pick.price && c.price - pick.price <= pick.price * CATCH_MAX_SHARE)
       .map((c) => ({ c, v: goodness(c.product, t) }))
       .filter((x): x is { c: Candidate; v: number } => x.v !== null && x.v - mine >= minLead(t))
-      .filter((x) => x.c.price - pick.price <= pick.price * CATCH_MAX_SHARE)
       .sort((a, b) => a.c.price - b.c.price || b.v - a.v)[0];
     if (!step) continue;
     const extraCents = step.c.price - pick.price;
@@ -500,15 +502,38 @@ export function catchFor(
   return null;
 }
 
-/** The catch of each pick, in order, never naming the same product on two cards. */
+/** The catch of each pick, in order: never another pick, never the same product on two cards. */
 export function catchesFor(picks: Candidate[], pool: Candidate[], targets: Target[]): Map<string, Catch> {
-  const named = new Set<string>();
+  const named = new Set(picks.map((p) => p.product.id));
   const out = new Map<string, Catch>();
   for (const pick of picks) {
     const c = catchFor(pick, pool, targets, named);
     if (!c) continue;
     named.add(c.productId);
     out.set(pick.product.id, c);
+  }
+  return out;
+}
+
+/**
+ * Products cheaper than a pick and clearly better than it on one of the
+ * argued attributes: the ones a shopper would ask "then why not this one?"
+ * about. Cheapest first, at most one per pick and attribute, picks excluded.
+ */
+export function cheaperAndBetter(picks: Candidate[], pool: Candidate[], targets: Target[]): Candidate[] {
+  const picked = new Set(picks.map((p) => p.product.id));
+  const out: Candidate[] = [];
+  for (const pick of picks) {
+    for (const t of targets) {
+      const mine = goodness(pick.product, t);
+      if (mine === null) continue;
+      const c = pool
+        .filter((x) => !picked.has(x.product.id) && x.price < pick.price)
+        .map((x) => ({ x, v: goodness(x.product, t) }))
+        .filter((y): y is { x: Candidate; v: number } => y.v !== null && y.v - mine >= minLead(t))
+        .sort((a, b) => a.x.price - b.x.price)[0]?.x;
+      if (c && !out.some((o) => o.product.id === c.product.id)) out.push(c);
+    }
   }
   return out;
 }
@@ -537,8 +562,8 @@ export type Gain = { attr: string; theirs: unknown; mine: unknown };
 export type WhyNot = {
   product: ProductView;
   priceCents: number;
-  /** Why this one was looked at: the cheapest, the best-graded brand, the most shops, the best reviews. */
-  because: "cheapest" | "brand" | "shops" | "reviews";
+  /** Why this one was looked at: cheaper and better than a pick on one point, the cheapest, the best-graded brand, the most shops, the best reviews. */
+  because: "better" | "cheapest" | "brand" | "shops" | "reviews";
   reason: WhyNotReason;
 };
 
@@ -553,6 +578,8 @@ export type WhyNotInput = {
   scored: Candidate[];
   /** The category's deciding attributes (knowledge.json), compared before the compare list. */
   decides: string[];
+  /** Products cheaper than a pick and better on an argued attribute (cheaperAndBetter): listed first. */
+  better?: ProductView[];
   table?: BrandTable;
 };
 
@@ -600,6 +627,12 @@ export function whyNot(input: WhyNotInput): WhyNot[] {
     if (x && !chosen.some((c) => c.p.id === x.p.id))
       chosen.push({ p: x.p, price: x.offer.priceCents, because });
   };
+  // "Then why not this one?": cheaper than a pick and better on a point the cards argue about.
+  for (const b of input.better ?? [])
+    add(
+      inRange.find((x) => x.p.id === b.id),
+      "better",
+    );
   add([...inRange].sort((a, b) => a.offer.priceCents - b.offer.priceCents)[0], "cheapest");
   if (table.reviewed && !ungradedSubcategory(table, input.sub.id)) {
     const graded = near

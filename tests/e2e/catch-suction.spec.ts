@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-// The "Bet:" line names the nearest fair step up and links to that product's
-// card, never the same product twice; vacuums ask about carpets and offer
+// The "Bet:" line names the nearest fair step up (dearer, never a pick) and
+// links to that product's card, never the same product twice; vacuums ask about carpets and offer
 // "Jaudīga sūkšana", judged by pascals or air watts, never by input watts.
 
 async function expectNoAxeViolations(page: Page) {
@@ -26,33 +26,66 @@ async function next(page: Page) {
   await expect(h1(page)).not.toHaveText(title);
 }
 
-test("the catch names a different product on each card and links to its card", async ({ page }) => {
+test("one honest catch per card: upward only, never a pick, linked to a card that lights up", async ({
+  page,
+}) => {
   await page.goto("/rezultati?sub=fridge");
-  await expect(picks(page).first()).toBeVisible();
-  const links = picks(page).locator("[data-catch-link]");
+  const cards = picks(page);
+  await expect(cards.first()).toBeVisible();
+  const pickIds = await cards.evaluateAll((els) => els.map((e) => e.id));
+  const priceOf = async (id: string) =>
+    Number(
+      await page.locator(`article[id="${id}"] [data-price-cents]`).first().getAttribute("data-price-cents"),
+    );
+  const links = cards.locator("[data-catch-link]");
   const count = await links.count();
   expect(count).toBeGreaterThan(0);
   const hrefs: string[] = [];
-  for (const link of await links.all()) {
+  for (const card of await cards.all()) {
+    // At most one "Bet:" on a card: the upgrade box says "Zaudē:" instead.
+    expect(((await card.textContent()) ?? "").match(/Bet: /g)?.length ?? 0).toBeLessThanOrEqual(1);
+    const link = card.locator("[data-catch-link]");
+    if ((await link.count()) === 0) continue;
     const href = (await link.getAttribute("href")) ?? "";
     expect(href).toMatch(/^#p-/);
     hrefs.push(href);
-    // Every named product has a card on the page to land on.
-    await expect(page.locator(`article[id="${href.slice(1)}"]`)).toHaveCount(1);
+    const target = href.slice(1);
+    // Never another pick; never a cheaper product; always a card to land on.
+    expect(pickIds).not.toContain(target);
+    await expect(page.locator(`article[id="${target}"]`)).toHaveCount(1);
+    expect(await priceOf(target)).toBeGreaterThanOrEqual(
+      await priceOf((await card.getAttribute("id")) ?? ""),
+    );
     await expect(link.locator("xpath=..")).toHaveText(
-      /^Bet: .+ — .+, (maksā \+[\d\s]+(,\d+)?\s€|ir par [\d\s]+(,\d+)?\s€ lētāks|maksā tikpat)\.$/,
+      /^Bet: .+\. .+ (ar|bez) .+ (maksā par [\d\s]+\s€ vairāk|maksā tikpat)\.$/,
     );
   }
   expect(new Set(hrefs).size).toBe(hrefs.length);
 
-  // Following the link brings that product's card, with its price and buy button, into view.
+  // Following the link lands on that product's card, which flashes its ring (CSS :target).
   const first = links.first();
   const target = page.locator(`article[id="${(await first.getAttribute("href"))!.slice(1)}"]`);
   await first.click();
   await expect(page).toHaveURL(/#p-/);
   await expect(target).toBeInViewport();
+  await expect(target).toHaveCSS("animation-name", "card-landed");
   await expect(target.locator("[data-price-cents]").first()).toBeVisible();
+  // The products a catch names sit under "Soli augstāk".
+  await expect(page.locator("[data-mentioned]")).toContainText("Soli augstāk");
   await expectNoAxeViolations(page);
+});
+
+test("the upgrade box says what you get and what you lose, in Latvian cases", async ({ page }) => {
+  await page.goto("/rezultati?sub=fridge");
+  const boxes = page.locator("[data-upgrade-gains]");
+  await expect(boxes.first()).toBeVisible();
+  const text = await boxes.allTextContents();
+  expect(text.join(" ")).not.toMatch(/Bet: /);
+  const lose = text.filter((x) => x.includes("Zaudē: "));
+  expect(lose.length).toBeGreaterThan(0);
+  // Genitive after a quantity ("97 L tilpuma"), never the nominative label ("97 L tilpums").
+  for (const line of lose) expect(line).not.toMatch(/Zaudē: .*(tilpums|darbības laiks|skaļāks)/);
+  expect(lose.some((x) => /Zaudē: \d+ L tilpuma/.test(x))).toBe(true);
 });
 
 test("a robot vacuum: the carpet question and strong suction in pascals", async ({ page }) => {

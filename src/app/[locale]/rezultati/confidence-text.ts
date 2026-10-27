@@ -16,6 +16,9 @@ export type TextContext = {
   attrValue: (key: string, value: unknown) => string;
   /** A feature's name as the upgrade box says it ("No Frost", "invertors"). */
   featureName: (key: string) => string;
+  /** The feature after "bez" / "ar", in the right case ("bez HEPA filtra", "ar HEPA filtru"). */
+  featureWithout: (key: string) => string;
+  featureWith: (key: string) => string;
   /** The phrase for a flow answer ("{answer} cilvēkiem {value} ir īstais izmērs"), if the category has one. */
   answerPhrase: (questionId: string) => string | null;
   /** The product's display name. */
@@ -103,24 +106,27 @@ export function verdictText(parts: VerdictPart[], ctx: TextContext): string {
     .join(" ");
 }
 
+/** Whole euros: "maksā par 40 € vairāk", never "par 39,99 € vairāk" (the card shows exact prices). */
 function cost(extraCents: number, t: Translator): string {
-  if (extraCents > 0) return t("costMore", { amount: formatEur(extraCents) });
-  if (extraCents < 0) return t("costLess", { amount: formatEur(-extraCents) });
+  const euros = Math.round(extraCents / 100);
+  if (euros > 0) return t("costMore", { amount: formatEur(euros * 100) });
   return t("costSame");
 }
 
 const NAME_MARK = "\u2063";
 
 /**
- * "Bet: trokšņa līmenis 39 dB; ar 36 dB — Samsung RB38, maksā +40 €." (§3 A5),
- * split around the product's name so the card can link it to that product.
+ * "Bet: darbības laiks 90 min. Hisense HVC646541A ar 108 min maksā par 40 € vairāk."
+ * "Bet: bez grīdas mazgāšanas. Dreame X ar grīdas mazgāšanu maksā par 40 € vairāk."
+ * Split around the product's name so the card can link it to that product.
  */
 export function catchParts(c: Catch, ctx: TextContext): { before: string; name: string; after: string } {
   const name = (ctx.shortNameOf ?? ctx.nameOf)(c.productId);
   const text =
     c.kind === "feature"
       ? ctx.t("catchFeature", {
-          feature: ctx.featureName(c.attr),
+          without: ctx.featureWithout(c.attr),
+          with: ctx.featureWith(c.attr),
           name: NAME_MARK,
           cost: cost(c.extraCents, ctx.t),
         })
