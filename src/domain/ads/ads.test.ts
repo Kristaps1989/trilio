@@ -4,7 +4,7 @@ import { catalog } from "@/domain/questions/catalog";
 import { costPerConversion, pacedBudget, splitBudget, weightedConversions } from "./budget";
 import { checkProposal, MAX_CHANGES_PER_DAY, type AccountState } from "./guardrails";
 import { lintAd, lintAdText } from "./honesty";
-import { buildCampaignPlan, templateAd } from "./plan";
+import { buildCampaignPlan, competitorAd, displayPaths, pathSlug, templateAd } from "./plan";
 
 describe("honesty lint", () => {
   it("blocks urgency, discounts, guarantees, superlatives, shouting and numbers not in the data", () => {
@@ -37,10 +37,16 @@ describe("campaign plan", () => {
     expect(plan.length).toBe(10);
     const groups = plan.flatMap((c) => c.adGroups);
     expect(groups.length).toBe(40);
+    const steps = new Map(
+      catalog.groups.flatMap((g) => g.subcategories.map((s) => [s.id, s.budget_steps_eur] as const)),
+    );
     for (const g of groups) {
       expect(g.landingPath).toMatch(/^\/izvelies(\/[a-z]+\/[a-z]+)?$/);
       expect(g.keywords.length).toBeGreaterThan(0);
-      expect(lintAd(g.ad), g.subcategoryId).toEqual([]);
+      // The budget-step headlines ("Ledusskapji līdz 500 €") quote the flow's own steps.
+      expect(lintAd(g.ad, { allowedNumbers: steps.get(g.subcategoryId) ?? [] }), g.subcategoryId).toEqual([]);
+      expect(g.ad.headlines.length).toBeGreaterThanOrEqual(10);
+      expect(g.ad.descriptions.length).toBe(4);
     }
     expect(plan.reduce((a, c) => a + c.budgetCents, 0)).toBe(1500);
     expect(plan.every((c) => c.budgetCents >= 100)).toBe(true);
@@ -52,6 +58,45 @@ describe("campaign plan", () => {
     expect(g.landingPath).toBe("/izvelies");
     expect([...g.ad.headlines, ...g.ad.descriptions].join(" ")).not.toMatch(/kurpirkt|salidzini/i);
     expect(lintAd(g.ad)).toEqual([]);
+  });
+});
+
+describe("template ads built for Google's ad strength", () => {
+  const fridge = seed.subcategories.fridge;
+  const ad = templateAd(fridge.short, fridge.keywords, [500, 800, 1200]);
+
+  it("has up to 15 unique headlines with the keywords inside them, 4 descriptions and a display path", () => {
+    expect(ad.headlines.length).toBe(15);
+    expect(new Set(ad.headlines.map((h) => h.toLowerCase())).size).toBe(15);
+    expect(ad.headlines.every((h) => [...h].length <= 30)).toBe(true);
+    // A keyword counts only when it fits whole in one headline.
+    expect(ad.headlines).toEqual(
+      expect.arrayContaining(["Ledusskapji", "Ledusskapis ar saldētavu", "Kombinētais ledusskapis"]),
+    );
+    expect(ad.headlines).toContain("Ledusskapji līdz 500 €");
+    expect(ad.headlines).not.toContain("Labākais ledusskapis");
+    expect(ad.descriptions.length).toBe(4);
+    expect(ad.descriptions.every((d) => [...d].length <= 90)).toBe(true);
+    expect(ad.descriptions[2]).toMatch(/^Ledusskapji: /);
+    expect(ad).toMatchObject({ path1: "izvelies", path2: "ledusskapji" });
+    expect(lintAd(ad, { allowedNumbers: [500, 800, 1200] })).toEqual([]);
+  });
+
+  it("still makes an honest ad for a category with few keywords, and for the competitor searches", () => {
+    const few = templateAd("Tējkannas", ["tējkanna"], [30, 60]);
+    expect(few.headlines.length).toBeGreaterThanOrEqual(10);
+    expect(lintAd(few, { allowedNumbers: [30, 60] })).toEqual([]);
+    const rivals = competitorAd();
+    expect(rivals.headlines.length).toBeGreaterThanOrEqual(10);
+    expect(rivals.descriptions.length).toBe(4);
+    expect(lintAd(rivals)).toEqual([]);
+  });
+
+  it("keeps the display path within 15 ASCII characters", () => {
+    expect(pathSlug("Veļas mašīnas")).toBe("velas-masinas");
+    expect(displayPaths("Veļas mašīnas")).toEqual({ path1: "izvelies", path2: "velas-masinas" });
+    expect(displayPaths("Karstā gaisa friteri")).toEqual({ path1: "izvelies", path2: "friteri" });
+    expect(displayPaths(null)).toEqual({ path1: "izvelies" });
   });
 });
 

@@ -307,12 +307,19 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
                   responsiveSearchAd: {
                     headlines: change.headlines.map((text) => ({ text })),
                     descriptions: change.descriptions.map((text) => ({ text })),
+                    ...(change.path1 ? { path1: change.path1 } : {}),
+                    ...(change.path2 ? { path2: change.path2 } : {}),
                   },
                 },
               },
             },
           ]),
         };
+      case "set_ad_status":
+        await mutate("adGroupAds", [
+          { update: { resourceName: change.ad, status: STATUS[change.status] }, updateMask: "status" },
+        ]);
+        return { ok: true, id: change.ad };
       case "set_budget":
         await mutate("campaignBudgets", [
           {
