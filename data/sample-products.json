@@ -4243,7 +4243,9 @@
     "run_min": 180,
     "noise_db": 67,
     "pet_brush": true,
-    "bagless": true
+    "bagless": true,
+    "suction_pa": 12000,
+    "strong_suction": true
    },
    "offers": [
     {
@@ -4280,7 +4282,9 @@
     "mop": false,
     "run_min": 90,
     "noise_db": 65,
-    "bagless": true
+    "bagless": true,
+    "suction_pa": 2500,
+    "strong_suction": false
    },
    "offers": [
     {
@@ -4317,7 +4321,9 @@
     "mop": true,
     "run_min": 110,
     "noise_db": 68,
-    "bagless": true
+    "bagless": true,
+    "suction_pa": 8000,
+    "strong_suction": false
    },
    "offers": [
     {
@@ -4351,7 +4357,10 @@
     "noise_db": 74,
     "pet_brush": false,
     "hepa": false,
-    "bagless": true
+    "bagless": true,
+    "suction_aw": 120,
+    "power_w": 350,
+    "strong_suction": false
    },
    "offers": [
     {
@@ -4380,7 +4389,10 @@
     "noise_db": 72,
     "pet_brush": true,
     "hepa": false,
-    "bagless": true
+    "bagless": true,
+    "suction_aw": 185,
+    "power_w": 450,
+    "strong_suction": true
    },
    "offers": [
     {
@@ -4414,7 +4426,9 @@
     "noise_db": 71,
     "pet_brush": false,
     "hepa": true,
-    "bagless": true
+    "bagless": true,
+    "suction_pa": 22000,
+    "strong_suction": true
    },
    "offers": [
     {
@@ -4480,7 +4494,8 @@
     "noise_db": 80,
     "bagless": false,
     "hepa": false,
-    "pet_brush": false
+    "pet_brush": false,
+    "power_w": 750
    },
    "offers": [
     {
@@ -4512,7 +4527,8 @@
     "noise_db": 79,
     "bagless": true,
     "hepa": false,
-    "pet_brush": true
+    "pet_brush": true,
+    "power_w": 850
    },
    "offers": [
     {
@@ -4544,7 +4560,8 @@
     "noise_db": 69,
     "bagless": true,
     "hepa": true,
-    "pet_brush": false
+    "pet_brush": false,
+    "power_w": 650
    },
    "offers": [
     {
@@ -4572,7 +4589,9 @@
     "run_min": 180,
     "noise_db": 67,
     "pet_brush": true,
-    "bagless": true
+    "bagless": true,
+    "suction_pa": 12000,
+    "strong_suction": true
    },
    "g": "A — kā jauna",
    "wr": "12 mēn.",

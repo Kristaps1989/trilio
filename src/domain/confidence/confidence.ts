@@ -454,46 +454,63 @@ export function verdictsFor(ctx: VerdictContext, rolesOf: (id: string) => Role[]
 // ---------------------------------------------------------------- the catch
 
 export type Catch =
-  /** On a number or class: the best available value and what it costs compared with this pick. */
+  /** On a number or class: the nearest clearly better value in budget (`best`) and its price difference. */
   | { kind: "attr"; attr: string; mine: unknown; best: unknown; extraCents: number; productId: string }
   /** A feature this pick lacks: the cheapest product that has it. */
   | { kind: "feature"; attr: string; extraCents: number; productId: string };
 
+/** A step up may cost at most this share of the pick's price; dearer ones are no fair "but". */
+export const CATCH_MAX_SHARE = 0.5;
+
 /**
- * What this pick is not, against the best in budget (§3 A5), on the shopper's
- * priority first, then the deciding attributes. Null when it is the best on
- * all of them as far as the data shows.
+ * What this pick is not (§3 A5), on the shopper's priority first, then the
+ * deciding attributes: the nearest real step up, i.e. the cheapest product in
+ * budget that is clearly better on that attribute, not the very best one at
+ * the top of the budget. A step dearer than CATCH_MAX_SHARE of the pick's
+ * price moves on to the next attribute. Products in `avoid` (already named on
+ * another card) are not named again. Null when nothing fair can be said.
  */
-export function catchFor(pick: Candidate, pool: Candidate[], targets: Target[]): Catch | null {
+export function catchFor(
+  pick: Candidate,
+  pool: Candidate[],
+  targets: Target[],
+  avoid: ReadonlySet<string> = new Set(),
+): Catch | null {
   for (const t of targets) {
     const mine = goodness(pick.product, t);
     if (mine === null) continue;
-    const better = pool
-      .filter((c) => c !== pick && c.product.id !== pick.product.id)
+    const step = pool
+      .filter((c) => c !== pick && c.product.id !== pick.product.id && !avoid.has(c.product.id))
       .map((c) => ({ c, v: goodness(c.product, t) }))
-      .filter((x): x is { c: Candidate; v: number } => x.v !== null && x.v - mine >= minLead(t));
-    if (better.length === 0) continue;
-    if (t.kind === "bool") {
-      const cheapest = better.sort((a, b) => a.c.price - b.c.price)[0]!.c;
-      return {
-        kind: "feature",
-        attr: t.attr,
-        extraCents: cheapest.price - pick.price,
-        productId: cheapest.product.id,
-      };
-    }
-    const bestV = Math.max(...better.map((x) => x.v));
-    const best = better.filter((x) => x.v === bestV).sort((a, b) => a.c.price - b.c.price)[0]!.c;
+      .filter((x): x is { c: Candidate; v: number } => x.v !== null && x.v - mine >= minLead(t))
+      .filter((x) => x.c.price - pick.price <= pick.price * CATCH_MAX_SHARE)
+      .sort((a, b) => a.c.price - b.c.price || b.v - a.v)[0];
+    if (!step) continue;
+    const extraCents = step.c.price - pick.price;
+    if (t.kind === "bool") return { kind: "feature", attr: t.attr, extraCents, productId: step.c.product.id };
     return {
       kind: "attr",
       attr: t.attr,
       mine: pick.product.attributes[t.attr],
-      best: best.product.attributes[t.attr],
-      extraCents: best.price - pick.price,
-      productId: best.product.id,
+      best: step.c.product.attributes[t.attr],
+      extraCents,
+      productId: step.c.product.id,
     };
   }
   return null;
+}
+
+/** The catch of each pick, in order, never naming the same product on two cards. */
+export function catchesFor(picks: Candidate[], pool: Candidate[], targets: Target[]): Map<string, Catch> {
+  const named = new Set<string>();
+  const out = new Map<string, Catch>();
+  for (const pick of picks) {
+    const c = catchFor(pick, pool, targets, named);
+    if (!c) continue;
+    named.add(c.productId);
+    out.set(pick.product.id, c);
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- why not

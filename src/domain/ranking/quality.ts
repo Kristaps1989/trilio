@@ -30,6 +30,7 @@ export function betterDirection(key: string): "min" | "max" | null {
     case "max_kg":
     case "bin_l":
     case "suction_pa":
+    case "suction_aw":
     case "cup_height_cm":
     case "warranty_months":
       return "max";

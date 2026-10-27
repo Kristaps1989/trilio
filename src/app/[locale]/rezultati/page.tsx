@@ -22,7 +22,7 @@ import {
 import {
   argumentTargets,
   assignRoles,
-  catchFor,
+  catchesFor,
   coverage,
   priceConfidence,
   priorityTarget,
@@ -72,7 +72,7 @@ import { CompareTable, type CompareColumn, type CompareRow } from "./CompareTabl
 import { deltaLines } from "./delta-text";
 import { ConfidenceQuestion } from "./ConfidenceQuestion";
 import {
-  catchText,
+  catchParts,
   factLines,
   sharedLines,
   priceNoteText,
@@ -227,6 +227,8 @@ export default async function ResultsPage({ searchParams }: Props) {
       : "";
   const pickCands = result.picks.map((p) => ({ ...p, price: p.offer.priceCents }));
   const roles = assignRoles(pickCands, inBudgetPool, sub, roleTarget, decides);
+  // Each pick's "but": the nearest fair step up, a different product on each card.
+  const catches = catchesFor(pickCands, inBudgetPool, targets);
   const roleNames = (id: string) => (roles.get(id) ?? []).map((r) => roleLabel(r, roleTargetLabel, t));
   const histories = await dailyLowest(
     db,
@@ -352,12 +354,11 @@ export default async function ResultsPage({ searchParams }: Props) {
         };
       }
     }
-    const cand = { ...pick, price: pick.offer.priceCents };
     const pickRoles = story ? (roles.get(pick.product.id) ?? []) : [];
     const parts = story ? verdicts.byId.get(pick.product.id) : undefined;
     const verdict = parts ? verdictText(parts, textCtx) : null;
     const ungraded = graded && gradeOf(brandTable, pick.product.brand, sub!.id) === null;
-    const flaw = story ? catchFor(cand, inBudgetPool, targets) : null;
+    const flaw = story ? (catches.get(pick.product.id) ?? null) : null;
     const confidence = story
       ? priceConfidence(pick.product, pick.offer.priceCents, histories.get(pick.product.id) ?? [], now)
       : null;
@@ -366,7 +367,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       roles: pickRoles.map((r) => roleLabel(r, roleTargetLabel, t)),
       roleIds: pickRoles,
       verdict,
-      catchText: flaw ? catchText(flaw, textCtx) : null,
+      catchLine: flaw ? { ...catchParts(flaw, textCtx), href: `#p-${flaw.productId}` } : null,
       priceNote: confidence ? priceNoteText(confidence, pick.offer.priceCents, t) : null,
       facts: factLines(pick.product, reviewSummary(pick.product), t),
       caveats: ungraded ? [t("factUngraded")] : [],
@@ -531,6 +532,22 @@ export default async function ResultsPage({ searchParams }: Props) {
     top && { ...top, price: top.offer.priceCents },
     state.trailing.brands ?? [],
   );
+
+  // The products a "but" line names get a card to land on, unless one is already on the page.
+  const onPage = new Set([
+    ...result.picks.map((p) => p.product.id),
+    ...result.extras.map((p) => p.product.id),
+    ...moreCards.map((c) => c.productId),
+    ...(consider ? [consider.product.id] : []),
+    ...result.refurbished.map((p) => p.product.id),
+  ]);
+  const mentionedCards = [...new Set([...catches.values()].map((c) => c.productId))]
+    .filter((id) => !onPage.has(id))
+    .flatMap((id) => inBudgetPool.filter((c) => c.product.id === id).slice(0, 1))
+    .map((c) => ({
+      ...toCard({ ...c, tier: null, recommended: false, overBudgetByCents: 0 }),
+      upgrade: null,
+    }));
 
   // Relax suggestions (§4.2) when fewer than three fit. Fewer picks because the rest are
   // pricier but not better (docs/UPGRADE_REASONS_PLAN.md) is not a reason to loosen anything.
@@ -1057,6 +1074,18 @@ export default async function ResultsPage({ searchParams }: Props) {
           ) : null}
           <CardRow>
             {cards.map((c) => (
+              <ResultCard key={c.productId} card={c} />
+            ))}
+          </CardRow>
+        </section>
+      ) : null}
+
+      {mentionedCards.length ? (
+        <section className="flex flex-col gap-3" aria-labelledby="mentioned-title" data-mentioned>
+          <SectionTitle id="mentioned-title">{t("mentionedTitle")}</SectionTitle>
+          <p className="text-base text-stone">{t("mentionedLead")}</p>
+          <CardRow>
+            {mentionedCards.map((c) => (
               <ResultCard key={c.productId} card={c} />
             ))}
           </CardRow>

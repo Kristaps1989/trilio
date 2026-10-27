@@ -96,6 +96,10 @@ A slider over one attribute. `bound: "max"` shows one handle, an upper limit (he
 - Multi answers: every chosen option's conditions must hold.
 - Options without `match` on a hard question fall back to the legacy rule: the option value is compared with `product.tags`. New data should always use `match`.
 
+### Derived attributes: vacuum suction
+
+Shops state vacuum suction in different units: pascals for robots, air watts (tet.lv's "sūkšanas jauda (w)") or pascals for cordless sticks and handhelds, and only input watts ("maksimālā ieejas jauda") for corded vacuums. Input watts do not measure suction (the EU caps them at 900 W), so no question filters on them. The normaliser derives `strong_suction` (`STRONG_SUCTION` in `src/domain/catalog/normalise.ts`): robots from 10 000 Pa, sticks and handhelds from 150 AW or 20 000 Pa, corded vacuums never. The carpet question and the "Jaudīga sūkšana" priority match `strong_suction`; the carpet question is hidden for corded and handheld vacuums. Input watts show on the card as a plain fact, neither better nor worse (`better: { power_w: "none" }`).
+
 ## Skips, defaults and counts
 
 `src/domain/flow/insight.ts` decides per screen, from the products in stock:

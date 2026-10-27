@@ -46,6 +46,7 @@ const NUMBER_RULES: Record<string, { higherIsBetter: boolean | null; minDelta: n
   moisture_pct: { higherIsBetter: false, minDelta: 3 },
   bin_l: { higherIsBetter: true, minDelta: 0.1 },
   suction_pa: { higherIsBetter: true, minDelta: 500 },
+  suction_aw: { higherIsBetter: true, minDelta: 20 },
   cup_height_cm: { higherIsBetter: true, minDelta: 2 },
   warranty_months: { higherIsBetter: true, minDelta: 12 },
 };
