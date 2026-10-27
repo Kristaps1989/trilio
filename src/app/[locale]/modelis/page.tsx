@@ -120,7 +120,7 @@ export default async function ModelPage({ searchParams }: Props) {
       roles: [],
       roleIds: [],
       verdict: null,
-      catchText: null,
+      catchLine: null,
       priceNote: null,
       facts: factLines(p, reviewSummary(p), (k, v) => tr(k as "title", v as Record<string, string>)),
       best: {

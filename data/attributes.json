@@ -210,7 +210,9 @@
         "maksimālā jauda",
         "motora jauda",
         "kopējā jauda",
-        "mikroviļņu jauda"
+        "mikroviļņu jauda",
+        "maksimālā ieejas jauda",
+        "ieejas jauda"
       ]
     },
     "spin_rpm": {
@@ -1472,6 +1474,21 @@
         "sūkšanas spēks",
         "sūkšanas spēks (pa)"
       ]
+    },
+    "suction_aw": {
+      "type": "number",
+      "unit": "aw",
+      "labels": [
+        "sūkšanas jauda (w)",
+        "sūkšanas jauda (aw)",
+        "sūkšanas jauda aw",
+        "gaisa jauda (aw)",
+        "suction power (aw)"
+      ]
+    },
+    "strong_suction": {
+      "type": "boolean",
+      "labels": []
     },
     "bin_l": {
       "type": "number",
@@ -2781,6 +2798,9 @@
         "hepa",
         "bagless",
         "suction_pa",
+        "suction_aw",
+        "strong_suction",
+        "power_w",
         "bin_l",
         "self_empty",
         "weight_kg",
@@ -2789,6 +2809,9 @@
       "fit": [
         "vacuum_type"
       ],
+      "better": {
+        "power_w": "none"
+      },
       "enums": {
         "vacuum_type": {
           "values": [

@@ -188,6 +188,26 @@ function ruleHolds(
   return !!(rule.text || rule.spec || rule.num);
 }
 
+/** Suction a shopper would call strong, per vacuum type (docs/QUESTION_SCHEMA.md, vacuum). */
+export const STRONG_SUCTION = { robotPa: 10000, cordlessAw: 150, cordlessPa: 20000 } as const;
+
+/** True or false when the type and its suction figure are known; null otherwise. */
+export function strongSuction(a: Record<string, unknown>): boolean | null {
+  const pa = typeof a.suction_pa === "number" ? a.suction_pa : null;
+  const aw = typeof a.suction_aw === "number" ? a.suction_aw : null;
+  switch (a.vacuum_type) {
+    case "robot":
+      return pa === null ? null : pa >= STRONG_SUCTION.robotPa;
+    case "stick":
+    case "handheld":
+      if (aw !== null && aw >= STRONG_SUCTION.cordlessAw) return true;
+      if (pa !== null && pa >= STRONG_SUCTION.cordlessPa) return true;
+      return aw === null && pa === null ? null : false;
+    default:
+      return null;
+  }
+}
+
 /** Attributes for one product of a subcategory, from its spec table and text. */
 export function normaliseProduct(subcategoryId: string, t: ProductText): Normalised {
   const out: Normalised = { attributes: {}, sources: {} };
@@ -276,6 +296,14 @@ export function normaliseProduct(subcategoryId: string, t: ProductText): Normali
   for (const [key, def] of Object.entries(sub?.enums ?? {})) {
     const rule = def.rules.find((r) => ruleHolds(r, text, spec, out.attributes));
     if (rule) set(key, rule.value, "rule");
+  }
+
+  // 4b. Strong suction for vacuums, in the unit each type is sold by: pascals for
+  // robots, air watts (or pascals) for cordless sticks and handhelds. Corded
+  // vacuums only state input watts, which do not measure suction, so they get none.
+  if (subcategoryId === "vacuum" && out.attributes.strong_suction === undefined) {
+    const strong = strongSuction(out.attributes);
+    if (strong !== null) set("strong_suction", strong, "rule");
   }
 
   // 5. Feature flags that are false unless something says otherwise.

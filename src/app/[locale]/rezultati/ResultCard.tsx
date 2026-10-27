@@ -27,8 +27,8 @@ export type CardModel = {
   roleIds: string[];
   /** One or two sentences in the shopper's terms, first on the card (A3). Picks only. */
   verdict: string | null;
-  /** What it is not, against the best available (A5). */
-  catchText: string | null;
+  /** What it is not (A5): the nearest step up, named and linked to its card. */
+  catchLine: { before: string; name: string; after: string; href: string } | null;
   /** How settled the price is (B6). */
   priceNote: string | null;
   /** Evidence: reviews, warranty, model year (B1–B3). */
@@ -246,9 +246,18 @@ export async function ResultCard({ card }: { card: CardModel }) {
         </div>
       ) : null}
 
-      {card.catchText ? (
+      {card.catchLine ? (
         <p className="text-sm leading-[1.45] text-over-text" data-catch>
-          {card.catchText}
+          {card.catchLine.before}
+          <a
+            href={card.catchLine.href}
+            className="font-semibold underline underline-offset-2"
+            lang="lv"
+            data-catch-link
+          >
+            {card.catchLine.name}
+          </a>
+          {card.catchLine.after}
         </p>
       ) : null}
 

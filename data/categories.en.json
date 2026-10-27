@@ -999,9 +999,29 @@
             }
           }
         },
+        "carpets": {
+          "title": "Are there carpets at home?",
+          "why": "Carpets need stronger suction. We compare the suction figure the maker states.",
+          "options": {
+            "yes": {
+              "label": "Yes",
+              "sublabel": "carpets or rugs",
+              "card_reason": "Strong suction for carpets"
+            },
+            "no": {
+              "label": "No",
+              "sublabel": "hard floors"
+            }
+          }
+        },
         "priorities": {
           "title": "What else matters to you?",
           "options": {
+            "suction": {
+              "label": "Strong suction",
+              "sublabel": "carpets, pet hair",
+              "card_reason": "Strong suction"
+            },
             "allergy": {
               "label": "Allergy",
               "sublabel": "HEPA filter",

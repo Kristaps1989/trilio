@@ -55,7 +55,7 @@ function toCard(
     roles: story.roles.map(story.label),
     roleIds: story.roles,
     verdict: null,
-    catchText: null,
+    catchLine: null,
     priceNote: null,
     facts: story.facts,
     best: {

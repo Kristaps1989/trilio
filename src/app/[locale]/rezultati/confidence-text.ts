@@ -56,6 +56,7 @@ const LEADS: Record<string, string> = {
   power_w: "leadsStrong",
   airflow_m3h: "leadsStrong",
   suction_pa: "leadsStrong",
+  suction_aw: "leadsStrong",
 };
 
 /** One or two sentences, strongest claim first (§3 A3). */
@@ -108,18 +109,36 @@ function cost(extraCents: number, t: Translator): string {
   return t("costSame");
 }
 
-/** "Bet: trokšņa līmenis 39 dB; labākais pieejamais (34 dB) maksā +170 €." (§3 A5). */
-export function catchText(c: Catch, ctx: TextContext): string {
+const NAME_MARK = "\u2063";
+
+/**
+ * "Bet: trokšņa līmenis 39 dB; ar 36 dB — Samsung RB38, maksā +40 €." (§3 A5),
+ * split around the product's name so the card can link it to that product.
+ */
+export function catchParts(c: Catch, ctx: TextContext): { before: string; name: string; after: string } {
+  const name = (ctx.shortNameOf ?? ctx.nameOf)(c.productId);
   const text =
     c.kind === "feature"
-      ? ctx.t("catchFeature", { feature: ctx.featureName(c.attr), cost: cost(c.extraCents, ctx.t) })
+      ? ctx.t("catchFeature", {
+          feature: ctx.featureName(c.attr),
+          name: NAME_MARK,
+          cost: cost(c.extraCents, ctx.t),
+        })
       : ctx.t("catchAttr", {
           label: ctx.attrLabel(c.attr).toLowerCase(),
           mine: c.attr === "energy_class" ? String(c.mine) : ctx.attrValue(c.attr, c.mine),
           best: c.attr === "energy_class" ? String(c.best) : ctx.attrValue(c.attr, c.best),
+          name: NAME_MARK,
           cost: cost(c.extraCents, ctx.t),
         });
-  return ctx.t("catch", { text });
+  const [before, after = ""] = ctx.t("catch", { text }).split(NAME_MARK);
+  return { before: before!, name, after };
+}
+
+/** The catch as one plain sentence. */
+export function catchText(c: Catch, ctx: TextContext): string {
+  const p = catchParts(c, ctx);
+  return `${p.before}${p.name}${p.after}`;
 }
 
 /** One line under the price (§3 B6); null when nothing settled can be said. */

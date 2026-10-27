@@ -7,6 +7,7 @@ import {
   assignRoles,
   bucketOption,
   catchFor,
+  catchesFor,
   coverage,
   gainsOf,
   goodness,
@@ -255,6 +256,52 @@ describe("the catch", () => {
       productId: "Bosch A",
     });
     expect(catchFor(byId(pool, "Bosch B"), pool, [{ attr: "noise_db", kind: "min" }])).toBeNull();
+  });
+});
+
+describe("the catch is the nearest fair step up", () => {
+  const products = [
+    f("Cheap 39", 480, { noise_db: 39 }),
+    f("Mid 36", 520, { noise_db: 36 }),
+    f("Quiet 34", 600, { noise_db: 34 }),
+    f("Top 33", 780, { noise_db: 33 }),
+  ];
+  const pool = candidatePool(input(products));
+  const noise = [{ attr: "noise_db", kind: "min" as const }];
+
+  it("names the cheapest clearly better product, not the best one at the top of the budget", () => {
+    expect(catchFor(byId(pool, "Cheap 39"), pool, noise)).toMatchObject({
+      best: 36,
+      extraCents: 4000,
+      productId: "Mid 36",
+    });
+  });
+
+  it("moves on to the next attribute when the step costs more than half the price", () => {
+    const tiny = candidatePool(
+      input(
+        [
+          f("Small 39", 410, { noise_db: 39, volume_l: 300 }),
+          f("Big 33", 790, { noise_db: 33, volume_l: 330 }),
+        ],
+        {},
+      ),
+    );
+    const two = [
+      { attr: "noise_db", kind: "min" as const },
+      { attr: "volume_l", kind: "max" as const },
+    ];
+    // 790 is more than 1,5 × 410, so neither noise nor volume makes a fair "but".
+    expect(catchFor(byId(tiny, "Small 39"), tiny, two)).toBeNull();
+  });
+
+  it("never names the same product on two cards", () => {
+    const picks = [byId(pool, "Cheap 39"), byId(pool, "Mid 36")];
+    const catches = catchesFor(picks, pool, noise);
+    expect(catches.get("Cheap 39")?.productId).toBe("Mid 36");
+    expect(catches.get("Mid 36")?.productId).toBe("Quiet 34");
+    const again = catchesFor([byId(pool, "Cheap 39"), byId(pool, "Cheap 39")], pool, noise);
+    expect(again.size).toBe(1);
   });
 });
 

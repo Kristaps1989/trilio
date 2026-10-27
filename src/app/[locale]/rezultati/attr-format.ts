@@ -36,6 +36,7 @@ const UNIT_SUFFIX: Record<string, string> = {
   kwh: "kWh",
   pct: "%",
   pa: "Pa",
+  aw: "AW",
 };
 
 export function formatAttr(

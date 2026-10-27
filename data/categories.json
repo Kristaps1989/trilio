@@ -2505,6 +2505,42 @@
               ]
             },
             {
+              "id": "carpets",
+              "title": "Vai mājā ir paklāji?",
+              "type": "single",
+              "hard_filter": false,
+              "stage": "flow",
+              "up_front_reason": "kind",
+              "why": "Paklājiem vajag jaudīgāku sūkšanu. To salīdzinām pēc ražotāja norādītā sūkšanas spēka.",
+              "showIf": {
+                "q": "type",
+                "notIn": [
+                  "corded",
+                  "handheld"
+                ]
+              },
+              "options": [
+                {
+                  "value": "yes",
+                  "label": "Jā",
+                  "sublabel": "paklāji vai paklājceliņi",
+                  "card_reason": "Jaudīga sūkšana paklājiem",
+                  "match": [
+                    {
+                      "attr": "strong_suction",
+                      "eq": true
+                    }
+                  ]
+                },
+                {
+                  "value": "no",
+                  "label": "Nē",
+                  "sublabel": "gludas grīdas",
+                  "passthrough": true
+                }
+              ]
+            },
+            {
               "id": "priorities",
               "title": "Kas tev vēl ir svarīgi?",
               "type": "multi",
@@ -2512,6 +2548,18 @@
               "stage": "results",
               "max_select": 2,
               "options": [
+                {
+                  "value": "suction",
+                  "label": "Jaudīga sūkšana",
+                  "sublabel": "paklāji, dzīvnieku spalvas",
+                  "card_reason": "Jaudīga sūkšana",
+                  "match": [
+                    {
+                      "attr": "strong_suction",
+                      "eq": true
+                    }
+                  ]
+                },
                 {
                   "value": "allergy",
                   "label": "Alerģija",
@@ -2553,6 +2601,8 @@
           ],
           "compare": [
             "vacuum_type",
+            "suction_pa",
+            "suction_aw",
             "run_min",
             "noise_db",
             "mop",

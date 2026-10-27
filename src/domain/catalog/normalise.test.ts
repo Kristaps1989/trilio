@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import fixtures from "@/services/ingestion/specs/__fixtures__/pages.json";
 import {
+  STRONG_SUCTION,
+  strongSuction,
   excludedByName,
   mergeAttributes,
   normaliseProduct,
@@ -259,5 +261,40 @@ describe("units for the confidence facts", () => {
     expect(parseQuantity("5", "months")).toBe(60);
     expect(parseQuantity("24 mēneši", "months")).toBe(24);
     expect(parseQuantity("4000 Pa", "pa")).toBe(4000);
+  });
+});
+
+describe("strong suction for vacuums", () => {
+  const vac = (name: string, specTable: Record<string, string>) =>
+    normaliseProduct("vacuum", { name, specTable }).attributes;
+
+  it("reads air watts and pascals as tet.lv prints them, and ignores 'not stated'", () => {
+    const stick = vac("Dyson V16 Piston Animal bezvadu putekļsūcējs", {
+      "jauda (w)": "900",
+      "sūkšanas jauda (w)": "315",
+    });
+    expect(stick).toMatchObject({
+      vacuum_type: "stick",
+      suction_aw: 315,
+      power_w: 900,
+      strong_suction: true,
+    });
+    const robot = vac("Roborock Qrevo 5AE robots putekļsūcējs", {
+      "sūkšanas jauda (pa)": "12000",
+      "sūkšanas jauda (w)": "Ražotājs sūkšanas jaudu norāda Pa (paskālos)",
+    });
+    expect(robot).toMatchObject({ vacuum_type: "robot", suction_pa: 12000, strong_suction: true });
+    expect(robot.suction_aw).toBeUndefined();
+  });
+
+  it("judges each type in its own unit, and says nothing for corded vacuums", () => {
+    expect(strongSuction({ vacuum_type: "robot", suction_pa: STRONG_SUCTION.robotPa - 1 })).toBe(false);
+    expect(strongSuction({ vacuum_type: "stick", suction_pa: STRONG_SUCTION.cordlessPa })).toBe(true);
+    expect(strongSuction({ vacuum_type: "stick", suction_aw: 120 })).toBe(false);
+    expect(strongSuction({ vacuum_type: "stick" })).toBeNull();
+    // Input watts are not suction: a 900 W corded vacuum is not "strong" by that figure.
+    const corded = vac("Bosch BGLS2BU2 putekļsūcējs ar maisiņu", { "maksimālā ieejas jauda": "900 W" });
+    expect(corded).toMatchObject({ vacuum_type: "corded", power_w: 900 });
+    expect(corded.strong_suction).toBeUndefined();
   });
 });
