@@ -144,7 +144,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
 
   return (
     <article
-      className={`flex min-w-0 max-w-full flex-[1_1_300px] flex-col gap-[14px] rounded-card bg-white sm:max-w-[560px] p-[22px] text-night ${
+      className={`flex min-w-0 max-w-full flex-[1_1_300px] flex-col gap-[14px] rounded-card bg-white sm:max-w-[560px] p-[22px] text-night scroll-mt-24 ${
         over ? "border-2 border-dashed border-over-border" : ""
       } ${card.recommended ? "shadow-[0_0_0_3px_var(--color-lime)]" : ""}`}
       aria-label={card.name}
