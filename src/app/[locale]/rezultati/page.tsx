@@ -343,8 +343,8 @@ export default async function ResultsPage({ searchParams }: Props) {
       );
       // §2.8: say nothing rather than guess when the specs are not known on both sides.
       if (d.status !== "unknown") {
-        const lines = (items: typeof d.items, lose = false) =>
-          deltaLines(items, td, attrLabel, enumLabel, { lose });
+        const lines = (items: typeof d.items, downside = false) =>
+          deltaLines(items, td, attrLabel, enumLabel, { downside });
         upgrade = {
           priceDeltaCents: d.priceDeltaCents,
           tierLabel: firstRole(cheapest.product.id) ?? t("cheapestOption"),

@@ -42,7 +42,7 @@ test("one honest catch per card: upward only, never a pick, linked to a card tha
   expect(count).toBeGreaterThan(0);
   const hrefs: string[] = [];
   for (const card of await cards.all()) {
-    // At most one "Bet:" on a card: the upgrade box says "Zaudē:" instead.
+    // At most one "Bet:" on a card: the upgrade box says "Mīnusi:" instead.
     expect(((await card.textContent()) ?? "").match(/Bet: /g)?.length ?? 0).toBeLessThanOrEqual(1);
     const link = card.locator("[data-catch-link]");
     if ((await link.count()) === 0) continue;
@@ -81,11 +81,11 @@ test("the upgrade box says what you get and what you lose, in Latvian cases", as
   await expect(boxes.first()).toBeVisible();
   const text = await boxes.allTextContents();
   expect(text.join(" ")).not.toMatch(/Bet: /);
-  const lose = text.filter((x) => x.includes("Zaudē: "));
-  expect(lose.length).toBeGreaterThan(0);
-  // Genitive after a quantity ("97 L tilpuma"), never the nominative label ("97 L tilpums").
-  for (const line of lose) expect(line).not.toMatch(/Zaudē: .*(tilpums|darbības laiks|skaļāks)/);
-  expect(lose.some((x) => /Zaudē: \d+ L tilpuma/.test(x))).toBe(true);
+  const downsides = text.filter((x) => x.includes("Mīnusi: "));
+  expect(downsides.length).toBeGreaterThan(0);
+  // Each item agrees with its attribute's noun ("par 97 L mazāks tilpums"), never a bare "−97 L tilpums".
+  for (const line of downsides) expect(line).not.toMatch(/Mīnusi: .*(−|\+)\d/);
+  expect(downsides.some((x) => /Mīnusi: .*par \d+ L mazāks tilpums/.test(x))).toBe(true);
 });
 
 test("a robot vacuum: the carpet question and strong suction in pascals", async ({ page }) => {
