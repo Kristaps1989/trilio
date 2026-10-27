@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { ImageResponse } from "next/og";
+import type { ReactElement } from "react";
 import { z } from "zod";
 import type { Db } from "@/db/client";
 import { adCampaigns, adCreatives, adKeywords, type AdCreative } from "@/db/schema";
@@ -11,6 +12,7 @@ import { lintAdText } from "@/domain/ads/honesty";
 import { eligibleOffers } from "@/domain/ranking/filters";
 import { getGroupOfSubcategory, getSubcategory } from "@/domain/questions/catalog";
 import { knowledgeOf } from "@/domain/knowledge/knowledge";
+import { DRAWINGS } from "@/ui/illustrations/drawings";
 import { wrapUntrusted, type StructuredCaller } from "@/services/llm/client";
 import seed from "../../../data/keywords.lv.json";
 import { send, siteUrl } from "./account";
@@ -57,7 +59,7 @@ export function templateCopy(subcategoryId: string): CreativeCopy {
   const name = short(subcategoryId);
   return {
     headline: `${name}: 3 piemērotākie`.length <= 30 ? `${name}: 3 piemērotākie` : name,
-    body: "Atbildi uz dažiem jautājumiem un salīdzini cenas partneru veikalos.",
+    body: "Atbildi uz pāris jautājumiem un saņem 3 piemērotākos variantus ar iemesliem.",
     video: [
       {
         seconds: 3,
@@ -84,22 +86,32 @@ export async function writeCopy(
   db: Db,
   caller: StructuredCaller | null,
   subcategoryId: string,
+  pick: () => number = Math.random,
 ): Promise<CreativeCopy> {
   const facts = await liveFacts(db, subcategoryId);
   const fallback = templateCopy(subcategoryId);
   if (!caller) return fallback;
   const know = knowledgeOf(subcategoryId);
+  // A different deciding factor on each press of "Ģenerēt", so drafts vary.
+  const focus = Math.floor(pick() * Math.max(1, know.decides.length));
   const res = await caller({
     purpose: "ads_copy",
     model: OPTIMISER_MODEL,
-    system:
-      "You write Latvian display and video ad copy for Trilio (trilio.lv), which helps shoppers choose a household appliance: a few questions, then the three best options from partner shops, with reasons. Honest only: no 'cheapest', 'guaranteed', discounts, percentages, urgency, superlatives, shop or competitor names, and no numbers except those given. headline at most 30 characters; body at most 90; video: 3–5 scenes of 2–5 seconds, onScreen at most 40 characters each, visual describes the shot in Latvian.",
+    system: [
+      "You write Latvian display and video ad copy for Trilio (trilio.lv). Trilio helps a shopper choose a household appliance: a few questions about their needs, then the three best options from partner shops' live stock, each with the reason it was picked.",
+      "Write like a sharp local copywriter, not a brochure. Address the reader as 'tu'. Correct Latvian grammar and cases.",
+      "headline (at most 30 characters): one concrete worry or wish a buyer of this category really has, built on the focus item of whatDecides, in everyday words. It must make sense on its own. Examples of the style (other categories; never reuse their wording): 'Tējkanna, kas nevārās mūžību', 'Putekļsūcējs, kas tiek zem gultas', 'Lai veļa nav jāgludina'. Bad (generic, never write these): 'Kurš ledusskapis tieši jums?', 'Atrodi labāko ledusskapi', 'Izvēlies gudri', anything with 'jums'.",
+      "body (at most 90 characters): name two or three things Trilio weighs for this category (from whatDecides, as plain nouns, e.g. 'troksni, ietilpību un patēriņu'), then the promise: three options that fit you, with reasons. Do not start with 'Daži jautājumi'.",
+      "video: 3–5 scenes of 2–5 seconds; onScreen at most 40 characters each; visual describes the shot in Latvian. Scene 1 shows the worry, the middle scenes the questions and the three result cards, the last scene 'trilio.lv'.",
+      "Honest only: no 'cheapest', 'best price', 'guaranteed', discounts, percentages, urgency, superlatives about prices, shop or competitor names, and no numbers except numbersYouMayUse.",
+    ].join("\n\n"),
     user: wrapUntrusted(
       "category",
       JSON.stringify({
         category: getSubcategory(subcategoryId)?.label,
         shortName: short(subcategoryId),
         whatDecides: know.decides.map((d) => d.why.lv),
+        focus: know.decides[focus]?.why.lv ?? null,
         numbersYouMayUse: [3, facts.products, facts.shops].filter((n) => n > 0),
       }),
     ),
@@ -149,17 +161,17 @@ export async function createCreatives(db: Db, subcategoryId: string, copy: Creat
 }
 
 let fonts: { name: string; data: Buffer; weight: 400 | 600 | 700 }[] | null = null;
-async function brandFonts() {
+export async function brandFonts() {
   if (fonts) return fonts;
   const dir = path.join(process.cwd(), "assets", "fonts");
   const load = async (file: string) => readFile(path.join(dir, file));
+  // One file per weight holding both Google subsets (latin + latin-ext):
+  // satori keeps only the first font of a name and weight, so a separate
+  // latin-ext file was ignored and ā, š, ķ fell back to a default font.
   fonts = [
-    { name: "Space Grotesk", data: await load("space-grotesk-latin-700.ttf"), weight: 700 },
-    { name: "Space Grotesk", data: await load("space-grotesk-latin-ext-700.ttf"), weight: 700 },
-    { name: "Figtree", data: await load("figtree-latin-400.ttf"), weight: 400 },
-    { name: "Figtree", data: await load("figtree-latin-ext-400.ttf"), weight: 400 },
-    { name: "Figtree", data: await load("figtree-latin-600.ttf"), weight: 600 },
-    { name: "Figtree", data: await load("figtree-latin-ext-600.ttf"), weight: 600 },
+    { name: "Space Grotesk", data: await load("space-grotesk-700.ttf"), weight: 700 },
+    { name: "Figtree", data: await load("figtree-400.ttf"), weight: 400 },
+    { name: "Figtree", data: await load("figtree-600.ttf"), weight: 600 },
   ];
   return fonts;
 }
@@ -214,59 +226,246 @@ function LogoMark({ size }: { size: number }) {
   );
 }
 
-/** The brand template (docs/BRAND.md): night green, lime accent, Space Grotesk and Figtree. */
+/** The category's line drawing (src/ui/illustrations), stroked in night green. */
+function Drawing({ subcategoryId, size }: { subcategoryId: string; size: number }) {
+  const name = getSubcategory(subcategoryId)?.illustration;
+  const drawing = name ? DRAWINGS[name] : undefined;
+  if (!drawing) return <div style={{ display: "flex", width: size, height: size }} />;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 96 96"
+      fill="none"
+      stroke={NIGHT}
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {drawing}
+    </svg>
+  );
+}
+
+/**
+ * Three result cards as in the brand videos: good, better, best, with the
+ * middle one ringed in lime. An illustration of how results look, with
+ * price levels instead of prices, so the image never shows a stale number.
+ */
+function Podium({ subcategoryId, u }: { subcategoryId: string; u: number }) {
+  const card = (label: string, price: string, main: boolean) => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        position: "relative",
+        width: (main ? 170 : 140) * u,
+        padding: `${(main ? 26 : 18) * u}px ${12 * u}px ${16 * u}px`,
+        marginTop: main ? 0 : 28 * u,
+        background: "#FFFFFF",
+        borderRadius: 18 * u,
+        border: main ? `${5 * u}px solid ${LIME}` : `${5 * u}px solid #FFFFFF`,
+        color: NIGHT,
+        opacity: main ? 1 : 0.92,
+      }}
+    >
+      {main ? (
+        <div
+          style={{
+            position: "absolute",
+            top: -16 * u,
+            background: LIME,
+            color: NIGHT,
+            fontSize: 15 * u,
+            fontWeight: 600,
+            padding: `${5 * u}px ${12 * u}px`,
+            borderRadius: 99,
+          }}
+        >
+          Labākā izvēle tev
+        </div>
+      ) : null}
+      <Drawing subcategoryId={subcategoryId} size={(main ? 96 : 76) * u} />
+      <div
+        style={{
+          fontFamily: "Space Grotesk",
+          fontWeight: 700,
+          fontSize: (main ? 26 : 21) * u,
+          marginTop: 8 * u,
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ fontSize: (main ? 20 : 17) * u, color: "#4E605C", fontWeight: 600 }}>{price}</div>
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          height: (main ? 30 : 24) * u,
+          marginTop: 10 * u,
+          borderRadius: 8 * u,
+          background: main ? NIGHT : "#DDE5E2",
+        }}
+      />
+    </div>
+  );
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 14 * u }}>
+      {card("Labs", "€", false)}
+      {card("Labāks", "€€", true)}
+      {card("Labākais", "€€€", false)}
+    </div>
+  );
+}
+
+function Wordmark({ u }: { u: number }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 * u }}>
+      <LogoMark size={40 * u} />
+      <div
+        style={{ fontFamily: "Space Grotesk", fontSize: 34 * u, fontWeight: 700, letterSpacing: "-0.045em" }}
+      >
+        trilio
+      </div>
+    </div>
+  );
+}
+
+function Cta({ u, label = "Sākt izvēli" }: { u: number; label?: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        background: LIME,
+        color: NIGHT,
+        fontWeight: 600,
+        fontSize: 26 * u,
+        padding: `${14 * u}px ${28 * u}px`,
+        borderRadius: 14 * u,
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+const glow = `radial-gradient(circle at 78% 55%, rgba(216,244,90,0.16) 0%, rgba(216,244,90,0) 45%), ${NIGHT}`;
+
+/** The brand template (docs/BRAND.md) in the look of the brand videos: copy left, results right. */
 export async function renderCreative(
   c: Pick<AdCreative, "headline" | "body" | "size" | "subcategoryId">,
   facts: { products: number; shops: number },
 ): Promise<Response> {
   const [w, h] = (c.size ?? "1200x628").split("x").map(Number) as [number, number];
-  const unit = Math.min(w, h) / 600;
   const coverage =
     facts.products > 0
       ? `Izskatām ${facts.products} preces ${facts.shops} ${facts.shops === 1 ? "veikalā" : "veikalos"}`
-      : "";
-  return new ImageResponse(
+      : "Trīs labākie. Bez meklēšanas.";
+  const category = short(c.subcategoryId);
+  const chip = (u: number) => (
     <div
       style={{
-        width: "100%",
-        height: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        background: NIGHT,
-        color: MIST,
-        padding: 40 * unit,
-        fontFamily: "Figtree",
+        alignSelf: "flex-start",
+        border: `${2 * u}px solid ${LIME}`,
+        color: LIME,
+        fontWeight: 600,
+        fontSize: 20 * u,
+        padding: `${6 * u}px ${16 * u}px`,
+        borderRadius: 99,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 * unit }}>
-        <LogoMark size={40 * unit} />
-        <div style={{ fontFamily: "Space Grotesk", fontSize: 34 * unit, fontWeight: 700 }}>trilio</div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 * unit }}>
-        <div style={{ fontFamily: "Space Grotesk", fontSize: 56 * unit, fontWeight: 700, lineHeight: 1.05 }}>
-          {c.headline}
+      {category}
+    </div>
+  );
+  const frame = {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    background: glow,
+    color: MIST,
+    fontFamily: "Figtree",
+  } as const;
+
+  let body: ReactElement;
+  if (w === 300) {
+    // Small rectangle: logo, headline, cards, button. The body does not fit.
+    const u = 0.42;
+    body = (
+      <div style={{ ...frame, flexDirection: "column", alignItems: "center", padding: 14, gap: 8 }}>
+        <div
+          style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <Wordmark u={0.5} />
+          <div style={{ fontSize: 12, color: LIME, fontWeight: 600 }}>{category}</div>
         </div>
-        <div style={{ fontSize: 28 * unit, lineHeight: 1.3, color: STONE }}>{c.body}</div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: 22 * unit, color: STONE }}>{coverage}</div>
         <div
           style={{
-            background: LIME,
-            color: NIGHT,
-            fontWeight: 600,
-            fontSize: 26 * unit,
-            padding: `${12 * unit}px ${24 * unit}px`,
-            borderRadius: 12 * unit,
+            fontFamily: "Space Grotesk",
+            fontWeight: 700,
+            fontSize: 22,
+            lineHeight: 1.1,
+            textAlign: "center",
           }}
         >
-          trilio.lv
+          {c.headline}
+        </div>
+        <Podium subcategoryId={c.subcategoryId} u={u} />
+        <Cta u={0.55} label="Sākt izvēli · trilio.lv" />
+      </div>
+    );
+  } else if (w === h) {
+    // Square: copy on top, the results row below, button at the foot.
+    const u = 1.65;
+    body = (
+      <div style={{ ...frame, flexDirection: "column", justifyContent: "space-between", padding: 72 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Wordmark u={1.6} />
+          {chip(1.6)}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ fontFamily: "Space Grotesk", fontSize: 80, fontWeight: 700, lineHeight: 1.04 }}>
+            {c.headline}
+          </div>
+          <div style={{ fontSize: 34, lineHeight: 1.3, color: STONE }}>{c.body}</div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 24 }}>
+          <Podium subcategoryId={c.subcategoryId} u={u} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 30, color: STONE }}>{coverage}</div>
+          <Cta u={1.6} />
         </div>
       </div>
-    </div>,
-    { width: w, height: h, fonts: await brandFonts() },
-  );
+    );
+  } else {
+    // Landscape: copy on the left, the results on the right.
+    body = (
+      <div style={{ ...frame, padding: 48, gap: 40 }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 560 }}
+        >
+          <Wordmark u={1} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            {chip(1)}
+            <div style={{ fontFamily: "Space Grotesk", fontSize: 60, fontWeight: 700, lineHeight: 1.04 }}>
+              {c.headline}
+            </div>
+            <div style={{ fontSize: 26, lineHeight: 1.35, color: STONE }}>{c.body}</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <Cta u={1} />
+            <div style={{ fontSize: 20, color: STONE, maxWidth: 300 }}>{coverage}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Podium subcategoryId={c.subcategoryId} u={1.08} />
+        </div>
+      </div>
+    );
+  }
+  return new ImageResponse(body, { width: w, height: h, fonts: await brandFonts() });
 }
 
 /** The square logo Performance Max requires. */
