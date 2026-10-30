@@ -4,7 +4,7 @@ Trilio helps people in the Baltics pick the right household appliance. Instead o
 
 Business model:
 - **Referral/affiliate commission** from partner shops.
-- **"Cenu radars"** (price radar) subscription, **€1/month**, which notifies users when the price of a tracked product (or a comparable model) drops.
+- **Trilio's own offers:** where Trilio buys from a distributor, it e-mails a better price to shoppers who asked to hear about that product. Price-drop e-mails are free (owner, 30 Oct 2026; docs/PRICE_NOTIFY_PLAN.md).
 
 This folder is the handoff from the design phase (done in Claude Design) to development in Claude Code.
 

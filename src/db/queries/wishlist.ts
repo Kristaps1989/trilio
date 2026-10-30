@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { notifySettings, offers, priceSnapshots, savedItems, stores, type SavedItem } from "@/db/schema";
-import { productKey, searchKey, type Threshold } from "@/domain/wishlist/wishlist";
+import { productKey, searchKey } from "@/domain/wishlist/wishlist";
 
 // Wishlist persistence. Every read and write is scoped to the user id.
 
@@ -94,18 +94,6 @@ export async function priceHistory(
     .groupBy(sql`1`)
     .orderBy(sql`1`);
   return rows.map((r) => ({ day: r.day, priceCents: Number(r.priceCents) }));
-}
-
-export async function getThreshold(db: Db, userId: string): Promise<Threshold> {
-  const [row] = await db.select().from(notifySettings).where(eq(notifySettings.userId, userId));
-  return row?.threshold ?? "5";
-}
-
-export async function setThreshold(db: Db, userId: string, threshold: Threshold): Promise<void> {
-  await db
-    .insert(notifySettings)
-    .values({ userId, threshold })
-    .onConflictDoUpdate({ target: notifySettings.userId, set: { threshold, updatedAt: new Date() } });
 }
 
 /** Every saved item with its owner's threshold, for the daily digest. */

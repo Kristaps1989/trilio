@@ -85,9 +85,11 @@ test("wishlist shows the saved product's photo", async ({ page }) => {
   await kettleResults(page);
   const first = picks(page).first();
   const name = (await first.getAttribute("aria-label")) ?? "";
-  await first.getByRole("button", { name: "Saglabāt", exact: true }).click();
+  await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
   // Enabled again once the save has reached the server (the heart fills at once).
-  await expect(first.getByRole("button", { name: "Saglabāts", exact: true })).toBeEnabled();
+  await expect(
+    first.getByRole("button", { name: "Paziņosim, kad cena samazināsies", exact: true }),
+  ).toBeEnabled();
 
   await page.goto("/velmju-saraksts");
   const saved = page.getByRole("region", { name: "Saglabātās preces" }).getByRole("article", { name });

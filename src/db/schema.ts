@@ -1123,3 +1123,61 @@ export type AdKeyword = typeof adKeywords.$inferSelect;
 export type AdAd = typeof adAds.$inferSelect;
 export type AdCreative = typeof adCreatives.$inferSelect;
 export type AdProposal = typeof adProposals.$inferSelect;
+
+/**
+ * "Paziņot, kad cena samazināsies" without an account (docs/PRICE_NOTIFY_PLAN.md):
+ * the e-mail a shopper typed, what they asked about and the exact consent text
+ * shown, until they confirm by the link e-mailed to that address. Nothing is
+ * sent to the address before that click; unconfirmed requests expire in 7 days.
+ */
+export const notifyRequests = pgTable(
+  "notify_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    token: text("token").notNull().unique(),
+    email: text("email").notNull(),
+    kind: savedItemKindEnum("kind").notNull(),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+    subcategoryId: text("subcategory_id").notNull(),
+    answersParam: text("answers_param"),
+    label: text("label"),
+    /** Where to return after confirming (a same-site path). */
+    returnPath: text("return_path"),
+    locale: text("locale").notNull().default("lv"),
+    /** The consent text shown, e.g. "notify.body@2026-10-30"; includes Trilio's offers only in sourcing categories. */
+    consent: text("consent").notNull(),
+    /** True when that text covered Trilio's own offers too. */
+    offers: boolean("offers").notNull().default(false),
+    visitorHash: text("visitor_hash"),
+    adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    /** The confirmation also signs the person in, once. */
+    signedInAt: timestamp("signed_in_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("notify_requests_email_idx").on(t.email, t.createdAt),
+    index("notify_requests_visitor_idx").on(t.visitorHash, t.createdAt),
+  ],
+);
+
+/**
+ * First-party funnel events without cookies (docs/PRICE_NOTIFY_PLAN.md §5 PR 3):
+ * one row per event, the day's anonymous visitor hash as in `visits`.
+ */
+export const uiEvents = pgTable(
+  "ui_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    day: date("day").notNull(),
+    visitorHash: text("visitor_hash").notNull(),
+    event: text("event").notNull(),
+    subcategoryId: text("subcategory_id"),
+    adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("ui_events_day_idx").on(t.day, t.event)],
+);
+
+export type NotifyRequest = typeof notifyRequests.$inferSelect;

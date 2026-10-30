@@ -5,6 +5,7 @@ import { change, parseRange, rangeDays, RANGES } from "@/domain/admin/stats";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur, formatInt } from "@/i18n/format";
 import { confidenceStats, searchStats, shopStats, visitStats } from "@/services/admin/stats";
+import { notifyFunnel } from "@/services/notify/events";
 import { botStats, clientStats } from "@/services/visits/visits";
 import { buttonClass } from "@/ui/Button";
 import { requireAdmin } from "../guard";
@@ -24,16 +25,28 @@ export default async function AdminStats({ searchParams }: Props) {
   const t = await getTranslations("admin.stats");
   const range = parseRange((await searchParams).periods);
   const r = rangeDays(range, new Date());
-  const [visits, prevVisits, searches, prevSearches, shops, confidence, bots, clients] = await Promise.all([
-    visitStats(db, r.from, r.to),
-    visitStats(db, r.prevFrom, r.prevTo),
-    searchStats(db, r.from, r.to),
-    searchStats(db, r.prevFrom, r.prevTo),
-    shopStats(db, r.from, r.to),
-    confidenceStats(db, r.from, r.to),
-    botStats(db, r.from, r.to),
-    clientStats(db, r.from, r.to),
-  ]);
+  const [visits, prevVisits, searches, prevSearches, shops, confidence, bots, clients, funnel] =
+    await Promise.all([
+      visitStats(db, r.from, r.to),
+      visitStats(db, r.prevFrom, r.prevTo),
+      searchStats(db, r.from, r.to),
+      searchStats(db, r.prevFrom, r.prevTo),
+      shopStats(db, r.from, r.to),
+      confidenceStats(db, r.from, r.to),
+      botStats(db, r.from, r.to),
+      clientStats(db, r.from, r.to),
+      notifyFunnel(db, r.from, r.to),
+    ]);
+  const funnelTotal = funnel.reduce(
+    (a, f) => ({
+      results: a.results + f.resultsVisitors,
+      taps: a.taps + f.taps,
+      sent: a.sent + f.sent,
+      confirmed: a.confirmed + f.confirmed,
+    }),
+    { results: 0, taps: 0, sent: 0, confirmed: 0 },
+  );
+  const share = (n: number, of: number) => (of ? `${formatInt(Math.round((n / of) * 100))} %` : "—");
   const botTotal = bots.visit + bots.search + bots.click;
   const clicks = shops.reduce((n, s) => n + s.clicks, 0);
   const pct = (x: number | null) => (x === null ? "—" : `${formatInt(Math.round(x * 100))} %`);
@@ -104,6 +117,37 @@ export default async function AdminStats({ searchParams }: Props) {
           />
         </div>
       ) : null}
+
+      {/* docs/PRICE_NOTIFY_PLAN.md §5 PR 3: where "Paziņot, kad cena samazināsies" loses people. */}
+      <Section title={t("notifyFunnel")} id="notify-funnel">
+        <Stats>
+          <Stat label={t("funnelResults")} value={formatInt(funnelTotal.results)} />
+          <Stat label={t("funnelTaps")} value={formatInt(funnelTotal.taps)} />
+          <Stat label={t("funnelSent")} value={formatInt(funnelTotal.sent)} />
+          <Stat label={t("funnelConfirmed")} value={formatInt(funnelTotal.confirmed)} />
+        </Stats>
+        <Table
+          caption={t("notifyFunnel")}
+          head={[
+            t("category"),
+            t("funnelResults"),
+            t("funnelAds"),
+            t("funnelTaps"),
+            t("funnelSent"),
+            t("funnelConfirmed"),
+          ]}
+          empty={t("empty")}
+          rows={funnel.map((f) => [
+            label(f.subcategoryId),
+            formatInt(f.resultsVisitors),
+            formatInt(f.adVisitors),
+            `${formatInt(f.taps)} (${share(f.taps, f.resultsVisitors)})`,
+            formatInt(f.sent),
+            formatInt(f.confirmed),
+          ])}
+        />
+        <p className="text-sm text-stone">{t("funnelMethod")}</p>
+      </Section>
 
       {/* docs/CONFIDENCE_PLAN.md §3 E: did the three options end the search? */}
       <Section title={t("confidence")} id="confidence">

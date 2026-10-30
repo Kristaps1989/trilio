@@ -264,8 +264,9 @@ Since 24 Oct 2026 (docs/CONFIDENCE_PLAN.md) a pick opens with its role pills and
 - **Highlighting:** the best value per row is shaded green, but not when all values are equal.
 - **"Rādīt tikai atšķirības"** (show differences only) hides identical rows. Price, model and rating always stay.
 
-### 3.5 Bottom of results
-- Price-radar call to action: "Ieslēgt cenu radaru · 1 €/mēn." (turn on the price radar).
+### 3.5 After the picks and at the bottom of results
+- Right after the three picks, one line for the search itself: "Paziņot, kad šajā meklējumā parādīsies lētāks variants?" with the button "Paziņot, kad parādīsies lētāks variants" (§5.1). Free, no price on the page.
+- Where Trilio sources (`data/offers.json`), one line above the picks: "Trilio var piedāvāt lētāk: iepērkam tieši no izplatītāja un piegādājam paši."
 - "Mainīt atbildes" (change answers) and "Sākt no jauna" (start over).
 
 ## 4. Model-check flow ("Es jau zinu modeli")
@@ -280,26 +281,30 @@ Since 24 Oct 2026 (docs/CONFIDENCE_PLAN.md) a pick opens with its role pills and
 
 Owner decision, 20 Oct 2026: the wishlist replaces the price radar. Saving is one tap and free. Old `/radars` links redirect to `/velmju-saraksts`; the radar tables stay in the database, unused.
 
-Owner decision, 24 Oct 2026 (docs/TRUST_POLISH_PLAN.md §1): **price-drop e-mails are free and on by default**, because saving is the request. The paid plan is retired: `/velmju-saraksts/pazinojumi` redirects to the wishlist; subscriptions bought earlier can still be seen and cancelled. Trilio's own personal offers stay a separate, explicit opt-in.
+Owner decision, 24 Oct 2026 (docs/TRUST_POLISH_PLAN.md §1): **price-drop e-mails are free and on by default**, because saving is the request.
+
+Owner decision, 30 Oct 2026 (docs/PRICE_NOTIFY_PLAN.md): the paid plan is removed for good, with no subscription option anywhere; the button says the outcome ("Paziņot, kad cena samazināsies"); signed out, one e-mail field on the card and one confirmation link replace the sign-in page; where Trilio sources, one plainly worded yes covers both price e-mails and Trilio's own offers. Home: "Pastāsti, kas tev vajadzīgs." with "Izvērtēsim trīs piemērotākos produktus un paziņosim, kad cena samazināsies!" under it. Trilio speaks to the shopper as "tu"; buttons are infinitives.
 
 Why (evaluated from the shopper's side): the radar asked three questions and showed a payment screen on the first tap. A heart is one tap that everyone knows, shoppers see the value (today's best offer and the price history) before paying, and a saved search fits how appliances are bought: "fridge, ~186 cm, one door" rather than one model.
 
-### 5.1 Saving (the heart)
-- **A product:** "Saglabāt" on every result card (picks, extras, "more options", "Vērts apsvērt", refurbished), on the model-check page and on the category landing pages. A second tap removes it ("Saglabāts").
-- **A search:** "Saglabāt meklējumu" under the results heading and in the panel below the picks. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
-- **Signed out:** the tap goes through sign-in (Google or e-mail) and saves on the way back to the same page (`/velmju-saraksts/pievienot`).
+### 5.1 "Paziņot, kad cena samazināsies" (the heart)
+- **A product:** "Paziņot, kad cena samazināsies" on every result card (picks, extras, "more options", "Vērts apsvērt", refurbished as the heart icon), under the shop button, which stays first. A second tap stops it ("Paziņosim, kad cena samazināsies").
+- **A search:** "Paziņot, kad parādīsies lētāks variants" in the line right after the picks. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
+- **Signed out:** the card opens one field, "Uz kādu e-pastu paziņot?", with one sentence saying exactly what will be sent and the button "Paziņot man". One confirmation e-mail goes out (`notify_requests`); nothing else is sent before its link is clicked. The link opens `/pazinot/{token}` with one button, "Apstiprināt" (a page, not a GET that confirms, because mail scanners open links). It makes the account, saves the item, turns the e-mails on, signs in once and returns to the same card. Rate limits: 5 requests a day per visitor, 3 per address.
+- **Signed in, where Trilio sources, first tap only:** the same sentence with the known address, "Paziņot uz {email}?", and "Paziņot man". That yes sets `offers_opt_in` and `offers_asked_at`; later taps save at once. Elsewhere no question is asked: price e-mails need no extra consent.
+- **The consent text and its version** are stored with each request (`notify.body@2026-10-30` and its search and plain variants). It mentions Trilio's offers only in sourcing categories.
 - One save per product or search per user. The price at saving is the baseline for "cheaper than when saved".
-- **Under the heart, after saving a product:** "Saglabāts. Nosūtīsim e-pastu, ja cena samazināsies. · Nesūtīt" ("Tomēr sūtīt" turns it back on).
-- **The first save only:** "Vai drīkstam reizēm piedāvāt pašu izdevīgāku cenu?" with two equal buttons, "Jā, sūtiet" and "Nē, paldies". Showing it counts as asked (`users.offers_asked_at`); it never returns on a card, and the checkbox stays in the wishlist and account pages.
+- **Under the button, after saving a product:** "Paziņosim uz {email}, kad cena samazināsies. · Nesūtīt" ("Tomēr sūtīt" turns it back on).
 
 ### 5.2 The wishlist page (`/velmju-saraksts`, header heart)
 - **Saved searches:** the name, today's recommended pick for those answers (ranked exactly like the results page) with price and shop, how many products match, the change since saving, "Skatīt rezultātus" (reopens the saved results) and a heart to remove.
 - **Saved products:** today's best new in-stock offer and shop, the change since saving, a link to the shop, a 90-day price history (lowest price per day, with the lowest and highest written out) and a heart to remove. "Pašlaik nav pieejams" when no shop has it.
-- **"Cenu e-pasti" panel:** one checkbox (on by default), the address, and while on "Par kādiem kritumiem ziņot?" (any drop, at least 5 % (default), at least 10 %). The same checkbox is on `/konts`.
+- **"Cenu paziņojumi" panel:** one checkbox (on by default) and the address, free, with no plan, price or threshold to pick (a threshold stored earlier is still honoured; the default is a drop of at least 5 %). The same checkbox is on `/konts`.
+- **"Personīgi piedāvājumi" panel:** the offers checkbox, never pre-ticked.
 - Account line and sign-out, as before.
 
 ### 5.3 E-mails (free)
-- After each ingestion, one digest per user with alerts on at most, listing the saved items whose price dropped by the threshold: a product's best offer, or a saved search's recommended pick. Each item at most once a day; the reported price becomes the new baseline.
+- After each ingestion, one digest per user with alerts on at most, listing the saved items whose price dropped by at least 5 % (or a threshold the user stored earlier): a product's best offer, or a saved search's recommended pick. Each item at most once a day; the reported price becomes the new baseline.
 - E-mail only: a web app cannot rely on push (owner, 19 Oct 2026).
 - No marketing, no countdowns; the e-mail links to the wishlist and ends with "Nesūtīt vairs cenu e-pastus" (a no-login page with one button, `/velmju-saraksts/atteikties/{token}`) plus RFC 8058 one-click headers (`/api/wishlist/unsubscribe/{token}`).
 

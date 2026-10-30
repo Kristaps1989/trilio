@@ -142,3 +142,16 @@ Steps: cancel any active subscription at period end and e-mail those users that 
 2. The list of subcategories where Trilio sources from a distributor, for `data/offers.json`.
 3. Whether the threshold picker ("par kādiem kritumiem ziņot") stays as a free setting or goes. Recommendation: goes; one e-mail a day about any drop is simpler to explain.
 4. Confirmation that no active paid subscriptions exist before PR 4 drops the tables (the admin shows the count).
+
+## 8. Status (30 Oct 2026): built, waiting for the owner's review
+
+All four PRs are built together on one branch, not merged. Choices made where the owner had not answered yet; each is one line to change:
+
+1. **Hero:** title "Pastāsti, kas tev vajadzīgs.", the owner's line under it (`welcome.headline`, `welcome.lead`).
+2. **Sourcing list:** `data/offers.json` holds `["fridge"]`, the category of the first real offer. The line "Trilio var piedāvāt lētāk…" and the offers half of the consent appear only there.
+3. **Threshold:** the picker is gone. A threshold stored earlier is still honoured; everyone else gets drops of at least 5 %, the old default, so a 1-cent change sends nothing.
+4. **Paid plan:** all code is gone (UI, actions, renewals, billing cron, receipts, plan seeding); `plans` rows are switched off at release. The `plans`, `subscriptions` and `notify_settings` tables stay until the owner confirms no active subscription is left (Admin → Lietotāji).
+
+Deviation from §5: the "Trilio var piedāvāt lētāk" line is shown once, above the three picks, not on every card. Three cards saying the same sentence read as an advert; once, next to the cards, it reads as a fact.
+
+Confirmation is a page with one "Apstiprināt" button rather than a link that confirms on opening, because mail scanners open links. It is one extra tap, made once per person.

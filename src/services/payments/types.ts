@@ -1,7 +1,7 @@
-// Payment provider interface. The billing engine (services/billing) owns
-// plans, subscriptions, renewals, retries and access; a provider only
-// collects money and, when it supports recurring billing, issues a reusable
-// token. Paysera Checkout (one-off payments, prepaid periods) and Paysera
+// Payment provider interface. Trilio takes one-off payments for personal
+// offers (services/offers/orders.ts, services/payments/process.ts); the paid
+// price-alert plan and its renewals are gone (docs/PRICE_NOTIFY_PLAN.md §4).
+// A provider only collects money. Paysera Checkout (one-off payments, prepaid periods) and Paysera
 // Recurring Billing are the real adapters (docs/PAYMENTS.md); `mock` drives
 // tests and local development.
 

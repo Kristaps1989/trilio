@@ -16,7 +16,6 @@ export default defineConfig({
         "src/services/ingestion/run.ts",
         "src/services/llm/client.ts",
         "src/services/llm/extract-job.ts",
-        "src/services/billing/job.ts",
       ],
       thresholds: { branches: 80, lines: 85 },
     },

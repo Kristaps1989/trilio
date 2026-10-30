@@ -25,7 +25,9 @@ export function createEmailSender(env: Record<string, string | undefined> = proc
   const from = env.EMAIL_FROM ?? "Trilio <noreply@trilio.lv>";
   if (!key)
     return {
-      async send() {
+      async send(message) {
+        // Dev and CI only: keep what would have been sent, so e2e can follow a confirmation link.
+        if (env.ALLOW_INSECURE_TEST_FEATURES === "1") testOutbox().push(message);
         return { ok: false, reason: "disabled" };
       },
     };
@@ -81,4 +83,12 @@ export function memoryEmailSender(): EmailSender & { sent: EmailMessage[] } {
       return { ok: true, id: `mem-${sent.length}` };
     },
   };
+}
+
+/** Messages not sent for lack of RESEND_API_KEY while ALLOW_INSECURE_TEST_FEATURES=1 (last 50, one process). */
+export function testOutbox(): EmailMessage[] {
+  const g = globalThis as { __trilioOutbox?: EmailMessage[] };
+  g.__trilioOutbox ??= [];
+  if (g.__trilioOutbox.length > 50) g.__trilioOutbox.splice(0, g.__trilioOutbox.length - 50);
+  return g.__trilioOutbox;
 }

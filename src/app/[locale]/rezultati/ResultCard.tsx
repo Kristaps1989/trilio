@@ -74,6 +74,8 @@ export type CardModel = {
   sessionId: string | null;
   /** In the signed-in user's wishlist (the heart is filled). */
   saved: boolean;
+  /** Trilio sources this category (data/offers.json): the notify sentence covers its offers. */
+  trilioOffer?: boolean;
   /** The shop's photo, or the subcategory drawing (card-media.ts). */
   image: CardImage;
   /** EPREL's class, label and sheet when the product was matched in EPREL. */
@@ -340,6 +342,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
           target={{ kind: "product", productId: card.productId }}
           saved={card.saved}
           name={card.name}
+          offers={card.trilioOffer}
         />
       </div>
     </article>
@@ -397,6 +400,7 @@ export async function RefurbishedCard({ card }: { card: CardModel }) {
           target={{ kind: "product", productId: card.productId }}
           saved={card.saved}
           name={card.name}
+          offers={card.trilioOffer}
           variant="icon"
         />
       </div>

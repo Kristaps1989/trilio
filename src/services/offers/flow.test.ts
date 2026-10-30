@@ -18,7 +18,7 @@ import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { formatEur } from "@/i18n/format";
 import type { OrderForm } from "@/domain/offers/checkout";
 import { OFFERS_PAUSED, setFlag } from "@/services/admin/audit";
-import { processPaymentEvent } from "@/services/billing/engine";
+import { processPaymentEvent } from "@/services/payments/process";
 import { upsertOffers } from "@/services/ingestion/upsert";
 import { memoryEmailSender } from "@/services/notify/email";
 import { createMockProvider, mockComplete } from "@/services/payments/mock";
@@ -167,7 +167,13 @@ run("offers and orders", () => {
     const stamp = Date.now();
     const [a] = await db
       .insert(users)
-      .values({ email: `offers-flow-a-${stamp}@example.invalid`, offersOptIn: true, name: "Anna" })
+      // Price e-mails off: the wishlist job test runs alongside and would otherwise move this buyer's saved baseline.
+      .values({
+        email: `offers-flow-a-${stamp}@example.invalid`,
+        offersOptIn: true,
+        priceAlerts: false,
+        name: "Anna",
+      })
       .returning();
     const [b] = await db
       .insert(users)
