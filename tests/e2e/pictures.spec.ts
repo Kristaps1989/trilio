@@ -86,6 +86,8 @@ test("wishlist shows the saved product's photo", async ({ page }) => {
   const first = picks(page).first();
   const name = (await first.getAttribute("aria-label")) ?? "";
   await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
+  // The first tap asks the one yes (every category covers Trilio's offers).
+  await first.locator("[data-notify-panel]").getByRole("button", { name: "Paziņot man" }).click();
   // Enabled again once the save has reached the server (the heart fills at once).
   await expect(
     first.getByRole("button", { name: "Paziņosim, kad cena samazināsies", exact: true }),

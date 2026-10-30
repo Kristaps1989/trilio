@@ -27,6 +27,8 @@ run("notify requests", () => {
   let end: () => Promise<void>;
   const mail = memoryEmailSender();
   const deps = { email: mail, baseUrl: BASE, company: "SIA Trilio" };
+  // A file that narrows sourcing to fridges, to keep the price-e-mails-only path covered.
+  const fridgesOnly = { ...deps, sourcing: { sourcing: ["fridge"] } };
   const fridge: NotifyTarget = {
     kind: "search",
     subcategoryId: "fridge",
@@ -103,7 +105,26 @@ run("notify requests", () => {
     ).toHaveLength(0);
   });
 
-  it("outside sourcing categories the consent covers price e-mails only", async () => {
+  it("every category is a sourcing one by default: a kettle's consent covers Trilio's offers too", async () => {
+    await requestNotify(
+      db,
+      {
+        email: `jon@${DOMAIN}`,
+        target: kettle,
+        returnPath: "/",
+        locale: "lv",
+        visitorHash: null,
+        adLandingId: null,
+      },
+      deps,
+    );
+    expect(await requestByToken(db, tokenOf())).toMatchObject({
+      offers: true,
+      consent: "notify.bodySearch@2026-10-30",
+    });
+  });
+
+  it("where the file leaves a category out, the consent covers price e-mails only", async () => {
     await requestNotify(
       db,
       {
@@ -114,7 +135,7 @@ run("notify requests", () => {
         visitorHash: null,
         adLandingId: null,
       },
-      deps,
+      fridgesOnly,
     );
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
@@ -197,7 +218,7 @@ run("notify requests", () => {
     expect(await notifySignIn(db, value)).toBeNull(); // once
   });
 
-  it("a kettle confirmation leaves Trilio's offers off; an expired or unknown link does nothing", async () => {
+  it("outside sourcing, a confirmation leaves Trilio's offers off; an expired or unknown link does nothing", async () => {
     await requestNotify(
       db,
       {
@@ -208,7 +229,7 @@ run("notify requests", () => {
         visitorHash: null,
         adLandingId: null,
       },
-      deps,
+      fridgesOnly,
     );
     const value = tokenOf();
     const c = await confirmNotify(db, value, save);

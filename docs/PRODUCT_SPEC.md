@@ -266,7 +266,7 @@ Since 24 Oct 2026 (docs/CONFIDENCE_PLAN.md) a pick opens with its role pills and
 
 ### 3.5 After the picks and at the bottom of results
 - Right after the three picks, one line for the search itself: "Paziņot, kad šajā meklējumā parādīsies lētāks variants?" with the button "Paziņot, kad parādīsies lētāks variants" (§5.1). Free, no price on the page.
-- Where Trilio sources (`data/offers.json`), one line above the picks: "Trilio var piedāvāt lētāk: iepērkam tieši no izplatītāja un piegādājam paši."
+- In every category (owner, 30 Oct 2026; `data/offers.json` holds `"*"`), one line above the picks: "Trilio var piedāvāt lētāk: iepērkam tieši no izplatītāja un piegādājam paši."
 - "Mainīt atbildes" (change answers) and "Sākt no jauna" (start over).
 
 ## 4. Model-check flow ("Es jau zinu modeli")
@@ -291,7 +291,7 @@ Why (evaluated from the shopper's side): the radar asked three questions and sho
 - **A product:** "Paziņot, kad cena samazināsies" on every result card (picks, extras, "more options", "Vērts apsvērt", refurbished as the heart icon), under the shop button, which stays first. A second tap stops it ("Paziņosim, kad cena samazināsies").
 - **A search:** "Paziņot, kad parādīsies lētāks variants" in the line right after the picks. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
 - **Signed out:** the card opens one field, "Uz kādu e-pastu paziņot?", with one sentence saying exactly what will be sent and the button "Paziņot man". One confirmation e-mail goes out (`notify_requests`); nothing else is sent before its link is clicked. The link opens `/pazinot/{token}` with one button, "Apstiprināt" (a page, not a GET that confirms, because mail scanners open links). It makes the account, saves the item, turns the e-mails on, signs in once and returns to the same card. Rate limits: 5 requests a day per visitor, 3 per address.
-- **Signed in, where Trilio sources, first tap only:** the same sentence with the known address, "Paziņot uz {email}?", and "Paziņot man". That yes sets `offers_opt_in` and `offers_asked_at`; later taps save at once. Elsewhere no question is asked: price e-mails need no extra consent.
+- **Signed in, first tap only (every category is a sourcing one):** the same sentence with the known address, "Paziņot uz {email}?", and "Paziņot man". That yes sets `offers_opt_in` and `offers_asked_at`; later taps save at once. If `data/offers.json` ever leaves a category out, no question is asked there: price e-mails need no extra consent.
 - **The consent text and its version** are stored with each request (`notify.body@2026-10-30` and its search and plain variants). It mentions Trilio's offers only in sourcing categories.
 - One save per product or search per user. The price at saving is the baseline for "cheaper than when saved".
 - **Under the button, after saving a product:** "Paziņosim uz {email}, kad cena samazināsies. · Nesūtīt" ("Tomēr sūtīt" turns it back on).

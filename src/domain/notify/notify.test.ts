@@ -75,9 +75,10 @@ describe("notify rules", () => {
     expect(requestState({ ...confirmed, signedInAt: later(2000) }, later(3000)).canSignIn).toBe(false);
   });
 
-  it("fridges are a sourcing category; the list can be swapped in tests", () => {
-    expect(trilioSources("fridge")).toBe(true);
-    expect(trilioSources("kettle")).toBe(false);
-    expect(trilioSources("kettle", new Set(["kettle"]))).toBe(true);
+  it("Trilio sources every category; the file can narrow it or leave some out", () => {
+    for (const sub of ["fridge", "kettle", "toaster"]) expect(trilioSources(sub)).toBe(true);
+    expect(trilioSources("kettle", { sourcing: ["fridge"] })).toBe(false);
+    expect(trilioSources("fridge", { sourcing: ["fridge"] })).toBe(true);
+    expect(trilioSources("kettle", { sourcing: ["*"], except: ["kettle"] })).toBe(false);
   });
 });
