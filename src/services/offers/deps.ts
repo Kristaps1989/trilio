@@ -1,5 +1,5 @@
 import { offerSignature } from "@/config/admin";
-import { companyFromEnv } from "@/config/company";
+import { companyFromEnv, companyLine } from "@/config/company";
 import { createEmailSender } from "@/services/notify/email";
 import { appBaseUrl } from "@/services/payments";
 import type { MailDeps } from "./emails";
@@ -11,5 +11,6 @@ export function offerMailDeps(): MailDeps {
     baseUrl: appBaseUrl(),
     signature: offerSignature(),
     inbox: companyFromEnv().email,
+    company: companyLine(companyFromEnv()),
   };
 }

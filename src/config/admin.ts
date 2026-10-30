@@ -17,7 +17,7 @@ export function isAdminEmail(
   return adminEmails(env).includes(email.trim().toLowerCase());
 }
 
-/** The name an offer e-mail is signed with ("Kristaps no Trilio"). Configuration, not code. */
+/** A person's name offer e-mails are signed with ("Kristaps, Trilio"); "Trilio" means the team. Configuration, not code. */
 export function offerSignature(env: Record<string, string | undefined> = process.env): string {
   return (env.OFFERS_SENDER_NAME ?? "").trim() || "Trilio";
 }

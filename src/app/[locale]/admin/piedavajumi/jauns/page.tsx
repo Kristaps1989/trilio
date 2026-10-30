@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { db, savedItems, users } from "@/db";
 import { searchProducts } from "@/db/queries/catalog";
 import { offerSignature } from "@/config/admin";
-import { companyFromEnv } from "@/config/company";
+import { companyFromEnv, companyLine } from "@/config/company";
 import { defaultValidUntil, deliveryOptions, vatRateFor } from "@/domain/offers/offers";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur } from "@/i18n/format";
@@ -193,7 +193,7 @@ export default async function NewOffer({ searchParams }: Props) {
         </Section>
       ) : (
         <OfferForm
-          product={{ id: product.id, name: product.name }}
+          product={{ id: product.id, name: product.name, imageUrl: image.src }}
           reference={{
             priceCents: reference.priceCents,
             storeName: reference.storeName,
@@ -202,6 +202,8 @@ export default async function NewOffer({ searchParams }: Props) {
           recipients={recipients}
           vatRate={vatRateFor(companyFromEnv().vatNo)}
           signature={offerSignature()}
+          inbox={companyFromEnv().email}
+          company={companyLine(companyFromEnv())}
           baseUrl={appBaseUrl()}
           defaults={{
             validUntil: rigaDate(defaultValidUntil(new Date())),

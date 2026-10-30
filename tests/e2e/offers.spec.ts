@@ -100,15 +100,21 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     await admin.getByText("Iepirkums (redzi tikai tu)").click();
     await admin.getByLabel("Iepirkuma cena").fill("0,50");
     await expect(admin.getByTestId("margin")).toContainText("Peļņa: 0,50");
-    const preview = admin.getByTestId("email-preview");
-    await expect(preview).toContainText(`Kristaps no Trilio: ${product} par 1`);
-    await expect(preview).toContainText("Tu saglabāji");
-    await expect(preview).toContainText("Kāpēc lētāk?");
+    // The subject names the product and the price, never "… no Trilio".
+    await expect(admin.getByTestId("email-subject")).toContainText(/ par 1(,00)?\s€/);
+    await expect(admin.getByTestId("email-subject")).not.toContainText("no Trilio");
+    // The preview is the branded HTML e-mail itself: logo, the saving, the button.
+    const mail = admin.frameLocator('[data-testid="email-preview"] iframe');
+    await expect(mail.getByRole("heading", { level: 1 })).toContainText("Tā pati prece.");
+    await expect(mail.getByText("Tu to saglabāji")).toBeVisible();
+    await expect(mail.getByRole("link", { name: /Pasūtīt par 1/ })).toBeVisible();
+    await expect(mail.getByText("Kāpēc lētāk?")).toBeVisible();
+    await expect(admin.getByTestId("email-text")).toContainText("Kristaps, Trilio");
     await expectNoAxeViolations(admin);
     await noSideScroll(admin);
     await admin.getByRole("button", { name: "Nosūtīt", exact: true }).click();
     await expect(admin.getByRole("status")).toHaveText("Nosūtīts.");
-    await expect(admin.getByTestId("email-preview")).toContainText("Skatīt piedāvājumu:");
+    await expect(admin.getByTestId("email-text")).toContainText(/Pasūtīt: .*\/piedavajums\//);
     link = await admin.getByLabel("Saite (var nosūtīt arī pats)").inputValue();
     expect(link).toMatch(/\/piedavajums\/[A-Za-z0-9_-]{43}$/);
   });

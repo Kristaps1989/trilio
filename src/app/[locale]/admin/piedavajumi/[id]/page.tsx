@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { offerSignature } from "@/config/admin";
 import { companyFromEnv } from "@/config/company";
 import { margin, savingClaim, vatRateFor } from "@/domain/offers/offers";
 import { formatDateShort, formatEur } from "@/i18n/format";
+import { offerMailDeps } from "@/services/offers/deps";
+import { EmailPreview } from "../EmailPreview";
 import { eventsOf, offerById, previewOffer } from "@/services/offers/offers";
 import { orderOfOffer } from "@/services/offers/orders";
 import { appBaseUrl } from "@/services/payments";
@@ -40,7 +41,7 @@ export default async function AdminOffer({ params, searchParams }: Props) {
   const [events, order, preview] = await Promise.all([
     eventsOf(db, id),
     orderOfOffer(db, id),
-    previewOffer(db, id, { baseUrl: base, signature: offerSignature() }),
+    previewOffer(db, id, offerMailDeps()),
   ]);
   const vatRate = vatRateFor(companyFromEnv().vatNo);
   const m = margin(offer.priceCents, offer.costCents, vatRate);
@@ -149,18 +150,14 @@ export default async function AdminOffer({ params, searchParams }: Props) {
         <section aria-label={t("email")} className="flex flex-col gap-2">
           <h2 className="font-heading text-xl font-semibold text-mist">{t("email")}</h2>
           {preview ? (
-            <div
-              className="rounded-panel-lg bg-white p-5 text-night [overflow-wrap:anywhere]"
-              data-testid="email-preview"
-            >
-              <p className="text-sm text-muted">{t("to", { email: preview.to })}</p>
-              <p className="mt-1 font-bold">{preview.subject}</p>
-              <div className="mt-3 flex flex-col gap-3 text-[15px] leading-relaxed whitespace-pre-line">
-                {preview.text.split("\n\n").map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-            </div>
+            <EmailPreview
+              message={preview}
+              labels={{
+                to: t("to", { email: preview.to }),
+                frame: t("previewFrame"),
+                text: t("textVersion"),
+              }}
+            />
           ) : null}
         </section>
       </div>

@@ -8,6 +8,8 @@ import { db } from "@/db";
 import { loadProduct } from "@/db/queries/catalog";
 import { deliveryBy, offerPhase, savingClaim } from "@/domain/offers/offers";
 import { formatDateDative, formatEur } from "@/i18n/format";
+import { activeLocale } from "@/i18n/active";
+import { signatureLine } from "@/services/offers/compose";
 import { markOpened, offerByToken } from "@/services/offers/offers";
 import { orderOfOffer } from "@/services/offers/orders";
 import { Button, ButtonLink } from "@/ui/Button";
@@ -120,7 +122,9 @@ export default async function OfferPage({ params }: Props) {
         {offer.message ? (
           <blockquote className="rounded-control bg-card-soft px-4 py-3 text-[15px]">
             <p className="whitespace-pre-line">{offer.message}</p>
-            <footer className="mt-1 text-sm text-muted">— {offerSignature()}, Trilio</footer>
+            <footer className="mt-1 text-sm text-muted">
+              — {signatureLine(offerSignature(), activeLocale())}
+            </footer>
           </blockquote>
         ) : null}
         {yours || !session?.user ? (
