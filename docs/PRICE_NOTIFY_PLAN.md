@@ -23,13 +23,15 @@ With roughly ninety search-ad visitors, a funnel of this shape yields fewer than
 1. **Home** says both promises in the first sentence.
 2. **Card** says, under the price and only where Trilio sources: "Trilio var piedāvāt lētāk: iepērkam tieši no izplatītāja un piegādājam paši."
 3. **Button** says the outcome: "Paziņot, kad cena samazināsies". "Pirkt — {veikals}" stays first and dark.
-4. **One tap, no account.** The button opens one field on the card, "Uz kādu e-pastu paziņot?", with one sentence that says exactly what will be sent, and one button, "Jā, paziņojiet". Signed-in shoppers skip the field: the tap saves and the card says "Paziņosim uz {email}, kad cena samazināsies."
+4. **One tap, no account.** The button opens one field on the card, "Uz kādu e-pastu paziņot?", with one sentence that says exactly what will be sent, and one button, "Paziņot man". Signed-in shoppers skip the field: the tap saves and the card says "Paziņosim uz {email}, kad cena samazināsies."
 5. **One confirmation e-mail** (branded shell, docs/ADMIN_AND_OFFERS_PLAN.md §11.1). Its one link confirms the address, creates the account silently, saves the product and switches both notifications on. Nothing is sent to an unconfirmed address.
 6. **Wishlist** stays the place to see saved products, price history and to stop the e-mails. One panel, "Cenu paziņojumi", free. No plan, no price, no threshold.
 
 ## 3. Copy (Latvian first; English goes to en.json in the same PR)
 
 The owner reviews every Latvian line before it ships. Keys are proposals.
+
+**One register.** Trilio speaks to the shopper as "tu" ("Pastāsti", "Apstiprini", "Atver to"), never "jūs". Buttons are infinitives ("Paziņot man", "Apstiprināt", "Nesūtīt"), so the shopper never has to address Trilio, and no line mixes the two. The old "Jā, sūtiet" goes with the old consent box.
 
 ### Home
 
@@ -59,7 +61,7 @@ The owner's line is the subtitle: as a second sentence of the h1 it would run to
 | `notify.title` | Uz kādu e-pastu paziņot? |
 | `notify.body` | Uzrakstīsim, kad šīs preces cena veikalos samazināsies vai kad Trilio to varēs piedāvāt lētāk nekā veikali. Tikai par šo preci, ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī. |
 | `notify.email` | E-pasts |
-| `notify.submit` | Jā, paziņojiet |
+| `notify.submit` | Paziņot man |
 | `notify.sent` | Nosūtījām apstiprinājuma saiti uz {email}. Atver to, un paziņosim, kad cena samazināsies. |
 | `notify.invalid` | Lūdzu, ievadi derīgu e-pasta adresi. |
 | `notify.tooMany` | Pārāk daudz pieprasījumu. Mēģini vēlreiz pēc stundas. |
@@ -115,7 +117,7 @@ Steps: cancel any active subscription at period end and e-mail those users that 
 - Server action `requestNotifyAction(target, email)`: validate, rate-limit per visitor hash (5 per day) and per e-mail (3 per day), store the request, send the confirmation e-mail. The link is the existing Auth.js magic link whose callback is the existing `/velmju-saraksts/pievienot` with the target, plus `notify=<request id>`; on arrival that route saves the item, sets `priceAlerts` on and `offersOptIn` with `offersOptInAt` and the consent version, and marks the request confirmed. Nothing is sent to the address before that click.
 - Signed-in tap: today's behaviour, with the new note. `OffersAsk` is replaced by the single text in `notify.body`; the "Nē, paldies" path becomes the "Nesūtīt" link that already exists.
 - The confirmation e-mail uses the branded shell from PR #51 and the same one-click List-Unsubscribe headers as the digest.
-- Unit tests: validation, rate limits, consent version stored, nothing sent twice. Integration: request → confirm → saved item with both flags → digest goes out on a drop. e2e: signed-out tap shows the field, submit shows `notify.sent`, the mock inbox has one e-mail, its link lands on the results page with the card in the "Paziņosim" state.
+- Unit tests: validation, rate limits, consent version stored, nothing sent twice. Integration: request → confirm → saved item with both flags → digest goes out on a drop. e2e: signed-out tap shows the field, tapping "Paziņot man" shows `notify.sent`, the mock inbox has one e-mail, its link lands on the results page with the card in the "Paziņosim" state.
 
 ### PR 3: measure the gates without cookies
 
@@ -129,7 +131,7 @@ Steps: cancel any active subscription at period end and e-mail those users that 
 
 ## 6. Law and honesty
 
-- Price-drop e-mails about a product the person asked about are a service message; Trilio's own offers are a commercial communication (Information Society Services Law art. 9, GDPR). One yes covers both only because the sentence above the button names both plainly and the button itself is the affirmative act. The exact text and its version are stored with the request. The lawyer confirms the wording once before PR 2 ships.
+- Price-drop e-mails about a product the person asked about are a service message; Trilio's own offers are a commercial communication (Information Society Services Law art. 9, GDPR). One yes covers both only because the sentence above the button names both plainly and the button "Paziņot man" itself is the affirmative act. The exact text and its version are stored with the request. The lawyer confirms the wording once before PR 2 ships.
 - Double opt-in: nothing goes to an address until its owner clicks the confirmation link. This protects strangers whose address someone typed, and it is what the magic link already does.
 - Every e-mail keeps one-click unsubscribe (RFC 8058) and the "Nesūtīt" link in the wishlist.
 - No "cena kritīs", no "tikai šodien", no pre-ticked boxes, no pop-up on leaving the page, no interstitial on the way to the shop. The shop button stays first and unchanged.
