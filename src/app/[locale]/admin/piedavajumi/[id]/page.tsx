@@ -16,6 +16,9 @@ import { cancelOfferAction, extendOfferAction, sendOfferAction } from "../../act
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, Section, inputClass, labelClass } from "../../ui";
 import { Timeline } from "@/ui/Timeline";
+import { offerItems } from "@/services/admin/crm";
+import { offerNoteAction } from "../../crm-actions";
+import { NextStepBox, RecordProduct } from "../../crm";
 
 // One offer: the e-mail as sent (or as it would go), its link for sharing by
 // hand, the timeline and the actions that fit its state.
@@ -25,7 +28,7 @@ export const metadata: Metadata = { title: "Piedāvājums" };
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ sent?: string; error?: string; created?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; created?: string; partner?: string }>;
 };
 
 export default async function AdminOffer({ params, searchParams }: Props) {
@@ -70,6 +73,13 @@ export default async function AdminOffer({ params, searchParams }: Props) {
           {t.has(`error.${sp.error}`) ? t(`error.${sp.error}`) : sp.error}
         </p>
       ) : null}
+
+      <NextStepBox item={(await offerItems(db)).find((i) => i.id === offer.id)} />
+      <RecordProduct
+        productId={offer.productId}
+        back={`/admin/piedavajumi/${offer.id}`}
+        status={sp.partner}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <div className="flex flex-col gap-4">
@@ -145,6 +155,18 @@ export default async function AdminOffer({ params, searchParams }: Props) {
           <Section title={t("timeline")} id="timeline">
             <Timeline events={events} />
           </Section>
+          <form action={offerNoteAction} className="flex flex-col gap-2" aria-label={t("notesTitle")}>
+            <input type="hidden" name="offerId" value={offer.id} />
+            <label className={labelClass}>
+              {t("note")}
+              <textarea name="note" rows={2} required maxLength={1000} className={`${inputClass} py-2`} />
+            </label>
+            <div>
+              <Button type="submit" variant="outline" size="sm">
+                {t("addNote")}
+              </Button>
+            </div>
+          </form>
         </div>
 
         <section aria-label={t("email")} className="flex flex-col gap-2">

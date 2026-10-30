@@ -134,6 +134,13 @@
       "when": 1793386211280,
       "tag": "0018_notify_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793389297750,
+      "tag": "0019_crm",
+      "breakpoints": true
     }
   ]
 }

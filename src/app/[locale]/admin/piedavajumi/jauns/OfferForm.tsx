@@ -30,7 +30,13 @@ type Props = {
   inbox: string;
   company: string;
   baseUrl: string;
-  defaults: { validUntil: string; deliveryWorkingDays: number; warrantyMonths: number };
+  defaults: {
+    validUntil: string;
+    deliveryWorkingDays: number;
+    warrantyMonths: number;
+    /** The partner's confirmed cost (Prasīts partnerim → Apstiprināts), pre-filled. */
+    costCents?: number | null;
+  };
 };
 
 function cents(raw: string): number | null {
@@ -64,7 +70,9 @@ export function OfferForm({
     startSubmit(() => action(data));
   };
   const [price, setPrice] = useState("");
-  const [cost, setCost] = useState("");
+  const [cost, setCost] = useState(
+    defaults.costCents ? (defaults.costCents / 100).toFixed(2).replace(".", ",") : "",
+  );
   const [condition, setCondition] = useState<"new" | "refurbished">("new");
   const [grade, setGrade] = useState("");
   const [warranty, setWarranty] = useState(String(defaults.warrantyMonths));
@@ -293,7 +301,10 @@ export function OfferForm({
           />
         </label>
 
-        <details className="rounded-panel-lg border-[1.5px] border-dashed border-line-30 p-4">
+        <details
+          open={!!defaults.costCents}
+          className="rounded-panel-lg border-[1.5px] border-dashed border-line-30 p-4"
+        >
           <summary className="min-h-11 cursor-pointer text-[15px] font-semibold text-mist">
             {t("private")}
           </summary>

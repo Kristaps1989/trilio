@@ -119,3 +119,13 @@ A sales forecast, deal values on a board, assignment to several owners (there is
 3. The worklist is "Uzdevumi" and replaces Šodien, which becomes a view inside it.
 
 Ready to build, PR 1 first.
+
+## 10. Status (30 Oct 2026): built, not merged
+
+All four PRs are built together on one branch.
+
+- **Uzdevumi** (`/admin`, replaces Šodien): views "Vajag rīcību · Gaida partneri · Gaida klientu · Pabeigti · Visi" with counts under the other filters; one GET filter form (search, period today/yesterday/7/30 days/from–to, kind, partner, category, sort), all in the URL; columns kind, product with model code and EAN, who, amount, stage and whose turn, partner, date with "gaida N d.", next step; 50 rows a page; CSV of exactly the view (`/admin/uzdevumi/csv`); ingestion failures as alerts on top; the day's numbers below. Default sort in "Vajag rīcību" is the longest-waiting first.
+- **Pieprasījums, Piedāvājumi, Pasūtījumi** use the same bar and cells. Pieprasījums adds savers with consent, offered/bought counts, shop price and the 30-day low, and "Piedāvāt visiem (n)".
+- **Partner mark** (`partner_requests`): free partner name, the partner's order number, status requested/confirmed/unavailable, cost when confirmed, note, who and when. On a lead (product level) or on one order; the newest row wins and the rest is the history. Search finds the partner's number. A confirmed cost pre-fills the offer form. On an order the mark also lands in the order's timeline.
+- **Records:** a new lead page (`/admin/pieprasijums/{productId}`) with who saved it, every offer for it, the partner block and notes (`lead_notes`); the offer and order pages gain "Nākamais solis", the product block with model code, EAN, today's shop price and the partner form; offers gain notes. The user page already held the person's saves, offers and orders.
+- **Rules** live in `src/domain/admin/crm.ts` (pure, unit-tested); data in `src/services/admin/crm.ts` (tested against Postgres); e2e in `tests/e2e/crm.spec.ts` and the offer flow in `tests/e2e/offers.spec.ts`.

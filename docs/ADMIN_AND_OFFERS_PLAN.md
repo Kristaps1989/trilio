@@ -184,6 +184,8 @@ Both sides must see where an order is, and the delivery date must be recorded: t
 
 **PR placement.** Fields, timeline, buyer page, admin actions and e-mails are part of PR 3; carrier polling and the late-parcel highlight are PR 4; label printing is in §7.
 
+> Since 30 Oct 2026 the admin home is **Uzdevumi**, a CRM worklist over leads, offers and orders that replaces Šodien (docs/CRM_PLAN.md).
+
 ## 11. Product principles for this section (UX review, 24 Oct 2026)
 
 The question to ask of every screen: what is the one thing the person came to do, and can they do it without reading? What follows is what that adds to the plan, and what it removes.

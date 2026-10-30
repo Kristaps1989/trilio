@@ -52,7 +52,7 @@ test("the admin reaches every section from the header, on a phone too", async ({
   await devLogin(page, ADMIN, "/");
   await page.getByRole("link", { name: "Admin", exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Šodien");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Uzdevumi");
   await expect(page.getByRole("heading", { name: "Skaitļi" })).toBeVisible();
   await expectNoAxeViolations(page);
   await noSideScroll(page);

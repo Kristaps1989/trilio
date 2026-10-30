@@ -334,3 +334,12 @@ export async function eventsOf(db: Db, offerId: string) {
     .where(eq(offerEvents.offerId, offerId))
     .orderBy(sql`${offerEvents.createdAt} asc`);
 }
+
+/** The owner's note on an offer, in its timeline. */
+export async function addOfferNote(db: Db, offerId: string, note: string, by: string): Promise<boolean> {
+  const text = note.trim().slice(0, 1000);
+  const offer = await offerById(db, offerId);
+  if (!offer || !text) return false;
+  await db.insert(offerEvents).values({ offerId, kind: "note", source: "admin", note: text, data: { by } });
+  return true;
+}

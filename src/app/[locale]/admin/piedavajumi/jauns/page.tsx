@@ -11,6 +11,7 @@ import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur } from "@/i18n/format";
 import { saversOf } from "@/services/admin/stats";
 import { referenceFor } from "@/services/offers/reference";
+import { confirmedCost } from "@/services/admin/crm";
 import { appBaseUrl } from "@/services/payments";
 import { Button } from "@/ui/Button";
 import { ProductImage } from "@/ui/ProductImage";
@@ -209,6 +210,7 @@ export default async function NewOffer({ searchParams }: Props) {
             validUntil: rigaDate(defaultValidUntil(new Date())),
             deliveryWorkingDays: large ? 5 : 3,
             warrantyMonths: 24,
+            costCents: await confirmedCost(db, product.id),
           }}
         />
       )}

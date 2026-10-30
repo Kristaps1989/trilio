@@ -1181,3 +1181,55 @@ export const uiEvents = pgTable(
 );
 
 export type NotifyRequest = typeof notifyRequests.$inferSelect;
+
+export const partnerRequestStatusEnum = pgEnum("partner_request_status", [
+  "requested",
+  "confirmed",
+  "unavailable",
+]);
+
+/**
+ * "Prasīts partnerim" (docs/CRM_PLAN.md §4): a product asked from a partner,
+ * for the leads on it or for one paid order. The newest row wins; older rows
+ * are the history. Partner names are free text (owner, 30 Oct 2026).
+ */
+export const partnerRequests = pgTable(
+  "partner_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    /** Set when the request is for one order; null for the product's leads and offers. */
+    orderId: uuid("order_id").references(() => offerOrders.id, { onDelete: "cascade" }),
+    status: partnerRequestStatusEnum("status").notNull().default("requested"),
+    partner: text("partner"),
+    /** The partner's own order number. */
+    partnerOrderRef: text("partner_order_ref"),
+    costCents: integer("cost_cents"),
+    note: text("note"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("partner_requests_product_idx").on(t.productId, t.createdAt),
+    index("partner_requests_order_idx").on(t.orderId),
+  ],
+);
+
+/** The owner's notes on a lead (a product people saved), with who and when. */
+export const leadNotes = pgTable(
+  "lead_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    note: text("note").notNull(),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("lead_notes_product_idx").on(t.productId, t.createdAt)],
+);
+
+export type PartnerRequest = typeof partnerRequests.$inferSelect;

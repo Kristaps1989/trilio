@@ -1508,7 +1508,10 @@
       "feedback_problem": "Problem reported",
       "problem_resolved": "Problem resolved",
       "delivery_corrected": "Delivery date corrected",
-      "note": "Note"
+      "note": "Note",
+      "partner_requested": "Requested from partner",
+      "partner_confirmed": "Partner confirmed",
+      "partner_unavailable": "Not available from partner"
     },
     "source": {
       "admin": "admin",

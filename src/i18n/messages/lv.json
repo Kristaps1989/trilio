@@ -1510,7 +1510,10 @@
       "feedback_problem": "Ziņota problēma",
       "problem_resolved": "Problēma atrisināta",
       "delivery_corrected": "Piegādes datums labots",
-      "note": "Piezīme"
+      "note": "Piezīme",
+      "partner_requested": "Prasīts partnerim",
+      "partner_confirmed": "Partneris apstiprināja",
+      "partner_unavailable": "Partnerim nav pieejams"
     },
     "source": {
       "admin": "admin",
@@ -1522,7 +1525,7 @@
   "admin": {
     "nav": {
       "label": "Admin sadaļas",
-      "today": "Šodien",
+      "today": "Uzdevumi",
       "stats": "Statistika",
       "users": "Lietotāji",
       "demand": "Pieprasījums",
@@ -1782,7 +1785,10 @@
         "email_failed": "E-pastu neizdevās nosūtīt. Mēģini vēlreiz."
       },
       "previewFrame": "E-pasta priekšskatījums",
-      "textVersion": "Teksta versija"
+      "textVersion": "Teksta versija",
+      "notesTitle": "Piezīmes",
+      "note": "Piezīme",
+      "addNote": "Pievienot piezīmi"
     },
     "orders": {
       "title": "Pasūtījumi",
@@ -2145,6 +2151,176 @@
           "landing": "Lapai jāsākas ar /, piemēram /izvelies."
         }
       }
+    },
+    "crm": {
+      "title": "Uzdevumi",
+      "sub": "Viss, kas jādara, vecākais augšā. {count, plural, one {# vajag rīcību} other {# vajag rīcību}}.",
+      "views": "Skati",
+      "view": {
+        "action": "Vajag rīcību",
+        "partner": "Gaida partneri",
+        "waiting": "Gaida klientu",
+        "done": "Pabeigti",
+        "all": "Visi"
+      },
+      "state": {
+        "action": "Tava kārta",
+        "partner": "Gaida partneri",
+        "waiting": "Gaida klientu vai kurjeru",
+        "done": "Pabeigts"
+      },
+      "stage": {
+        "lead": {
+          "new": "Jauns pieprasījums",
+          "requested": "Prasīts partnerim",
+          "confirmed": "Partneris apstiprināja",
+          "unavailable": "Nav pieejams",
+          "offered": "Piedāvāts",
+          "won": "Nopirkts"
+        },
+        "offer": {
+          "draft": "Melnraksts",
+          "sent": "Nosūtīts",
+          "opened": "Atvērts",
+          "accepted": "Pieņemts",
+          "paid": "Apmaksāts",
+          "expired": "Beidzies",
+          "cancelled": "Atcelts"
+        },
+        "order": {
+          "awaiting_payment": "Gaida apmaksu",
+          "paid": "Apmaksāts",
+          "packed": "Sapakots",
+          "shipped": "Nosūtīts",
+          "delivered": "Piegādāts",
+          "return_requested": "Atteikums",
+          "returned": "Atgriezts",
+          "refunded": "Atmaksāts",
+          "cancelled": "Atcelts"
+        }
+      },
+      "next": {
+        "request_partner": "Prasīt partnerim",
+        "record_answer": "Atzīmēt atbildi",
+        "make_offer": "Piedāvāt",
+        "send_offer": "Nosūtīt",
+        "pack": "Sapakot",
+        "ship": "Nosūtīt pircējam",
+        "check_parcel": "Pārbaudīt sūtījumu",
+        "contact_buyer": "Sazināties",
+        "refund": "Atmaksāt",
+        "resolve_problem": "Atrisināt"
+      },
+      "partner": {
+        "none": "Nav prasīts",
+        "requested": "Prasīts partnerim",
+        "confirmed": "Partneris apstiprināja",
+        "unavailable": "Nav pieejams",
+        "cost": "Iepirkums {cost}"
+      },
+      "late": "Kavējas",
+      "model": "Modelis {code}",
+      "ean": "EAN {ean}",
+      "noCodes": "Modelis un EAN nav zināmi",
+      "waitToday": "gaida kopš šodienas",
+      "waitDays": "gaida {days} d.",
+      "filters": "Filtri",
+      "search": "Meklēt",
+      "searchHint": "Nr., e-pasts, prece, modelis, EAN, partnera nr.",
+      "period": "Periods",
+      "range": {
+        "all": "Viss laiks",
+        "today": "Šodien",
+        "yesterday": "Vakar",
+        "7d": "7 dienas",
+        "30d": "30 dienas",
+        "custom": "No–līdz"
+      },
+      "from": "No",
+      "to": "Līdz",
+      "kind": "Veids",
+      "kinds": {
+        "all": "Visi",
+        "lead": "Pieprasījumi",
+        "offer": "Piedāvājumi",
+        "order": "Pasūtījumi"
+      },
+      "kindLabel": {
+        "lead": "Pieprasījums",
+        "offer": "Piedāvājums",
+        "order": "Pasūtījums"
+      },
+      "partnerFilter": "Partneris",
+      "partnerOption": {
+        "all": "Visi",
+        "none": "Nav prasīts",
+        "requested": "Prasīts partnerim",
+        "confirmed": "Apstiprināts",
+        "unavailable": "Nav pieejams"
+      },
+      "category": "Kategorija",
+      "allCategories": "Visas kategorijas",
+      "sort": "Kārtot",
+      "sortWaiting": "Ilgāk gaidošie augšā",
+      "sortNewest": "Jaunākie augšā",
+      "apply": "Rādīt",
+      "reset": "Notīrīt",
+      "csv": "CSV (šis skats)",
+      "shown": "Rāda {shown} no {total}",
+      "prev": "Iepriekšējie",
+      "more": "Vēl",
+      "empty": "Šajā skatā nekā nav.",
+      "col": {
+        "kind": "Veids",
+        "product": "Prece",
+        "person": "Kas",
+        "amount": "Summa",
+        "stage": "Stadija",
+        "partner": "Partneris",
+        "date": "Datums",
+        "next": "Nākamais solis",
+        "savers": "Saglabājuši",
+        "prices": "Cenas veikalos",
+        "validUntil": "Derīgs līdz"
+      },
+      "savers": "{total} saglabāja · {optedIn} piekrīt piedāvājumiem",
+      "saversDone": "{offered} piedāvāts · {bought} nopirkts",
+      "low30": "30 d. zemākā {price}",
+      "noShop": "Nav veikalos",
+      "offerAll": "Piedāvāt visiem ({count})",
+      "partnerTitle": "Atzīmēt partnera pieprasījumu",
+      "partnerStatus": "Stāvoklis",
+      "partnerName": "Partneris",
+      "partnerRef": "Partnera pasūtījuma nr.",
+      "partnerCost": "Iepirkuma cena, € (ja apstiprināts)",
+      "partnerNote": "Piezīme",
+      "partnerSave": "Saglabāt",
+      "partnerSaved": "Partnera atzīme saglabāta.",
+      "partnerError": "Neizdevās saglabāt partnera atzīmi. Pārbaudi cenu.",
+      "partnerHistory": "Partnera vēsture",
+      "alerts": "Sistēmas brīdinājumi",
+      "numbersTitle": "Skaitļi",
+      "leadTitle": "Pieprasījums",
+      "leadSub": "{count, plural, one {# cilvēks saglabāja} other {# cilvēki saglabāja}}",
+      "leadSavers": "Kas saglabāja",
+      "leadOffers": "Piedāvājumi šai precei",
+      "leadNotes": "Piezīmes",
+      "note": "Piezīme",
+      "addNote": "Pievienot piezīmi",
+      "noNotes": "Piezīmju vēl nav.",
+      "savedAt": "Saglabāja",
+      "optIn": "Piekrīt piedāvājumiem",
+      "noOptIn": "Nepiekrīt",
+      "email": "E-pasts",
+      "price": "Cena",
+      "status": "Statuss",
+      "created": "Izveidots",
+      "by": "{who}",
+      "nextTitle": "Nākamais solis",
+      "nothingNext": "Šobrīd nekas nav jādara.",
+      "product": "Prece",
+      "shopNow": "Veikalos tagad",
+      "record": "Atvērt"
     }
   },
   "alertsUnsubscribe": {

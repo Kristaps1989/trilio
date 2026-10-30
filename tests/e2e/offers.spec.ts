@@ -180,11 +180,48 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     await expectNoAxeViolations(page);
   });
 
-  await test.step("the admin sees it on Šodien and ships it with Omniva", async () => {
-    await admin.goto("/admin");
-    const todo = admin.getByRole("region", { name: "Jāizdara" });
-    await todo.getByRole("link", { name: new RegExp(`Jānosūta.*${orderNumber}`) }).click();
+  await test.step("Uzdevumi: the paid order is Trilio's turn; ordered from a partner it waits for the partner", async () => {
+    // The default view ("Vajag rīcību", longest-waiting first), narrowed to this order.
+    await admin.goto(`/admin?q=${orderNumber}`);
+    await expect(admin.getByRole("heading", { level: 1 })).toHaveText("Uzdevumi");
+    const row = admin.getByRole("row").filter({ hasText: orderNumber });
+    await expect(row).toContainText("Apmaksāts");
+    await expect(row.getByRole("link", { name: "Sapakot" })).toBeVisible();
+    // Pasūtījumi, today, found by the order number, with the product's codes.
+    await admin.goto(`/admin/pasutijumi?range=today&q=${orderNumber}`);
+    await expect(admin.locator("[data-crm-total]")).toHaveText("Rāda 1 no 1");
+    await expect(
+      admin.getByRole("row").filter({ hasText: orderNumber }).locator("[data-product-codes]"),
+    ).toContainText("EAN");
+    await admin.getByRole("link", { name: new RegExp(`^${orderNumber} · `) }).click();
     await expect(admin).toHaveURL(/\/admin\/pasutijumi\/[0-9a-f-]{36}$/);
+    await expect(admin.locator("[data-next-step]")).toHaveAttribute("data-next-step", "pack");
+    // Ordered from a partner, with the partner's order number.
+    const form = admin.locator("[data-partner-form]");
+    await form.getByText("Atzīmēt partnera pieprasījumu").click();
+    await form.getByLabel("Partneris", { exact: true }).fill("Euronics");
+    await form.getByLabel("Partnera pasūtījuma nr.").fill("E2E-77");
+    await form.getByRole("button", { name: "Saglabāt" }).click();
+    await expect(admin.getByRole("status").filter({ hasText: "Partnera atzīme saglabāta." })).toBeVisible();
+    await expect(admin.locator("[data-record-product] [data-partner]")).toContainText("Euronics #E2E-77");
+    await expect(admin.locator("[data-next-step]")).toHaveAttribute("data-next-step", "record_answer");
+    await expectNoAxeViolations(admin);
+    // "Gaida partneri" lists it, and the partner's number finds it.
+    await admin.goto("/admin?state=partner&q=E2E-77");
+    await expect(admin.getByRole("row").filter({ hasText: orderNumber })).toBeVisible();
+    await admin
+      .getByRole("row")
+      .filter({ hasText: orderNumber })
+      .getByRole("link", { name: "Atzīmēt atbildi" })
+      .click();
+    // The goods arrived: confirmed, and it is Trilio's turn to pack again.
+    await form.getByText("Atzīmēt partnera pieprasījumu").click();
+    await form.getByText("Partneris apstiprināja").click();
+    await form.getByRole("button", { name: "Saglabāt" }).click();
+    await expect(admin.locator("[data-next-step]")).toHaveAttribute("data-next-step", "pack");
+  });
+
+  await test.step("the admin ships it with Omniva", async () => {
     await expect(admin.getByText("Anna Bērziņa")).toBeVisible();
     await expect(admin.getByText("+371 20000000")).toBeVisible();
     await admin.getByRole("button", { name: "Sagatavots sūtīšanai" }).click();

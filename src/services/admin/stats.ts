@@ -16,7 +16,6 @@ import {
   users,
 } from "@/db/schema";
 import { loadProducts } from "@/db/queries/catalog";
-import { priceHistory } from "@/db/queries/wishlist";
 import { rigaDay } from "@/domain/analytics/visits";
 import { daysBetween, paidRatio, quartiles, topAnswers } from "@/domain/admin/stats";
 import { isLate } from "@/domain/offers/offers";
@@ -332,65 +331,6 @@ export async function userDetail(db: Db, userId: string) {
 
 // ---------------------------------------------------------------- Pieprasījums
 
-export type DemandRow = {
-  productId: string;
-  name: string;
-  subcategoryId: string;
-  savers: number;
-  optedIn: number;
-  bestCents: number | null;
-  bestStore: string | null;
-  low30Cents: number | null;
-  imageUrl: string | null;
-};
-
-/** Products ranked by how many people saved them: the sourcing list. */
-export async function demand(
-  db: Db,
-  opts: { subcategoryId?: string; minSavers?: number; limit?: number } = {},
-): Promise<DemandRow[]> {
-  const rows = await db
-    .select({
-      productId: savedItems.productId,
-      savers: count(),
-      optedIn: sql<number>`count(*) filter (where ${users.offersOptIn})`.mapWith(Number),
-    })
-    .from(savedItems)
-    .innerJoin(users, eq(users.id, savedItems.userId))
-    .where(
-      and(
-        eq(savedItems.kind, "product"),
-        opts.subcategoryId ? eq(savedItems.subcategoryId, opts.subcategoryId) : undefined,
-      ),
-    )
-    .groupBy(savedItems.productId)
-    .having(sql`count(*) >= ${opts.minSavers ?? 1}`)
-    .orderBy(desc(count()))
-    .limit(opts.limit ?? 50);
-  const ids = rows.map((r) => r.productId).filter((id): id is string => !!id);
-  const products = new Map((await loadProducts(db, ids)).map((p) => [p.id, p]));
-  const out: DemandRow[] = [];
-  for (const r of rows) {
-    const product = r.productId ? products.get(r.productId) : undefined;
-    if (!product) continue;
-    const best = currentOffer(product);
-    const lows = (await priceHistory(db, product.id, 30)).map((h) => h.priceCents);
-    if (best) lows.push(best.priceCents);
-    out.push({
-      productId: product.id,
-      name: product.name,
-      subcategoryId: product.subcategoryId,
-      savers: Number(r.savers),
-      optedIn: Number(r.optedIn),
-      bestCents: best?.priceCents ?? null,
-      bestStore: best?.storeName ?? null,
-      low30Cents: lows.length ? Math.min(...lows) : null,
-      imageUrl: product.imageUrl,
-    });
-  }
-  return out;
-}
-
 /** Everyone who saved a product, with consent, for "Piedāvāt visiem". */
 export async function saversOf(db: Db, productId: string) {
   return db
@@ -401,37 +341,6 @@ export async function saversOf(db: Db, productId: string) {
 }
 
 // ---------------------------------------------------------------- Piedāvājumi and pasūtījumi
-
-export async function listOffers(db: Db, status?: string) {
-  const valid = ["draft", "sent", "opened", "accepted", "paid", "expired", "cancelled"];
-  return db
-    .select({ offer: specialOffers, email: users.email, order: offerOrders })
-    .from(specialOffers)
-    .leftJoin(users, eq(users.id, specialOffers.userId))
-    .leftJoin(offerOrders, eq(offerOrders.offerId, specialOffers.id))
-    .where(
-      status && valid.includes(status)
-        ? eq(specialOffers.status, status as (typeof specialOffers.status.enumValues)[number])
-        : undefined,
-    )
-    .orderBy(desc(specialOffers.createdAt))
-    .limit(200);
-}
-
-export async function listOrders(db: Db, status?: string) {
-  const valid = offerOrders.status.enumValues as readonly string[];
-  return db
-    .select({ order: offerOrders, offer: specialOffers })
-    .from(offerOrders)
-    .innerJoin(specialOffers, eq(specialOffers.id, offerOrders.offerId))
-    .where(
-      status && valid.includes(status)
-        ? eq(offerOrders.status, status as (typeof offerOrders.status.enumValues)[number])
-        : undefined,
-    )
-    .orderBy(desc(offerOrders.createdAt))
-    .limit(200);
-}
 
 // ---------------------------------------------------------------- Sistēma
 

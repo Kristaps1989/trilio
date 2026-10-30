@@ -1,6 +1,7 @@
 import { and, eq, inArray, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
+import { leadItems, leadPrices, workItems } from "./crm";
 import {
   adminAudit,
   affiliateClicks,
@@ -26,12 +27,9 @@ import { upsertOffers } from "@/services/ingestion/upsert";
 import { recordVisit, rollupVisits, visitRows } from "@/services/visits/visits";
 import { audit, getFlag, offersPaused, recentAudit, setFlag, OFFERS_PAUSED } from "./audit";
 import {
-  demand,
   eprelCounts,
   headline,
   lastRuns,
-  listOffers,
-  listOrders,
   listUsers,
   ordersNeedingDelivery,
   retryEprelErrors,
@@ -257,16 +255,21 @@ run("admin statistics, visits and audit", () => {
     expect(await userDetail(db, "00000000-0000-0000-0000-000000000000")).toBeNull();
   });
 
-  it("ranks demand by savers with consent counts and prices", async () => {
-    const rows = await demand(db, { subcategoryId: "blender", minSavers: 2 });
-    expect(rows.find((r) => r.productId === productId)).toMatchObject({
-      savers: 2,
-      optedIn: 1,
+  it("turns saved products into leads with consent counts, codes and prices", async () => {
+    const lead = (await leadItems(db)).find((r) => r.id === productId);
+    expect(lead).toMatchObject({
+      kind: "lead",
+      stage: "new",
+      state: "action",
+      next: "request_partner",
+      savers: { total: 2, optedIn: 1, offered: 0, bought: 0 },
+      product: { id: productId, subcategoryId: "blender" },
+    });
+    expect((await leadPrices(db, [productId])).get(productId)).toEqual({
       bestCents: 8900,
       bestStore: "Admin Stats Store",
       low30Cents: 8900,
     });
-    expect(await demand(db, { subcategoryId: "blender", minSavers: 50 })).toEqual([]);
     const savers = await saversOf(db, productId);
     expect(savers.map((s) => s.optIn).sort()).toEqual([false, true]);
   });
@@ -340,10 +343,18 @@ run("admin statistics, visits and audit", () => {
     expect(h.revenueMonthCents).toBeGreaterThanOrEqual(7900);
     expect(h.paidRatio).not.toBeNull();
 
-    expect((await listOffers(db, "sent")).some((r) => r.offer.id === offer!.id)).toBe(true);
-    expect((await listOffers(db, "bogus")).length).toBeGreaterThan(0);
-    expect((await listOrders(db, "delivered")).some((r) => r.order.id === paid!.id)).toBe(true);
-    expect((await listOrders(db)).length).toBeGreaterThan(0);
+    // The CRM lists: the sent offer waits for the shopper; the delivered order is done.
+    const items = await workItems(db);
+    expect(items.find((i) => i.id === offer!.id)).toMatchObject({
+      kind: "offer",
+      stage: "sent",
+      state: "waiting",
+    });
+    expect(items.find((i) => i.id === paid!.id)).toMatchObject({
+      kind: "order",
+      stage: "delivered",
+      state: "done",
+    });
     expect((await listUsers(db, `admin-stats-a-${stamp}`))[0]).toMatchObject({
       offersSent: 1,
       ordersPaid: 1,
