@@ -1,0 +1,4 @@
+{
+  "_comment": "Subcategories where Trilio buys directly from a distributor and can make its own offer (docs/PRICE_NOTIFY_PLAN.md). Only here do the results say \"Trilio var piedāvāt lētāk\" and does the notify consent cover Trilio's offers. The owner keeps this list true.",
+  "sourcing": ["fridge"]
+}

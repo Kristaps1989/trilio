@@ -1,42 +1,41 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { isLate } from "@/domain/offers/offers";
-import { formatDateShort, formatEur } from "@/i18n/format";
-import { listOrders } from "@/services/admin/stats";
+import { applyFilters, parseFilters } from "@/domain/admin/crm";
+import { formatEur } from "@/i18n/format";
+import { workItems } from "@/services/admin/crm";
 import { buttonClass } from "@/ui/Button";
 import { requireAdmin } from "../guard";
-import { AdminTitle, Chip, FilterLinks, Table } from "../ui";
+import {
+  FilterBar,
+  NextStepCell,
+  PartnerChip,
+  Pager,
+  ProductCell,
+  StageCell,
+  StateViews,
+  WaitCell,
+  csvHref,
+} from "../crm";
+import { AdminTitle, Table } from "../ui";
 
-// Pasūtījumi: paid orders with delivery state; late parcels stand out.
+// Pasūtījumi (docs/CRM_PLAN.md §3.2): every order with its number, the
+// product's model code and EAN, the buyer, the amount, the stage, the partner
+// mark with the partner's order number, the date and the next step.
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Pasūtījumi" };
 
-const STATUSES = [
-  "all",
-  "awaiting_payment",
-  "paid",
-  "packed",
-  "shipped",
-  "delivered",
-  "return_requested",
-  "returned",
-  "refunded",
-  "cancelled",
-] as const;
-
-type Props = { searchParams: Promise<{ status?: string }> };
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function AdminOrders({ searchParams }: Props) {
   await requireAdmin("/admin/pasutijumi");
   const t = await getTranslations("admin.orders");
-  const ts = await getTranslations("admin.status");
-  const sp = await searchParams;
-  const status = STATUSES.includes(sp.status as (typeof STATUSES)[number]) ? sp.status! : "all";
-  const rows = await listOrders(db, status === "all" ? undefined : status);
+  const tc = await getTranslations("admin.crm");
+  const filters = { ...parseFilters(await searchParams, { state: "all" }), kind: "order" as const };
   const now = new Date();
+  const { rows, total, counts, hasMore } = applyFilters(await workItems(db, now, ["order"]), filters, now);
+  const base = "/admin/pasutijumi";
   return (
     <>
       <AdminTitle title={t("title")}>
@@ -44,46 +43,31 @@ export default async function AdminOrders({ searchParams }: Props) {
           {t("csv")}
         </a>
       </AdminTitle>
-      <FilterLinks
-        label={t("filter")}
-        items={STATUSES.map((s) => ({
-          href: s === "all" ? "/admin/pasutijumi" : `/admin/pasutijumi?status=${s}`,
-          label: s === "all" ? t("all") : ts(`order.${s}`),
-          active: s === status,
-        }))}
-      />
+      <StateViews filters={filters} counts={counts} basePath={base} />
+      <FilterBar filters={filters} basePath={base} csvHref={csvHref(filters)} />
       <Table
         caption={t("title")}
-        head={[t("number"), t("product"), t("buyer"), t("amount"), t("status"), t("date")]}
-        empty={t("empty")}
-        rows={rows.map(({ order, offer }) => {
-          const late = isLate(order, now);
-          return [
-            <Link
-              key="n"
-              href={`/admin/pasutijumi/${order.id}`}
-              className="font-semibold underline underline-offset-2"
-            >
-              {order.number}
-            </Link>,
-            offer.productName,
-            <span key="b">
-              {order.buyerKind === "company" ? (order.companyName ?? order.fullName) : order.fullName}
-              <span className="block text-sm text-stone">
-                {order.deliveryMethod === "locker" ? order.lockerName : order.city}
-              </span>
-            </span>,
-            formatEur(order.amountCents),
-            <span key="s" className="flex flex-wrap gap-1">
-              <Chip tone={late ? "warning" : order.status === "delivered" ? "lime" : "neutral"}>
-                {ts(`order.${order.status}`)}
-              </Chip>
-              {late ? <Chip tone="warning">{t("late")}</Chip> : null}
-            </span>,
-            formatDateShort(order.paidAt ?? order.createdAt),
-          ];
-        })}
+        head={[
+          tc("col.product"),
+          tc("col.person"),
+          tc("col.amount"),
+          tc("col.stage"),
+          tc("col.partner"),
+          tc("col.date"),
+          tc("col.next"),
+        ]}
+        empty={tc("empty")}
+        rows={rows.map((item) => [
+          <ProductCell key="p" item={item} />,
+          item.person ?? "—",
+          item.amountCents !== null ? formatEur(item.amountCents) : "—",
+          <StageCell key="st" item={item} />,
+          <PartnerChip key="pa" partner={item.partner} />,
+          <WaitCell key="w" item={item} now={now} />,
+          <NextStepCell key="n" item={item} />,
+        ])}
       />
+      <Pager filters={filters} basePath={base} total={total} shown={rows.length} hasMore={hasMore} />
     </>
   );
 }

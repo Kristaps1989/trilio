@@ -2,18 +2,19 @@
 
 import { track } from "@/ui/analytics/track";
 import { useRouter } from "@/i18n/navigation";
-import { useLocale, useTranslations } from "next-intl";
-import { isUiLocale, localizedPath, type UiLocale } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toggleSavedAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
-import { OffersAsk } from "./OffersAsk";
+import { NotifyPanel } from "./NotifyPanel";
 import { SavedAlertNote } from "./SavedAlertNote";
 
-// The heart (owner, 20 Oct 2026): one tap saves a product or a whole search
-// to the wishlist, a second tap removes it. Signed out, the tap goes through
-// sign-in and the item is saved on the way back.
+// "Paziņot, kad cena samazināsies" (docs/PRICE_NOTIFY_PLAN.md): one tap saves
+// a product or a whole search and turns price e-mails on; a second tap stops
+// it. Signed out, the card opens one e-mail field instead of a sign-in page.
+// Signed in where Trilio sources, the first tap shows the one sentence that
+// also covers Trilio's offers.
 
 function Heart({ filled }: { filled: boolean }) {
   return (
@@ -32,26 +33,12 @@ function Heart({ filled }: { filled: boolean }) {
   );
 }
 
-function signInUrl(target: SaveTarget, locale: UiLocale): string {
-  const p = new URLSearchParams();
-  if (target.kind === "product") p.set("product", target.productId);
-  else {
-    p.set("sub", target.subcategoryId);
-    p.set("a", target.answersParam);
-    p.set("label", target.label);
-  }
-  p.set("next", `${window.location.pathname}${window.location.search}`);
-  return localizedPath(
-    `/ienakt?callbackUrl=${encodeURIComponent(`/velmju-saraksts/pievienot?${p.toString()}`)}`,
-    locale,
-  );
-}
-
 export function SaveButton({
   target,
   saved: initial,
   variant = "card",
   name,
+  offers = false,
 }: {
   target: SaveTarget;
   saved: boolean;
@@ -59,34 +46,43 @@ export function SaveButton({
   variant?: "card" | "inline" | "icon";
   /** What is saved, for the screen-reader label. */
   name: string;
+  /** Trilio sources this category (data/offers.json): the consent sentence covers its offers too. */
+  offers?: boolean;
 }) {
   const t = useTranslations("wishlist");
-  const locale = useLocale();
   const router = useRouter();
   const [saved, setSaved] = useState(initial);
   const [pending, start] = useTransition();
-  const [note, setNote] = useState<{ alerts: boolean; askOffers: boolean } | null>(null);
-  // Another heart for the same item (and the refresh after a tap) brings the server's state.
+  const [note, setNote] = useState<{ email: string } | null>(null);
+  const [panel, setPanel] = useState<{ email: string | null } | null>(null);
+  // Another button for the same item (and the refresh after a tap) brings the server's state.
   const [prevInitial, setPrevInitial] = useState(initial);
   if (initial !== prevInitial) {
     setPrevInitial(initial);
     setSaved(initial);
   }
   const search = target.kind === "search";
-  const text = saved ? (search ? t("searchSaved") : t("saved")) : search ? t("saveSearch") : t("save");
+  const text = saved
+    ? search
+      ? t("notifyingSearch")
+      : t("notifying")
+    : search
+      ? t("notifySearch")
+      : t("notify");
 
-  function toggle() {
-    const next = !saved;
+  function run(next: boolean, consent = false) {
     setSaved(next); // optimistic
     start(async () => {
-      const r = await toggleSavedAction(target, next);
+      const r = await toggleSavedAction(target, next, consent);
       if (!r.ok) {
         setSaved(!next);
-        if (r.reason === "auth") window.location.href = signInUrl(target, isUiLocale(locale) ? locale : "lv");
+        if (r.reason === "auth") setPanel({ email: null });
+        else if (r.reason === "consent") setPanel({ email: r.email });
         return;
       }
+      setPanel(null);
       if (r.saved) track("save_item", { item: target.kind });
-      setNote(variant === "card" && r.saved ? { alerts: r.alerts, askOffers: r.askOffers } : null);
+      setNote(r.saved && r.alerts && r.email && variant !== "icon" ? { email: r.email } : null);
       router.refresh();
     });
   }
@@ -102,20 +98,31 @@ export function SaveButton({
     <button
       type="button"
       aria-label={variant === "icon" ? `${text}: ${name}` : undefined}
+      aria-expanded={panel ? true : undefined}
       disabled={pending}
-      onClick={toggle}
+      onClick={() => (panel ? setPanel(null) : run(!saved))}
       className={`${className} ${saved ? "text-lime" : ""}`}
+      data-notify-button
     >
       <Heart filled={saved} />
       {variant === "icon" ? null : <span>{text}</span>}
     </button>
   );
-  if (!note || !saved || (!note.alerts && !note.askOffers)) return button;
+  if (!panel && !(note && saved)) return button;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex w-full flex-col gap-2">
       {button}
-      {note.alerts ? <SavedAlertNote /> : null}
-      {note.askOffers ? <OffersAsk /> : null}
+      {panel ? (
+        <NotifyPanel
+          target={target}
+          email={panel.email}
+          offers={offers}
+          onConsent={() => run(true, true)}
+          onClose={() => setPanel(null)}
+        />
+      ) : note && saved ? (
+        <SavedAlertNote email={note.email} />
+      ) : null}
     </div>
   );
 }

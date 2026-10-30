@@ -1123,3 +1123,113 @@ export type AdKeyword = typeof adKeywords.$inferSelect;
 export type AdAd = typeof adAds.$inferSelect;
 export type AdCreative = typeof adCreatives.$inferSelect;
 export type AdProposal = typeof adProposals.$inferSelect;
+
+/**
+ * "Paziņot, kad cena samazināsies" without an account (docs/PRICE_NOTIFY_PLAN.md):
+ * the e-mail a shopper typed, what they asked about and the exact consent text
+ * shown, until they confirm by the link e-mailed to that address. Nothing is
+ * sent to the address before that click; unconfirmed requests expire in 7 days.
+ */
+export const notifyRequests = pgTable(
+  "notify_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    token: text("token").notNull().unique(),
+    email: text("email").notNull(),
+    kind: savedItemKindEnum("kind").notNull(),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "cascade" }),
+    subcategoryId: text("subcategory_id").notNull(),
+    answersParam: text("answers_param"),
+    label: text("label"),
+    /** Where to return after confirming (a same-site path). */
+    returnPath: text("return_path"),
+    locale: text("locale").notNull().default("lv"),
+    /** The consent text shown, e.g. "notify.body@2026-10-30"; includes Trilio's offers only in sourcing categories. */
+    consent: text("consent").notNull(),
+    /** True when that text covered Trilio's own offers too. */
+    offers: boolean("offers").notNull().default(false),
+    visitorHash: text("visitor_hash"),
+    adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    /** The confirmation also signs the person in, once. */
+    signedInAt: timestamp("signed_in_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("notify_requests_email_idx").on(t.email, t.createdAt),
+    index("notify_requests_visitor_idx").on(t.visitorHash, t.createdAt),
+  ],
+);
+
+/**
+ * First-party funnel events without cookies (docs/PRICE_NOTIFY_PLAN.md §5 PR 3):
+ * one row per event, the day's anonymous visitor hash as in `visits`.
+ */
+export const uiEvents = pgTable(
+  "ui_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    day: date("day").notNull(),
+    visitorHash: text("visitor_hash").notNull(),
+    event: text("event").notNull(),
+    subcategoryId: text("subcategory_id"),
+    adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("ui_events_day_idx").on(t.day, t.event)],
+);
+
+export type NotifyRequest = typeof notifyRequests.$inferSelect;
+
+export const partnerRequestStatusEnum = pgEnum("partner_request_status", [
+  "requested",
+  "confirmed",
+  "unavailable",
+]);
+
+/**
+ * "Prasīts partnerim" (docs/CRM_PLAN.md §4): a product asked from a partner,
+ * for the leads on it or for one paid order. The newest row wins; older rows
+ * are the history. Partner names are free text (owner, 30 Oct 2026).
+ */
+export const partnerRequests = pgTable(
+  "partner_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    /** Set when the request is for one order; null for the product's leads and offers. */
+    orderId: uuid("order_id").references(() => offerOrders.id, { onDelete: "cascade" }),
+    status: partnerRequestStatusEnum("status").notNull().default("requested"),
+    partner: text("partner"),
+    /** The partner's own order number. */
+    partnerOrderRef: text("partner_order_ref"),
+    costCents: integer("cost_cents"),
+    note: text("note"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("partner_requests_product_idx").on(t.productId, t.createdAt),
+    index("partner_requests_order_idx").on(t.orderId),
+  ],
+);
+
+/** The owner's notes on a lead (a product people saved), with who and when. */
+export const leadNotes = pgTable(
+  "lead_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    note: text("note").notNull(),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("lead_notes_product_idx").on(t.productId, t.createdAt)],
+);
+
+export type PartnerRequest = typeof partnerRequests.$inferSelect;

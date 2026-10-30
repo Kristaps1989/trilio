@@ -1,12 +1,8 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db, payments, plans, subscriptions, users } from "@/db";
-import { formatDateNominative, formatEur } from "@/i18n/format";
-import { isUiLocale } from "@/i18n/routing";
-import { processPaymentEvent } from "@/services/billing/engine";
-import { createEmailSender } from "@/services/notify/email";
+import { db, payments } from "@/db";
+import { processPaymentEvent } from "@/services/payments/process";
 import { paymentsProvider } from "@/services/payments";
-import { billingTexts } from "@/services/texts";
 import { offerMailDeps } from "@/services/offers/deps";
 import { afterOrderPaid } from "@/services/offers/notify";
 
@@ -32,32 +28,6 @@ export async function POST(request: Request) {
   if (outcome === "order_paid") {
     const [payment] = await db.select().from(payments).where(eq(payments.orderId, event.orderId));
     if (payment?.offerOrderId) await afterOrderPaid(db, payment.offerOrderId, offerMailDeps());
-  }
-  if (outcome === "activated" || outcome === "renewed") {
-    const [payment] = await db.select().from(payments).where(eq(payments.orderId, event.orderId));
-    const [sub] = payment?.subscriptionId
-      ? await db.select().from(subscriptions).where(eq(subscriptions.id, payment.subscriptionId))
-      : [];
-    const [user] = sub
-      ? await db
-          .select({ email: users.email, locale: users.locale })
-          .from(users)
-          .where(eq(users.id, sub.userId))
-      : [];
-    const [plan] = sub ? await db.select().from(plans).where(eq(plans.id, sub.planId)) : [];
-    if (user && plan && sub) {
-      const lang = isUiLocale(user.locale) ? user.locale : ("lv" as const);
-      const texts = billingTexts(lang);
-      const amount = formatEur(plan.priceCents, lang);
-      await createEmailSender().send({
-        to: user.email,
-        subject: texts.receiptSubject({ amount }),
-        text: texts.receiptBody({
-          amount,
-          next: sub.nextBillingAt ? formatDateNominative(sub.nextBillingAt, lang) : "—",
-        }),
-      });
-    }
   }
   return new NextResponse("OK", { status: 200, headers: { "cache-control": "no-store" } });
 }

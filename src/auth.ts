@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 import { isAdminEmail } from "@/config/admin";
 import { rememberedLanguage } from "@/i18n/path";
+import { notifySignIn } from "@/services/notify/requests";
 import { offerSignIn } from "@/services/offers/offers";
 
 // Google and email magic link (spec §5.1 step 4; Apple deferred by the owner
@@ -46,6 +47,18 @@ function providers(): NextAuthConfig["providers"] {
       credentials: { token: { label: "Token", type: "text" } },
       async authorize(credentials) {
         return offerSignIn(db, String(credentials?.token ?? ""));
+      },
+    }),
+  );
+  // "Paziņot, kad cena samazināsies" without an account (docs/PRICE_NOTIFY_PLAN.md): the
+  // confirmation link was e-mailed to that address, so right after the click it signs in, once.
+  list.push(
+    Credentials({
+      id: "notify",
+      name: "Notify link",
+      credentials: { token: { label: "Token", type: "text" } },
+      async authorize(credentials) {
+        return notifySignIn(db, String(credentials?.token ?? ""));
       },
     }),
   );

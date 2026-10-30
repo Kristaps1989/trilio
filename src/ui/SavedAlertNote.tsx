@@ -8,7 +8,7 @@ import { setPriceAlertsAction } from "@/app/[locale]/velmju-saraksts/actions";
 // request to hear when the price drops, said plainly, with the way out in
 // the same line and the way back after it.
 
-export function SavedAlertNote() {
+export function SavedAlertNote({ email }: { email: string }) {
   const t = useTranslations("wishlist");
   const [on, setOn] = useState(true);
   const [pending, start] = useTransition();
@@ -22,7 +22,7 @@ export function SavedAlertNote() {
 
   return (
     <p role="status" className="text-sm text-night" data-alert-note={on ? "on" : "off"}>
-      {on ? t("alertNote") : t("alertNoteOff")}{" "}
+      {on ? t("alertNote", { email }) : t("alertNoteOff")}{" "}
       <button
         type="button"
         disabled={pending}

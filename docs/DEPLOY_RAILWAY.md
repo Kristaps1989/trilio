@@ -39,7 +39,7 @@ Open the web service → **Variables** → add:
 | `AUTH_URL` | same as `APP_URL` | |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | from Google Cloud console | Enables "Turpināt ar Google". Steps: `docs/AUTH_SETUP.md`. |
 | `RESEND_API_KEY`, `EMAIL_FROM` | from resend.com | Magic-link sign-in, receipts and radar emails. Steps: `docs/AUTH_SETUP.md`. |
-| `PAYSERA_MAC_ID` / `PAYSERA_MAC_KEY` / `PAYSERA_BUSINESS_ID` | from Paysera after approval | Recurring billing (`docs/PAYMENTS.md`). |
+| `PAYSERA_MAC_ID` / `PAYSERA_MAC_KEY` / `PAYSERA_BUSINESS_ID` | from Paysera after approval | One-off payments for personal offers (`docs/PAYMENTS.md`). |
 | `PAYMENT_TOKEN_KEY` | `openssl rand -hex 32` | Encrypts stored billing tokens. |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys` | Web push. |
 | `AUTH_DEV_LOGIN`, `PAYMENTS_PROVIDER=mock`, `ADS_PROVIDER=mock`, `ALLOW_INSECURE_TEST_FEATURES` | **never set on Railway** | Dev/CI only. |
@@ -53,7 +53,7 @@ Railway injects `PORT`; `next start` binds to it automatically on `0.0.0.0`.
 
 Railway builds with Railpack (`npm install`, `npm run build`), then starts the service with `npm run start:release`: it runs `npm run db:release` against `DATABASE_URL` and then `next start`. Railway waits for `/api/health` to return 200, which needs both the database connection and the migrated schema. A failed migration or health check leaves the previous deployment running. (Migrations used to run as a Railway pre-deploy command; on the first production deploy that step left the database empty, so they now run in the start command, where their output is in the deploy log.)
 
-`npm run db:release` applies migrations and seeds the partner stores (with their crawl config and category maps) and the subscription plans. It runs on every deploy and is safe to repeat: store settings in `src/db/stores.ts` reach production with the next deploy, while the `active` flag, feed URLs and affiliate templates you change in the database are kept. Production never gets the placeholder sample shops (`SEED_SAMPLE_DATA=0`).
+`npm run db:release` applies migrations and seeds the partner stores (with their crawl config and category maps). It runs on every deploy and is safe to repeat: store settings in `src/db/stores.ts` reach production with the next deploy, while the `active` flag, feed URLs and affiliate templates you change in the database are kept. Production never gets the placeholder sample shops (`SEED_SAMPLE_DATA=0`).
 
 ### If the deploy fails
 

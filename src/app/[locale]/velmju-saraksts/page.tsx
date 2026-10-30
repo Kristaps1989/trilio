@@ -5,17 +5,16 @@ import { getTranslations } from "next-intl/server";
 import { eq } from "drizzle-orm";
 import { auth, signOut } from "@/auth";
 import { localPath } from "@/i18n/path";
-import { accounts, db, plans } from "@/db";
+import { accounts, db } from "@/db";
 import { loadCandidates, loadProducts } from "@/db/queries/catalog";
-import { getThreshold, listSaved, priceHistory } from "@/db/queries/wishlist";
+import { listSaved, priceHistory } from "@/db/queries/wishlist";
 import type { ProductView } from "@/domain/catalog/types";
 import { decodeState } from "@/domain/flow/state";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer, searchProposal } from "@/domain/wishlist/wishlist";
 import { formatEur } from "@/i18n/format";
-import { currentSubscription, hasAccess } from "@/services/billing/engine";
 import { Button, ButtonLink, buttonClass } from "@/ui/Button";
-import { InfoBox, Kicker, Page, PageTitle, Panel, Screen } from "@/ui/layout";
+import { Kicker, Page, PageTitle, Panel, Screen } from "@/ui/layout";
 import { ProductImage } from "@/ui/ProductImage";
 import { OffersConsent } from "@/ui/OffersConsent";
 import { PriceAlertsSwitch } from "@/ui/PriceAlertsSwitch";
@@ -24,25 +23,21 @@ import { SaveButton } from "@/ui/SaveButton";
 import { offersOptIn } from "@/services/offers/offers";
 import { cardMedia } from "../rezultati/card-media";
 import { PriceHistory } from "./PriceHistory";
-import { SubscriptionPanel, type SubscriptionModel } from "./SubscriptionPanel";
-import { ThresholdPicker } from "./ThresholdPicker";
 import { activeLocale } from "@/i18n/active";
 
-// The wishlist (owner, 20 Oct 2026): saved products and searches with today's
-// best offer and the price history, free; e-mails about drops are the paid
-// extra. Signed out, only the sign-in prompt shows.
+// The wishlist: what the shopper asked to hear about ("Paziņot, kad cena
+// samazināsies"), with today's best offer and the price history. Price e-mails
+// are free (owner, 30 Oct 2026; docs/PRICE_NOTIFY_PLAN.md). Signed out, only
+// the sign-in prompt shows.
 
 export const dynamic = "force-dynamic";
-
-type Props = { searchParams: Promise<{ apmaksats?: string }> };
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("wishlist");
   return { title: t("title") };
 }
 
-export default async function WishlistPage({ searchParams }: Props) {
-  const { apmaksats } = await searchParams;
+export default async function WishlistPage() {
   const t = await getTranslations("wishlist");
   const tr = await getTranslations("results");
   const ta = await getTranslations("auth");
@@ -64,16 +59,12 @@ export default async function WishlistPage({ searchParams }: Props) {
     );
   }
 
-  const [items, sub, threshold, account, offersOn, alertsOn] = await Promise.all([
+  const [items, account, offersOn, alertsOn] = await Promise.all([
     listSaved(db, userId),
-    currentSubscription(db, userId),
-    getThreshold(db, userId),
     db.select({ provider: accounts.provider }).from(accounts).where(eq(accounts.userId, userId)).limit(1),
     offersOptIn(db, userId),
     priceAlertsOn(db, userId),
   ]);
-  const plan = sub ? (await db.select().from(plans).where(eq(plans.id, sub.planId)))[0] : undefined;
-  const subscribed = hasAccess(sub);
 
   // Saved products: today's best offer, the change since saving, 90 days of prices.
   const productItems = items.filter((i) => i.kind === "product" && i.productId);
@@ -118,16 +109,6 @@ export default async function WishlistPage({ searchParams }: Props) {
     return { text: t("changeSame"), good: null };
   };
 
-  const subscription: SubscriptionModel | null = sub
-    ? {
-        status: sub.status,
-        cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
-        currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
-        nextBillingAt: sub.nextBillingAt?.toISOString() ?? null,
-        paymentMethodLabel: sub.paymentMethodLabel,
-        planName: plan?.name ?? sub.planId,
-      }
-    : null;
   const email = session.user?.email ?? "";
 
   return (
@@ -137,12 +118,6 @@ export default async function WishlistPage({ searchParams }: Props) {
         <PageTitle scale="results">{t("title")}</PageTitle>
         <p className="text-[17px] text-stone">{t("sub")}</p>
       </div>
-
-      {apmaksats && subscribed ? (
-        <InfoBox>
-          <span role="status">{t("paidBanner")}</span>
-        </InfoBox>
-      ) : null}
 
       {items.length === 0 ? (
         <Panel tone="dashed" className="flex flex-col items-start gap-3 text-lg">
@@ -291,21 +266,12 @@ export default async function WishlistPage({ searchParams }: Props) {
       <Panel className="flex flex-col gap-[14px]">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("notifyTitle")}</h2>
         <PriceAlertsSwitch initial={alertsOn} email={email} />
-        {alertsOn ? <ThresholdPicker value={threshold} /> : null}
       </Panel>
 
       <Panel className="flex flex-col gap-[14px]">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("offersTitle")}</h2>
         <OffersConsent initial={offersOn} />
       </Panel>
-
-      {/* Subscriptions bought before the plan was retired can still be seen and cancelled. */}
-      {subscription && subscription.status !== "pending" && subscription.status !== "expired" ? (
-        <Panel className="flex flex-col gap-[14px]">
-          <h2 className="font-heading text-xl font-semibold text-mist">{t("subscription")}</h2>
-          <SubscriptionPanel subscription={subscription} />
-        </Panel>
-      ) : null}
 
       <section
         aria-label={t("account")}

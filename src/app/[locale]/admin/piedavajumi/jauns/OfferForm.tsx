@@ -7,6 +7,7 @@ import { formatEur } from "@/i18n/format";
 import { composeOfferEmail } from "@/services/offers/compose";
 import { Button } from "@/ui/Button";
 import { createOfferAction, type OfferFormState } from "../../actions";
+import { EmailPreview } from "../EmailPreview";
 import { inputClass, labelClass } from "../../ui";
 
 // The offer form (docs/ADMIN_AND_OFFERS_PLAN.md §11.10): everything prefilled
@@ -21,13 +22,21 @@ export type Recipient = {
 };
 
 type Props = {
-  product: { id: string; name: string };
+  product: { id: string; name: string; imageUrl: string | null };
   reference: { priceCents: number | null; storeName: string | null; low30Cents: number | null };
   recipients: Recipient[];
   vatRate: number | null;
   signature: string;
+  inbox: string;
+  company: string;
   baseUrl: string;
-  defaults: { validUntil: string; deliveryWorkingDays: number; warrantyMonths: number };
+  defaults: {
+    validUntil: string;
+    deliveryWorkingDays: number;
+    warrantyMonths: number;
+    /** The partner's confirmed cost (Prasīts partnerim → Apstiprināts), pre-filled. */
+    costCents?: number | null;
+  };
 };
 
 function cents(raw: string): number | null {
@@ -36,7 +45,17 @@ function cents(raw: string): number | null {
   return Math.round(Number(v) * 100);
 }
 
-export function OfferForm({ product, reference, recipients, vatRate, signature, baseUrl, defaults }: Props) {
+export function OfferForm({
+  product,
+  reference,
+  recipients,
+  vatRate,
+  signature,
+  inbox,
+  company,
+  baseUrl,
+  defaults,
+}: Props) {
   const t = useTranslations("admin.offerForm");
   const [state, action, pending] = useActionState<OfferFormState, FormData>(createOfferAction, {
     error: null,
@@ -51,7 +70,9 @@ export function OfferForm({ product, reference, recipients, vatRate, signature, 
     startSubmit(() => action(data));
   };
   const [price, setPrice] = useState("");
-  const [cost, setCost] = useState("");
+  const [cost, setCost] = useState(
+    defaults.costCents ? (defaults.costCents / 100).toFixed(2).replace(".", ",") : "",
+  );
   const [condition, setCondition] = useState<"new" | "refurbished">("new");
   const [grade, setGrade] = useState("");
   const [warranty, setWarranty] = useState(String(defaults.warrantyMonths));
@@ -86,10 +107,13 @@ export function OfferForm({ product, reference, recipients, vatRate, signature, 
         warrantyMonths: Number(warranty) || 0,
         message: message.trim() || null,
         validUntil: new Date(`${validUntil}T20:59:59Z`),
+        imageUrl: product.imageUrl,
       },
       {
         baseUrl,
         signature,
+        inbox,
+        company,
         to: first.email,
         unsubscribeUrl: `${baseUrl}/piedavajumi/atteikties/…`,
         saved: first.saved ? { at: new Date(first.saved.at), priceCents: first.saved.priceCents } : null,
@@ -277,7 +301,10 @@ export function OfferForm({ product, reference, recipients, vatRate, signature, 
           />
         </label>
 
-        <details className="rounded-panel-lg border-[1.5px] border-dashed border-line-30 p-4">
+        <details
+          open={!!defaults.costCents}
+          className="rounded-panel-lg border-[1.5px] border-dashed border-line-30 p-4"
+        >
           <summary className="min-h-11 cursor-pointer text-[15px] font-semibold text-mist">
             {t("private")}
           </summary>
@@ -331,18 +358,14 @@ export function OfferForm({ product, reference, recipients, vatRate, signature, 
       <section aria-label={t("preview")} className="flex flex-col gap-2">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("preview")}</h2>
         {preview ? (
-          <div
-            className="rounded-panel-lg bg-white p-5 text-night [overflow-wrap:anywhere]"
-            data-testid="email-preview"
-          >
-            <p className="text-sm text-muted">{t("to", { email: preview.to })}</p>
-            <p className="mt-1 font-bold">{preview.subject}</p>
-            <div className="mt-3 flex flex-col gap-3 text-[15px] leading-relaxed whitespace-pre-line">
-              {preview.text.split("\n\n").map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-          </div>
+          <EmailPreview
+            message={preview}
+            labels={{
+              to: t("to", { email: preview.to }),
+              frame: t("previewFrame"),
+              text: t("textVersion"),
+            }}
+          />
         ) : (
           <p className="text-[15px] text-stone">{t("previewEmpty")}</p>
         )}

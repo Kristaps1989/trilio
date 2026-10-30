@@ -55,26 +55,14 @@ export async function seedSampleProducts(db: Db, body: string) {
   return summary;
 }
 
-/** Launch plans (owner decision): 1,99 €/month and 12 €/year. */
-export async function upsertPlans(db: Db) {
-  const rows = [
-    { id: "monthly", name: "Cenu paziņojumi — mēnesī", priceCents: 199, interval: "month" as const },
-    { id: "annual", name: "Cenu paziņojumi — gadā", priceCents: 1200, interval: "year" as const },
-  ];
-  for (const r of rows) {
-    await db
-      .insert(plans)
-      .values({ ...r, currency: "EUR", active: true })
-      .onConflictDoUpdate({
-        target: plans.id,
-        set: { name: r.name, priceCents: r.priceCents, interval: r.interval },
-      });
-  }
+/** The paid plan is removed (owner, 30 Oct 2026; docs/PRICE_NOTIFY_PLAN.md §4): any plan rows left are switched off. */
+export async function retirePlans(db: Db) {
+  await db.update(plans).set({ active: false });
 }
 
 /**
- * Production (`npm run db:release` at Railway start) sets SEED_SAMPLE_DATA=0: partner stores and
- * plans only, no placeholder shops. Local development and CI keep the samples.
+ * Production (`npm run db:release` at Railway start) sets SEED_SAMPLE_DATA=0: partner stores
+ * only, no placeholder shops. Local development and CI keep the samples.
  */
 export function seedSampleData(env: Record<string, string | undefined> = process.env): boolean {
   return env.SEED_SAMPLE_DATA !== "0";
@@ -84,9 +72,9 @@ async function main() {
   const { db, client } = createDb();
   const withSamples = seedSampleData();
   await upsertStores(db, withSamples ? [...SAMPLE_STORES, ...PARTNER_STORES] : PARTNER_STORES);
-  await upsertPlans(db);
+  await retirePlans(db);
   if (!withSamples) {
-    console.log("seeded partner stores and plans (no sample data)");
+    console.log("seeded partner stores (no sample data)");
     await client.end();
     return;
   }

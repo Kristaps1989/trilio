@@ -9,6 +9,8 @@ import { eventsOf } from "@/services/offers/offers";
 import { invoicesOf, orderWithOffer } from "@/services/offers/orders";
 import { Button, buttonClass } from "@/ui/Button";
 import { Timeline } from "@/ui/Timeline";
+import { orderItems } from "@/services/admin/crm";
+import { NextStepBox, RecordProduct } from "../../crm";
 import { correctDeliveryAction, orderNoteAction, orderStepAction, resolveProblemAction } from "../../actions";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, Section, inputClass, labelClass } from "../../ui";
@@ -19,7 +21,10 @@ import { AdminTitle, Chip, Section, inputClass, labelClass } from "../../ui";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Pasūtījums" };
 
-type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; done?: string; partner?: string }>;
+};
 
 function StepButton({
   orderId,
@@ -81,6 +86,14 @@ export default async function AdminOrder({ params, searchParams }: Props) {
           {t("done", { status: ts(`order.${sp.done}`) })}
         </p>
       ) : null}
+
+      <NextStepBox item={(await orderItems(db, new Date())).find((i) => i.id === order.id)} />
+      <RecordProduct
+        productId={offer.productId}
+        orderId={order.id}
+        back={`/admin/pasutijumi/${order.id}`}
+        status={sp.partner}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <div className="flex flex-col gap-5">

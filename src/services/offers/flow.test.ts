@@ -18,7 +18,7 @@ import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { formatEur } from "@/i18n/format";
 import type { OrderForm } from "@/domain/offers/checkout";
 import { OFFERS_PAUSED, setFlag } from "@/services/admin/audit";
-import { processPaymentEvent } from "@/services/billing/engine";
+import { processPaymentEvent } from "@/services/payments/process";
 import { upsertOffers } from "@/services/ingestion/upsert";
 import { memoryEmailSender } from "@/services/notify/email";
 import { createMockProvider, mockComplete } from "@/services/payments/mock";
@@ -167,7 +167,13 @@ run("offers and orders", () => {
     const stamp = Date.now();
     const [a] = await db
       .insert(users)
-      .values({ email: `offers-flow-a-${stamp}@example.invalid`, offersOptIn: true, name: "Anna" })
+      // Price e-mails off: the wishlist job test runs alongside and would otherwise move this buyer's saved baseline.
+      .values({
+        email: `offers-flow-a-${stamp}@example.invalid`,
+        offersOptIn: true,
+        priceAlerts: false,
+        name: "Anna",
+      })
       .returning();
     const [b] = await db
       .insert(users)
@@ -267,13 +273,20 @@ run("offers and orders", () => {
     expect(sent).toEqual({ ok: true, emailed: true });
     const msg = mail.sent.at(-1)!;
     expect(msg.to).toBe(buyer.email);
-    expect(msg.subject).toBe(`Kristaps no Trilio: FlowBrand kettle par ${formatEur(3900)}`);
-    expect(msg.text).toContain(`kad cena bija ${formatEur(4900)}`);
-    expect(msg.text).toContain(`par ${formatEur(600)} lētāk nekā zemākā cena`);
+    // The subject names the product and price; the sender's name is in the signature, not repeated there.
+    expect(msg.subject).toBe(`FlowBrand kettle par ${formatEur(3900)}. Lētāk nekā veikalos.`);
+    expect(msg.text).toContain(`kad tā maksāja ${formatEur(4900)}`);
+    expect(msg.text).toContain(`Par ${formatEur(600)} lētāk nekā zemākā cena`);
+    expect(msg.text).toContain("Kristaps, Trilio");
+    // The branded HTML part carries the same offer: the price, the button and the link.
+    expect(msg.html).toContain(`${BASE}/email/logo.png`);
+    expect(msg.html).toContain(`Pasūtīt par ${formatEur(3900)}`);
+    expect(msg.html).toContain(`${BASE}/piedavajums/${draft!.token}`);
     expect(msg.text).toContain("Tikko atvests no noliktavas.");
     expect(msg.text).toContain(`${BASE}/piedavajums/${draft!.token}`);
     expect(msg.headers?.["List-Unsubscribe"]).toMatch(/\/api\/offers\/unsubscribe\//);
-    expect(msg.replyTo).toBeUndefined();
+    // Replies reach Trilio's inbox when it is configured, never the no-reply sender.
+    expect(msg.replyTo).toBe(deps.inbox);
     expect(preview?.subject).toBe(msg.subject);
     expect(preview?.text.split("\n\n").slice(0, 4)).toEqual(msg.text.split("\n\n").slice(0, 4));
     expect(await sendOffer(db, draft!.id, deps)).toEqual({ ok: false, reason: "not_draft" });

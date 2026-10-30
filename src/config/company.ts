@@ -22,6 +22,13 @@ export function companyFromEnv(env: Record<string, string | undefined> = process
   };
 }
 
+/** "SIA Trilio · Reģ. Nr. 40000000000 · Rīga, …" for e-mail small print; empty parts are left out. */
+export function companyLine(company: Company): string {
+  return [company.name, company.regNo ? `Reģ. Nr. ${company.regNo}` : "", company.address]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** Replaces {company}, {regNo}, {address}, {email} and {site} in legal copy; blanks become `missing`. */
 export function fillCompany(text: string, company: Company, site: string, missing: string): string {
   const values: Record<string, string> = {

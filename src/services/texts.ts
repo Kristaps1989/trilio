@@ -1,7 +1,6 @@
 import en from "@/i18n/messages/en.json";
 import lv from "@/i18n/messages/lv.json";
 import type { UiLocale } from "@/i18n/routing";
-import type { BillingTexts } from "@/services/billing/job";
 import type { WishlistTexts } from "@/services/wishlist/job";
 
 // Copy for background jobs in the recipient's language (users.locale), read
@@ -13,17 +12,6 @@ const MESSAGES = { lv, en } as const;
 
 function fill(template: string, values: Record<string, string | number> = {}): string {
   return template.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? `{${k}}`));
-}
-
-export function billingTexts(lang: UiLocale = "lv"): BillingTexts {
-  const { email, wishlist } = MESSAGES[lang];
-  return {
-    receiptSubject: (v) => fill(email.receiptSubject, v),
-    receiptBody: (v) => fill(email.receiptBody, v),
-    failedSubject: email.failedSubject,
-    failedBody: (v) => fill(email.failedBody, v),
-    expired: wishlist.expired,
-  };
 }
 
 export function wishlistTexts(lang: UiLocale = "lv"): WishlistTexts {

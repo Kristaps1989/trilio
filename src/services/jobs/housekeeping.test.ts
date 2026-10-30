@@ -23,12 +23,16 @@ describe("admin configuration", () => {
       offers: { expired: 0, reminded: 0, feedbackAsked: 0, tracked: 0, delivered: 0 },
       adLandingsPurged: 0,
       tvViewersPurged: 0,
+      notifyRequestsPurged: 0,
+      uiEventsPurged: 0,
     };
     expect(eventful(quiet)).toBe(false);
     expect(eventful({ ...quiet, offers: { ...quiet.offers, reminded: 1 } })).toBe(true);
     expect(eventful({ ...quiet, visits: { days: 0, purged: 3 } })).toBe(true);
     expect(eventful({ ...quiet, adLandingsPurged: 1 })).toBe(true);
     expect(eventful({ ...quiet, tvViewersPurged: 1 })).toBe(true);
+    expect(eventful({ ...quiet, notifyRequestsPurged: 1 })).toBe(true);
+    expect(eventful({ ...quiet, uiEventsPurged: 1 })).toBe(true);
   });
 });
 

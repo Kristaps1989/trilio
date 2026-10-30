@@ -39,17 +39,3 @@ export async function unsubscribeAlertsByToken(db: Db, value: string): Promise<b
     .returning({ id: users.id });
   return rows.length > 0;
 }
-
-/**
- * Whether to ask about Trilio's own offers under the heart just tapped: only
- * once per person, and never to someone who already said yes. Asking marks
- * it as asked, so ignoring the question is an answer too.
- */
-export async function takeOffersAsk(db: Db, userId: string): Promise<boolean> {
-  const rows = await db
-    .update(users)
-    .set({ offersAskedAt: new Date() })
-    .where(and(eq(users.id, userId), isNull(users.offersAskedAt), eq(users.offersOptIn, false)))
-    .returning({ id: users.id });
-  return rows.length > 0;
-}

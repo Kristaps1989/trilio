@@ -1,7 +1,9 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { offerEvents, savedItems, specialOffers, users, type SpecialOffer } from "@/db/schema";
+import { offerEvents, products, savedItems, specialOffers, users, type SpecialOffer } from "@/db/schema";
+import { IMAGE_HOSTS } from "@/db/stores";
+import { imageSrc } from "@/domain/catalog/media";
 import { canAccept } from "@/domain/offers/offers";
 import type { EmailMessage, EmailSender } from "@/services/notify/email";
 import { offersPaused } from "@/services/admin/audit";
@@ -116,6 +118,16 @@ export async function ensureOffersToken(db: Db, userId: string): Promise<string>
   return again?.t ?? fresh;
 }
 
+/** The offer as the e-mail shows it: with the product's picture when the shop allows it. */
+async function withImage(db: Db, offer: SpecialOffer) {
+  if (!offer.productId) return offer;
+  const [row] = await db
+    .select({ imageUrl: products.imageUrl })
+    .from(products)
+    .where(eq(products.id, offer.productId));
+  return { ...offer, imageUrl: imageSrc(row?.imageUrl, IMAGE_HOSTS) };
+}
+
 async function savedContext(db: Db, offer: SpecialOffer) {
   if (!offer.userId || !offer.productId) return null;
   const [item] = await db
@@ -156,7 +168,7 @@ export async function sendOffer(
   if (!user?.optIn) return { ok: false, reason: "no_consent" };
   const unsub = await ensureOffersToken(db, offer.userId);
   const lang = user.locale === "en" ? "en" : "lv";
-  const message = composeOfferEmail(offer, {
+  const message = composeOfferEmail(await withImage(db, offer), {
     ...deps,
     to: user.email,
     lang,
@@ -189,7 +201,7 @@ export async function previewOffer(
     .from(users)
     .where(eq(users.id, offer.userId));
   const lang = user?.locale === "en" ? "en" : "lv";
-  return composeOfferEmail(offer, {
+  return composeOfferEmail(await withImage(db, offer), {
     ...ctx,
     to: user?.email ?? "",
     lang,
@@ -321,4 +333,13 @@ export async function eventsOf(db: Db, offerId: string) {
     .from(offerEvents)
     .where(eq(offerEvents.offerId, offerId))
     .orderBy(sql`${offerEvents.createdAt} asc`);
+}
+
+/** The owner's note on an offer, in its timeline. */
+export async function addOfferNote(db: Db, offerId: string, note: string, by: string): Promise<boolean> {
+  const text = note.trim().slice(0, 1000);
+  const offer = await offerById(db, offerId);
+  if (!offer || !text) return false;
+  await db.insert(offerEvents).values({ offerId, kind: "note", source: "admin", note: text, data: { by } });
+  return true;
 }

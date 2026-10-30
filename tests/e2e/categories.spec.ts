@@ -68,9 +68,11 @@ for (const { group, sub } of all) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākie varianti tev");
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
-    // The wishlist: the search and every pick can be saved with one tap.
-    await expect(page.getByRole("button", { name: "Saglabāt meklējumu" }).first()).toBeVisible();
-    await expect(picks.first().getByRole("button", { name: "Saglabāt", exact: true })).toBeVisible();
+    // One tap asks to hear when the search or any pick gets cheaper.
+    await expect(page.getByRole("button", { name: "Paziņot, kad parādīsies lētāks variants" })).toBeVisible();
+    await expect(
+      picks.first().getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }),
+    ).toBeVisible();
 
     // The chosen price range is a chip; every pick inside it, unless labelled over budget.
     const chips = page.getByRole("navigation", { name: "Tavas izvēles" }).getByRole("button");

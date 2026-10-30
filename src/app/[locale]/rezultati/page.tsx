@@ -85,6 +85,7 @@ import {
 import { FilterBar, type Chip } from "./FilterBar";
 import { HowWeRank } from "./HowWeRank";
 import { cardMedia } from "./card-media";
+import { trilioSources } from "@/domain/offers/sourcing";
 import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCard";
 import { activeLocale } from "@/i18n/active";
 
@@ -398,6 +399,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       refurbished: null,
       sessionId,
       saved: saved.has(productKey(pick.product.id)),
+      trilioOffer: trilioSources(sub!.id),
       score: pick.score,
       ...cardMedia(pick.product),
     };
@@ -974,6 +976,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       saved={saved.has(searchKey(sub.id, answersParam))}
       name={searchLabel}
       variant={variant}
+      offers={trilioSources(sub.id)}
     />
   );
 
@@ -1035,7 +1038,6 @@ export default async function ResultsPage({ searchParams }: Props) {
           </nav>
         ) : null}
         <FilterBar chips={chips} state={state} subId={sub.id} />
-        <div>{saveSearch("inline")}</div>
         <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
       </div>
 
@@ -1082,6 +1084,27 @@ export default async function ResultsPage({ searchParams }: Props) {
               ) : null}
             </div>
           ) : null}
+          {trilioSources(sub.id) ? (
+            <p className="mb-3 flex items-start gap-2 text-[15px] font-semibold text-lime" data-trilio-offer>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="mt-0.5 shrink-0"
+              >
+                <path d="M20 12V8H6a2 2 0 0 1 0-4h12v4" />
+                <path d="M4 6v12a2 2 0 0 0 2 2h14v-4" />
+                <path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
+              </svg>
+              {t("trilioCanOffer")}
+            </p>
+          ) : null}
           <CardRow>
             {cards.map((c) => (
               <ResultCard key={c.productId} card={c} />
@@ -1089,6 +1112,19 @@ export default async function ResultsPage({ searchParams }: Props) {
           </CardRow>
         </section>
       ) : null}
+
+      {/* One line after the picks: the search itself, for when a cheaper option appears (docs/PRICE_NOTIFY_PLAN.md). */}
+      <section aria-labelledby="notify-search-title" data-notify-search>
+        <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">
+          <div className="min-w-0 flex-[1_1_320px]">
+            <h2 id="notify-search-title" className="font-heading text-[20px] font-semibold text-mist">
+              {t("notifySearchTitle")}
+            </h2>
+            <p className="text-base text-stone">{t("notifySearchSub")}</p>
+          </div>
+          {saveSearch("inline")}
+        </Panel>
+      </section>
 
       {mentionedCards.length ? (
         <section className="flex flex-col gap-3" aria-labelledby="mentioned-title" data-mentioned>
@@ -1278,17 +1314,6 @@ export default async function ResultsPage({ searchParams }: Props) {
             <ResultCard key={`r-${c.productId}`} card={c} />
           ))}
         </section>
-      ) : null}
-
-      {result.picks.length ? (
-        // The wishlist pitch (owner, 20 Oct 2026): saving is free; e-mails are the paid extra.
-        <Panel tone="lime" className="flex flex-wrap items-center justify-between gap-x-5 gap-y-[14px]">
-          <div className="min-w-0 flex-[1_1_320px]">
-            <h2 className="font-heading text-[22px] font-semibold text-mist">{t("saveTitle")}</h2>
-            <p className="text-base text-stone">{t("saveSub", { price: t("radarMonthly") })}</p>
-          </div>
-          {saveSearch("inline")}
-        </Panel>
       ) : null}
 
       {result.picks.length ? (

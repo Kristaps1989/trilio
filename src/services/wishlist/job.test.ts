@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { eq, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { products, savedItems, stores, users } from "@/db/schema";
-import { saveProduct, setThreshold } from "@/db/queries/wishlist";
+import { notifySettings, products, savedItems, stores, users } from "@/db/schema";
+import { saveProduct } from "@/db/queries/wishlist";
 import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { memoryEmailSender } from "@/services/notify/email";
 import { upsertOffers } from "@/services/ingestion/upsert";
@@ -92,7 +92,8 @@ run("runWishlistJob", () => {
     for (const userId of [subscriber, freeUser]) {
       await saveProduct(db, userId, { productId, subcategoryId: "kettle", baselinePriceCents: 6000 });
     }
-    await setThreshold(db, subscriber, "10");
+    // A threshold stored before the picker was removed is still honoured.
+    await db.insert(notifySettings).values({ userId: subscriber, threshold: "10" });
     const email = memoryEmailSender();
     const res = await runWishlistJob(db, {
       email,
