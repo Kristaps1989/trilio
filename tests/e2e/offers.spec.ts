@@ -72,7 +72,7 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
   const shopper = `e2e-offer-${test.info().project.name}-${Date.now()}@example.invalid`;
   let product = "";
 
-  await test.step("the shopper asks to hear about a kettle and ticks personal offers in the wishlist", async () => {
+  await test.step("the shopper asks to hear about a kettle; the one yes covers Trilio's offers", async () => {
     await devLogin(page, shopper, "/");
     await page.goto("/izvelies/kitchensmall/kettle");
     await page.getByRole("button", { name: "Tālāk", exact: true }).click();
@@ -80,15 +80,18 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     const first = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").first();
     product = (await first.getAttribute("aria-label")) ?? "";
     await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
+    // One yes on the card covers price e-mails and Trilio's own offers.
+    await first
+      .getByRole("group", { name: `Paziņot uz ${shopper}?` })
+      .getByRole("button", { name: "Paziņot man" })
+      .click();
     await expect(
       first.getByRole("button", { name: "Paziņosim, kad cena samazināsies", exact: true }),
-    ).toBeVisible();
-    // Kettles are not a sourcing category, so the card asks nothing about Trilio's offers; the wishlist box does.
+    ).toBeEnabled();
     await page.goto("/velmju-saraksts");
-    await page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm").check();
     await expect(
-      page.getByRole("status").filter({ hasText: "Paldies! Rakstīsim tikai par precēm, ko saglabāji." }),
-    ).toBeVisible();
+      page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm"),
+    ).toBeChecked();
   });
 
   const admin = await newPage(browser);

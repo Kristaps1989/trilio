@@ -99,15 +99,18 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   const first = picks(page).first();
   const name = (await first.getAttribute("aria-label")) ?? "";
   const productId = ((await first.getAttribute("id")) ?? "").replace(/^p-/, "");
-  // Kettles are not a sourcing category: no promise of Trilio's own offer on the page.
-  await expect(page.locator("[data-trilio-offer]")).toHaveCount(0);
+  // Every category promises Trilio's own offer (owner, 30 Oct 2026).
+  await expect(page.locator("[data-trilio-offer]")).toHaveText(
+    "Trilio var piedāvāt lētāk: iepērkam tieši no izplatītāja un piegādājam paši.",
+  );
   await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
 
   // No sign-in page: the card asks for the address, says exactly what will be sent, nothing more.
   await expect(page).toHaveURL(url);
   const panel = first.getByRole("group", { name: "Uz kādu e-pastu paziņot?" });
-  await expect(panel).toContainText("Uzrakstīsim, kad šīs preces cena veikalos samazināsies.");
-  await expect(panel).not.toContainText("Trilio to varēs piedāvāt");
+  await expect(panel).toContainText(
+    "Uzrakstīsim, kad šīs preces cena veikalos samazināsies vai kad Trilio to varēs piedāvāt lētāk nekā veikali.",
+  );
   await expectNoAxeViolations(page);
   await panel.getByLabel("E-pasts").fill("nav-epasts");
   await panel.getByRole("button", { name: "Paziņot man" }).click();
@@ -140,10 +143,8 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
       .locator("[data-price-alerts]")
       .getByRole("checkbox", { name: "Sūtīt e-pastu, kad saglabātās preces vai meklējuma cena samazinās" }),
   ).toBeChecked();
-  // A kettle's yes covered price e-mails only: Trilio's offers stay off.
-  await expect(
-    page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm"),
-  ).not.toBeChecked();
+  // The one yes covered Trilio's offers too, as the sentence said.
+  await expect(page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm")).toBeChecked();
 
   // The link has done its job: a second visit cannot confirm or sign in again.
   await deleteAccount(page);
@@ -213,6 +214,10 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   await kettleResults(page);
   const search = page.locator("[data-notify-search]");
   await search.getByRole("button", { name: "Paziņot, kad parādīsies lētāks variants" }).click();
+  // The first tap asks the one yes, with the address already known; it covers Trilio's offers too.
+  const ask = search.getByRole("group", { name: `Paziņot uz ${email}?` });
+  await expect(ask).toContainText("vai kad Trilio kādu no tiem varēs piedāvāt lētāk nekā veikali");
+  await ask.getByRole("button", { name: "Paziņot man" }).click();
   await expect(search.getByRole("button", { name: "Paziņosim par lētākiem variantiem" })).toBeVisible();
   const product = picks(page).first();
   const productName = (await product.getAttribute("aria-label")) ?? "";
@@ -223,7 +228,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // The card says where the e-mail goes, with the way out in the same line and the way back.
   const note = product.locator("[data-alert-note]");
   await expect(note).toHaveText(`Paziņosim uz ${email}, kad cena samazināsies. · Nesūtīt`);
-  // A kettle is not a sourcing category: no question about Trilio's offers at all.
+  // Asked once: the product saves at the first tap.
   await expect(product.locator("[data-notify-panel]")).toHaveCount(0);
   await expectNoAxeViolations(page);
   await note.getByRole("button", { name: "Nesūtīt" }).click();
@@ -307,8 +312,8 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   expect(data.wishlist[0].kind).toBe("search");
   expect(data.notificationSettings).toHaveLength(0);
   expect(data.user.priceAlerts).toBe(true);
-  // Never asked about Trilio's offers: kettles are not a sourcing category.
-  expect(data.user.offersAskedAt).toBeNull();
+  // Asked once, on the first tap, and the yes covered Trilio's offers.
+  expect(data.user.offersAskedAt).not.toBeNull();
 
   await deleteAccount(page);
 });

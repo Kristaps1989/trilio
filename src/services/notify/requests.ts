@@ -10,7 +10,7 @@ import {
   safeReturnPath,
   type NotifyKind,
 } from "@/domain/notify/notify";
-import { trilioSources } from "@/domain/offers/sourcing";
+import { trilioSources, type Sourcing } from "@/domain/offers/sourcing";
 import type { EmailSender } from "@/services/notify/email";
 import { token } from "@/services/offers/offers";
 import type { UiLocale } from "@/i18n/routing";
@@ -42,7 +42,14 @@ export type RequestInput = {
   now?: Date;
 };
 
-export type RequestDeps = { email: EmailSender; baseUrl: string; company?: string; inbox?: string };
+export type RequestDeps = {
+  email: EmailSender;
+  baseUrl: string;
+  company?: string;
+  inbox?: string;
+  /** Where Trilio sources; data/offers.json (every category) unless a test narrows it. */
+  sourcing?: Sourcing;
+};
 
 export type RequestResult =
   { ok: true; email: string; id: string } | { ok: false; reason: "invalid" | "too_many" | "email_failed" };
@@ -68,7 +75,7 @@ export async function requestNotify(db: Db, input: RequestInput, deps: RequestDe
     return { ok: false, reason: "too_many" };
 
   const t = input.target;
-  const consent = consentFor(t.kind as NotifyKind, trilioSources(t.subcategoryId));
+  const consent = consentFor(t.kind as NotifyKind, trilioSources(t.subcategoryId, deps.sourcing));
   const value = token();
   const [row] = await db
     .insert(notifyRequests)

@@ -70,6 +70,8 @@ test("a lead from a saved product: found by EAN, marked for a partner, noted, of
       ).match(/EAN (\d{8,14})/)?.[1] ?? "";
     expect(ean).not.toBe("");
     await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
+    // The first tap asks the one yes (every category covers Trilio's offers).
+    await first.locator("[data-notify-panel]").getByRole("button", { name: "Paziņot man" }).click();
     await expect(
       first.getByRole("button", { name: "Paziņosim, kad cena samazināsies", exact: true }),
     ).toBeEnabled();

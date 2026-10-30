@@ -148,7 +148,7 @@ Steps: cancel any active subscription at period end and e-mail those users that 
 All four PRs are built together on one branch, not merged. Choices made where the owner had not answered yet; each is one line to change:
 
 1. **Hero:** title "Pastāsti, kas tev vajadzīgs.", the owner's line under it (`welcome.headline`, `welcome.lead`).
-2. **Sourcing list:** `data/offers.json` holds `["fridge"]`, the category of the first real offer. The line "Trilio var piedāvāt lētāk…" and the offers half of the consent appear only there.
+2. **Sourcing list:** every category (owner, 30 Oct 2026). `data/offers.json` holds `"sourcing": ["*"]`; the line "Trilio var piedāvāt lētāk…" and the offers half of the consent appear everywhere. The file can still narrow the list or leave categories out with `"except"`.
 3. **Threshold:** the picker is gone. A threshold stored earlier is still honoured; everyone else gets drops of at least 5 %, the old default, so a 1-cent change sends nothing.
 4. **Paid plan:** all code is gone (UI, actions, renewals, billing cron, receipts, plan seeding); `plans` rows are switched off at release. The `plans`, `subscriptions` and `notify_settings` tables stay until the owner confirms no active subscription is left (Admin → Lietotāji).
 
