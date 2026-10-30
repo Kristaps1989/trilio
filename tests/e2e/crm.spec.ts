@@ -43,22 +43,31 @@ async function noSideScroll(page: Page) {
 
 test.setTimeout(120_000);
 
-test("a lead from a saved kettle: found by EAN, marked for a partner, noted, offered at the confirmed cost", async ({
+test("a lead from a saved product: found by EAN, marked for a partner, noted, offered at the confirmed cost", async ({
   page,
   browser,
 }) => {
   const shopper = `e2e-crm-${test.info().project.name}-${Date.now()}@example.invalid`;
   let ean = "";
 
-  await test.step("a shopper asks to hear about a kettle", async () => {
+  await test.step("a shopper asks to hear about a product", async () => {
     await devLogin(page, shopper, "/");
-    await page.goto("/izvelies/kitchensmall/kettle");
-    await page.getByRole("button", { name: "Tālāk", exact: true }).click();
-    await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
-    // Its own kettle per screen size; the offer flow test uses the first one.
-    const index = test.info().project.name === "desktop" ? 2 : 1;
-    const first = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").nth(index);
-    ean = ((await first.textContent()) ?? "").match(/EAN (\d{8,14})/)?.[1] ?? "";
+    // Its own category per screen size, which no other test saves from, so parallel runs never meet.
+    const sub = test.info().project.name === "desktop" ? "micro" : "toaster";
+    await page.goto(`/rezultati?sub=${sub}`);
+    const cards = page.locator('main article[id^="p-"]');
+    await expect(cards.first()).toBeVisible();
+    const count = await cards.count();
+    expect(count).toBeGreaterThan(0);
+    const first = cards.nth(count - 1);
+    // The card's own model line ("Modelis … · EAN …"), so the next line's digits never run into it.
+    ean =
+      (
+        (await first
+          .getByText(/EAN \d{8,14}/)
+          .first()
+          .textContent()) ?? ""
+      ).match(/EAN (\d{8,14})/)?.[1] ?? "";
     expect(ean).not.toBe("");
     await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
     await expect(
