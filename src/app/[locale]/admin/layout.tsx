@@ -35,6 +35,7 @@ export default async function AdminLayout({
     { href: "/admin/piedavajumi", label: t("offers") },
     { href: "/admin/pasutijumi", label: t("orders") },
     { href: "/admin/reklama", label: t("ads") },
+    { href: "/admin/sociali", label: t("social") },
     { href: "/admin/sistema", label: t("system") },
   ];
   return (

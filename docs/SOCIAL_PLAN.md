@@ -119,3 +119,26 @@ cron 18:00 Riga ─► pick type (rules §4) ─► query data ─► compose ca
 | 3 | Types B and D with `anonymise()` and its tests; Reels upload (type R); privacy-policy line; BRAND.md register rule | 1 PR |
 
 Unit tests for every domain rule (pick, anonymise, thresholds, lint, hashtags), service tests against the mock Graph API and Postgres, e2e for the admin queue on mobile-360 and desktop with axe. Each PR merges only green.
+
+## 12. Status (31 Oct 2026): built
+
+Decided by the owner: D1 (no pronoun, "jūs" if unavoidable; the site keeps "tu"), D2 ("pircējs", no names), D3 (approve first), D4 (Mon/Wed/Fri 19:00, Sunday 11:00), D5 (`dish`, `fridge`, `vacuum`, `washer`, then traffic), D6 (rank only, no counts).
+
+- **Data:** `social_posts` and `social_insights` (migration `0020_social`). Settings (on/off, approve/auto) live in `app_flags` (`social_enabled`, `social_mode`) rather than a separate table.
+- **Domain** (`src/domain/social/`, pure, tested): `schedule.ts` (Riga wall-clock slots across summer time, `pickKind`, rotation, thresholds), `lint.ts` (the ads' honesty rules plus price, "bez maksas", "ja" and "tu" checks; links, tags and data names are not text), `anonymise.ts` (`offerStory` keeps product, shop, prices, days and month; `leaks` checks every personal field of the order in any spacing), `captions.ts` (all six kinds, Facebook with the UTM link, Instagram with "Saite profilā." and five tags).
+- **Services** (`src/services/social/`): `facts.ts` (live queries; a shop whose feed is older than a day is left out), `render.tsx` (1080×1350 brand template; JPEG through sharp, because Instagram takes nothing else), `meta.ts` (Graph API: page photo/video, Instagram container → publish, insights, delete, token check), `mock.ts`, `posts.ts` (draft, refresh, publish, approve, edit, skip, delete, insights), `job.ts`.
+- **Schedule:** the web service's scheduler runs the job every 15 minutes (`/api/cron/social` does the same for an outside cron). Drafts appear 26 hours before the slot; an unapproved draft is skipped at its time; an approved post more than 6 hours late is skipped.
+- **Before sending,** picks, price-drop and most-viewed posts read their prices again: same numbers go out as they are; changed numbers rewrite an untouched post; a post the owner edited is held back with the reason, and a drop that is gone is skipped.
+- **Admin → Sociālie tīkli:** connection state, settings, "Izveidot tagad" per kind (the new draft is highlighted), the queue with the image, both captions editable (an edit must pass the same lint), Apstiprināt / Publicēt tūlīt / Izlaist, history with reach, reactions, comments and clicks, "Dzēst no tīkliem", and the Reels form (a public MP4 link, caption, day). Every action is in the audit log.
+- **Image URL** `/api/social/{id}/image.jpg`: public once approved (Meta fetches it), admin-only while a draft.
+- **Privacy policy:** a line on what posts use and never publish, and Meta as a recipient that receives no personal data. The profile texts and the register rule are in `docs/BRAND.md`.
+
+Deviations from the plan, each small:
+
+1. **Type F counts interest, not views.** Trilio has no product pages, so "most viewed" would be untrue. F ranks by shop clicks (one per visitor and day) plus saves in 7 days, needs 30, and says "Šonedēļ Trilio lietotājus visvairāk interesēja".
+2. **Claude writes one line only:** the opening sentence of picks and advice posts. Everything with a number is the template's. A line that fails the lint is dropped for the template's.
+3. **Advice skips a knowledge sentence written in the "tu" form** (2 of 116 today) and takes the category's next one.
+4. **Token alert** is the connection line on the admin page (checked on every visit), not a Uzdevumi item.
+5. **Free text in an order** (the owner's greeting, a delivery note) is checked for leaks only as a whole; names and addresses also word by word.
+
+To switch it on: the Meta set-up in §8, then in Railway `FEATURE_SOCIAL=1`, `META_PAGE_ID`, `META_IG_USER_ID`, `META_SYSTEM_USER_TOKEN`. Drafts start appearing the next day; nothing is published until a draft is approved.

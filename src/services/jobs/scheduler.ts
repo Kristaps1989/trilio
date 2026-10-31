@@ -3,6 +3,7 @@ import { eprelClientFromEnv } from "@/services/eprel/client";
 import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
 import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
+import { runSocialJob } from "@/services/social/job";
 import { runAllJobs } from "./all";
 import { eventful, runHousekeeping } from "./housekeeping";
 
@@ -43,6 +44,13 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
       return null;
     });
     if (ads) log.log("ads optimiser:", JSON.stringify(ads));
+    // Facebook and Instagram posts: drafts a day ahead, sends at 19:00 Riga (docs/SOCIAL_PLAN.md).
+    const social = await runSocialJob(db).catch((err) => {
+      log.error("social posts:", err);
+      return null;
+    });
+    if (social && (social.drafted || social.published || social.failed || social.skipped))
+      log.log("social posts:", JSON.stringify(social));
     const result = await runAllJobs(db);
     if (!result) return false;
     log.log(

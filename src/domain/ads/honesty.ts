@@ -26,12 +26,10 @@ const BANNED: { re: RegExp; why: string }[] = [
 /** Numbers an ad may contain: the ones the page will show (e.g. "3" picks, a price), passed in by the caller. */
 export type LintContext = { allowedNumbers?: number[] };
 
-export function lintAdText(text: string, kind: "headline" | "description", ctx: LintContext = {}): string[] {
+/** The honesty rules without a length limit (shared with social posts, docs/SOCIAL_PLAN.md §2). */
+export function honestyIssues(text: string, ctx: LintContext = {}): string[] {
   const issues: string[] = [];
-  const max = kind === "headline" ? HEADLINE_MAX : DESCRIPTION_MAX;
   const t = text.trim();
-  if (!t) issues.push("empty");
-  if ([...t].length > max) issues.push(`longer than ${max} characters`);
   for (const b of BANNED) if (b.re.test(t)) issues.push(b.why);
   const allowed = new Set([...(ctx.allowedNumbers ?? []), 1, 2, 3]);
   for (const m of t.matchAll(/\d+(?:[.,]\d+)?/g)) {
@@ -39,6 +37,15 @@ export function lintAdText(text: string, kind: "headline" | "description", ctx: 
     if (!allowed.has(n)) issues.push(`number ${m[0]} is not in the data`);
   }
   return issues;
+}
+
+export function lintAdText(text: string, kind: "headline" | "description", ctx: LintContext = {}): string[] {
+  const issues: string[] = [];
+  const max = kind === "headline" ? HEADLINE_MAX : DESCRIPTION_MAX;
+  const t = text.trim();
+  if (!t) issues.push("empty");
+  if ([...t].length > max) issues.push(`longer than ${max} characters`);
+  return [...issues, ...honestyIssues(t, ctx)];
 }
 
 /** All issues of a responsive search ad, or [] when it may go out. */

@@ -78,6 +78,9 @@ export default defineConfig({
         // Paid traffic against a fake account (tests/e2e/ads.spec.ts).
         FEATURE_ADS: "1",
         ADS_PROVIDER: "mock",
+        // Facebook and Instagram posts against a fake Meta (tests/e2e/social.spec.ts).
+        FEATURE_SOCIAL: "1",
+        SOCIAL_PROVIDER: "mock",
       },
     },
   ],
