@@ -74,7 +74,7 @@ export async function renderPost(card: PostCard): Promise<ImageResponse> {
           flexDirection: "column",
           gap: many ? 14 : 22,
           flex: 1,
-          justifyContent: text ? "center" : "flex-start",
+          justifyContent: "center",
         }}
       >
         {card.lines.map((l, i) =>
