@@ -83,6 +83,17 @@ describe("lintPost", () => {
     expect(lintPost("Ja varēsim lētāk, atsūtīsim piedāvājumu.")).toEqual([]);
   });
 
+  it("refuses a line in English, as a model sometimes writes one", () => {
+    expect(lintPost("Dishwasher noise bothers you in an open kitchen? Vai troksnis ir svarīgs?")).toContain(
+      "not Latvian",
+    );
+    expect(
+      lintPost("Trīs ieteikumi: trauku mazgājamās mašīnas. Klusa, 44 dB, atvērtai virtuvei.", {
+        numbers: [44],
+      }),
+    ).toEqual([]);
+  });
+
   it("refuses “tu” in captions and the ads' banned claims", () => {
     expect(lintPost("Tev piemērotākie varianti.")).toContain(
       "informal address: captions avoid the pronoun, or use “jūs”",

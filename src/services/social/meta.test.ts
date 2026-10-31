@@ -70,12 +70,12 @@ describe("meta provider", () => {
     });
   });
 
-  it("publishes to Instagram in two steps, waiting for a video to be ready", async () => {
+  it("publishes to Instagram in two steps, waiting until the media is ready", async () => {
     let checks = 0;
     const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/IG/media`) return { json: { id: "container" } };
       if (c.url === `${G}/container`)
-        return { json: { status_code: ++checks < 2 ? "IN_PROGRESS" : "FINISHED" } };
+        return { json: { status_code: ++checks % 2 ? "IN_PROGRESS" : "FINISHED" } };
       return { json: { id: "media9" } };
     });
     const p = metaProvider(cfg, http, noWait);
@@ -84,15 +84,44 @@ describe("meta provider", () => {
       id: "media9",
     });
     expect(await p.publishVideo("instagram", "https://t/v.mp4", "Video")).toEqual({ ok: true, id: "media9" });
+    // An image waits too: publishing before "FINISHED" is Meta's #9007.
     expect(calls.map((c) => c.url.replace(G, ""))).toEqual([
       "/IG/media",
+      "/container",
+      "/container",
       "/IG/media_publish",
       "/IG/media",
       "/container",
       "/container",
       "/IG/media_publish",
     ]);
-    expect(calls[2]!.body).toMatchObject({ media_type: "REELS", video_url: "https://t/v.mp4" });
+    expect(calls[4]!.body).toMatchObject({ media_type: "REELS", video_url: "https://t/v.mp4" });
+  });
+
+  it("tries publishing again when Meta says the media id is not available yet, and gives up after five", async () => {
+    let publishes = 0;
+    const { http } = fakeFetch((c) => {
+      if (c.url === `${G}/IG/media_publish`)
+        return ++publishes < 3
+          ? { status: 400, json: { error: { message: "Media ID is not available", code: 9007 } } }
+          : { json: { id: "m2" } };
+      return { json: { id: "c", status_code: "FINISHED" } };
+    });
+    expect(await metaProvider(cfg, http, noWait).publishImage("instagram", "u", "t")).toEqual({
+      ok: true,
+      id: "m2",
+    });
+    expect(publishes).toBe(3);
+    const never = fakeFetch((c) =>
+      c.url === `${G}/IG/media_publish`
+        ? { status: 400, json: { error: { message: "Media ID is not available", code: 9007 } } }
+        : { json: { id: "c", status_code: "FINISHED" } },
+    );
+    expect(await metaProvider(cfg, never.http, noWait).publishImage("instagram", "u", "t")).toEqual({
+      ok: false,
+      error: "Meta 400 #9007: Media ID is not available",
+    });
+    expect(never.calls.filter((c) => c.url === `${G}/IG/media_publish`)).toHaveLength(5);
   });
 
   it("a carousel: items then one container on Instagram, unpublished photos then one feed post on the page", async () => {
@@ -100,6 +129,7 @@ describe("meta provider", () => {
     const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
       if (c.url === `${G}/PAGE/feed`) return { json: { id: "PAGE_feed1" } };
+      if (c.method === "GET") return { json: { status_code: "FINISHED" } };
       return { json: { id: `id${++n}` } };
     });
     const p = metaProvider(cfg, http, noWait);
@@ -108,7 +138,7 @@ describe("meta provider", () => {
       { url: "u2", alt: "Bosch SMV2ITX22E, 529,99 €" },
     ];
     expect(await p.publishCarousel("instagram", imgs, "Teksts")).toMatchObject({ ok: true });
-    const ig = calls.filter((c) => c.url.startsWith(`${G}/IG`));
+    const ig = calls.filter((c) => c.url.startsWith(`${G}/IG`) && c.method === "POST");
     expect(ig.map((c) => c.body.is_carousel_item ?? c.body.media_type ?? "publish")).toEqual([
       "true",
       "true",
@@ -136,7 +166,7 @@ describe("meta provider", () => {
         refused++;
         return { status: 400, json: { error: { message: "(#100) Param alt_text is not supported" } } };
       }
-      return { json: { id: "m1" } };
+      return { json: { id: "m1", status_code: "FINISHED" } };
     });
     expect(await metaProvider(cfg, http, noWait).publishImage("instagram", "u", "Teksts", "Alt")).toEqual({
       ok: true,
@@ -162,6 +192,10 @@ describe("meta provider", () => {
     const bad = fakeFetch((c) =>
       c.url === `${G}/IG/media` ? { json: { id: "c" } } : { json: { status_code: "ERROR" } },
     );
+    expect(await metaProvider(cfg, bad.http, noWait).publishImage("instagram", "i", "y")).toEqual({
+      ok: false,
+      error: "Instagram media ERROR",
+    });
     expect(await metaProvider(cfg, bad.http, noWait).publishVideo("instagram", "v", "y")).toEqual({
       ok: false,
       error: "Instagram video ERROR",
