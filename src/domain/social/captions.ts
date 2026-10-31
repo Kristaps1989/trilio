@@ -47,11 +47,15 @@ export type PostFacts =
     }
   | {
       kind: "top_categories";
-      /** `fromCents`: the lowest current price in the category, for its slide. */
-      categories: { id: string; label: string; fromCents?: number | null }[];
+      /** `fromCents`: the lowest current price in the category, for its slide; `path`: its flow. */
+      categories: { id: string; label: string; fromCents?: number | null; path?: string }[];
       path: string;
     }
-  | { kind: "top_products"; products: (PickLine & { id: string; subcategoryId?: string })[]; path: string }
+  | {
+      kind: "top_products";
+      products: (PickLine & { id: string; subcategoryId?: string; path?: string })[];
+      path: string;
+    }
   | { kind: "reel"; caption: string; videoUrl: string; path: string };
 
 export type CardLine = {
@@ -121,6 +125,8 @@ export type PostCard = {
   icons?: string[];
   /** The closing slide says the line itself, so the footer shows trilio.lv only. */
   plainFooter?: boolean;
+  /** The site page this slide's card opens in a Facebook link carousel; the post's own page when absent. */
+  link?: string;
 };
 
 /** Alt text for a slide from what it shows: the words people search for, nothing invented. */
@@ -424,6 +430,7 @@ function parts(
         },
         ...f.categories.map((c, i) => ({
           layout: "rank" as const,
+          ...(c.path ? { link: c.path } : {}),
           chip: `${i + 1}. vieta`,
           eyebrow: `${i + 1}. vieta šonedēļ`,
           title: c.label,
@@ -488,6 +495,7 @@ function parts(
         { ...card },
         ...f.products.map((p, i) => ({
           layout: "product" as const,
+          ...(p.path ? { link: p.path } : {}),
           chip: `${i + 1}.`,
           eyebrow: `${i + 1}. vieta šonedēļ`,
           title: p.name,

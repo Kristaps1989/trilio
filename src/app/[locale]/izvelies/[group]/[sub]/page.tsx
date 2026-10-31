@@ -10,7 +10,7 @@ import { getGroup, getSubcategory } from "@/domain/questions/catalog";
 import type { Answers, Question } from "@/domain/questions/schema";
 import { Screen } from "@/ui/layout";
 import { TopProgress } from "@/ui/shell/TopProgress";
-import { NOINDEX } from "../../../seo";
+import { NOINDEX, withSharePreview } from "../../../seo";
 import { QuestionScreen, type ScreenQuestion } from "../../QuestionScreen";
 import { localPath } from "@/i18n/path";
 import { activeLocale } from "@/i18n/active";
@@ -20,14 +20,17 @@ export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ locale: string; group: string; sub: string }>;
-  searchParams: Promise<{ a?: string; q?: string }>;
+  searchParams: Promise<{ a?: string; q?: string; utm_source?: string; utm_content?: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   await initLocale(params);
   const { sub } = await params;
   // A question screen per answer combination: /kategorija/<sub> is the page meant for search.
-  return { title: getSubcategory(sub, activeLocale())?.label ?? "", robots: NOINDEX };
+  return withSharePreview(
+    { title: getSubcategory(sub, activeLocale())?.label ?? "", robots: NOINDEX },
+    await searchParams,
+  );
 }
 
 /** Answers to the flow questions before `q`, so counts show what each option would leave. */

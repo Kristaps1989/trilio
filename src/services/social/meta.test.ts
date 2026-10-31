@@ -159,6 +159,90 @@ describe("meta provider", () => {
     expect(JSON.parse(feed.body["attached_media[1]"]!)).toEqual({ media_fbid: "id6" });
   });
 
+  it("a link carousel on the page: one feed post whose cards each open their own page", async () => {
+    const { http, calls } = fakeFetch((c) =>
+      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : { json: { id: "PAGE_lc1" } },
+    );
+    const card = (n: number) => ({
+      url: `https://t/${n}/image.jpg`,
+      card: {
+        link: `https://t/l${n}`,
+        name: `Karte ${n}`,
+        description: "no 23 €",
+        picture: `https://t/${n}/square.jpg`,
+      },
+    });
+    expect(
+      await metaProvider(cfg, http, noWait).publishCarousel(
+        "facebook",
+        [card(1), card(2)],
+        "Teksts",
+        "https://t/post",
+      ),
+    ).toEqual({ ok: true, id: "PAGE_lc1" });
+    const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
+    expect(feed.body).toMatchObject({
+      message: "Teksts",
+      link: "https://t/post",
+      multi_share_optimized: "false",
+      multi_share_end_card: "false",
+    });
+    expect(JSON.parse(feed.body.child_attachments!)).toEqual([
+      { link: "https://t/l1", name: "Karte 1", description: "no 23 €", picture: "https://t/1/square.jpg" },
+      { link: "https://t/l2", name: "Karte 2", description: "no 23 €", picture: "https://t/2/square.jpg" },
+    ]);
+    // No photos uploaded: the cards carry their own pictures.
+    expect(calls.some((c) => c.url === `${G}/PAGE/photos`)).toBe(false);
+  });
+
+  it("when Meta refuses the link carousel the slides still go out as photos; a token error does not retry", async () => {
+    const refused = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      if (c.url === `${G}/PAGE/feed` && c.body.child_attachments)
+        return { status: 400, json: { error: { message: "Invalid parameter", code: 100 } } };
+      return { json: { id: "p1" } };
+    });
+    const imgs = [1, 2].map((n) => ({
+      url: `u${n}`,
+      card: { link: `l${n}`, name: "K", picture: `s${n}` },
+    }));
+    expect(await metaProvider(cfg, refused.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual(
+      {
+        ok: true,
+        id: "p1",
+      },
+    );
+    expect(refused.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(2);
+    const expired = fakeFetch((c) =>
+      c.url === `${G}/PAGE`
+        ? { json: { access_token: "PT" } }
+        : { status: 401, json: { error: { message: "Session has expired", code: 190 } } },
+    );
+    expect(await metaProvider(cfg, expired.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual(
+      {
+        ok: false,
+        error: "Meta 401 #190: Session has expired",
+      },
+    );
+    expect(expired.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
+  });
+
+  it("a link post on the page: message and link, with the page's token", async () => {
+    const { http, calls } = fakeFetch((c) =>
+      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : { json: { id: "PAGE_l1" } },
+    );
+    expect(await metaProvider(cfg, http, noWait).publishLink("https://t/x", "Teksts")).toEqual({
+      ok: true,
+      id: "PAGE_l1",
+    });
+    expect(calls.at(-1)).toMatchObject({
+      url: `${G}/PAGE/feed`,
+      body: { message: "Teksts", link: "https://t/x", access_token: "PT" },
+    });
+    const bad = fakeFetch(() => ({ status: 400, json: { error: { message: "Bad link", code: 100 } } }));
+    expect(await metaProvider(cfg, bad.http, noWait).publishLink("x", "y")).toMatchObject({ ok: false });
+  });
+
   it("an image goes out without alt text when Meta refuses the field", async () => {
     let refused = 0;
     const { http, calls } = fakeFetch((c) => {

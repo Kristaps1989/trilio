@@ -136,6 +136,15 @@ describe("every layout draws", () => {
     120_000,
   );
 
+  it("the link preview of every kind is 1200 × 630", async () => {
+    const sharp = (await import("sharp")).default;
+    for (const f of facts) {
+      const [first] = slidesOf(composePost(f, { postId: "s", baseUrl: "https://trilio.lv" }).card);
+      const meta = await sharp(await renderPostJpeg(first!, 0, 1, "link")).metadata();
+      expect([meta.width, meta.height]).toEqual([1200, 630]);
+    }
+  }, 120_000);
+
   it("a card saved before the layouts existed, and a long list", async () => {
     const legacy = {
       chip: "3 ieteikumi",

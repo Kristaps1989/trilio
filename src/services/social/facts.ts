@@ -244,6 +244,7 @@ export async function topCategoriesFacts(db: Db, now: Date): Promise<PostFacts |
         id: c.id,
         label: categoryLabel(c.id),
         fromCents: await lowestPrice(db, c.id, now),
+        path: flowPath(c.id),
       })),
     ),
     path: "/",
@@ -304,6 +305,7 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
       shop: p.shop,
       subcategoryId: p.sub,
       imageUrl: p.imageUrl,
+      path: flowPath(p.sub),
     })),
     path: flowPath(products[0]!.sub),
   };

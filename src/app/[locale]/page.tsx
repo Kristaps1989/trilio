@@ -5,7 +5,7 @@ import { catalogIn } from "@/domain/questions/catalog";
 import { ButtonLink } from "@/ui/Button";
 import { Container, Kicker, Lead, PageTitle, SectionTitle } from "@/ui/layout";
 import { TileIcon } from "@/ui/Tile";
-import { pageMetadata } from "./seo";
+import { pageMetadata, withSharePreview } from "./seo";
 import { activeLocale } from "@/i18n/active";
 
 // Welcome screen (spec §1, prototype "welcome") plus crawlable entry points
@@ -15,9 +15,16 @@ import { activeLocale } from "@/i18n/active";
 // Rendered per request so the site URL in metadata and JSON-LD comes from APP_URL at runtime.
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
   const t = await getTranslations("meta");
-  return { ...pageMetadata("/", t("title"), t("description")), title: { absolute: t("title") } };
+  return withSharePreview(
+    { ...pageMetadata("/", t("title"), t("description")), title: { absolute: t("title") } },
+    await searchParams,
+  );
 }
 
 export default async function WelcomePage() {

@@ -74,6 +74,14 @@ test("a post from the knowledge base: draft, image, publish now to both networks
     `${info.project.use.baseURL ?? "http://localhost:3000"}/api/social/${id}/image.jpg`,
   );
   expect(pub.status()).toBe(200);
+  // Facebook gets a link post: the landing page's Open Graph names this post's own preview picture.
+  const base = info.project.use.baseURL ?? "http://localhost:3000";
+  const link = /https?:\/\/\S*utm_source=facebook\S*/.exec(fb)![0];
+  const landing = await anon.request.get(`${base}${new URL(link).pathname}${new URL(link).search}`);
+  const html = await landing.text();
+  expect(html).toMatch(new RegExp(`<meta property="og:image" content="[^"]*/api/social/${id}/link\\.jpg"`));
+  const preview = await anon.request.get(`${base}/api/social/${id}/link.jpg`);
+  expect(preview.headers()["content-type"]).toBe("image/jpeg");
   await anon.close();
 
   const history = page.getByRole("group", { name: "Publicētie" });

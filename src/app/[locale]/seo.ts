@@ -61,5 +61,30 @@ export function pageMetadata(
   };
 }
 
+/**
+ * A page opened from a Facebook link post: its Open Graph names that post's
+ * own picture and words, so the preview shows the post (docs/SOCIAL_PLAN.md §12).
+ * Search results and canonical stay the page's own.
+ */
+export async function withSharePreview(
+  meta: Metadata,
+  search: Record<string, string | string[] | undefined>,
+): Promise<Metadata> {
+  if (search.utm_source !== "facebook" || typeof search.utm_content !== "string") return meta;
+  const [{ db }, { sharePreview }] = await Promise.all([import("@/db"), import("@/services/social/share")]);
+  const p = await sharePreview(db, search).catch(() => null);
+  if (!p) return meta;
+  return {
+    ...meta,
+    openGraph: {
+      ...openGraphBase(),
+      ...(meta.openGraph ?? {}),
+      title: p.title,
+      ...(p.description ? { description: p.description } : {}),
+      images: [p.image],
+    },
+  };
+}
+
 /** Pages that must stay out of search results but whose links may be followed. */
 export const NOINDEX: Metadata["robots"] = { index: false, follow: true };

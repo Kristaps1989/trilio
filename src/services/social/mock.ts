@@ -11,6 +11,8 @@ export type MockPost = {
   caption: string;
   removed: boolean;
   alts?: string[];
+  /** A Facebook link carousel: each card's link. */
+  links?: string[];
 };
 
 const store = globalThis as unknown as { __trilioSocialMock?: MockPost[] };
@@ -20,9 +22,9 @@ const n = (seed: string, max: number) =>
   createHash("sha256").update(seed).digest().readUInt32BE(0) % (max + 1);
 
 export function mockSocialProvider(): SocialProvider {
-  const add = (network: Network, media: string, caption: string, alts?: string[]) => {
+  const add = (network: Network, media: string, caption: string, alts?: string[], links?: string[]) => {
     const id = `mock_${network}_${randomUUID().slice(0, 8)}`;
-    mockPosts().push({ network, id, media, caption, removed: false, alts });
+    mockPosts().push({ network, id, media, caption, removed: false, alts, ...(links ? { links } : {}) });
     return { ok: true as const, id };
   };
   return {
@@ -31,12 +33,17 @@ export function mockSocialProvider(): SocialProvider {
       return add(network, imageUrl, caption, alt ? [alt] : undefined);
     },
     async publishCarousel(network, images, caption) {
+      const cards = network === "facebook" && images.every((i) => i.card);
       return add(
         network,
         images.map((i) => i.url).join(" "),
         caption,
         images.map((i) => i.alt ?? ""),
+        cards ? images.map((i) => i.card!.link) : undefined,
       );
+    },
+    async publishLink(link, caption) {
+      return add("facebook", link, caption, undefined, [link]);
     },
     async publishVideo(network, videoUrl, caption) {
       return add(network, videoUrl, caption);
