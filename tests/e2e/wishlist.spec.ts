@@ -218,7 +218,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   const ask = search.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
   await expect(ask).toContainText("tiklīdz kādu varēsim piedāvāt lētāk nekā veikali");
   await ask.getByRole("button", { name: "Pieprasīt labāku cenu" }).click();
-  await expect(search.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu" })).toBeVisible();
+  await expect(search.getByRole("button", { name: "Pieprasīts · meklējam lētāku variantu" })).toBeVisible();
   const product = picks(page).first();
   const productName = (await product.getAttribute("aria-label")) ?? "";
   await product.getByRole("button", { name: "Pieprasīt labāku cenu", exact: true }).click();
@@ -265,7 +265,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // The saved search reopens the same results.
   await searches.first().getByRole("link", { name: "Skatīt rezultātus" }).click();
   await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
-  await expect(page.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pieprasīts · meklējam lētāku variantu" })).toBeVisible();
   await page.goBack();
 
   // Remove the product from the list with its heart.
