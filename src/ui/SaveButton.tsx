@@ -10,11 +10,13 @@ import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
 import { SavedAlertNote } from "./SavedAlertNote";
 
-// "Paziņot, kad cena samazināsies" (docs/PRICE_NOTIFY_PLAN.md): one tap saves
-// a product or a whole search and turns price e-mails on; a second tap stops
-// it. Signed out, the card opens one e-mail field instead of a sign-in page.
-// Signed in where Trilio sources, the first tap shows the one sentence that
-// also covers Trilio's offers.
+// "Pieprasīt labāku cenu" (docs/PRICE_NOTIFY_PLAN.md §8.3): one tap saves a
+// product or a whole search, asks Trilio for a better price and turns price
+// e-mails on; a second tap stops it. Where Trilio does not source (data/
+// offers.json "except") the button only promises the price e-mail, with the
+// heart. Signed out, the card opens one e-mail field instead of a sign-in
+// page. Signed in where Trilio sources, the first tap shows the one sentence
+// that also covers Trilio's offers.
 
 function Heart({ filled }: { filled: boolean }) {
   return (
@@ -29,6 +31,27 @@ function Heart({ filled }: { filled: boolean }) {
       aria-hidden="true"
     >
       <path d="M12 20.5s-7.5-4.6-9.3-9.4C1.5 7.8 3.7 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.3 0 5.5 3.3 4.3 6.6C19.5 15.9 12 20.5 12 20.5z" />
+    </svg>
+  );
+}
+
+// A price tag with an arrow down: the request is for a better price, not a wish.
+function Tag({ filled }: { filled: boolean }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 3h8l10 10-8 8L3 11z" />
+      <circle cx="7.5" cy="7.5" r="1.5" fill={filled ? "#fff" : "currentColor"} stroke="none" />
+      <path d="M20 14v6M17 17l3 3 3-3" fill="none" stroke={filled ? "#fff" : "currentColor"} />
     </svg>
   );
 }
@@ -62,13 +85,8 @@ export function SaveButton({
     setSaved(initial);
   }
   const search = target.kind === "search";
-  const text = saved
-    ? search
-      ? t("notifyingSearch")
-      : t("notifying")
-    : search
-      ? t("notifySearch")
-      : t("notify");
+  const key = `${saved ? "notifying" : "notify"}${search ? "Search" : ""}${offers ? "" : "Drop"}` as const;
+  const text = t(key);
 
   function run(next: boolean, consent = false) {
     setSaved(next); // optimistic
@@ -104,7 +122,7 @@ export function SaveButton({
       className={`${className} ${saved ? "text-lime" : ""}`}
       data-notify-button
     >
-      <Heart filled={saved} />
+      {offers && variant !== "icon" ? <Tag filled={saved} /> : <Heart filled={saved} />}
       {variant === "icon" ? null : <span>{text}</span>}
     </button>
   );
@@ -121,7 +139,7 @@ export function SaveButton({
           onClose={() => setPanel(null)}
         />
       ) : note && saved ? (
-        <SavedAlertNote email={note.email} />
+        <SavedAlertNote email={note.email} offers={offers} />
       ) : null}
     </div>
   );

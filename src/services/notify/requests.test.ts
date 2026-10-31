@@ -86,13 +86,13 @@ run("notify requests", () => {
     expect(r).toMatchObject({ ok: true, email: `anna@${DOMAIN}` });
     const m = mail.sent.at(-1)!;
     expect(m.to).toBe(`anna@${DOMAIN}`);
-    expect(m.subject).toBe("Apstiprini cenu paziņojumus: Ledusskapji · 181–205 cm");
+    expect(m.subject).toBe("Apstiprini, un meklēsim labāku cenu: Ledusskapji · 181–205 cm");
     expect(m.text).toContain(`${BASE}/pazinot/`);
     expect(m.text).toContain("bez apstiprinājuma neko nesūtīsim");
     expect(m.html).toContain(`${BASE}/email/logo.png`);
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
-      consent: "notify.bodySearch@2026-10-30",
+      consent: "notify.bodySearch@2026-10-31",
       offers: true,
       confirmedAt: null,
     });
@@ -120,7 +120,7 @@ run("notify requests", () => {
     );
     expect(await requestByToken(db, tokenOf())).toMatchObject({
       offers: true,
-      consent: "notify.bodySearch@2026-10-30",
+      consent: "notify.bodySearch@2026-10-31",
     });
   });
 
@@ -140,7 +140,7 @@ run("notify requests", () => {
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
       offers: false,
-      consent: "notify.bodySearchPlain@2026-10-30",
+      consent: "notify.bodySearchPlain@2026-10-31",
       returnPath: null,
       locale: "en",
     });

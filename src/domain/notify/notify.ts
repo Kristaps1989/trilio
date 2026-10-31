@@ -1,9 +1,9 @@
-// "Paziņot, kad cena samazināsies" without an account (docs/PRICE_NOTIFY_PLAN.md):
+// "Pieprasīt labāku cenu" without an account (docs/PRICE_NOTIFY_PLAN.md):
 // the rules that need no database. One yes covers Trilio's own offers only
 // where the text shown said so, and that text is stored with its version.
 
 /** Bump when the wording in notify.body* changes, so every stored consent names the text it saw. */
-export const CONSENT_VERSION = "2026-10-30";
+export const CONSENT_VERSION = "2026-10-31";
 
 export const REQUEST_TTL_MS = 7 * 24 * 3600 * 1000;
 /** After confirming, the same link signs the person in once, for this long. */

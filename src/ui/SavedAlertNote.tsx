@@ -4,11 +4,12 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { setPriceAlertsAction } from "@/app/[locale]/velmju-saraksts/actions";
 
-// Under a heart just tapped (docs/TRUST_POLISH_PLAN.md §1): saving is the
-// request to hear when the price drops, said plainly, with the way out in
-// the same line and the way back after it.
+// Under a button just tapped (docs/TRUST_POLISH_PLAN.md §1): saving is the
+// request for a better price, or outside sourcing to hear when the price
+// drops, said plainly, with the way out in the same line and the way back
+// after it.
 
-export function SavedAlertNote({ email }: { email: string }) {
+export function SavedAlertNote({ email, offers = false }: { email: string; offers?: boolean }) {
   const t = useTranslations("wishlist");
   const [on, setOn] = useState(true);
   const [pending, start] = useTransition();
@@ -22,7 +23,7 @@ export function SavedAlertNote({ email }: { email: string }) {
 
   return (
     <p role="status" className="text-sm text-night" data-alert-note={on ? "on" : "off"}>
-      {on ? t("alertNote", { email }) : t("alertNoteOff")}{" "}
+      {on ? t(offers ? "alertNoteOffers" : "alertNote", { email }) : t("alertNoteOff")}{" "}
       <button
         type="button"
         disabled={pending}

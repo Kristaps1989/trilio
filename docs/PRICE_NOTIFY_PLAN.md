@@ -155,3 +155,19 @@ All four PRs are built together on one branch, not merged. Choices made where th
 Deviation from §5: the "Trilio var piedāvāt lētāk" line is shown once, above the three picks, not on every card. Three cards saying the same sentence read as an advert; once, next to the cards, it reads as a fact.
 
 Confirmation is a page with one "Apstiprināt" button rather than a link that confirms on opening, because mail scanners open links. It is one extra tap, made once per person.
+
+### 8.3 The request, not the watch (owner, 31 Oct 2026)
+
+Seen live, the owner's verdict: "Trilio var piedāvāt lētāk: iepērkam tieši no izplatītāja…" is Trilio's method, not the shopper's gain, and "Paziņot, kad cena samazināsies" still reads as a price watch; nothing on the screen says that saving makes Trilio go and find a better price. The owner suggested "Saņemt Trilio piedāvājumu"; it promises a thing that may never come, so the button names the shopper's act instead. "Lūgt" was rejected as pleading. Decided:
+
+| Where | Now |
+| --- | --- |
+| Line above the picks (`results.trilioCanOffer`) | Pieprasi labāku cenu: Trilio pajautās izplatītājam un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali. |
+| Card button (`wishlist.notify` / `notifying`) | Pieprasīt labāku cenu → Pieprasīts · meklējam labāku cenu; a price-tag icon, the heart only in the header and the wishlist |
+| Search line (`results.notifySearchTitle`, `wishlist.notifySearch`) | Pieprasīt labāku cenu visam meklējumam? → Pieprasīt labāku cenu šim meklējumam |
+| Panel (`notify.title`, `body`, `submit`) | Uz kādu e-pastu sūtīt piedāvājumu? · Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali, vai kad tās cena veikalos samazināsies… · Pieprasīt labāku cenu |
+| Under the card (`wishlist.alertNoteOffers`) | Meklējam labāku cenu. Uzrakstīsim uz {email}. |
+| Confirmation e-mail and page | Apstiprini, un meklēsim labāku cenu · Tu pieprasīji labāku cenu… |
+| Wishlist (`wishlist.sub`, `empty`) | …Visiem meklējam labāku cenu. · Spied „Pieprasīt labāku cenu” pie preces. |
+
+The honesty guards: every promise is conditional ("ja varēsim piedāvāt lētāk"), and the price-drop e-mail stays in the same sentence, so the request always has a true outcome even when the distributor is not cheaper. The consent text changed, so `CONSENT_VERSION` is `2026-10-31`; earlier requests keep the version they were shown. Where `data/offers.json` leaves a category out, the `…Plain` and `…Drop` keys keep the old price-watch wording and the heart, because there Trilio asks nobody.

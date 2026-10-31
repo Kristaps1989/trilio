@@ -26,17 +26,19 @@ export default async function ConfirmNotify({ params }: Props) {
   const t = await getTranslations("notify");
   const request = await requestByToken(db, token);
   const ok = !!request && requestState(request, new Date()).confirmable;
+  // The page repeats the promise the request was made under: a better price where Trilio sources, else the price e-mail.
+  const p = request?.offers === false ? "Plain" : "";
   return (
     <Page size="narrow">
-      <Kicker>{t("confirmKicker")}</Kicker>
-      <PageTitle>{t("confirmTitle")}</PageTitle>
+      <Kicker>{t(`confirmKicker${p}`)}</Kicker>
+      <PageTitle>{t(`confirmTitle${p}`)}</PageTitle>
       {ok ? (
         <form action={confirmNotifyAction} className="flex flex-col gap-5">
           <input type="hidden" name="token" value={token} />
           <p className="text-[17px] text-mist">
             {request.kind === "product"
-              ? t("confirmProduct", { email: request.email, name: offerProductName(request.label ?? "") })
-              : t("confirmSearch", { email: request.email, name: request.label ?? "" })}
+              ? t(`confirmProduct${p}`, { email: request.email, name: offerProductName(request.label ?? "") })
+              : t(`confirmSearch${p}`, { email: request.email, name: request.label ?? "" })}
           </p>
           <Button type="submit" size="lg">
             {t("confirmButton")}

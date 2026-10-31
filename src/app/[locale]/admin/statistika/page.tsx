@@ -118,7 +118,7 @@ export default async function AdminStats({ searchParams }: Props) {
         </div>
       ) : null}
 
-      {/* docs/PRICE_NOTIFY_PLAN.md §5 PR 3: where "Paziņot, kad cena samazināsies" loses people. */}
+      {/* docs/PRICE_NOTIFY_PLAN.md §5 PR 3: where "Pieprasīt labāku cenu" loses people. */}
       <Section title={t("notifyFunnel")} id="notify-funnel">
         <Stats>
           <Stat label={t("funnelResults")} value={formatInt(funnelTotal.results)} />

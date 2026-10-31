@@ -10,6 +10,7 @@ import { loadCandidates, loadProducts } from "@/db/queries/catalog";
 import { listSaved, priceHistory } from "@/db/queries/wishlist";
 import type { ProductView } from "@/domain/catalog/types";
 import { decodeState } from "@/domain/flow/state";
+import { trilioSources } from "@/domain/offers/sourcing";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer, searchProposal } from "@/domain/wishlist/wishlist";
 import { formatEur } from "@/i18n/format";
@@ -157,6 +158,7 @@ export default async function WishlistPage() {
                         saved
                         name={item.label ?? item.subcategoryId}
                         variant="icon"
+                        offers={trilioSources(item.subcategoryId)}
                       />
                     </div>
                     {top ? (
@@ -220,6 +222,7 @@ export default async function WishlistPage() {
                         saved
                         name={name}
                         variant="icon"
+                        offers={trilioSources(product.subcategoryId)}
                       />
                     </div>
                     {offer ? (
