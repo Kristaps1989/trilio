@@ -141,13 +141,13 @@ run("social posts", () => {
   it("in automatic mode the drafts are approved by the system", async () => {
     await updateSocialSettings(db, { mode: "auto" });
     expect((await socialSettings(db)).mode).toBe("auto");
-    const sunMorning = rigaTime("2031-01-17", 12); // Friday noon: Friday 19:00 is next
-    expect(await draftUpcoming(db, deps, sunMorning)).toBeGreaterThanOrEqual(1);
+    // Wednesday noon: only Wednesday 19:00 is within a day, and advice always has data.
+    expect(await draftUpcoming(db, deps, rigaTime("2031-01-22", 12))).toBe(1);
     const [p] = await db
       .select()
       .from(socialPosts)
-      .where(eq(socialPosts.slotAt, rigaTime("2031-01-17", 19)));
-    expect(p).toMatchObject({ status: "approved", approvedBy: "sistēma" });
+      .where(eq(socialPosts.slotAt, rigaTime("2031-01-22", 19)));
+    expect(p).toMatchObject({ kind: "advice", status: "approved", approvedBy: "sistēma" });
     await updateSocialSettings(db, { mode: "approve" });
   });
 
