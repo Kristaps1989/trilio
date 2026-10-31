@@ -42,6 +42,9 @@ export function mockSocialProvider(): SocialProvider {
         cards ? images.map((i) => i.card!.link) : undefined,
       );
     },
+    async publishLink(link, caption) {
+      return add("facebook", link, caption, undefined, [link]);
+    },
     async publishVideo(network, videoUrl, caption) {
       return add(network, videoUrl, caption);
     },

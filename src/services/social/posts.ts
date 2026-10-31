@@ -34,7 +34,7 @@ import {
   topCategoriesFacts,
   topProductsFacts,
 } from "./facts";
-import type { Network, SocialProvider } from "./provider";
+import type { Network, PublishResult, SocialProvider } from "./provider";
 
 // Drafting, approving and publishing posts (docs/SOCIAL_PLAN.md §7). A post
 // is drafted from live data a day ahead; right before it goes out its prices
@@ -373,6 +373,22 @@ export const slideUrls = (baseUrl: string, id: string, n: number) =>
     i === 0 ? imageUrl(baseUrl, id) : `${baseUrl}/api/social/${id}/${i + 1}/image.jpg`,
   );
 
+/** Meta's token, permission and rate errors: another format would fail the same way. */
+const TOKEN_ERROR = /#(190|200|10|4|17|32)\b/;
+
+/** A link post's caption: the link is the preview below it, so the line with the bare URL goes. */
+export function withoutLink(caption: string, link: string): string {
+  return caption
+    .split("\n")
+    .filter((l) => !l.includes(link))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** The link preview picture of a post (1200 × 630), named in the landing page's Open Graph tags. */
+export const linkImageUrl = (baseUrl: string, id: string) => `${baseUrl}/api/social/${id}/link.jpg`;
+
 /** The square picture of a slide, for a Facebook link carousel card (1:1). */
 export const squareUrl = (baseUrl: string, id: string, n: number) =>
   `${baseUrl}/api/social/${id}/${n}/square.jpg`;
@@ -420,23 +436,27 @@ export async function publishPost(
   const card = post.card as unknown as PostCard;
   const slides = card.slides?.length ?? 0;
   const alts = card.slides?.map(slideAlt) ?? [];
-  const send = async (n: Network, caption: string) =>
-    post.videoUrl
-      ? provider.publishVideo(n, post.videoUrl, caption)
-      : slides > 1
-        ? provider.publishCarousel(
-            n,
-            slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({
-              url,
-              alt: alts[i],
-              ...(n === "facebook" ? { card: carouselCard(deps.baseUrl, post, card.slides![i]!, i) } : {}),
-            })),
-            caption,
-            n === "facebook"
-              ? utmLink(deps.baseUrl, sitePath(post), "facebook", post.kind, post.id)
-              : undefined,
-          )
-        : provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption, post.alt);
+  const fbLink = utmLink(deps.baseUrl, sitePath(post), "facebook", post.kind, post.id);
+  const send = async (n: Network, caption: string): Promise<PublishResult> => {
+    if (n === "facebook" && !post.videoUrl && slides <= 1) {
+      // A link post brings people to the site; its preview is this post's own picture (Open Graph).
+      const r = await provider.publishLink(fbLink, withoutLink(caption, fbLink));
+      if (r.ok || TOKEN_ERROR.test(r.error)) return r;
+    }
+    if (post.videoUrl) return provider.publishVideo(n, post.videoUrl, caption);
+    if (slides > 1)
+      return provider.publishCarousel(
+        n,
+        slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({
+          url,
+          alt: alts[i],
+          ...(n === "facebook" ? { card: carouselCard(deps.baseUrl, post, card.slides![i]!, i) } : {}),
+        })),
+        caption,
+        n === "facebook" ? fbLink : undefined,
+      );
+    return provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption, post.alt);
+  };
   const errors: string[] = [];
   let fb = post.fbPostId;
   let ig = post.igMediaId;

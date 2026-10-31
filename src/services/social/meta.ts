@@ -201,6 +201,14 @@ export function metaProvider(
         return fail(err);
       }
     },
+    async publishLink(link: string, caption: string) {
+      try {
+        const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, link }, await page());
+        return { ok: true, id: String(r.id) };
+      } catch (err) {
+        return fail(err);
+      }
+    },
     async publishVideo(network: Network, videoUrl: string, caption: string) {
       try {
         if (network === "instagram")

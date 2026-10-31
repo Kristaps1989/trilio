@@ -23,7 +23,10 @@ export const POST_SIZE = { width: 1080, height: 1350 } as const;
  */
 export const SQUARE_CANVAS = 1350;
 export const SQUARE_SIZE = 1080;
-export type Shape = "portrait" | "square";
+/** A link post's preview (Open Graph, 1.91:1): laid out on 1600 × 840 and scaled to 1200 × 630. */
+export const LINK_CANVAS = { width: 1600, height: 840 } as const;
+export const LINK_SIZE = { width: 1200, height: 630 } as const;
+export type Shape = "portrait" | "square" | "link";
 
 const NIGHT = "#0F2A2E";
 const NIGHT_DEEP = "#0A1F22";
@@ -862,6 +865,42 @@ function Closing(c: PostCard) {
   );
 }
 
+/** A link post's preview: the slide's words on the left, its photo or drawing on the right. */
+function LinkCard(c: Slide) {
+  const headline = c.headline ?? c.title;
+  const long = headline.length > 40;
+  return (
+    <div style={{ display: "flex", flex: 1, gap: 56, alignItems: "stretch" }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 18 }}>
+        {c.eyebrow ? <Eyebrow text={c.eyebrow} /> : null}
+        <Headline
+          text={headline}
+          accent={c.headlineAccent}
+          size={Math.min(headlineSize(headline, c.headlineAccent), long ? 60 : 84)}
+        />
+        <div style={{ display: "flex", flex: 1 }} />
+        {c.stat ? (
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 48 }}>
+            <Stat label={c.stat.label} value={c.stat.value} size={110} color={LIME} />
+            {c.stat2 ? <Stat label={c.stat2.label} value={c.stat2.value} size={56} color={STONE} /> : null}
+          </div>
+        ) : c.rows?.length ? (
+          <Rows rows={c.rows.slice(0, 3)} compact />
+        ) : (
+          <Sub text={c.sub ?? "Daži jautājumi, un trīs piemērotākie varianti."} />
+        )}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {c.photo ? (
+          <Photo src={c.photo} width={440} height={440} />
+        ) : c.hero ? (
+          <Hero subcategoryId={c.hero} size={380} />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 /** The layout before this redesign, for a card stored without one. */
 function Legacy(c: PostCard) {
   return (
@@ -908,8 +947,13 @@ export async function renderPost(
   total = 1,
   shape: Shape = "portrait",
 ): Promise<ImageResponse> {
-  const size = shape === "square" ? { width: SQUARE_CANVAS, height: SQUARE_CANVAS } : POST_SIZE;
-  const Layout = card.layout ? LAYOUTS[card.layout] : Legacy;
+  const size =
+    shape === "square"
+      ? { width: SQUARE_CANVAS, height: SQUARE_CANVAS }
+      : shape === "link"
+        ? LINK_CANVAS
+        : POST_SIZE;
+  const Layout = shape === "link" ? LinkCard : card.layout ? LAYOUTS[card.layout] : Legacy;
   const photo = await loadPhoto(card.image ?? (card.phone?.kind === "card" ? card.phone.image : undefined));
   const cue =
     card.layout === "cover" && total > 1
@@ -938,6 +982,11 @@ export async function renderPostJpeg(
 ): Promise<Buffer> {
   const png = Buffer.from(await (await renderPost(card, index, total, shape)).arrayBuffer());
   const sharp = (await import("sharp")).default;
-  const img = shape === "square" ? sharp(png).resize(SQUARE_SIZE, SQUARE_SIZE) : sharp(png);
+  const img =
+    shape === "square"
+      ? sharp(png).resize(SQUARE_SIZE, SQUARE_SIZE)
+      : shape === "link"
+        ? sharp(png).resize(LINK_SIZE.width, LINK_SIZE.height)
+        : sharp(png);
   return img.jpeg({ quality: 90, mozjpeg: true }).toBuffer();
 }

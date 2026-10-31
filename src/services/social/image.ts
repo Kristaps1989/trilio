@@ -21,7 +21,11 @@ export async function postImage(rawId: string, n: number, shape: Shape = "portra
   const slides = slidesOf(p.card as unknown as PostCard);
   const slide = slides[n - 1];
   if (!slide) return new NextResponse(null, { status: 404 });
-  const jpeg = await renderPostJpeg(slide, n - 1, slides.length, shape);
+  // A link preview is one picture: the first slide, without a carousel's counter.
+  const jpeg =
+    shape === "link"
+      ? await renderPostJpeg(slide, 0, 1, shape)
+      : await renderPostJpeg(slide, n - 1, slides.length, shape);
   return new NextResponse(new Uint8Array(jpeg), {
     headers: {
       "content-type": "image/jpeg",

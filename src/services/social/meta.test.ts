@@ -227,6 +227,22 @@ describe("meta provider", () => {
     expect(expired.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
   });
 
+  it("a link post on the page: message and link, with the page's token", async () => {
+    const { http, calls } = fakeFetch((c) =>
+      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : { json: { id: "PAGE_l1" } },
+    );
+    expect(await metaProvider(cfg, http, noWait).publishLink("https://t/x", "Teksts")).toEqual({
+      ok: true,
+      id: "PAGE_l1",
+    });
+    expect(calls.at(-1)).toMatchObject({
+      url: `${G}/PAGE/feed`,
+      body: { message: "Teksts", link: "https://t/x", access_token: "PT" },
+    });
+    const bad = fakeFetch(() => ({ status: 400, json: { error: { message: "Bad link", code: 100 } } }));
+    expect(await metaProvider(cfg, bad.http, noWait).publishLink("x", "y")).toMatchObject({ ok: false });
+  });
+
   it("an image goes out without alt text when Meta refuses the field", async () => {
     let refused = 0;
     const { http, calls } = fakeFetch((c) => {

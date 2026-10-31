@@ -13,9 +13,11 @@ import {
 import { leaks } from "@/domain/social/anonymise";
 import { FIRST_CATEGORIES, rigaTime } from "@/domain/social/schedule";
 import { mockPosts, mockSocialProvider } from "./mock";
+import { sharePreview } from "./share";
 import {
   approvePost,
   carouselCard,
+  withoutLink,
   createPost,
   draftUpcoming,
   editCaptions,
@@ -121,11 +123,22 @@ run("social posts", () => {
     expect(p!.fbPostId).toMatch(/^mock_facebook_/);
     expect(p!.igMediaId).toMatch(/^mock_instagram_/);
     const sent = mockPosts().filter((m) => m.id === p!.fbPostId || m.id === p!.igMediaId);
-    expect(sent.map((m) => m.media)).toEqual([
-      `${BASE}/api/social/${id}/image.jpg`,
-      `${BASE}/api/social/${id}/image.jpg`,
+    // Facebook: a link post to the site (its preview is the post's picture); Instagram: the JPEG.
+    const fbLink = `${new URL(p!.link).origin}${new URL(p!.link).pathname}?utm_source=facebook&utm_medium=social&utm_campaign=advice&utm_content=${id}`;
+    expect(sent.map((m) => [m.network, m.media])).toEqual([
+      ["facebook", fbLink],
+      ["instagram", `${BASE}/api/social/${id}/image.jpg`],
     ]);
+    const fbPost = sent.find((m) => m.network === "facebook")!;
+    expect(fbPost.caption).not.toContain("http");
+    expect(p!.captionFb).toContain(fbLink);
     expect(sent.find((m) => m.network === "instagram")!.caption).toContain("Saite profilā.");
+    // The landing page names this post's own picture and words for the preview.
+    const preview = await sharePreview(db, { utm_source: "facebook", utm_content: id });
+    expect(preview).toMatchObject({ image: { url: `/api/social/${id}/link.jpg`, width: 1200, height: 630 } });
+    expect(preview!.title.length).toBeGreaterThan(5);
+    expect(await sharePreview(db, { utm_source: "instagram", utm_content: id })).toBeNull();
+    expect(await sharePreview(db, { utm_source: "facebook", utm_content: "nav-id" })).toBeNull();
 
     // Numbers once a day; deleting removes it from both networks.
     expect(await syncInsights(db, deps, rigaTime("2031-01-11", 10), true)).toBe(2);
@@ -318,6 +331,12 @@ run("social posts", () => {
       ),
     );
     expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
+  });
+
+  it("a link post's caption drops the line with the bare link: the preview is the link", () => {
+    expect(withoutLink("Fakts.\n\nJautājums?\n\nCTA:\n👉 https://t/x?a=1", "https://t/x?a=1")).toBe(
+      "Fakts.\n\nJautājums?\n\nCTA:",
+    );
   });
 
   it("a card of the link carousel: square picture, short name, the slide's own page", () => {

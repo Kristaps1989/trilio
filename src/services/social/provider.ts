@@ -36,6 +36,12 @@ export interface SocialProvider {
     caption: string,
     link?: string,
   ): Promise<PublishResult>;
+  /**
+   * The page only: a link post. Facebook draws the preview (picture, title,
+   * line) from the linked page's Open Graph tags, so the whole picture is a
+   * click to the site.
+   */
+  publishLink(link: string, caption: string): Promise<PublishResult>;
   /** A video the owner uploaded: a Reel on Instagram, a video post on the page. */
   publishVideo(network: Network, videoUrl: string, caption: string): Promise<PublishResult>;
   insights(network: Network, id: string): Promise<Insight | null>;
