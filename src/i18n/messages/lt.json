@@ -1,9 +1,9 @@
 {
   "__status": "pending_translation",
   "meta": {
-    "title": "Trilio — trīs labākie. Bez meklēšanas.",
+    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.",
     "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
-    "tagline": "Trīs labākie. Bez meklēšanas.",
+    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.",
     "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
     "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },

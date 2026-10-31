@@ -19,7 +19,9 @@ export type LlmPurpose =
   /** The daily ads optimiser and its weekly memo (docs/GROWTH_PLAN.md, Phase 2). */
   | "ads_optimiser"
   | "ads_terms"
-  | "ads_copy";
+  | "ads_copy"
+  /** The lead sentence of a Facebook and Instagram post (docs/SOCIAL_PLAN.md). */
+  | "social_copy";
 
 /** Small, fast and cheap: reading spec tables and routing short text needs no more (LLM_MODEL overrides). */
 export const DEFAULT_MODEL = "claude-haiku-5-5";

@@ -1,8 +1,8 @@
 {
   "meta": {
-    "title": "Trilio — the best three. No searching.",
+    "title": "Trilio — a few questions, 3 picks. Buy now or ask for a better price.",
     "description": "Tell us what you need and we'll find the three best home appliances in our partner shops in Latvia.",
-    "tagline": "The best three. No searching.",
+    "tagline": "A few questions. 3 picks. Buy now or ask for a better price.",
     "groupDescription": "{group}: answer a few questions and get the three best options in partner shops, with prices matched by EAN and electricity costs.",
     "modelDescription": "Enter a model or a shop link: we'll check its price in partner shops and show whether the same money buys something better."
   },
@@ -832,7 +832,8 @@
             "Arriving from an ad: if you arrive by clicking an ad, we record the ad click identifier (gclid) and the campaign name with that day's visit code (without cookies, as for visit statistics), to count how many shop clicks and saves each ad brought. Basis: legitimate interests.",
             "TV ad measurement: when an addressable TV platform (Go3) shows a Trilio ad, its ad server calls Trilio's impression counter and passes a device identifier. We immediately turn it into an irreversible code (hash) with a separate salt per campaign and keep only that code, to count how many different devices saw the ad. We do not store the identifier itself, the IP address or the browser name, and the code cannot be linked to your visit to Trilio. Basis: legitimate interest in measuring the reach of advertising.",
             "Personal offers: if you allow it, we e-mail offers for products you saved. We keep the consent, the offers sent and whether the offer page was opened (the e-mails have no tracking). Basis: your consent, which you can withdraw at any time with the link in the e-mail or in the wishlist.",
-            "Purchases from Trilio: name, phone, delivery address or parcel locker, company details (if buying for a company), payment status, parcel number and invoices. Basis: performance of a contract and a legal obligation (accounting)."
+            "Purchases from Trilio: name, phone, delivery address or parcel locker, company details (if buying for a company), payment status, parcel number and invoices. Basis: performance of a contract and a legal obligation (accounting).",
+            "Trilio posts on Facebook and Instagram: we use only facts about products and prices and totals (for example, which categories were searched most this week). A post about an offer that worked names only the product, the prices, the delivery time and the month; a buyer's name, e-mail, address, order number or any other personal data is never published."
           ]
         },
         {
@@ -855,7 +856,8 @@
             "Paysera LT, UAB: payment processing.",
             "Anthropic: finding the category from free text, as described above.",
             "Browser notification services (for example Google, Mozilla, Apple): delivering browser notifications, if you switch them on.",
-            "Couriers (Omniva, DPD, Venipak, Latvijas Pasts): name, phone and delivery address, to deliver a product you bought."
+            "Couriers (Omniva, DPD, Venipak, Latvijas Pasts): name, phone and delivery address, to deliver a product you bought.",
+            "Meta Platforms Ireland: publishing Trilio's posts on Facebook and Instagram. We pass no personal data to Meta."
           ],
           "after": [
             "Partner shops receive only what you send them yourself by opening their page. We do not pass on your e-mail or search history."

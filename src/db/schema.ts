@@ -1233,3 +1233,72 @@ export const leadNotes = pgTable(
 );
 
 export type PartnerRequest = typeof partnerRequests.$inferSelect;
+
+export const socialPostStatusEnum = pgEnum("social_post_status", [
+  "draft",
+  "approved",
+  "published",
+  "skipped",
+  "failed",
+]);
+
+/** What a post is about (docs/SOCIAL_PLAN.md §3); "reel" is a video the owner uploaded. */
+export type SocialKind =
+  "picks" | "price_drop" | "advice" | "offer" | "top_categories" | "top_products" | "reel";
+
+/**
+ * One Facebook and Instagram post (docs/SOCIAL_PLAN.md): drafted from live
+ * data a day before its slot, approved by the owner or automatically, then
+ * published to both networks. `card` holds the facts the image is drawn
+ * from, already anonymised; nothing about a shopper is ever stored here.
+ */
+export const socialPosts = pgTable(
+  "social_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").$type<SocialKind>().notNull(),
+    slotAt: timestamp("slot_at", { withTimezone: true }).notNull(),
+    status: socialPostStatusEnum("status").notNull().default("draft"),
+    subcategoryId: text("subcategory_id"),
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+    /** Type "offer": the special offer it tells about, so one order is never told twice. */
+    specialOfferId: uuid("special_offer_id").references(() => specialOffers.id, { onDelete: "set null" }),
+    card: jsonb("card").$type<Record<string, unknown>>().notNull(),
+    captionFb: text("caption_fb").notNull(),
+    captionIg: text("caption_ig").notNull(),
+    alt: text("alt").notNull(),
+    link: text("link").notNull(),
+    /** Reels only: a public URL Meta fetches the video from. */
+    videoUrl: text("video_url"),
+    /** "template" or "claude": who wrote the caption's lead sentence. */
+    source: text("source").notNull().default("template"),
+    fbPostId: text("fb_post_id"),
+    igMediaId: text("ig_media_id"),
+    error: text("error"),
+    createdBy: text("created_by").notNull(),
+    approvedBy: text("approved_by"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("social_posts_slot_idx").on(t.slotAt), index("social_posts_status_idx").on(t.status)],
+);
+
+/** Reach and reactions per post, network and day, pulled once a day. */
+export const socialInsights = pgTable(
+  "social_insights",
+  {
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => socialPosts.id, { onDelete: "cascade" }),
+    network: text("network").$type<"facebook" | "instagram">().notNull(),
+    day: date("day").notNull(),
+    reach: integer("reach").notNull().default(0),
+    reactions: integer("reactions").notNull().default(0),
+    comments: integer("comments").notNull().default(0),
+    shares: integer("shares").notNull().default(0),
+    linkClicks: integer("link_clicks").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.network, t.day] })],
+);
+
+export type SocialPost = typeof socialPosts.$inferSelect;

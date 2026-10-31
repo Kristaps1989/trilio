@@ -182,7 +182,7 @@ const MIST = "#F2F5F2";
 const STONE = "#A9BDB9";
 
 /** The logo mark from docs/BRAND.md (40×40 grid), drawn with boxes for satori. */
-function LogoMark({ size }: { size: number }) {
+export function LogoMark({ size }: { size: number }) {
   const k = size / 40;
   const bar = (x: number, y: number, hgt: number) => (
     <div
@@ -227,7 +227,7 @@ function LogoMark({ size }: { size: number }) {
 }
 
 /** The category's line drawing (src/ui/illustrations), stroked in night green. */
-function Drawing({ subcategoryId, size }: { subcategoryId: string; size: number }) {
+export function Drawing({ subcategoryId, size }: { subcategoryId: string; size: number }) {
   const name = getSubcategory(subcategoryId)?.illustration;
   const drawing = name ? DRAWINGS[name] : undefined;
   if (!drawing) return <div style={{ display: "flex", width: size, height: size }} />;
@@ -319,7 +319,7 @@ function Podium({ subcategoryId, u }: { subcategoryId: string; u: number }) {
   );
 }
 
-function Wordmark({ u }: { u: number }) {
+export function Wordmark({ u }: { u: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 * u }}>
       <LogoMark size={40 * u} />
@@ -361,7 +361,7 @@ export async function renderCreative(
   const coverage =
     facts.products > 0
       ? `Izskatām ${facts.products} preces ${facts.shops} ${facts.shops === 1 ? "veikalā" : "veikalos"}`
-      : "Trīs labākie. Bez meklēšanas.";
+      : "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.";
   const category = short(c.subcategoryId);
   const chip = (u: number) => (
     <div

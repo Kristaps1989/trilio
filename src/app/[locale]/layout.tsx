@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Figtree } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -16,18 +16,25 @@ import { Header } from "@/ui/shell/Header";
 import { OG_IMAGE, openGraphBase } from "./seo";
 import "../globals.css";
 
-// Latin Extended covers Latvian, Lithuanian and Estonian diacritics.
-const spaceGrotesk = Space_Grotesk({
+// Self-hosted from src/app/fonts (OFL): Latin and Latin Extended, which
+// cover Latvian, Lithuanian and Estonian. Bundled rather than fetched from
+// Google at build time, so a build never depends on Google Fonts answering.
+const spaceGrotesk = localFont({
   variable: "--font-space-grotesk",
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
+  src: [
+    { path: "../fonts/space-grotesk-600.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/space-grotesk-700.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
 });
 
-const figtree = Figtree({
+const figtree = localFont({
   variable: "--font-figtree",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "600", "700"],
+  src: [
+    { path: "../fonts/figtree-400.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/figtree-600.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/figtree-700.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
 });
 

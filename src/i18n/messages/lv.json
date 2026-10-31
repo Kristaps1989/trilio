@@ -1,8 +1,8 @@
 {
   "meta": {
-    "title": "Trilio — trīs labākie. Bez meklēšanas.",
+    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.",
     "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
-    "tagline": "Trīs labākie. Bez meklēšanas.",
+    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.",
     "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
     "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },
@@ -822,7 +822,8 @@
             "Atnākšana no reklāmas: ja atnāc, uzklikšķinot uz reklāmas, reģistrējam reklāmas klikšķa identifikatoru (gclid) un kampaņas nosaukumu kopā ar tās dienas apmeklējuma kodu (bez sīkdatnēm, kā apmeklējumu statistikai), lai saskaitītu, cik klikšķu uz veikaliem un saglabājumu atveda katra reklāma. Pamats: leģitīmās intereses.",
             "TV reklāmas mērījumi: kad adresējamā TV platforma (Go3) parāda Trilio reklāmu, tās reklāmas serveris izsauc Trilio parādījumu skaitītāju un nodod ierīces identifikatoru. Mēs to uzreiz pārvēršam neatgriezeniskā kodā (hash) ar katrai kampaņai atsevišķu sāli un glabājam tikai šo kodu, lai saskaitītu, cik dažādas ierīces reklāmu redzējušas. Pašu identifikatoru, IP adresi un pārlūka nosaukumu neglabājam, un kodu nevar sasaistīt ar tavu Trilio apmeklējumu. Pamats: leģitīmās intereses izmērīt reklāmas sasniedzamību.",
             "Personīgi piedāvājumi: ja to atļauj, e-pastā sūtām piedāvājumus par precēm, ko saglabāji. Glabājam piekrišanu, nosūtītos piedāvājumus un to, vai piedāvājuma lapa atvērta (e-pastos izsekošanas nav). Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti e-pastā vai vēlmju sarakstā.",
-            "Pirkumi no Trilio: vārds, telefons, piegādes adrese vai pakomāts, uzņēmuma rekvizīti (ja pērc uzņēmumam), maksājuma statuss, sūtījuma numurs un rēķini. Pamats: līguma izpilde un juridisks pienākums (grāmatvedība)."
+            "Pirkumi no Trilio: vārds, telefons, piegādes adrese vai pakomāts, uzņēmuma rekvizīti (ja pērc uzņēmumam), maksājuma statuss, sūtījuma numurs un rēķini. Pamats: līguma izpilde un juridisks pienākums (grāmatvedība).",
+            "Trilio ieraksti Facebook un Instagram: izmantojam tikai faktus par precēm un cenām un kopsummas (piemēram, kuras kategorijas šonedēļ meklēja visvairāk). Ierakstā par izdevušos piedāvājumu minam tikai preci, cenas, piegādes laiku un mēnesi; pircēja vārdu, e-pastu, adresi, pasūtījuma numuru un citus personas datus nekad nepublicējam."
           ]
         },
         {
@@ -847,7 +848,8 @@
             "Paysera LT, UAB: maksājumu apstrāde.",
             "Anthropic: kategorijas noteikšana no brīvā teksta, kā aprakstīts iepriekš.",
             "Pārlūkprogrammu paziņojumu servisi (piemēram, Google, Mozilla, Apple): pārlūka paziņojumu piegāde, ja tos ieslēdz.",
-            "Kurjeri (Omniva, DPD, Venipak, Latvijas Pasts): vārds, telefons un piegādes adrese, lai piegādātu tevis pirkto preci."
+            "Kurjeri (Omniva, DPD, Venipak, Latvijas Pasts): vārds, telefons un piegādes adrese, lai piegādātu tevis pirkto preci.",
+            "Meta Platforms Ireland: Trilio ierakstu publicēšana Facebook un Instagram. Personas datus Meta nenododam."
           ],
           "after": [
             "Partneru veikali saņem tikai to, ko tu pats tiem nosūti, atverot to lapu. Tavu e-pastu vai meklēšanas vēsturi tiem nenododam."
@@ -1535,7 +1537,8 @@
       "offers": "Piedāvājumi",
       "orders": "Pasūtījumi",
       "system": "Sistēma",
-      "ads": "Reklāma"
+      "ads": "Reklāma",
+      "social": "Sociālie tīkli"
     },
     "today": {
       "title": "Šodien",
@@ -2324,6 +2327,77 @@
       "product": "Prece",
       "shopNow": "Veikalos tagad",
       "record": "Atvērt"
+    },
+    "social": {
+      "title": "Sociālie tīkli",
+      "sub": "Facebook un Instagram ieraksti no īstiem datiem: melnraksts dienu iepriekš, publicēšana pirmdien, trešdien un piektdien 19:00 un svētdienā 11:00.",
+      "connection": "Savienojums ar Meta",
+      "connOk": "Kārtībā",
+      "connBad": "Nedarbojas: pārbaudi META_SYSTEM_USER_TOKEN",
+      "connMock": "Testa režīms (SOCIAL_PROVIDER=mock): nekas netiek publicēts",
+      "connOff": "Izslēgts: iestati FEATURE_SOCIAL=1 un Meta piekļuvi (docs/SOCIAL_PLAN.md §8)",
+      "settings": "Iestatījumi",
+      "enabled": "Veidot un publicēt ierakstus",
+      "mode": "Režīms",
+      "modeApprove": "Apstiprināt katru ierakstu",
+      "modeAuto": "Publicēt automātiski",
+      "save": "Saglabāt",
+      "queue": "Rinda",
+      "queueEmpty": "Rindā nekā nav. Melnraksti parādās dienu pirms publicēšanas.",
+      "history": "Publicētie",
+      "historyEmpty": "Vēl nekas nav publicēts.",
+      "generate": "Izveidot tagad",
+      "generateHint": "Melnraksts nākamajā brīvajā vakarā 19:00.",
+      "kind": "Veids",
+      "kind_picks": "3 ieteikumi",
+      "kind_price_drop": "Cena samazinājās",
+      "kind_advice": "Kā izvēlēties",
+      "kind_offer": "Pieprasīts un atrasts",
+      "kind_top_categories": "Ko meklē šonedēļ",
+      "kind_top_products": "Visvairāk interesēja",
+      "kind_reel": "Video",
+      "status_draft": "Melnraksts",
+      "status_approved": "Apstiprināts",
+      "status_published": "Publicēts",
+      "status_skipped": "Izlaists",
+      "status_failed": "Neizdevās",
+      "when": "Laiks",
+      "captionFb": "Teksts Facebook",
+      "captionIg": "Teksts Instagram",
+      "saveText": "Saglabāt tekstu",
+      "approve": "Apstiprināt",
+      "publishNow": "Publicēt tūlīt",
+      "retry": "Mēģināt vēlreiz",
+      "skip": "Izlaist",
+      "remove": "Dzēst no tīkliem",
+      "source_claude": "Pirmo teikumu rakstīja Claude",
+      "source_template": "Teksts no veidnes",
+      "edited": "Teksts labots",
+      "imageAlt": "Ieraksta attēls: {alt}",
+      "reach": "Sasniedza",
+      "reactions": "Reakcijas",
+      "comments": "Komentāri",
+      "clicks": "Klikšķi",
+      "networks": "Tīkli",
+      "reel": "Pievienot video",
+      "reelHint": "Video, ko filmēji pats: publiska saite uz MP4 failu (9:16, 5–90 s), teksts un diena.",
+      "videoUrl": "Video saite (MP4)",
+      "reelCaption": "Teksts",
+      "reelDay": "Diena (19:00)",
+      "reelAdd": "Pievienot rindai",
+      "ok_saved": "Saglabāts.",
+      "ok_generated": "Melnraksts izveidots.",
+      "ok_approved": "Apstiprināts.",
+      "ok_published": "Publicēts.",
+      "ok_skipped": "Izlaists.",
+      "ok_removed": "Dzēsts no tīkliem.",
+      "ok_reel": "Video pievienots rindai.",
+      "err_no_data": "Šim veidam šobrīd nav datu (piem., nav cenu krituma vai apmaksāta piedāvājuma).",
+      "err_off": "Publicēšana nav ieslēgta.",
+      "err_invalid": "Pārbaudi laukus.",
+      "err_failed": "Neizdevās. Kļūda ir redzama pie ieraksta.",
+      "rules": "Noteikumi: tikai dati no Trilio datubāzes, nekādu pircēju personas datu, bez „tu” un „labākais”; „bez maksas” tikai pakalpojumam.",
+      "slideAlt": "Karuseļa {n}. attēls"
     }
   },
   "alertsUnsubscribe": {
