@@ -40,6 +40,8 @@ jobs:
       # A fake Google Ads tag and conversion label, also stubbed in the e2e suite.
       GOOGLE_ADS_TAG_ID: AW-123456789
       GOOGLE_ADS_CONVERSION_SHOP_CLICK: shopClickTest
+      # A fake Meta dataset id: the e2e suite stubs fbevents.js (no Conversions API token, so nothing leaves).
+      META_PIXEL_ID: "1234567890123"
       PAYMENT_TOKEN_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       CI: "1"
     steps:

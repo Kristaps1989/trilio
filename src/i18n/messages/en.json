@@ -793,7 +793,7 @@
     "how3": "We show the best three in three price classes, refurbished separately. Shop commissions don't affect the order."
   },
   "legal": {
-    "updated": "In force from 24 October 2026",
+    "updated": "In force from 31 October 2026",
     "notSet": "—",
     "kicker": "Legal information",
     "summaryTitle": "In short",
@@ -852,6 +852,7 @@
             "Google: signing in with a Google account, if you choose it.",
             "Google Ireland Limited: usage statistics (Google Analytics), only with your consent.",
             "Google Ireland Limited: Google Ads measurement (which ad brought a visitor), only with your consent. Ads are not personalised.",
+            "Meta Platforms Ireland Limited: Facebook and Instagram ad measurement (Meta Pixel and Conversions API), only with your consent: which pages you visited, which category's results you viewed, and whether you requested a better price (with that, your e-mail in hashed, irreversible form). Meta may use this to show Trilio ads on Facebook and Instagram. Answers to questions and free text are never sent.",
             "Resend: sending e-mails (EU region).",
             "Paysera LT, UAB: payment processing.",
             "Anthropic: finding the category from free text, as described above.",
@@ -897,7 +898,7 @@
         {
           "h": "Cookies",
           "p": [
-            "Cookies the service needs are always used. Google Analytics statistics and Google Ads measurement cookies are set only with your permission, and we do not use them to personalise ads. More in the cookie policy."
+            "Cookies the service needs are always used. Google Analytics statistics, Google Ads and Meta ad measurement cookies are set only with your permission. We do not use the Google cookies to personalise ads; Meta may use its cookies to show Trilio ads. More in the cookie policy."
           ]
         },
         {
@@ -999,7 +1000,7 @@
     "cookies": {
       "title": "Cookie policy",
       "description": "Which cookies Trilio uses and why.",
-      "intro": "Trilio always uses only the cookies the service cannot work without. Google Analytics statistics cookies and Google Ads measurement cookies are set only if you allow it in the cookie window. They measure which ad brought you here; we do not use them to personalise ads (remarketing).",
+      "intro": "Trilio always uses only the cookies the service cannot work without. Google Analytics statistics cookies, Google Ads and Meta ad measurement cookies are set only if you allow it in the cookie window. They measure which ad brought you here. We do not use the Google cookies to personalise ads; Meta may use its cookies to show Trilio ads on Facebook and Instagram.",
       "tableName": "Cookie",
       "tablePurpose": "Purpose",
       "tableDuration": "Duration",
@@ -1043,6 +1044,11 @@
           "name": "_gcl_au, _gcl_aw",
           "purpose": "Google Ads: links the visit to an ad click, to see which ads work. Only with your permission.",
           "duration": "90 days"
+        },
+        {
+          "name": "_fbp, _fbc",
+          "purpose": "Meta Pixel: tells browsers apart and links the visit to a Facebook or Instagram ad click. Only with your permission.",
+          "duration": "90 days"
         }
       ],
       "sections": [
@@ -1065,7 +1071,7 @@
         {
           "h": "How to manage cookies",
           "p": [
-            "You can change your choice about statistics and ad measurement cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics and Google Ads cookies are deleted.",
+            "You can change your choice about statistics and ad measurement cookies at any time with the “Cookie settings” link at the bottom of the page. If you withdraw permission, the Google Analytics, Google Ads and Meta cookies are deleted.",
             "You can also delete or block cookies in the browser settings. If you delete the sign-in cookie, you will need to sign in again."
           ]
         }
@@ -1176,7 +1182,7 @@
   },
   "consent": {
     "title": "Cookies for statistics and ad measurement",
-    "text": "Do you allow Google Analytics and Google Ads measurement cookies? They help us see which sections and buttons are used and which ads bring visitors, so we can improve Trilio. Ads are not personalised for you. Without your permission the cookies are not loaded, and the site works the same. More: <policy>cookie policy</policy>.",
+    "text": "Do you allow Google Analytics, Google Ads and Meta measurement cookies? They help us see which sections and buttons are used and which ads bring visitors, so we can improve Trilio. Meta may use them to show Trilio ads on Facebook and Instagram. Without your permission the cookies are not loaded, and the site works the same. More: <policy>cookie policy</policy>.",
     "accept": "Allow",
     "reject": "Don't allow",
     "settings": "Cookie settings"

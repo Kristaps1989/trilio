@@ -1,7 +1,8 @@
 "use server";
 
 import { and, eq, isNull } from "drizzle-orm";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { currentUserId } from "@/auth";
@@ -21,6 +22,9 @@ import { isUiLocale } from "@/i18n/routing";
 import { recordUiEvent, visitorOf } from "@/services/notify/events";
 import { requestNotify, type NotifyTarget } from "@/services/notify/requests";
 import { offerMailDeps } from "@/services/offers/deps";
+import { metaPixelId } from "@/config/analytics";
+import { capiConfigFromEnv, newEventId, sendCapiEvent } from "@/services/meta/capi";
+import { CONSENT_COOKIE } from "@/ui/analytics/consent";
 import { keyOf, saveTarget, type SaveTarget } from "./save";
 
 // "Pieprasīt labāku cenu" and the e-mail settings. Every action checks the session and
@@ -46,6 +50,41 @@ async function creditAdLanding(userId: string, key: string): Promise<void> {
     .where(and(eq(savedItems.userId, userId), eq(savedItems.key, key), isNull(savedItems.adLandingId)));
 }
 
+/**
+ * A better-price request is Meta's `Lead` (docs/META_ADS_PLAN.md §2): only
+ * when the Pixel is on and the visitor accepted cookies. Returns the event id
+ * the browser Pixel sends too, so Meta counts it once; the server copy goes
+ * after the response, with the e-mail hashed.
+ */
+async function metaLead(
+  email: string,
+  subcategoryId: string,
+  returnPath: string | null,
+): Promise<string | undefined> {
+  if (!metaPixelId()) return undefined;
+  const jar = await cookies();
+  if (jar.get(CONSENT_COOKIE)?.value !== "granted") return undefined;
+  const eventId = newEventId();
+  const h = await headers();
+  const w = await who();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host") ?? ""}`;
+  const referer = h.get("referer");
+  const page = returnPath ? new URL(returnPath, origin) : referer ? new URL(referer) : new URL(origin);
+  const event = {
+    name: "Lead" as const,
+    eventId,
+    url: `${page.origin}${page.pathname}`,
+    ip: w.ip,
+    userAgent: w.userAgent,
+    email,
+    fbp: jar.get("_fbp")?.value ?? null,
+    fbc: jar.get("_fbc")?.value ?? null,
+    category: subcategoryId,
+  };
+  after(() => sendCapiEvent(capiConfigFromEnv(), event));
+  return eventId;
+}
+
 async function who() {
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
@@ -60,7 +99,8 @@ async function subcategoryOf(target: SaveTarget): Promise<string | null> {
 }
 
 export type ToggleResult =
-  | { ok: true; saved: boolean; alerts: boolean; email: string | null }
+  /** `lead`: the Meta event id when this save was a better-price request (consent given). */
+  | { ok: true; saved: boolean; alerts: boolean; email: string | null; lead?: string }
   | { ok: false; reason: "auth" | "invalid" }
   /** Signed in, in a category where Trilio sources: the one yes is asked once, with the text it covers. */
   | { ok: false; reason: "consent"; email: string };
@@ -105,11 +145,14 @@ export async function toggleSavedAction(
   }
   revalidatePath("/velmju-saraksts");
   const alerts = save ? await priceAlertsOn(db, userId) : false;
-  return { ok: true, saved: save, alerts, email: user.email };
+  const request = save && target.data.kind === "product" && !!sub && trilioSources(sub);
+  const lead = request ? await metaLead(user.email, sub, null).catch(() => undefined) : undefined;
+  return { ok: true, saved: save, alerts, email: user.email, ...(lead ? { lead } : {}) };
 }
 
 export type NotifyRequestResult =
-  { ok: true; email: string } | { ok: false; reason: "invalid" | "too_many" | "email_failed" | "unknown" };
+  | { ok: true; email: string; lead?: string }
+  | { ok: false; reason: "invalid" | "too_many" | "email_failed" | "unknown" };
 
 /** The e-mail field on a card, signed out: one confirmation e-mail, nothing else until it is clicked. */
 export async function requestNotifyAction(
@@ -154,7 +197,11 @@ export async function requestNotifyAction(
   );
   if (!r.ok) return r;
   await recordUiEvent(db, w, "notify_sent", target.subcategoryId).catch(() => undefined);
-  return { ok: true, email: r.email };
+  const lead =
+    target.kind === "product" && trilioSources(target.subcategoryId)
+      ? await metaLead(r.email, target.subcategoryId, returnPath).catch(() => undefined)
+      : undefined;
+  return { ok: true, email: r.email, ...(lead ? { lead } : {}) };
 }
 
 /** Price-drop e-mails on or off: the "Nesūtīt" under the heart and the switch in the account. */

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { adsConversionFor, adsTag, adsTagId, analyticsId, trackingEnabled, trackingHosts } from "./analytics";
+import {
+  adsConversionFor,
+  adsTag,
+  adsTagId,
+  analyticsId,
+  metaPixelId,
+  trackingEnabled,
+  trackingHosts,
+} from "./analytics";
 
 describe("analyticsId", () => {
   it("accepts GA4 ids and ignores anything else", () => {
@@ -46,5 +54,19 @@ describe("Google Ads tag", () => {
     );
     const both = trackingHosts({ GOOGLE_ADS_TAG_ID: "AW-123456789", GA_MEASUREMENT_ID: "G-ABC123XYZ" });
     expect(both.filter((h) => h === "https://www.googletagmanager.com")).toHaveLength(1);
+  });
+});
+
+describe("Meta Pixel", () => {
+  it("takes a numeric dataset id, turns the banner on and adds its hosts to the CSP", () => {
+    expect(metaPixelId({})).toBeNull();
+    expect(metaPixelId({ META_PIXEL_ID: "fb-123" })).toBeNull();
+    expect(metaPixelId({ META_PIXEL_ID: " 2161476984461393 " })).toBe("2161476984461393");
+    expect(trackingEnabled({ META_PIXEL_ID: "2161476984461393" })).toBe(true);
+    expect(trackingHosts({ META_PIXEL_ID: "2161476984461393" })).toEqual([
+      "https://connect.facebook.net",
+      "https://www.facebook.com",
+    ]);
+    expect(trackingHosts({})).toEqual([]);
   });
 });

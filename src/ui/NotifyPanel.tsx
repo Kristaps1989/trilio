@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { metaTrack } from "@/ui/analytics/meta";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import { requestNotifyAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
@@ -51,8 +52,10 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
         value,
         `${window.location.pathname}${window.location.search}`,
       );
-      if (r.ok) setSent(r.email);
-      else
+      if (r.ok) {
+        setSent(r.email);
+        if (r.lead) metaTrack("Lead", {}, r.lead);
+      } else
         setError(
           r.reason === "invalid" ? t("invalid") : r.reason === "too_many" ? t("tooMany") : t("failed"),
         );

@@ -793,7 +793,7 @@
     "how3": "Rādām trīs labākos trīs cenu klasēs, atjaunotas preces atsevišķi. Veikalu komisija secību neietekmē."
   },
   "legal": {
-    "updated": "Spēkā no 2026. gada 24. oktobra",
+    "updated": "Spēkā no 2026. gada 31. oktobra",
     "notSet": "—",
     "privacy": {
       "title": "Privātuma politika",
@@ -844,6 +844,7 @@
             "Google: ienākšana ar Google kontu, ja to izvēlies.",
             "Google Ireland Limited: lietošanas statistika (Google Analytics), tikai ar tavu piekrišanu.",
             "Google Ireland Limited: Google Ads reklāmu mērījumi (kura reklāma atveda apmeklētāju), tikai ar tavu piekrišanu. Reklāmas netiek personalizētas.",
+            "Meta Platforms Ireland Limited: Facebook un Instagram reklāmu mērījumi (Meta Pixel un Conversions API), tikai ar tavu piekrišanu: kuras lapas apmeklēji, kuru kategoriju rezultātus skatīji, vai pieprasīji labāku cenu (ar to arī tavs e-pasts šifrētā, neatgriezeniski sajauktā veidā). Meta šos datus var izmantot, lai rādītu Trilio reklāmas Facebook un Instagram. Atbildes uz jautājumiem un brīvais teksts netiek sūtīti.",
             "Resend: e-pastu nosūtīšana (ES reģions).",
             "Paysera LT, UAB: maksājumu apstrāde.",
             "Anthropic: kategorijas noteikšana no brīvā teksta, kā aprakstīts iepriekš.",
@@ -889,7 +890,7 @@
         {
           "h": "Sīkdatnes",
           "p": [
-            "Pakalpojumam nepieciešamās sīkdatnes izmantojam vienmēr. Google Analytics statistikas un Google Ads mērījumu sīkdatnes tiek iestatītas tikai pēc tavas atļaujas, un reklāmu personalizēšanai tās neizmantojam. Sīkāk: sīkdatņu politikā."
+            "Pakalpojumam nepieciešamās sīkdatnes izmantojam vienmēr. Google Analytics statistikas, Google Ads un Meta reklāmu mērījumu sīkdatnes tiek iestatītas tikai pēc tavas atļaujas. Google sīkdatnes reklāmu personalizēšanai neizmantojam; Meta tās var izmantot, lai rādītu Trilio reklāmas. Sīkāk: sīkdatņu politikā."
           ]
         },
         {
@@ -997,7 +998,7 @@
     "cookies": {
       "title": "Sīkdatņu politika",
       "description": "Kādas sīkdatnes izmanto Trilio un kāpēc.",
-      "intro": "Trilio vienmēr izmanto tikai sīkdatnes, bez kurām pakalpojums nedarbojas. Google Analytics statistikas sīkdatnes un Google Ads mērījumu sīkdatnes tiek iestatītas tikai tad, ja to atļauj sīkdatņu logā. Tās mēra, kura reklāma tevi atveda; reklāmu personalizēšanai (atkārtotai rādīšanai) tās neizmantojam.",
+      "intro": "Trilio vienmēr izmanto tikai sīkdatnes, bez kurām pakalpojums nedarbojas. Google Analytics statistikas sīkdatnes, Google Ads un Meta reklāmu mērījumu sīkdatnes tiek iestatītas tikai tad, ja to atļauj sīkdatņu logā. Tās mēra, kura reklāma tevi atveda. Google sīkdatnes reklāmu personalizēšanai neizmantojam; Meta var izmantot savējās, lai rādītu Trilio reklāmas Facebook un Instagram.",
       "tableName": "Sīkdatne",
       "tablePurpose": "Mērķis",
       "tableDuration": "Ilgums",
@@ -1041,6 +1042,11 @@
           "name": "_gcl_au, _gcl_aw",
           "purpose": "Google Ads: saista apmeklējumu ar reklāmas klikšķi, lai redzētu, kura reklāma strādā. Tikai ar tavu atļauju.",
           "duration": "90 dienas"
+        },
+        {
+          "name": "_fbp, _fbc",
+          "purpose": "Meta Pixel: atšķir pārlūku un saista apmeklējumu ar Facebook vai Instagram reklāmas klikšķi. Tikai ar tavu atļauju.",
+          "duration": "90 dienas"
         }
       ],
       "sections": [
@@ -1063,7 +1069,7 @@
         {
           "h": "Kā pārvaldīt sīkdatnes",
           "p": [
-            "Savu izvēli par statistikas un reklāmu mērījumu sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics un Google Ads sīkdatnes tiek dzēstas.",
+            "Savu izvēli par statistikas un reklāmu mērījumu sīkdatnēm vari mainīt jebkurā brīdī ar saiti “Sīkdatņu iestatījumi” lapas apakšā. Atsaucot atļauju, Google Analytics, Google Ads un Meta sīkdatnes tiek dzēstas.",
             "Sīkdatnes vari dzēst vai bloķēt arī pārlūka iestatījumos. Ja dzēsīsi ienākšanas sīkdatni, būs jāienāk vēlreiz."
           ]
         }
@@ -1178,7 +1184,7 @@
   },
   "consent": {
     "title": "Sīkdatnes statistikai un reklāmu mērījumiem",
-    "text": "Vai atļauj Google Analytics un Google Ads mērījumu sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas un kuras reklāmas atved apmeklētājus, lai uzlabotu Trilio. Reklāmas tev personalizētas netiek. Bez atļaujas sīkdatnes netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
+    "text": "Vai atļauj Google Analytics, Google Ads un Meta mērījumu sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas un kuras reklāmas atved apmeklētājus, lai uzlabotu Trilio. Meta tās var izmantot, lai rādītu Trilio reklāmas Facebook un Instagram. Bez atļaujas sīkdatnes netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
     "accept": "Atļaut",
     "reject": "Neatļaut",
     "settings": "Sīkdatņu iestatījumi"

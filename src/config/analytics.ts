@@ -42,9 +42,15 @@ export function adsConversionFor(event: string, ads: AdsTag | null): string | nu
   return null;
 }
 
-/** True when any Google tag is configured: the consent banner and its footer link are shown. */
+/** Meta Pixel (dataset) id from META_PIXEL_ID, or null. Loads only after consent (docs/META_ADS_PLAN.md §2). */
+export function metaPixelId(env: Record<string, string | undefined> = process.env): string | null {
+  const id = (env.META_PIXEL_ID ?? "").trim();
+  return /^\d{10,20}$/.test(id) ? id : null;
+}
+
+/** True when any measuring tag is configured: the consent banner and its footer link are shown. */
 export function trackingEnabled(env: Record<string, string | undefined> = process.env): boolean {
-  return !!(analyticsId(env) || adsTagId(env));
+  return !!(analyticsId(env) || adsTagId(env) || metaPixelId(env));
 }
 
 /** Hosts GA4 sends data to; added to the CSP only when analytics is on. */
@@ -65,7 +71,16 @@ export const ADS_HOSTS = [
   "https://www.google.lv",
 ] as const;
 
-/** CSP hosts for whichever Google tags are configured, without duplicates. */
+/** Hosts the Meta Pixel loads its script from and sends events to; only when the Pixel is on. */
+export const META_HOSTS = ["https://connect.facebook.net", "https://www.facebook.com"] as const;
+
+/** CSP hosts for whichever tags are configured, without duplicates. */
 export function trackingHosts(env: Record<string, string | undefined> = process.env): string[] {
-  return [...new Set([...(analyticsId(env) ? ANALYTICS_HOSTS : []), ...(adsTagId(env) ? ADS_HOSTS : [])])];
+  return [
+    ...new Set([
+      ...(analyticsId(env) ? ANALYTICS_HOSTS : []),
+      ...(adsTagId(env) ? ADS_HOSTS : []),
+      ...(metaPixelId(env) ? META_HOSTS : []),
+    ]),
+  ];
 }
