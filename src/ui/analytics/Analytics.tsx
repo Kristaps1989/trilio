@@ -15,6 +15,7 @@ import {
   readConsent,
   writeConsent,
 } from "./consent";
+import { loadMetaPixel, metaTrack, metaTrackCustom } from "./meta";
 import { TRACK_EVENT, type TrackDetail } from "./track";
 
 // Google Analytics 4 and the Google Ads tag, opt-in only (docs/ANALYTICS.md).
@@ -75,10 +76,14 @@ const CLICKABLE = "a, button, [role=button], [role=radio], [role=checkbox]";
 
 function onDocumentClick(event: MouseEvent, measurementId: string | null, ads: AdsTag | null) {
   const el = (event.target as Element | null)?.closest<HTMLElement>(CLICKABLE);
-  if (!el || !window.gtag || el.closest("[data-ga-ignore]")) return;
+  if (!el || el.closest("[data-ga-ignore]")) return;
   const page = pageInfo(location.pathname, location.search);
   const base = { section: page.section, subcategory: page.subcategory };
   const custom = eventFromDataset(el.dataset);
+  // Meta: a shop click is measured (not optimised for); nothing else is sent on a click.
+  if (custom?.event === "select_offer")
+    metaTrackCustom("ShopClick", { content_category: page.subcategory ?? "" });
+  if (!window.gtag) return;
   if (custom) {
     const conversion = adsConversionFor(custom.event, ads);
     if (conversion) window.gtag("event", "conversion", { send_to: conversion });
@@ -99,7 +104,16 @@ function onDocumentClick(event: MouseEvent, measurementId: string | null, ads: A
   window.gtag("event", "ui_click", { ...params, send_to: measurementId });
 }
 
-export function Analytics({ measurementId, ads }: { measurementId: string | null; ads: AdsTag | null }) {
+export function Analytics({
+  measurementId,
+  ads,
+  metaPixel = null,
+}: {
+  measurementId: string | null;
+  ads: AdsTag | null;
+  /** Meta Pixel (dataset) id; loads after "Atļaut" like the Google tags (docs/META_ADS_PLAN.md). */
+  metaPixel?: string | null;
+}) {
   const t = useTranslations("consent");
   const consent = useSyncExternalStore<Consent | "pending">(
     subscribe,
@@ -119,6 +133,7 @@ export function Analytics({ measurementId, ads }: { measurementId: string | null
   useEffect(() => {
     if (consent !== "granted") return;
     loadGtag(measurementId, ads);
+    if (metaPixel) loadMetaPixel(metaPixel);
     const onClick = (e: MouseEvent) => onDocumentClick(e, measurementId, ads);
     const onTrack = (e: Event) => {
       const { event, params } = (e as CustomEvent<TrackDetail>).detail;
@@ -141,7 +156,16 @@ export function Analytics({ measurementId, ads }: { measurementId: string | null
       document.removeEventListener("click", onClick, true);
       window.removeEventListener(TRACK_EVENT, onTrack);
     };
-  }, [consent, measurementId, ads]);
+  }, [consent, measurementId, ads, metaPixel]);
+
+  useEffect(() => {
+    if (consent !== "granted" || !metaPixel) return;
+    // Meta: every page, and the results page as ViewContent with its category.
+    const page = pageInfo(pathname, search ? `?${search}` : "");
+    metaTrack("PageView");
+    if (page.section === "results" && page.subcategory)
+      metaTrack("ViewContent", { content_category: page.subcategory });
+  }, [consent, pathname, search, metaPixel]);
 
   useEffect(() => {
     if (consent !== "granted" || !window.gtag) return;

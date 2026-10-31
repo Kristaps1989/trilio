@@ -124,3 +124,74 @@ test("the CSP allows the Google Ads hosts when the tag is configured", async ({ 
   const res = await page.goto("/");
   expect(res!.headers()["content-security-policy"]).toContain("https://www.googleadservices.com");
 });
+
+// Meta Pixel (docs/META_ADS_PLAN.md §2): fbevents.js is stubbed, so fbq() calls stay in its queue.
+type FbqCall = unknown[];
+const fbqCalls = (page: Page): Promise<FbqCall[]> =>
+  page.evaluate(() => ((window.fbq as unknown as { queue?: unknown[][] })?.queue ?? []).map((a) => [...a]));
+
+test.describe("Meta Pixel", () => {
+  test.skip(!process.env.META_PIXEL_ID, "META_PIXEL_ID is not set for the test server");
+  test.beforeEach(async ({ page }) => {
+    await page.route("https://connect.facebook.net/**", (r) =>
+      r.fulfill({ contentType: "application/javascript", body: "" }),
+    );
+    await page.route("https://www.facebook.com/**", (r) => r.fulfill({ status: 204 }));
+  });
+
+  test("loads only after consent; page views, results and shop clicks; the CSP allows it", async ({
+    page,
+  }) => {
+    const res = await page.goto("/rezultati?sub=kettle");
+    expect(res!.headers()["content-security-policy"]).toContain("https://connect.facebook.net");
+    expect(await page.evaluate(() => typeof window.fbq)).toBe("undefined");
+    await banner(page).getByRole("button", { name: "Atļaut", exact: true }).click();
+    await expect(page.locator('script[src*="connect.facebook.net"]')).toHaveCount(1);
+    await expect.poll(() => fbqCalls(page)).toContainEqual(["init", process.env.META_PIXEL_ID]);
+    const calls = await fbqCalls(page);
+    expect(calls).toContainEqual(["consent", "grant"]);
+    expect(calls).toContainEqual(["track", "PageView", {}, undefined]);
+    expect(calls).toContainEqual(["track", "ViewContent", { content_category: "kettle" }, undefined]);
+    // Nothing from the question flow or the URL is sent.
+    expect(JSON.stringify(calls)).not.toContain("sub=");
+
+    await page.evaluate(() =>
+      document.addEventListener("click", (e) => (e.target as Element).closest("a") && e.preventDefault()),
+    );
+    await page
+      .getByRole("region", { name: "Ieteiktie varianti" })
+      .getByRole("link", { name: /^Pirkt/ })
+      .first()
+      .click();
+    await expect
+      .poll(async () => (await fbqCalls(page)).find((c) => c[0] === "trackCustom"))
+      .toEqual(["trackCustom", "ShopClick", { content_category: "kettle" }]);
+  });
+
+  test("declining keeps the Pixel out", async ({ page }) => {
+    await page.goto("/");
+    await banner(page).getByRole("button", { name: "Neatļaut", exact: true }).click();
+    await page.goto("/rezultati?sub=kettle");
+    expect(await page.evaluate(() => typeof window.fbq)).toBe("undefined");
+    expect(await page.locator('script[src*="connect.facebook.net"]').count()).toBe(0);
+  });
+
+  test("a better-price request is a Lead, with the event id the server uses", async ({ page }) => {
+    const email = `meta-lead-${test.info().project.name}-${Date.now()}@example.invalid`;
+    await page.goto("/");
+    await banner(page).getByRole("button", { name: "Atļaut", exact: true }).click();
+    await page.goto(`/ienakt?callbackUrl=${encodeURIComponent("/rezultati?sub=blender")}`);
+    await page.getByLabel("E-pasts").last().fill(email);
+    await page.getByRole("button", { name: "Ienākt bez paroles" }).click();
+    await page.waitForURL((u) => !u.pathname.startsWith("/ienakt"));
+    const first = page.locator('main article[id^="p-"]').first();
+    await first.getByRole("button", { name: "Pieprasīt labāku cenu", exact: true }).click();
+    await first.locator("[data-notify-panel]").getByRole("button", { name: "Pieprasīt labāku cenu" }).click();
+    await expect(
+      first.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu", exact: true }),
+    ).toBeEnabled();
+    await expect
+      .poll(async () => (await fbqCalls(page)).find((c) => c[0] === "track" && c[1] === "Lead"))
+      .toEqual(["track", "Lead", {}, { eventID: expect.stringMatching(/^[0-9a-f-]{36}$/) }]);
+  });
+});

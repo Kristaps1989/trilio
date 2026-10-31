@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { initLocale } from "@/i18n/init";
 import { htmlLang } from "@/i18n/request";
 import { isUiLocale, routing } from "@/i18n/routing";
-import { adsTag, analyticsId } from "@/config/analytics";
+import { adsTag, analyticsId, metaPixelId } from "@/config/analytics";
 import { appBaseUrl } from "@/services/payments";
 import { Analytics } from "@/ui/analytics/Analytics";
 import { VisitBeacon } from "@/ui/analytics/VisitBeacon";
@@ -87,6 +87,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   const base = appBaseUrl();
   const measurementId = analyticsId();
   const ads = adsTag();
+  const metaPixel = metaPixelId();
   // Site-level structured data for search engines and AI assistants.
   const jsonLd = [
     {
@@ -140,9 +141,9 @@ export default async function RootLayout({ children, params }: LayoutProps) {
           <Suspense fallback={null}>
             <VisitBeacon />
           </Suspense>
-          {measurementId || ads ? (
+          {measurementId || ads || metaPixel ? (
             <Suspense fallback={null}>
-              <Analytics measurementId={measurementId} ads={ads} />
+              <Analytics measurementId={measurementId} ads={ads} metaPixel={metaPixel} />
             </Suspense>
           ) : null}
         </NextIntlClientProvider>

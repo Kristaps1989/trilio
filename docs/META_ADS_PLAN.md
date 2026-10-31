@@ -126,12 +126,21 @@ Phase 2: duplicate the campaign → change objective to **Leads** → conversion
 - Ads are public in Meta's Ad Library (EU DSA); write every ad as if a competitor and a journalist read it.
 - No targeting of under-18s; no sensitive interests.
 
-## 9. Next steps
+## 9. Status (31 Oct 2026)
+
+**Built:** dataset "Trilio Web" (`2161476984461393`); `META_PIXEL_ID` and `META_CAPI_TOKEN` set in Railway by the owner (the token never in the repository or chat).
+
+- **Browser** (`src/ui/analytics/meta.ts`, loaded by `Analytics.tsx` only after "Atļaut"): `PageView` on every page, `ViewContent` with `content_category` on results, custom `ShopClick` on "Pirkt …", `Lead` after a better-price request. Automatic events (`autoConfig`) off; the dataset's automatic advanced matching stays off. Withdrawing consent deletes `_fbp` and `_fbc`. CSP allows `connect.facebook.net` and `www.facebook.com` only when the Pixel id is set.
+- **Server** (`src/services/meta/capi.ts`): `Lead` from the request actions (signed in: a product request in a category Trilio sources; signed out: the e-mail field), with the same `event_id` as the browser, the e-mail SHA-256 hashed, IP, user agent, `_fbp`/`_fbc`; only when the `trilio_consent` cookie says granted; sent after the response, never blocking or failing the request. `META_CAPI_TEST_CODE` (optional) routes events to Events Manager → Test events while testing.
+- **Texts:** privacy policy (Meta Platforms Ireland as a recipient, what is sent, that Meta may use it to show Trilio ads), cookie policy (`_fbp`, `_fbc`), the banner question; in force from 31 Oct 2026.
+- **Checking it live:** Events Manager → Test events → copy the test code → Railway `META_CAPI_TEST_CODE` → open trilio.lv, "Atļaut", open a category's results, request a better price → `PageView`, `ViewContent` (browser) and `Lead` (browser + server, "Deduplicated") appear → remove `META_CAPI_TEST_CODE`.
+
+## 10. Next steps
 
 | Who | What |
 |---|---|
 | Owner | Business portfolio, ad account (EUR, Europe/Riga), payment; verify `trilio.lv`; create the dataset and send **Dataset ID** + **CAPI token** |
-| Claude | Meta Pixel + Conversions API behind the consent banner, `Lead` on a registered request, privacy and cookie text, tests; then the 4:5 / 9:16 / 1:1 versions of S1 and S2 from the existing image templates |
+| Claude | ~~Meta Pixel + Conversions API~~ (done, §9); the 4:5 / 9:16 / 1:1 versions of S1 and S2 from the existing image templates |
 | Owner | Film R1–R4 on a phone (scripts in docs/TIKTOK_PLAN.md §6); R5 when a real offer exists |
 | Both | Launch Phase 1; review on day 7 and day 14; switch to Phase 2 when requests allow |
 

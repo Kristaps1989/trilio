@@ -1,6 +1,7 @@
 "use client";
 
 import { track } from "@/ui/analytics/track";
+import { metaTrack } from "@/ui/analytics/meta";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -101,6 +102,7 @@ export function SaveButton({
       }
       setPanel(null);
       if (r.saved) track("save_item", { item: target.kind });
+      if (r.lead) metaTrack("Lead", {}, r.lead);
       setNote(r.saved && r.alerts && r.email && variant !== "icon" ? { email: r.email } : null);
       router.refresh();
     });
