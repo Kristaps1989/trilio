@@ -1254,7 +1254,7 @@
     "accountLine": "Signed in as {email} · {provider}",
     "offersTitle": "Personal offers",
     "alertNote": "We'll write to {email} when the price drops. ·",
-    "alertNoteOffers": "We're looking for a better price. We'll write to {email}. ·",
+    "alertNoteOffers": "We're looking for a better price. If we find one, we'll send the offer to {email}; if not, we'll write when the shop price drops. ·",
     "alertNoteOff": "Saved. We won't send price e-mails. ·",
     "alertStop": "Don't send",
     "alertResume": "Send after all",

@@ -1256,7 +1256,7 @@
     "accountLine": "Ienācis kā {email} · {provider}",
     "offersTitle": "Personīgi piedāvājumi",
     "alertNote": "Paziņosim uz {email}, kad cena samazināsies. ·",
-    "alertNoteOffers": "Meklējam labāku cenu. Uzrakstīsim uz {email}. ·",
+    "alertNoteOffers": "Meklējam labāku cenu. Ja atradīsim, atsūtīsim piedāvājumu uz {email}; ja ne, uzrakstīsim, kad cena veikalos samazināsies. ·",
     "alertNoteOff": "Saglabāts. Cenu paziņojumus nesūtīsim. ·",
     "alertStop": "Nesūtīt",
     "alertResume": "Tomēr sūtīt",

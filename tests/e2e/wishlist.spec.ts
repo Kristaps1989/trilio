@@ -184,7 +184,7 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
     first.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu", exact: true }),
   ).toBeVisible();
   await expect(first.locator("[data-alert-note]")).toHaveText(
-    `Meklējam labāku cenu. Uzrakstīsim uz ${email}. · Nesūtīt`,
+    `Meklējam labāku cenu. Ja atradīsim, atsūtīsim piedāvājumu uz ${email}; ja ne, uzrakstīsim, kad cena veikalos samazināsies. · Nesūtīt`,
   );
   // Asked once: the next product saves at the first tap.
   const second = picks(page).nth(1);
@@ -229,7 +229,9 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   ).toBeVisible();
   // The card says where the e-mail goes, with the way out in the same line and the way back.
   const note = product.locator("[data-alert-note]");
-  await expect(note).toHaveText(`Meklējam labāku cenu. Uzrakstīsim uz ${email}. · Nesūtīt`);
+  await expect(note).toHaveText(
+    `Meklējam labāku cenu. Ja atradīsim, atsūtīsim piedāvājumu uz ${email}; ja ne, uzrakstīsim, kad cena veikalos samazināsies. · Nesūtīt`,
+  );
   await expect(product.locator("[data-notify-panel]")).toHaveCount(0);
   await expectNoAxeViolations(page);
   await note.getByRole("button", { name: "Nesūtīt" }).click();
