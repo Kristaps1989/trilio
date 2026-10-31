@@ -361,7 +361,7 @@ export async function renderCreative(
   const coverage =
     facts.products > 0
       ? `Izskatām ${facts.products} preces ${facts.shops} ${facts.shops === 1 ? "veikalā" : "veikalos"}`
-      : "Trīs labākie. Bez meklēšanas.";
+      : "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.";
   const category = short(c.subcategoryId);
   const chip = (u: number) => (
     <div

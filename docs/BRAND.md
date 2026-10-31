@@ -12,7 +12,7 @@
 - **Wordmark:** "trilio" in lowercase, Space Grotesk 700, letter-spacing −0.045em.
 - **Versions:** lime mark on dark (primary); dark mark with lime bars on light; bars only on lime. The app icon uses radius 9.
 - **Clear space:** ≥ ⅓ of the mark's width around it.
-- **Tagline:** "Trīs labākie. Bez meklēšanas." (EN: "Three best picks. No searching.")
+- **Tagline (owner, 31 Oct 2026):** "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu." (EN: "A few questions. 3 picks. Buy now or ask for a better price."). Three beats in the order the shopper lives them; the third beat uses the button's own words, so the line teaches the product. The earlier "Trīs labākie. Bez meklēšanas." is retired: it read as misleading once the better-price request became the point.
 
 ## Colours
 | Token | Hex | Use |
