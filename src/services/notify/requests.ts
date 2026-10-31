@@ -104,6 +104,7 @@ export async function requestNotify(db: Db, input: RequestInput, deps: RequestDe
       company: deps.company,
       token: value,
       target: t,
+      offers: consent.offers,
     }),
   );
   if (!sent.ok && sent.reason === "error") {

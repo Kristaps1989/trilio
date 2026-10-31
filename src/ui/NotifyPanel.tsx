@@ -6,7 +6,7 @@ import { requestNotifyAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 
-// The one step between "Paziņot, kad cena samazināsies" and the e-mail
+// The one step between "Pieprasīt labāku cenu" and the e-mail
 // (docs/PRICE_NOTIFY_PLAN.md §2): signed out, one field on the card; signed in
 // where Trilio sources, the same sentence with the address already known. The
 // sentence says exactly what will be sent; the button is the yes.
@@ -29,13 +29,7 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
   const [sent, setSent] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const search = target.kind === "search";
-  const body = search
-    ? offers
-      ? t("bodySearch")
-      : t("bodySearchPlain")
-    : offers
-      ? t("body")
-      : t("bodyPlain");
+  const body = search ? t("bodySearch") : offers ? t("body") : t("bodyPlain");
 
   if (sent)
     return (
@@ -44,7 +38,7 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
         className="rounded-control bg-card-soft px-3 py-3 text-[15px] text-night"
         data-notify-sent
       >
-        {t("sent", { email: sent })}
+        {t(offers ? "sent" : "sentPlain", { email: sent })}
       </p>
     );
 
@@ -73,7 +67,9 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
       data-notify-panel
     >
       <p id={`${id}-title`} className="text-[16px] font-bold">
-        {email ? t("titleSignedIn", { email }) : t("title")}
+        {email
+          ? t(offers ? "titleSignedIn" : "titleSignedInPlain", { email })
+          : t(offers ? "title" : "titlePlain")}
       </p>
       <p className="text-sm" id={`${id}-body`}>
         {body}
@@ -86,7 +82,7 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
             className={buttonClass({ variant: "dark", size: "sm" })}
             aria-describedby={`${id}-body`}
           >
-            {t("submit")}
+            {t(offers ? "submit" : "submitPlain")}
           </button>
           <button type="button" onClick={onClose} className={buttonClass({ variant: "card", size: "sm" })}>
             {t("close")}
@@ -119,7 +115,7 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
           ) : null}
           <div className="flex flex-wrap gap-2">
             <button type="submit" disabled={pending} className={buttonClass({ variant: "dark", size: "sm" })}>
-              {t("submit")}
+              {t(offers ? "submit" : "submitPlain")}
             </button>
             <button type="button" onClick={onClose} className={buttonClass({ variant: "card", size: "sm" })}>
               {t("close")}

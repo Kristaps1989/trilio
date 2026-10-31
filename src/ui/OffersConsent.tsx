@@ -7,7 +7,7 @@ import { setOffersOptInAction } from "@/app/[locale]/velmju-saraksts/actions";
 // Consent to personal offers by e-mail (docs/ADMIN_AND_OFFERS_PLAN.md §2.3,
 // §11.7) in the wishlist and account pages: a checkbox the shopper ticks,
 // never pre-ticked, and unticked the same way. On a card the same yes is the
-// "Paziņot man" under the notify sentence (NotifyPanel).
+// "Pieprasīt labāku cenu" under the notify sentence (NotifyPanel).
 
 export function OffersConsent({ initial }: { initial: boolean }) {
   const t = useTranslations("offersConsent");

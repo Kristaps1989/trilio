@@ -79,14 +79,14 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
     const first = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").first();
     product = (await first.getAttribute("aria-label")) ?? "";
-    await first.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }).click();
+    await first.getByRole("button", { name: "Pieprasīt labāku cenu", exact: true }).click();
     // One yes on the card covers price e-mails and Trilio's own offers.
     await first
-      .getByRole("group", { name: `Paziņot uz ${shopper}?` })
-      .getByRole("button", { name: "Paziņot man" })
+      .getByRole("group", { name: `Sūtīt piedāvājumu uz ${shopper}?` })
+      .getByRole("button", { name: "Pieprasīt labāku cenu" })
       .click();
     await expect(
-      first.getByRole("button", { name: "Paziņosim, kad cena samazināsies", exact: true }),
+      first.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu", exact: true }),
     ).toBeEnabled();
     await page.goto("/velmju-saraksts");
     await expect(

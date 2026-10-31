@@ -18,8 +18,13 @@ export function composeNotifyConfirmEmail(input: {
   company?: string;
   token: string;
   target: NotifyTarget;
+  /** The consent covered Trilio's offers: the e-mail promises a better price, not only the price e-mail. */
+  offers: boolean;
 }): EmailMessage {
-  const c = input.lang === "en" ? en.notifyEmail : lv.notifyEmail;
+  const m = input.lang === "en" ? en.notifyEmail : lv.notifyEmail;
+  const c = input.offers
+    ? m
+    : { ...m, title: m.titlePlain, subject: m.subjectPlain, product: m.productPlain };
   const t = input.target;
   const url = `${input.baseUrl}${localizedPath(`/pazinot/${input.token}`, input.lang)}`;
   const name = t.kind === "product" ? offerProductName(t.name) : t.label;

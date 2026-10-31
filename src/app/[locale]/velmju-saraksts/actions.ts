@@ -23,7 +23,7 @@ import { requestNotify, type NotifyTarget } from "@/services/notify/requests";
 import { offerMailDeps } from "@/services/offers/deps";
 import { keyOf, saveTarget, type SaveTarget } from "./save";
 
-// "Paziņot, kad cena samazināsies" and the e-mail settings. Every action checks the session and
+// "Pieprasīt labāku cenu" and the e-mail settings. Every action checks the session and
 // writes only the signed-in user's rows.
 
 const Target = z.discriminatedUnion("kind", [
@@ -66,7 +66,7 @@ export type ToggleResult =
   | { ok: false; reason: "consent"; email: string };
 
 /**
- * "Paziņot, kad cena samazināsies" (docs/PRICE_NOTIFY_PLAN.md): saves the item
+ * "Pieprasīt labāku cenu" (docs/PRICE_NOTIFY_PLAN.md): saves the item
  * and turns price e-mails on. Signed out, the card opens the e-mail field
  * instead. Signed in where Trilio sources, the first tap shows the one
  * sentence that also covers Trilio's offers; `consent` is that sentence's yes.
@@ -88,7 +88,8 @@ export async function toggleSavedAction(
     .where(eq(users.id, userId));
   if (!user) return { ok: false, reason: "auth" };
   if (save) {
-    const ask = !!sub && trilioSources(sub) && !user.optIn && !user.asked;
+    // Only a product is a request to a partner; a saved search is a watch and asks nothing.
+    const ask = target.data.kind === "product" && !!sub && trilioSources(sub) && !user.optIn && !user.asked;
     if (ask && !consent) return { ok: false, reason: "consent", email: user.email };
     if (!(await saveTarget(userId, target.data))) return { ok: false, reason: "invalid" };
     await creditAdLanding(userId, keyOf(target.data)).catch(() => undefined);

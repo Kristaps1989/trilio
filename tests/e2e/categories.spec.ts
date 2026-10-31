@@ -69,9 +69,9 @@ for (const { group, sub } of all) {
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
     // One tap asks to hear when the search or any pick gets cheaper.
-    await expect(page.getByRole("button", { name: "Paziņot, kad parādīsies lētāks variants" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Paziņot par lētāku variantu" })).toBeVisible();
     await expect(
-      picks.first().getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }),
+      picks.first().getByRole("button", { name: "Pieprasīt labāku cenu", exact: true }),
     ).toBeVisible();
 
     // The chosen price range is a chip; every pick inside it, unless labelled over budget.

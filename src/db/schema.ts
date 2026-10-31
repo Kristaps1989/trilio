@@ -1125,7 +1125,7 @@ export type AdCreative = typeof adCreatives.$inferSelect;
 export type AdProposal = typeof adProposals.$inferSelect;
 
 /**
- * "Paziņot, kad cena samazināsies" without an account (docs/PRICE_NOTIFY_PLAN.md):
+ * "Pieprasīt labāku cenu" without an account (docs/PRICE_NOTIFY_PLAN.md):
  * the e-mail a shopper typed, what they asked about and the exact consent text
  * shown, until they confirm by the link e-mailed to that address. Nothing is
  * sent to the address before that click; unconfirmed requests expire in 7 days.
@@ -1144,7 +1144,7 @@ export const notifyRequests = pgTable(
     /** Where to return after confirming (a same-site path). */
     returnPath: text("return_path"),
     locale: text("locale").notNull().default("lv"),
-    /** The consent text shown, e.g. "notify.body@2026-10-30"; includes Trilio's offers where Trilio sources (data/offers.json: every category). */
+    /** The consent text shown, e.g. "notify.body@2026-10-31"; includes Trilio's offers where Trilio sources (data/offers.json: every category). */
     consent: text("consent").notNull(),
     /** True when that text covered Trilio's own offers too. */
     offers: boolean("offers").notNull().default(false),
