@@ -88,7 +88,7 @@ cron 18:00 Riga ─► pick type (rules §4) ─► query data ─► compose ca
 2. **Meta Business Manager** owns the page and the Instagram account.
 3. **developers.facebook.com → Create app → Business**; add the products *Facebook Login for Business* and *Instagram Graph API*.
 4. **System user** in Business Manager (admin), assigned to the page and the Instagram account; generate a **long-lived token** with `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`, `instagram_basic`, `instagram_content_publish`, `instagram_manage_insights`, `business_management`. Paste it into Railway as `META_SYSTEM_USER_TOKEN`.
-5. Posting to a page and an Instagram account the business owns works with the app in **development mode without app review**, as long as the system user belongs to that business. If Meta changes this and demands review, the review is for the same permissions and takes a few days; the plan does not depend on it.
+5. **Publish the app (Live).** While an app is in development mode, what it posts is visible only to people with a role on the app. The privacy, terms and data-deletion URLs (trilio.lv/privatums, trilio.lv/noteikumi) are what Meta asks for. Posting to a page and an Instagram account the business owns uses the system user's own assets; if Meta asks for app review of these permissions, it takes a few days and the plan does not depend on it.
 6. Verify `trilio.lv` as a domain in Business Manager (also needed for the pixel and link previews).
 
 ## 9. Decisions for the owner
