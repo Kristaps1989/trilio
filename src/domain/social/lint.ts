@@ -41,6 +41,12 @@ const SOCIAL_RULES: { re: RegExp; why: string; unless?: RegExp }[] = [
   },
 ];
 
+/** Emojis that sell urgency or hype; Trilio's honesty rules have no use for them. */
+const HYPE = /[🔥⏰🚨💥‼❗⚡]/u;
+const EMOJI = /\p{Extended_Pictographic}/gu;
+const NOT_EMOJI = new Set(["©", "®", "™"]);
+export const MAX_EMOJIS = 2;
+
 export function lintPost(text: string, ctx: PostLintContext = {}): string[] {
   const issues: string[] = [];
   const t = text.trim();
@@ -56,5 +62,8 @@ export function lintPost(text: string, ctx: PostLintContext = {}): string[] {
   issues.push(...honestyIssues(words, { allowedNumbers: ctx.numbers ?? [] }));
   for (const r of SOCIAL_RULES)
     if (r.re.test(words) && !(r.unless && r.unless.test(words))) issues.push(r.why);
+  const emojis = [...words.matchAll(EMOJI)].filter((m) => !NOT_EMOJI.has(m[0]));
+  if (emojis.length > MAX_EMOJIS) issues.push(`more than ${MAX_EMOJIS} emojis`);
+  if (HYPE.test(words)) issues.push("hype emoji");
   return issues;
 }

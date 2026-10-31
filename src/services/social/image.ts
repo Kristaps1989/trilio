@@ -18,9 +18,10 @@ export async function postImage(rawId: string, n: number): Promise<NextResponse>
   if (!p || p.videoUrl) return new NextResponse(null, { status: 404 });
   const open = p.status === "approved" || p.status === "published";
   if (!open && !(await adminOrNull())) return new NextResponse(null, { status: 404 });
-  const slide = slidesOf(p.card as unknown as PostCard)[n - 1];
+  const slides = slidesOf(p.card as unknown as PostCard);
+  const slide = slides[n - 1];
   if (!slide) return new NextResponse(null, { status: 404 });
-  const jpeg = await renderPostJpeg(slide);
+  const jpeg = await renderPostJpeg(slide, n - 1, slides.length);
   return new NextResponse(new Uint8Array(jpeg), {
     headers: {
       "content-type": "image/jpeg",

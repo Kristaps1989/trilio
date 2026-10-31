@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { leaks, offerStory } from "./anonymise";
-import { composePost, hashtags, type PostFacts } from "./captions";
+import { composePost, hashtags, slideAlt, type PostFacts } from "./captions";
 import { lintPost, priceToCents } from "./lint";
 import { isoWeek, nextCategory, nextFreeEvening, pickKind, rigaTime, slotsBetween } from "./schedule";
 
@@ -238,6 +238,121 @@ describe("composePost", () => {
     expect(p.card.lines.map((l) => l.side)).toHaveLength(3);
     // Without questions it stays one image.
     expect(composePost(kinds[0]!, base).card.slides).toBeUndefined();
+  });
+
+  it("one emoji marks the post and one the link: never more than two, never hype", () => {
+    const picks = composePost(kinds[0]!, base);
+    expect(picks.captionFb.startsWith("🏷️ Trīs ieteikumi:")).toBe(true);
+    expect(picks.captionFb).toContain("👉 https://trilio.lv/");
+    expect(picks.captionIg.startsWith("🏷️ ")).toBe(true);
+    expect(composePost(kinds[1]!, base).captionFb.startsWith("📉 ")).toBe(true);
+    expect(composePost(kinds[2]!, base).captionFb.startsWith("💡 ")).toBe(true);
+    expect(lintPost("🔥 Tikai pie mums")).toContain("hype emoji");
+    expect(lintPost("🏷️ 📉 💡 Trīs")).toContain("more than 2 emojis");
+    // ® and ™ in product names are not emojis.
+    expect(lintPost("Dyson® Cyclone™ 🏷️")).toEqual([]);
+  });
+
+  it("asks one question without “tu”, and leads with the fact", () => {
+    for (const f of kinds) {
+      const p = composePost(f, base);
+      expect(p.captionFb.match(/Rakstiet komentāros\./g)).toHaveLength(1);
+    }
+    const top = composePost(kinds[3]!, base);
+    expect(top.captionFb.split("\n")[0]).toBe("🔎 Šonedēļ Trilio visvairāk meklētā kategorija: ledusskapji.");
+  });
+
+  it("the week's lists are carousels: a cover, one slide per item, and the way to start", () => {
+    const top = composePost(
+      {
+        kind: "top_categories",
+        categories: [
+          { id: "fridge", label: "Ledusskapji", fromCents: 19900 },
+          { id: "washer", label: "Veļas mašīnas", fromCents: 24900 },
+          { id: "kettle", label: "Tējkannas", fromCents: null },
+        ],
+        path: "/",
+      },
+      base,
+    );
+    expect(top.issues).toEqual([]);
+    expect(top.card.slides?.map((x) => x.chip)).toEqual([
+      "Ko meklē šonedēļ",
+      "1. vieta",
+      "2. vieta",
+      "3. vieta",
+      "Sākt izvēli",
+    ]);
+    expect(top.card.slides![1]!).toMatchObject({
+      subcategoryId: "fridge",
+      lines: [{ side: "199\u00a0€" }, {}],
+    });
+    // No price for a category with no fresh offer.
+    expect(top.card.slides![3]!.lines).toHaveLength(1);
+    const prod = composePost(kinds[4]!, base);
+    expect(prod.card.slides?.length).toBe(3);
+    expect(prod.card.slides![1]!.lines[0]!.buttons).toEqual(["Pirkt — Veikals A", "Pieprasīt labāku cenu"]);
+    // Alt text per slide, from what it shows.
+    expect(slideAlt(top.card.slides![1]!)).toBe(
+      "Ledusskapji. Cenas partneru veikalos no, 199\u00a0€. Daži jautājumi, un trīs piemērotākie varianti",
+    );
+  });
+
+  it("a product's photo from the feed goes on its slide and on the phone's card; none when the feed has none", () => {
+    const drop = composePost(
+      {
+        ...(kinds[1] as Extract<PostFacts, { kind: "price_drop" }>),
+        imageUrl: "https://cdn.example.lv/a.jpg",
+      },
+      base,
+    );
+    expect(drop.card.image).toBe("https://cdn.example.lv/a.jpg");
+    expect(drop.card.hero).toBe("fridge");
+    expect(composePost(kinds[1]!, base).card).not.toHaveProperty("image");
+    const prod = composePost(
+      {
+        kind: "top_products",
+        products: [
+          {
+            id: "a",
+            name: "Philips XC",
+            priceCents: 19900,
+            shop: "Veikals A",
+            imageUrl: "https://cdn.example.lv/p.jpg",
+          },
+          { id: "b", name: "Dyson V8", priceCents: 34900, shop: "Veikals B", imageUrl: null },
+        ],
+        path: "/izvelies/cleaning/vacuum",
+      },
+      base,
+    );
+    expect(prod.card.slides!.map((s) => s.image)).toEqual([
+      undefined,
+      "https://cdn.example.lv/p.jpg",
+      undefined,
+    ]);
+    const picks = composePost(
+      {
+        ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>),
+        picks: [
+          {
+            name: "Electrolux EEA27200L",
+            priceCents: 37900,
+            shop: "Veikals A",
+            imageUrl: "https://cdn.example.lv/e.jpg",
+          },
+          ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>).picks.slice(1),
+        ],
+        questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
+      },
+      base,
+    );
+    expect(picks.card.slides![3]!.phone).toMatchObject({
+      kind: "card",
+      image: "https://cdn.example.lv/e.jpg",
+    });
+    // The photo URL is not a word of the post: the lint still passes.
+    expect(picks.issues).toEqual([]);
   });
 
   it("refuses a lead sentence the lint does not pass", () => {
