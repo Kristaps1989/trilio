@@ -18,7 +18,7 @@ The measure is not likes. It is: visits from the posts (UTM), taps on "Pieprasī
 
 ## 3. Post types
 
-Four types rotate. Each has a data source, a rendered image from the brand template (`src/services/ads/creatives.tsx`, satori: night-green, lime, Space Grotesk, Figtree) and a caption in Latvian.
+Six types rotate. Each has a data source, a rendered image from the brand template (`src/services/ads/creatives.tsx`, satori: night-green, lime, Space Grotesk, Figtree) and a caption in Latvian.
 
 | # | Type | Source | Image | Caption shape | When |
 | --- | --- | --- | --- | --- | --- |
@@ -26,6 +26,8 @@ Four types rotate. Each has a data source, a rendered image from the brand templ
 | B | **Cena samazinājās** | A product whose price today is below its 30-day low by a real amount (Omnibus; `price_history`) | One card: product, today's price, the 30-day low, the shop | "{Prece} šodien {cena} veikalā {veikals}, zemāk nekā pēdējās 30 dienās ({zemākā}). Cenu vēsture un trīs alternatīvas → …" | Only when the data shows a drop of at least 5 %; at most twice a week |
 | C | **Kā izvēlēties** | One deciding factor from `data/knowledge.json` for a subcategory | Quote card with the factor and one sentence | "Kas ir {faktors} un kad tas ir svarīgi: {viens teikums}. Visi {kategorija} ieteikumi → …" | Once a week |
 | D | **Pieprasīts un atrasts** | A real offer that was **accepted and paid** (`special_offers`, `offer_orders`), anonymised per §5 | Card: product, shop price, Trilio's price, delivery days | "Pircējs pieprasīja labāku cenu {precei}. Veikalā {cena}, Trilio piedāvāja {cena}, piegāde {n} darba dienās. Ja varam lētāk, piedāvājam; ja ne, paziņojam, kad cena krīt. → …" | Only when one exists; at most once a week; never the same order twice |
+| E | **Ko meklē šonedēļ** | The five subcategories with the most results views in the last 7 days (first-party `visits`, cookieless, aggregated) | Ranked list card: 1–5 with the category illustrations | "Ko Latvija meklēja šonedēļ: 1. {kat}, 2. {kat}, 3. {kat}… Katrai trīs ieteikumi → trilio.lv" | Once a week (Sunday 11:00), only when the top category has at least 50 views, so the list means something |
+| F | **Visvairāk skatītās preces** | The three products with the most results-card views, shop clicks or saves in the last 7 days (`ui_events`, `visits`, `saved_items` counts, aggregated) | Three cards: product, today's price, the shop | "Nedēļas trīs visvairāk skatītās preces: {prece} ({cena}), {prece} ({cena}), {prece} ({cena}). Pērc veikalā vai pieprasi labāku cenu → …" | Every other week in the Friday slot when no type D exists; a product needs at least 30 views to qualify |
 
 Reels are not generated: a person speaking and a real tap on a phone cannot be produced honestly by a template. The owner shoots those (docs/TIKTOK_PLAN.md C1–C5); the system schedules and publishes them once uploaded (type **R**, manual).
 
@@ -33,7 +35,7 @@ Facebook and Instagram get the same image and the same caption, with two differe
 
 ## 4. Cadence and timing
 
-- Three generated posts a week: Monday A, Wednesday C or B, Friday A or D. B pre-empts the Wednesday slot when a drop exists; D pre-empts Friday when a paid order exists.
+- Three generated posts a week plus a Sunday list: Monday A, Wednesday C or B, Friday D, F or A, Sunday 11:00 E. B pre-empts Wednesday when a drop exists; D pre-empts Friday when a paid order exists, else F every other week, else A. E runs only when the week's traffic clears its threshold.
 - Published at **19:00 Europe/Riga**, the evening peak for Latvian consumer pages; a Saturday 11:00 slot is added once reach data says it works.
 - A post is drafted 24 hours before its slot, so the owner has a day to look at it in Approve mode.
 - Reels (type R) go whenever uploaded, into the next free evening slot.
@@ -44,6 +46,7 @@ Nothing that identifies a shopper leaves the database. In code this is a single 
 
 - **Never in a post:** e-mail, name, surname, phone, address, order number, offer token, invoice number, the shopper's city or street, the delivery parcel locker, the date of the order to the day, free-text notes from the CRM.
 - **Allowed:** the product (public), the shop (public), the prices (ours and the shop's), the delivery time in working days, the month ("oktobrī").
+- **Aggregates (types E, F):** counts only, never a path or a person. A category or product appears only above a minimum (50 views for a category, 30 for a product), so a list can never describe one visitor's week. The counts themselves are not printed in the caption unless the owner wants them; the rank is enough.
 - **No invented people.** A Latvian first name presented as a buyer ("Anna no Jelgavas") is a fake testimonial even if the facts are real; it fails rule 4 (honest persuasion). The post says "pircējs" or "kāds pircējs". If the owner wants a name for warmth, the caption must say "vārds mainīts" in the same line; the recommendation is not to.
 - **No quotes.** Shoppers' messages are not quoted, even anonymised, unless the shopper wrote a review for publication and ticked a box saying so (not built; not planned).
 - **Images:** product photos come from the partner feed (public catalogue pictures) or the category illustration, never from an order or a shopper.
@@ -97,6 +100,7 @@ cron 18:00 Riga ─► pick type (rules §4) ─► query data ─► compose ca
 | D3 | Start mode | Approve for the first two weeks, then automatic |
 | D4 | Cadence | Mon/Wed/Fri 19:00; Saturday 11:00 after reach data |
 | D5 | First categories for type A | `dish`, `fridge`, `vacuum`, `washer`, then rotation by traffic |
+| D6 | Show view counts in E and F captions | No: rank only ("Nedēļas trīs visvairāk skatītās"); counts invite comparison with bigger sites and add nothing for the reader |
 
 ## 10. Risks
 
@@ -111,7 +115,7 @@ cron 18:00 Riga ─► pick type (rules §4) ─► query data ─► compose ca
 | PR | Scope | Effort |
 | --- | --- | --- |
 | 1 | Meta app wiring: env, `meta.ts`, mock provider, publish and insights for a hand-written post; admin page with the queue and settings; cron; audit; e2e | 1 PR |
-| 2 | Types A and C: data, templates, images, compose with lint, scheduling rules | 1 PR |
+| 2 | Types A, C, E and F: data queries (aggregated, thresholds), templates, images, compose with lint, scheduling rules | 1 PR |
 | 3 | Types B and D with `anonymise()` and its tests; Reels upload (type R); privacy-policy line; BRAND.md register rule | 1 PR |
 
-Unit tests for every domain rule (pick, anonymise, lint, hashtags), service tests against the mock Graph API and Postgres, e2e for the admin queue on mobile-360 and desktop with axe. Each PR merges only green.
+Unit tests for every domain rule (pick, anonymise, thresholds, lint, hashtags), service tests against the mock Graph API and Postgres, e2e for the admin queue on mobile-360 and desktop with axe. Each PR merges only green.
