@@ -269,6 +269,39 @@ run("social posts", () => {
     expect(await refresh(db, deps, edited!, now)).toMatchObject({ ok: false });
   });
 
+  it("a picks carousel goes out as four images on both networks", async () => {
+    const at = rigaTime("2031-02-09", 19);
+    const facts = {
+      kind: "picks" as const,
+      subcategoryId: "dish",
+      category: "Trauku mazgājamās mašīnas",
+      picks: [
+        { name: "Produkts A1", priceCents: 30000, shop: "Veikals A" },
+        { name: "Produkts B2", priceCents: 40000, shop: "Veikals B" },
+      ],
+      questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
+      path: "/izvelies/kitchen/dish",
+    };
+    const made = await createPost(db, deps, { facts, slotAt: at, createdBy: "social-test", mode: "approve" });
+    expect(made.ok ? "ok" : made.reason).toBe("ok");
+    const id = made.ok ? made.post.id : "";
+    // Sent as stored: the refresh only re-reads posts drafted from live picks, which these are not.
+    await db
+      .update(socialPosts)
+      .set({ card: { ...(made.ok ? made.post.card : {}), facts: undefined } })
+      .where(eq(socialPosts.id, id));
+    const sent = await approvePost(db, deps, id, "admin@example.invalid", { now: true });
+    expect(sent?.status).toBe("published");
+    const media = mockPosts().filter((m) => m.id === sent!.fbPostId || m.id === sent!.igMediaId);
+    for (const m of media)
+      expect(m.media.split(" ")).toEqual([
+        `${BASE}/api/social/${id}/image.jpg`,
+        `${BASE}/api/social/${id}/2/image.jpg`,
+        `${BASE}/api/social/${id}/3/image.jpg`,
+        `${BASE}/api/social/${id}/4/image.jpg`,
+      ]);
+  });
+
   it("refuses an edit that breaks the rules", async () => {
     const [p] = await db.select().from(socialPosts).where(eq(socialPosts.createdBy, "social-test")).limit(1);
     const r = await editCaptions(db, p!.id, "Tev lētākais Latvijā, tikai šodien!", p!.captionIg);

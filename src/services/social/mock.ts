@@ -23,6 +23,9 @@ export function mockSocialProvider(): SocialProvider {
     async publishImage(network, imageUrl, caption) {
       return add(network, imageUrl, caption);
     },
+    async publishCarousel(network, imageUrls, caption) {
+      return add(network, imageUrls.join(" "), caption);
+    },
     async publishVideo(network, videoUrl, caption) {
       return add(network, videoUrl, caption);
     },

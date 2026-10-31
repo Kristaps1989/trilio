@@ -66,6 +66,17 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
     kind: "picks",
     subcategoryId,
     category: sub.label,
+    // The flow's first plain questions (no conditional ones), worded as the site asks them.
+    questions: sub.questions
+      .filter(
+        (q) =>
+          q.stage === "flow" &&
+          !q.showIf &&
+          (q.type === "single" || q.type === "multi") &&
+          q.options.length >= 2,
+      )
+      .slice(0, 3)
+      .map((q) => ({ title: q.title, options: q.options.map((o) => o.label) })),
     picks: picks.map((p) => ({
       name: cleanName(p.product.name, p.product.brand, p.product.modelCode),
       priceCents: p.offer.priceCents,

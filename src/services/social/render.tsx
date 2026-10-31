@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import type { PostCard } from "@/domain/social/captions";
+import type { CardLine, PostCard } from "@/domain/social/captions";
 import { TAGLINE } from "@/domain/social/captions";
 import { brandFonts, Drawing, Wordmark } from "@/services/ads/creatives";
 
@@ -14,9 +14,87 @@ const LIME = "#D8F45A";
 const MIST = "#F2F5F2";
 const STONE = "#A9BDB9";
 const MUTED = "#4E605C";
+const LINE = "#C9D4D1";
 const glow = `radial-gradient(circle at 85% 12%, rgba(216,244,90,0.18) 0%, rgba(216,244,90,0) 40%), ${NIGHT}`;
 
-export async function renderPost(card: PostCard): Promise<ImageResponse> {
+/** A white card: name, shop, price, and a question's options or the site's two buttons. */
+function Line({ l, compact }: { l: CardLine; compact: boolean }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 18,
+        background: "#FFFFFF",
+        color: NIGHT,
+        borderRadius: 28,
+        padding: compact ? "20px 30px" : "30px 34px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 6 }}>
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Space Grotesk",
+              fontWeight: 700,
+              fontSize: compact ? 34 : 38,
+              lineHeight: 1.12,
+            }}
+          >
+            {l.main}
+          </div>
+          {l.sub ? <div style={{ display: "flex", fontSize: 26, color: MUTED }}>{l.sub}</div> : null}
+        </div>
+        {l.side ? (
+          <div style={{ display: "flex", fontFamily: "Space Grotesk", fontWeight: 700, fontSize: 46 }}>
+            {l.side}
+          </div>
+        ) : null}
+      </div>
+      {l.chips?.length ? (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          {l.chips.map((c) => (
+            <div
+              key={c}
+              style={{
+                display: "flex",
+                border: `2px solid ${LINE}`,
+                borderRadius: 99,
+                padding: "10px 22px",
+                fontSize: 28,
+                fontWeight: 600,
+              }}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {(l.buttons ?? []).map((b, i) => (
+        <div
+          key={b}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: 84,
+            borderRadius: 22,
+            fontSize: 32,
+            fontWeight: 700,
+            background: i === 0 ? NIGHT : "#FFFFFF",
+            color: i === 0 ? "#FFFFFF" : NIGHT,
+            border: i === 0 ? "none" : `3px solid ${NIGHT}`,
+          }}
+        >
+          {b}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export async function renderPost(card: Omit<PostCard, "slides">): Promise<ImageResponse> {
   const many = card.lines.length > 3;
   const text = card.lines.length === 1 && !card.lines[0]!.side;
   return new ImageResponse(
@@ -86,39 +164,7 @@ export async function renderPost(card: PostCard): Promise<ImageResponse> {
               {l.main}
             </div>
           ) : (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 24,
-                background: "#FFFFFF",
-                color: NIGHT,
-                borderRadius: 28,
-                padding: many ? "20px 30px" : "30px 34px",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 6 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    fontFamily: "Space Grotesk",
-                    fontWeight: 700,
-                    fontSize: many ? 34 : 38,
-                    lineHeight: 1.12,
-                  }}
-                >
-                  {l.main}
-                </div>
-                {l.sub ? <div style={{ display: "flex", fontSize: 26, color: MUTED }}>{l.sub}</div> : null}
-              </div>
-              {l.side ? (
-                <div style={{ display: "flex", fontFamily: "Space Grotesk", fontWeight: 700, fontSize: 46 }}>
-                  {l.side}
-                </div>
-              ) : null}
-            </div>
+            <Line key={i} l={l} compact={many} />
           ),
         )}
         {card.note ? <div style={{ display: "flex", fontSize: 26, color: STONE }}>{card.note}</div> : null}
@@ -146,7 +192,11 @@ export async function renderPost(card: PostCard): Promise<ImageResponse> {
 }
 
 /** Instagram takes JPEG only; Facebook takes either. */
-export async function renderPostJpeg(card: PostCard): Promise<Buffer> {
+/** The slides of a carousel, or the one image of any other post. */
+export const slidesOf = (card: PostCard): Omit<PostCard, "slides">[] =>
+  card.slides?.length ? card.slides : [card];
+
+export async function renderPostJpeg(card: Omit<PostCard, "slides">): Promise<Buffer> {
   const png = Buffer.from(await (await renderPost(card)).arrayBuffer());
   const sharp = (await import("sharp")).default;
   return sharp(png).jpeg({ quality: 90, mozjpeg: true }).toBuffer();

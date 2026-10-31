@@ -95,6 +95,34 @@ describe("meta provider", () => {
     expect(calls[2]!.body).toMatchObject({ media_type: "REELS", video_url: "https://t/v.mp4" });
   });
 
+  it("a carousel: items then one container on Instagram, unpublished photos then one feed post on the page", async () => {
+    let n = 0;
+    const { http, calls } = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      if (c.url === `${G}/PAGE/feed`) return { json: { id: "PAGE_feed1" } };
+      return { json: { id: `id${++n}` } };
+    });
+    const p = metaProvider(cfg, http, noWait);
+    expect(await p.publishCarousel("instagram", ["u1", "u2"], "Teksts")).toMatchObject({ ok: true });
+    const ig = calls.filter((c) => c.url.startsWith(`${G}/IG`));
+    expect(ig.map((c) => c.body.is_carousel_item ?? c.body.media_type ?? "publish")).toEqual([
+      "true",
+      "true",
+      "CAROUSEL",
+      "publish",
+    ]);
+    expect(ig[2]!.body).toMatchObject({ children: "id1,id2", caption: "Teksts" });
+    expect(await p.publishCarousel("facebook", ["u1", "u2"], "Teksts")).toEqual({
+      ok: true,
+      id: "PAGE_feed1",
+    });
+    const photos = calls.filter((c) => c.url === `${G}/PAGE/photos`);
+    expect(photos.map((c) => c.body.published)).toEqual(["false", "false"]);
+    const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
+    expect(feed.body.message).toBe("Teksts");
+    expect(JSON.parse(feed.body["attached_media[1]"]!)).toEqual({ media_fbid: "id6" });
+  });
+
   it("returns Meta's error as text, and a failed video stops waiting", async () => {
     const { http } = fakeFetch((c) =>
       c.url === `${G}/IG/media`

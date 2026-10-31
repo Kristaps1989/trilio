@@ -10,7 +10,15 @@ import { lintPost, type PostLintContext } from "./lint";
 export type PickLine = { name: string; priceCents: number; shop: string };
 
 export type PostFacts =
-  | { kind: "picks"; subcategoryId: string; category: string; picks: PickLine[]; path: string }
+  | {
+      kind: "picks";
+      subcategoryId: string;
+      category: string;
+      picks: PickLine[];
+      /** The flow's first questions as the site asks them, for the carousel (no answers are invented). */
+      questions?: { title: string; options: string[] }[];
+      path: string;
+    }
   | {
       kind: "price_drop";
       subcategoryId: string;
@@ -38,13 +46,25 @@ export type PostFacts =
   | { kind: "top_products"; products: (PickLine & { id: string })[]; path: string }
   | { kind: "reel"; caption: string; videoUrl: string; path: string };
 
+export type CardLine = {
+  main: string;
+  side?: string;
+  sub?: string;
+  /** A question's options, drawn as pills. */
+  chips?: string[];
+  /** The card's buttons, as on the site: the first dark, the rest outlined. */
+  buttons?: string[];
+};
+
 /** What the image shows (src/services/social/render.tsx draws it). */
 export type PostCard = {
   chip: string;
   title: string;
-  lines: { main: string; side?: string; sub?: string }[];
+  lines: CardLine[];
   note?: string;
   subcategoryId?: string;
+  /** A carousel: every slide is a card of its own; `lines` above stay the facts to re-check. */
+  slides?: Omit<PostCard, "slides">[];
 };
 
 export type ComposedPost = {
@@ -116,11 +136,54 @@ function parts(
   switch (f.kind) {
     case "picks": {
       const head = lead ?? `Trīs ieteikumi: ${lower(f.category)}.`;
+      const questions = (f.questions ?? []).slice(0, 3);
+      const first = f.picks[0]!;
+      const slides: PostCard["slides"] = questions.length
+        ? [
+            {
+              chip: "Izvēle 3 soļos",
+              title: f.category,
+              lines: [
+                { main: "1. Daži jautājumi" },
+                { main: "2. Trīs ieteikumi" },
+                { main: "3. Pērc uzreiz vai pieprasi labāku cenu" },
+              ],
+              subcategoryId: f.subcategoryId,
+            },
+            {
+              chip: "1. solis",
+              title: "Daži jautājumi",
+              lines: questions.map((q) => ({ main: q.title, chips: q.options.slice(0, 4) })),
+              note: "Tikai tas, kas izšķir izvēli",
+            },
+            {
+              chip: "2. solis",
+              title: "Trīs ieteikumi",
+              lines: f.picks.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop })),
+              note: "Piemērs bez atbildēm; cenas šodien partneru veikalos",
+            },
+            {
+              chip: "3. solis",
+              title: "Pērc uzreiz vai pieprasi labāku cenu",
+              lines: [
+                {
+                  main: first.name,
+                  side: eur(first.priceCents),
+                  sub: first.shop,
+                  buttons: [`Pirkt — ${first.shop}`, "Pieprasīt labāku cenu"],
+                },
+              ],
+              note: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena krīt",
+            },
+          ]
+        : undefined;
       return {
         body: [
           head,
           f.picks.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
-          "Cenas šodien partneru veikalos.",
+          slides
+            ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pieprasīt labāku cenu."
+            : "Cenas šodien partneru veikalos.",
         ],
         cta: "Var pirkt uzreiz veikalā vai pieprasīt labāku cenu: tad pajautāsim izplatītājam.",
         card: {
@@ -129,8 +192,9 @@ function parts(
           lines: f.picks.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop })),
           note: "Cenas šodien partneru veikalos",
           subcategoryId: f.subcategoryId,
+          ...(slides ? { slides } : {}),
         },
-        alt: `Trīs ieteikumi: ${f.category}. ${f.picks.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
+        alt: `${slides ? "Izvēle 3 soļos. " : ""}Trīs ieteikumi: ${f.category}. ${f.picks.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
         prices: f.picks.map((p) => p.priceCents),
         numbers: [],
         names: f.picks.flatMap((p) => [p.name, p.shop]),

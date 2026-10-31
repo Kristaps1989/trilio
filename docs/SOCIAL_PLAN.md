@@ -133,6 +133,8 @@ Decided by the owner: D1 (no pronoun, "jūs" if unavoidable; the site keeps "tu"
 - **Image URL** `/api/social/{id}/image.jpg`: public once approved (Meta fetches it), admin-only while a draft.
 - **Privacy policy:** a line on what posts use and never publish, and Meta as a recipient that receives no personal data. The profile texts and the register rule are in `docs/BRAND.md`.
 
+- **Carousel (owner, 31 Oct 2026):** a "3 ieteikumi" post is four slides, so the post shows how easy it is, not only the result: (1) the category and "Izvēle 3 soļos"; (2) "1. solis — Daži jautājumi": the flow's first two or three plain questions with their options as pills, worded as the site asks them; (3) "2. solis — Trīs ieteikumi" with today's prices and the note "Piemērs bez atbildēm", because no answers were given for these picks; (4) "3. solis — Pērc uzreiz vai pieprasi labāku cenu": the first pick as the site's card with both buttons and "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena krīt". Facebook gets a multi-photo post (photos uploaded unpublished, then one feed post), Instagram a native carousel (items, then one CAROUSEL container). Slides are at `/api/social/{id}/{n}/image.jpg`; the admin queue shows all of them.
+
 Deviations from the plan, each small:
 
 1. **Type F counts interest, not views.** Trilio has no product pages, so "most viewed" would be untrue. F ranks by shop clicks (one per visitor and day) plus saves in 7 days, needs 30, and says "Šonedēļ Trilio lietotājus visvairāk interesēja".

@@ -360,6 +360,11 @@ export async function refresh(
 }
 
 export const imageUrl = (baseUrl: string, id: string) => `${baseUrl}/api/social/${id}/image.jpg`;
+/** A carousel's slides; the first is the same image as imageUrl. */
+export const slideUrls = (baseUrl: string, id: string, n: number) =>
+  Array.from({ length: n }, (_, i) =>
+    i === 0 ? imageUrl(baseUrl, id) : `${baseUrl}/api/social/${id}/${i + 1}/image.jpg`,
+  );
 
 /** Sends to the networks that do not have the post yet, so a retry never posts twice. */
 export async function publishPost(
@@ -370,10 +375,13 @@ export async function publishPost(
 ): Promise<SocialPost> {
   const provider = deps.provider;
   if (!provider) return post;
+  const slides = (post.card as unknown as PostCard).slides?.length ?? 0;
   const send = async (n: Network, caption: string) =>
     post.videoUrl
       ? provider.publishVideo(n, post.videoUrl, caption)
-      : provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption);
+      : slides > 1
+        ? provider.publishCarousel(n, slideUrls(deps.baseUrl, post.id, slides), caption)
+        : provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption);
   const errors: string[] = [];
   let fb = post.fbPostId;
   let ig = post.igMediaId;

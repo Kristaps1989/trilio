@@ -8,7 +8,7 @@ import { requireAdmin } from "../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../ui";
 import { Outcome } from "../reklama/shared";
 import { socialProvider } from "@/services/social";
-import { socialSettings } from "@/services/social/posts";
+import { slideUrls, socialSettings } from "@/services/social/posts";
 import {
   approveAction,
   captionsAction,
@@ -172,12 +172,20 @@ export default async function SocialPage({ searchParams }: Props) {
                     {p.videoUrl}
                   </a>
                 ) : (
-                  <img
-                    src={`/api/social/${p.id}/image.jpg`}
-                    alt={t("imageAlt", { alt: p.alt })}
-                    className="h-auto w-full max-w-[420px] rounded-control border border-line-25"
-                    loading="lazy"
-                  />
+                  <div className="flex gap-2 overflow-x-auto" data-social-slides>
+                    {slideUrls("", p.id, (p.card as { slides?: unknown[] }).slides?.length || 1).map(
+                      (src, i) => (
+                        <img
+                          key={src}
+                          src={src}
+                          alt={i === 0 ? t("imageAlt", { alt: p.alt }) : t("slideAlt", { n: i + 1 })}
+                          className="h-auto w-full max-w-[420px] shrink-0 rounded-control border border-line-25 data-[many]:w-[70%]"
+                          data-many={(p.card as { slides?: unknown[] }).slides?.length ? "" : undefined}
+                          loading="lazy"
+                        />
+                      ),
+                    )}
+                  </div>
                 )}
                 <p className="text-sm text-stone">
                   {t(`source_${p.source === "claude" ? "claude" : "template"}`)}

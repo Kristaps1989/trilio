@@ -215,6 +215,31 @@ describe("composePost", () => {
     expect(p.card.lines).toHaveLength(3);
   });
 
+  it("a picks post with the flow's questions is a four-slide carousel that shows the way", () => {
+    const f = {
+      ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>),
+      questions: [
+        { title: "Iebūvējama vai brīvi stāvoša?", options: ["Iebūvējama", "Brīvi stāvoša", "Galda"] },
+        { title: "Cik plata?", options: ["45 cm", "60 cm"] },
+      ],
+    };
+    const p = composePost(f, base);
+    expect(p.issues).toEqual([]);
+    expect(p.card.slides?.map((x) => x.chip)).toEqual(["Izvēle 3 soļos", "1. solis", "2. solis", "3. solis"]);
+    expect(p.card.slides![1]!.lines.map((l) => l.chips)).toEqual([
+      ["Iebūvējama", "Brīvi stāvoša", "Galda"],
+      ["45 cm", "60 cm"],
+    ]);
+    // Honest about the example: no answers were given for these picks.
+    expect(p.card.slides![2]!.note).toContain("Piemērs bez atbildēm");
+    expect(p.card.slides![3]!.lines[0]!.buttons).toEqual(["Pirkt — Veikals A", "Pieprasīt labāku cenu"]);
+    expect(p.captionFb).toContain("Kā tas notiek, redzams bildēs");
+    // The facts to re-check before sending stay the three prices.
+    expect(p.card.lines.map((l) => l.side)).toHaveLength(3);
+    // Without questions it stays one image.
+    expect(composePost(kinds[0]!, base).card.slides).toBeUndefined();
+  });
+
   it("refuses a lead sentence the lint does not pass", () => {
     const p = composePost(kinds[0]!, { ...base, lead: "Tev lētākais Latvijā!" });
     expect(p.issues.length).toBeGreaterThan(0);

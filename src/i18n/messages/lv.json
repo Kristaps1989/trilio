@@ -2396,7 +2396,8 @@
       "err_off": "Publicēšana nav ieslēgta.",
       "err_invalid": "Pārbaudi laukus.",
       "err_failed": "Neizdevās. Kļūda ir redzama pie ieraksta.",
-      "rules": "Noteikumi: tikai dati no Trilio datubāzes, nekādu pircēju personas datu, bez „tu” un „labākais”; „bez maksas” tikai pakalpojumam."
+      "rules": "Noteikumi: tikai dati no Trilio datubāzes, nekādu pircēju personas datu, bez „tu” un „labākais”; „bez maksas” tikai pakalpojumam.",
+      "slideAlt": "Karuseļa {n}. attēls"
     }
   },
   "alertsUnsubscribe": {

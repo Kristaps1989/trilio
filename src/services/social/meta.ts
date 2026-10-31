@@ -105,6 +105,35 @@ export function metaProvider(
         return fail(err);
       }
     },
+    async publishCarousel(network: Network, imageUrls: string[], caption: string) {
+      try {
+        if (network === "instagram") {
+          // Each image is a carousel item first, then one container holds them all.
+          const children: string[] = [];
+          for (const url of imageUrls) {
+            const item = await call(
+              "POST",
+              `${cfg.igUserId}/media`,
+              { image_url: url, is_carousel_item: "true" },
+              cfg.token,
+            );
+            children.push(String(item.id));
+          }
+          return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);
+        }
+        // The page: each photo uploaded unpublished, then one feed post with all of them.
+        const token = await page();
+        const media: Record<string, string> = {};
+        for (const [i, url] of imageUrls.entries()) {
+          const photo = await call("POST", `${cfg.pageId}/photos`, { url, published: "false" }, token);
+          media[`attached_media[${i}]`] = JSON.stringify({ media_fbid: String(photo.id) });
+        }
+        const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, ...media }, token);
+        return { ok: true, id: String(r.id) };
+      } catch (err) {
+        return fail(err);
+      }
+    },
     async publishVideo(network: Network, videoUrl: string, caption: string) {
       try {
         if (network === "instagram")
