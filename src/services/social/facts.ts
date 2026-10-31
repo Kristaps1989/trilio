@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { loadCandidates, loadProducts } from "@/db/queries/catalog";
-import { offerOrders, specialOffers } from "@/db/schema";
+import { offerOrders, products, specialOffers } from "@/db/schema";
+import { IMAGE_HOSTS } from "@/db/stores";
+import { imageSrc } from "@/domain/catalog/media";
 import { cleanName } from "@/domain/catalog/naming";
 import { decodeState } from "@/domain/flow/state";
 import { knowledgeOf } from "@/domain/knowledge/knowledge";
@@ -81,6 +83,7 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
       name: cleanName(p.product.name, p.product.brand, p.product.modelCode),
       priceCents: p.offer.priceCents,
       shop: p.offer.storeName,
+      imageUrl: imageSrc(p.product.imageUrl, IMAGE_HOSTS),
     })),
     path: flowPath(subcategoryId),
   };
@@ -96,7 +99,7 @@ export async function priceDropFacts(
   const since = new Date(now.getTime() - FRESH_MS);
   const result = await db.execute(sql`
     select o.product_id as "productId", p.name, p.brand, p.model_code as "modelCode",
-           p.subcategory_id as "subcategoryId", s.display_name as shop,
+           p.subcategory_id as "subcategoryId", p.image_url as "imageUrl", s.display_name as shop,
            o.price_cents as "priceCents", low.low as "lowCents"
       from offers o
       join stores s on s.id = o.store_id
@@ -119,6 +122,7 @@ export async function priceDropFacts(
     brand: string;
     modelCode: string;
     subcategoryId: string;
+    imageUrl: string | null;
     shop: string;
     priceCents: number;
     lowCents: number;
@@ -134,6 +138,7 @@ export async function priceDropFacts(
     priceCents: Number(r.priceCents),
     lowCents: Number(r.lowCents),
     shop: r.shop,
+    imageUrl: imageSrc(r.imageUrl, IMAGE_HOSTS),
     path: flowPath(r.subcategoryId),
   };
 }
@@ -168,9 +173,10 @@ export async function paidOfferFacts(
   usedOfferIds: string[],
 ): Promise<{ facts: PostFacts; personal: (string | null)[] } | null> {
   const [row] = await db
-    .select({ o: specialOffers, order: offerOrders })
+    .select({ o: specialOffers, order: offerOrders, imageUrl: products.imageUrl })
     .from(specialOffers)
     .innerJoin(offerOrders, eq(offerOrders.offerId, specialOffers.id))
+    .leftJoin(products, eq(products.id, specialOffers.productId))
     .where(
       and(
         inArray(offerOrders.status, [...PAID]),
@@ -193,6 +199,7 @@ export async function paidOfferFacts(
       trilioPriceCents: story.trilioPriceCents,
       deliveryDays: story.deliveryDays,
       month: story.month,
+      imageUrl: imageSrc(row.imageUrl, IMAGE_HOSTS),
       path: flowPath(row.o.subcategoryId),
     },
     personal: [
@@ -281,6 +288,7 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
               priceCents: o.priceCents,
               shop: o.storeName,
               sub: p.subcategoryId,
+              imageUrl: imageSrc(p.imageUrl, IMAGE_HOSTS),
             },
           ]
         : [];
@@ -295,6 +303,7 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
       priceCents: p.priceCents,
       shop: p.shop,
       subcategoryId: p.sub,
+      imageUrl: p.imageUrl,
     })),
     path: flowPath(products[0]!.sub),
   };

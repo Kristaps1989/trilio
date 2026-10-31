@@ -24,6 +24,13 @@
 - **Emojis (owner, 31 Oct 2026):** at most two in a post, each with a job: one marking the topic at the start (🏷️ picks and products, 📉 price drop, 💡 advice, 📦 offer, 🔎 what is searched) and 👉 before the Facebook link. Never instead of words, never hype or urgency (🔥 ⏰ 🚨 💥 ‼️ ❗ ⚡). The post lint enforces both.
 - **Captions:** the fact first (the first ~125 characters show before "… vairāk"), the words people search for (category, product, "cena"), one question that invites a comment ("… Rakstiet komentāros."), then the link. Five hashtags, Instagram's limit.
 
+## Post images (owner, 31 Oct 2026)
+
+- **One idea per slide.** A large headline, one hero (a numeral, a price, a phone mock-up of the site, a product photo or a category drawing on a lime disc), one line under it. Nothing in boxes; rows are typographic (lime numeral, name, figure on the right, hairline rules).
+- **Product photos on white.** A slide about one product shows the shop's photo of it on a white card with rounded corners; category slides show the drawing. Night green stays the ground of every slide.
+- **Scale by length.** The headline size follows its length (132 px for a word, down to 54 px for a sentence); prices in lime, 150–190 px; eyebrow in lime small capitals.
+- **Carousels:** a counter top right, "Ritini tālāk →" on the cover only, the tagline only on the closing slide, "trilio.lv" bottom right on every slide.
+
 ## Social profiles (owner, 31 Oct 2026)
 
 - **Cover:** `assets/brand/facebook-cover.png` (1640×624; the centre 1110 px stays visible on phones). Share image: `public/og.png` (1200×630), same line.

@@ -298,6 +298,63 @@ describe("composePost", () => {
     );
   });
 
+  it("a product's photo from the feed goes on its slide and on the phone's card; none when the feed has none", () => {
+    const drop = composePost(
+      {
+        ...(kinds[1] as Extract<PostFacts, { kind: "price_drop" }>),
+        imageUrl: "https://cdn.example.lv/a.jpg",
+      },
+      base,
+    );
+    expect(drop.card.image).toBe("https://cdn.example.lv/a.jpg");
+    expect(drop.card.hero).toBe("fridge");
+    expect(composePost(kinds[1]!, base).card).not.toHaveProperty("image");
+    const prod = composePost(
+      {
+        kind: "top_products",
+        products: [
+          {
+            id: "a",
+            name: "Philips XC",
+            priceCents: 19900,
+            shop: "Veikals A",
+            imageUrl: "https://cdn.example.lv/p.jpg",
+          },
+          { id: "b", name: "Dyson V8", priceCents: 34900, shop: "Veikals B", imageUrl: null },
+        ],
+        path: "/izvelies/cleaning/vacuum",
+      },
+      base,
+    );
+    expect(prod.card.slides!.map((s) => s.image)).toEqual([
+      undefined,
+      "https://cdn.example.lv/p.jpg",
+      undefined,
+    ]);
+    const picks = composePost(
+      {
+        ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>),
+        picks: [
+          {
+            name: "Electrolux EEA27200L",
+            priceCents: 37900,
+            shop: "Veikals A",
+            imageUrl: "https://cdn.example.lv/e.jpg",
+          },
+          ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>).picks.slice(1),
+        ],
+        questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
+      },
+      base,
+    );
+    expect(picks.card.slides![3]!.phone).toMatchObject({
+      kind: "card",
+      image: "https://cdn.example.lv/e.jpg",
+    });
+    // The photo URL is not a word of the post: the lint still passes.
+    expect(picks.issues).toEqual([]);
+  });
+
   it("refuses a lead sentence the lint does not pass", () => {
     const p = composePost(kinds[0]!, { ...base, lead: "Tev lētākais Latvijā!" });
     expect(p.issues.length).toBeGreaterThan(0);
