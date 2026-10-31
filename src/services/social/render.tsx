@@ -26,7 +26,14 @@ export const SQUARE_SIZE = 1080;
 /** A link post's preview (Open Graph, 1.91:1): laid out on 1600 × 840 and scaled to 1200 × 630. */
 export const LINK_CANVAS = { width: 1600, height: 840 } as const;
 export const LINK_SIZE = { width: 1200, height: 630 } as const;
-export type Shape = "portrait" | "square" | "link";
+/**
+ * Stories and Reels (9:16, 1080 × 1920): Meta covers the top ~14 % and the
+ * bottom ~20–35 % with its own interface, so the slide keeps the portrait
+ * layout inside those margins and the brand ground fills the rest.
+ */
+export const STORY_SIZE = { width: 1080, height: 1920 } as const;
+const STORY_INSETS = { top: 290, bottom: 470 } as const;
+export type Shape = "portrait" | "square" | "link" | "story";
 
 const NIGHT = "#0F2A2E";
 const NIGHT_DEEP = "#0A1F22";
@@ -539,11 +546,14 @@ function Frame({
   index,
   total,
   cue,
+  insets,
 }: {
   children: ReactNode;
   index: number;
   total: number;
   cue?: string;
+  /** Extra top and bottom space (Stories and Reels interface). */
+  insets?: { top: number; bottom: number };
 }) {
   const carousel = total > 1;
   return (
@@ -556,7 +566,9 @@ function Frame({
         background: bg,
         color: MIST,
         fontFamily: "Figtree",
-        padding: `${PAD - 12}px ${PAD}px ${PAD - 16}px`,
+        padding: insets
+          ? `${insets.top}px ${PAD}px ${insets.bottom}px`
+          : `${PAD - 12}px ${PAD}px ${PAD - 16}px`,
         position: "relative",
         overflow: "hidden",
       }}
@@ -705,7 +717,7 @@ function Statement(c: PostCard) {
         />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <Sub text="Daži jautājumi, un trīs piemērotākie varianti." />
+        <Sub text={c.sub ?? "Daži jautājumi, un trīs piemērotākie varianti."} />
         {c.hero ? <Hero subcategoryId={c.hero} size={300} /> : null}
       </div>
     </div>
@@ -952,7 +964,9 @@ export async function renderPost(
       ? { width: SQUARE_CANVAS, height: SQUARE_CANVAS }
       : shape === "link"
         ? LINK_CANVAS
-        : POST_SIZE;
+        : shape === "story"
+          ? STORY_SIZE
+          : POST_SIZE;
   const Layout = shape === "link" ? LinkCard : card.layout ? LAYOUTS[card.layout] : Legacy;
   const photo = await loadPhoto(card.image ?? (card.phone?.kind === "card" ? card.phone.image : undefined));
   const cue =
@@ -962,7 +976,7 @@ export async function renderPost(
         ? TAGLINE
         : undefined;
   return new ImageResponse(
-    <Frame index={index} total={total} cue={cue}>
+    <Frame index={index} total={total} cue={cue} insets={shape === "story" ? STORY_INSETS : undefined}>
       <Layout {...card} photo={photo} width={size.width} />
     </Frame>,
     { ...size, fonts: await brandFonts() },
