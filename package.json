@@ -22,7 +22,7 @@
     "cron:billing": "node scripts/cron-billing.mjs",
     "extract": "tsx src/services/llm/cli.ts",
     "test:smoke": "playwright test -c playwright.smoke.config.ts",
-    "creatives:meta": "vitest run -c vitest.scripts.config.mts scripts/meta-phase1.gen.ts"
+    "creatives:meta": "vitest run -c vitest.scripts.config.mts scripts/meta-phase1.gen.tsx"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
