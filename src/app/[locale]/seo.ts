@@ -9,8 +9,8 @@ import { appBaseUrl } from "@/services/payments";
 // own title spread openGraphBase() to keep the site name, locale and share image.
 
 const OG_ALT: Record<UiLocale, string> = {
-  lv: "Trilio — īstā prece. Labāka cena.",
-  en: "Trilio — the right product. A better price.",
+  lv: "Trilio — daži jautājumi. Īstā prece. Labāka cena.",
+  en: "Trilio — a few questions. The right product. A better price.",
 };
 const OG_LOCALE: Record<UiLocale, string> = { lv: "lv_LV", en: "en_GB" };
 
