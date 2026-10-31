@@ -164,7 +164,7 @@ Seen live, the owner's verdict: "Trilio var piedāvāt lētāk: iepērkam tieši
 | --- | --- |
 | Line above the picks (`results.trilioCanOffer`) | Pieprasi labāku cenu: Trilio pajautās izplatītājam un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali. |
 | Card button (`wishlist.notify` / `notifying`) | Pieprasīt labāku cenu → Pieprasīts · meklējam labāku cenu; a price-tag icon, the heart only in the header and the wishlist |
-| Search line (`results.notifySearchTitle`, `wishlist.notifySearch`) | Pieprasīt labāku cenu visam meklējumam? → Pieprasīt labāku cenu šim meklējumam → Pieprasīts · meklējam lētāku variantu |
+| Search line (`results.notifySearchTitle`, `wishlist.notifySearch`) | Unchanged in substance: Paziņot, kad šajā meklējumā parādīsies lētāks variants? → Paziņot par lētāku variantu → Paziņosim par lētāku variantu. The owner asked whether a search-level request was too much; it was also untrue, since a lead is a product and nobody can ask a partner about "a search". So the request exists only on a product; a search is a watch, saves at once, and its consent never covers offers. |
 | Panel (`notify.title`, `body`, `submit`) | Uz kādu e-pastu sūtīt piedāvājumu? · Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali, vai kad tās cena veikalos samazināsies… · Pieprasīt labāku cenu |
 | Under the card (`wishlist.alertNoteOffers`) | Meklējam labāku cenu. Uzrakstīsim uz {email}. |
 | Confirmation e-mail and page | Apstiprini, un meklēsim labāku cenu · Tu pieprasīji labāku cenu… |

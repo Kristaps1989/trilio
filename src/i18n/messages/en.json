@@ -313,8 +313,8 @@
     "reliabilityValue": "{grade}/5",
     "glossaryLabel": "What is it?",
     "trilioCanOffer": "Ask for a better price: Trilio will ask the distributor and write if it can offer it for less than the shops.",
-    "notifySearchTitle": "Ask for a better price on the whole search?",
-    "notifySearchSub": "We'll write if we can offer one of the options for less, or when a cheaper one appears. At most once a day."
+    "notifySearchTitle": "Want to hear when a cheaper option appears in this search?",
+    "notifySearchSub": "One e-mail, at most once a day."
   },
   "waitlist": {
     "outOfScope": "For now we only help choose home appliances",
@@ -1263,12 +1263,10 @@
     "alertsOff": "We don't send price e-mails. Saved products and price history work without them.",
     "notify": "Ask for a better price",
     "notifying": "Asked · looking for a better price",
-    "notifySearch": "Ask for a better price on this search",
-    "notifyingSearch": "Asked · looking for a cheaper option",
+    "notifySearch": "Tell me about a cheaper option",
+    "notifyingSearch": "We'll tell you about a cheaper option",
     "notifyDrop": "Tell me when the price drops",
-    "notifyingDrop": "We'll tell you when the price drops",
-    "notifySearchDrop": "Tell me when a cheaper option appears",
-    "notifyingSearchDrop": "We'll tell you about cheaper options"
+    "notifyingDrop": "We'll tell you when the price drops"
   },
   "offerEmail": {
     "subject": "{product} for {price}",
@@ -1540,8 +1538,7 @@
     "titleSignedInPlain": "Write to {email}?",
     "body": "We'll ask the distributor and write as soon as we can offer this product for less than the shops, or when its shop price drops. Only about this product, at most once a day. You can stop at any time.",
     "bodyPlain": "We'll write when this product's price drops in the shops. Only about this product, at most once a day. You can stop at any time.",
-    "bodySearch": "We'll ask the distributor about the best-matching options and write as soon as we can offer one for less than the shops, or when a cheaper option appears in this search. At most once a day. You can stop at any time.",
-    "bodySearchPlain": "We'll write when a cheaper option appears in this search. At most once a day. You can stop at any time.",
+    "bodySearch": "We'll write when a cheaper option appears in this search. At most once a day. You can stop at any time.",
     "email": "E-mail",
     "submit": "Ask for a better price",
     "submitPlain": "Tell me",
@@ -1557,8 +1554,7 @@
     "confirmTitlePlain": "Confirm price e-mails",
     "confirmProduct": "You asked for a better price: {name}. We'll ask the distributor and write to {email} if we can offer it for less than the shops or when the shop price drops.",
     "confirmProductPlain": "We'll write to {email} when the price drops: {name}.",
-    "confirmSearch": "You asked for a better price on this search: {name}. We'll write to {email} if we can offer one of the options for less than the shops or when a cheaper one appears.",
-    "confirmSearchPlain": "We'll write to {email} when a cheaper option appears in this search: {name}.",
+    "confirmSearch": "We'll write to {email} when a cheaper option appears in this search: {name}.",
     "confirmButton": "Confirm",
     "confirmGone": "This link is no longer valid. Open the product again and tap “Ask for a better price”.",
     "toHome": "To the home page"
@@ -1570,8 +1566,7 @@
     "subjectPlain": "Confirm price e-mails: {product}",
     "product": "You asked for a better price on this product. We'll ask the distributor and write if we can offer it for less than the shops or when the shop price drops.",
     "productPlain": "You asked us to tell you when the price of this product drops.",
-    "search": "You asked for a better price on this search. We'll write if we can offer one of the options for less than the shops or when a cheaper one appears.",
-    "searchPlain": "You asked us to tell you when a cheaper option appears in this search.",
+    "search": "You asked us to tell you when a cheaper option appears in this search.",
     "now": "Now from {price}",
     "cta": "Confirm with one click and you're all set.",
     "button": "Confirm",

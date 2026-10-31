@@ -38,7 +38,7 @@ export default async function ConfirmNotify({ params }: Props) {
           <p className="text-[17px] text-mist">
             {request.kind === "product"
               ? t(`confirmProduct${p}`, { email: request.email, name: offerProductName(request.label ?? "") })
-              : t(`confirmSearch${p}`, { email: request.email, name: request.label ?? "" })}
+              : t("confirmSearch", { email: request.email, name: request.label ?? "" })}
           </p>
           <Button type="submit" size="lg">
             {t("confirmButton")}

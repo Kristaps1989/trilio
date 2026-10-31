@@ -88,7 +88,8 @@ export async function toggleSavedAction(
     .where(eq(users.id, userId));
   if (!user) return { ok: false, reason: "auth" };
   if (save) {
-    const ask = !!sub && trilioSources(sub) && !user.optIn && !user.asked;
+    // Only a product is a request to a partner; a saved search is a watch and asks nothing.
+    const ask = target.data.kind === "product" && !!sub && trilioSources(sub) && !user.optIn && !user.asked;
     if (ask && !consent) return { ok: false, reason: "consent", email: user.email };
     if (!(await saveTarget(userId, target.data))) return { ok: false, reason: "invalid" };
     await creditAdLanding(userId, keyOf(target.data)).catch(() => undefined);

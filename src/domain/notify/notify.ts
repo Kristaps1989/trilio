@@ -22,10 +22,14 @@ export function normaliseEmail(raw: unknown): string | null {
 
 export type NotifyKind = "product" | "search";
 
-/** The message key of the consent text shown, and whether it covers Trilio's offers. */
+/**
+ * The message key of the consent text shown, and whether it covers Trilio's offers.
+ * Only a product can be asked from a partner (owner, 31 Oct 2026): a saved search
+ * is a watch for a cheaper option, so its consent never covers offers.
+ */
 export function consentFor(kind: NotifyKind, sourcing: boolean): { key: string; offers: boolean } {
-  const base = kind === "product" ? "notify.body" : "notify.bodySearch";
-  return { key: `${sourcing ? base : `${base}Plain`}@${CONSENT_VERSION}`, offers: sourcing };
+  if (kind === "search") return { key: `notify.bodySearch@${CONSENT_VERSION}`, offers: false };
+  return { key: `notify.${sourcing ? "body" : "bodyPlain"}@${CONSENT_VERSION}`, offers: sourcing };
 }
 
 /** A same-site path to return to, or null (no other hosts, no protocol-relative URLs). */

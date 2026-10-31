@@ -213,22 +213,23 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // Results: save the whole search, then one product.
   await kettleResults(page);
   const search = page.locator("[data-notify-search]");
-  await search.getByRole("button", { name: "Pieprasīt labāku cenu šim meklējumam" }).click();
-  // The first tap asks the one yes, with the address already known; it covers Trilio's offers too.
-  const ask = search.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
-  await expect(ask).toContainText("tiklīdz kādu varēsim piedāvāt lētāk nekā veikali");
-  await ask.getByRole("button", { name: "Pieprasīt labāku cenu" }).click();
-  await expect(search.getByRole("button", { name: "Pieprasīts · meklējam lētāku variantu" })).toBeVisible();
+  // A search is a watch, not a request to a partner: it saves at once, no question asked.
+  await search.getByRole("button", { name: "Paziņot par lētāku variantu" }).click();
+  await expect(search.getByRole("button", { name: "Paziņosim par lētāku variantu" })).toBeVisible();
+  await expect(search.locator("[data-notify-panel]")).toHaveCount(0);
   const product = picks(page).first();
   const productName = (await product.getAttribute("aria-label")) ?? "";
   await product.getByRole("button", { name: "Pieprasīt labāku cenu", exact: true }).click();
+  // The first product tap asks the one yes, with the address already known; it covers Trilio's offers too.
+  const ask = product.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
+  await expect(ask).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
+  await ask.getByRole("button", { name: "Pieprasīt labāku cenu" }).click();
   await expect(
     product.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu", exact: true }),
   ).toBeVisible();
   // The card says where the e-mail goes, with the way out in the same line and the way back.
   const note = product.locator("[data-alert-note]");
   await expect(note).toHaveText(`Meklējam labāku cenu. Uzrakstīsim uz ${email}. · Nesūtīt`);
-  // Asked once: the product saves at the first tap.
   await expect(product.locator("[data-notify-panel]")).toHaveCount(0);
   await expectNoAxeViolations(page);
   await note.getByRole("button", { name: "Nesūtīt" }).click();
@@ -265,7 +266,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // The saved search reopens the same results.
   await searches.first().getByRole("link", { name: "Skatīt rezultātus" }).click();
   await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
-  await expect(page.getByRole("button", { name: "Pieprasīts · meklējam lētāku variantu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Paziņosim par lētāku variantu" })).toBeVisible();
   await page.goBack();
 
   // Remove the product from the list with its heart.

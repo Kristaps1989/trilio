@@ -265,7 +265,7 @@ Since 24 Oct 2026 (docs/CONFIDENCE_PLAN.md) a pick opens with its role pills and
 - **"Rādīt tikai atšķirības"** (show differences only) hides identical rows. Price, model and rating always stay.
 
 ### 3.5 After the picks and at the bottom of results
-- Right after the three picks, one line for the search itself: "Pieprasīt labāku cenu visam meklējumam?" with the button "Pieprasīt labāku cenu šim meklējumam" (§5.1). Free, no price on the page.
+- Right after the three picks, one line for the search itself: "Paziņot, kad šajā meklējumā parādīsies lētāks variants?" with the button "Paziņot par lētāku variantu" (§5.1). A search is a watch, never a request to a partner (owner, 31 Oct 2026: a lead is a product). Free, no price on the page.
 - In every category (owner, 30 Oct 2026; `data/offers.json` holds `"*"`), one line above the picks, in the shopper's interest rather than Trilio's method (owner, 31 Oct 2026): "Pieprasi labāku cenu: Trilio pajautās izplatītājam un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali."
 - "Mainīt atbildes" (change answers) and "Sākt no jauna" (start over).
 
@@ -291,7 +291,7 @@ Why (evaluated from the shopper's side): the radar asked three questions and sho
 
 ### 5.1 "Pieprasīt labāku cenu" (the request)
 - **A product:** "Pieprasīt labāku cenu" on every result card (picks, extras, "more options", "Vērts apsvērt", refurbished as the icon), under the shop button, which stays first. A second tap stops it ("Pieprasīts · meklējam labāku cenu").
-- **A search:** "Pieprasīt labāku cenu šim meklējumam" in the line right after the picks. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
+- **A search:** "Paziņot par lētāku variantu" in the line right after the picks; it saves at once with no offers question, and its consent (`notify.bodySearch`) never covers Trilio's offers. It saves the subcategory with every answer and the price range, named after them, e.g. "Tējkannas · Metāla · Jebkura cena".
 - **Signed out:** the card opens one field, "Uz kādu e-pastu sūtīt piedāvājumu?", with one sentence saying exactly what will be sent (we ask the distributor and write if we can offer it for less, or when the shop price drops) and the button "Pieprasīt labāku cenu". One confirmation e-mail goes out (`notify_requests`); nothing else is sent before its link is clicked. The link opens `/pazinot/{token}` with one button, "Apstiprināt" (a page, not a GET that confirms, because mail scanners open links). It makes the account, saves the item, turns the e-mails on, signs in once and returns to the same card. Rate limits: 5 requests a day per visitor, 3 per address.
 - **Signed in, first tap only (every category is a sourcing one):** the same sentence with the known address, "Sūtīt piedāvājumu uz {email}?", and "Pieprasīt labāku cenu". That yes sets `offers_opt_in` and `offers_asked_at`; later taps save at once. If `data/offers.json` ever leaves a category out, no question is asked there: price e-mails need no extra consent.
 - **The consent text and its version** are stored with each request (`notify.body@2026-10-31` and its search and plain variants; the version moved from 2026-10-30 when the wording changed). It mentions Trilio's offers only in sourcing categories.

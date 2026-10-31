@@ -1,7 +1,7 @@
 import { eq, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { notifyRequests, savedItems, uiEvents, users } from "@/db/schema";
+import { notifyRequests, savedItems, uiEvents, users, products } from "@/db/schema";
 import { memoryEmailSender } from "@/services/notify/email";
 import { notifyFunnel, purgeUiEvents } from "./events";
 import {
@@ -41,6 +41,21 @@ run("notify requests", () => {
     answersParam: "",
     label: "Tējkannas",
   };
+  /** Any seeded product: only a product is a request to a partner, so only it carries the offers consent. */
+  async function productTarget(): Promise<NotifyTarget> {
+    const [p] = await db
+      .select({ id: products.id, name: products.name, subcategoryId: products.subcategoryId })
+      .from(products)
+      .limit(1);
+    return {
+      kind: "product",
+      productId: p!.id,
+      subcategoryId: p!.subcategoryId,
+      name: p!.name,
+      priceCents: null,
+      imageUrl: null,
+    };
+  }
   const saves: string[] = [];
   const save = async (userId: string) => {
     saves.push(userId);
@@ -86,14 +101,15 @@ run("notify requests", () => {
     expect(r).toMatchObject({ ok: true, email: `anna@${DOMAIN}` });
     const m = mail.sent.at(-1)!;
     expect(m.to).toBe(`anna@${DOMAIN}`);
-    expect(m.subject).toBe("Apstiprini, un meklēsim labāku cenu: Ledusskapji · 181–205 cm");
+    // A search is a watch, so its e-mail promises the price e-mail only.
+    expect(m.subject).toBe("Apstiprini cenu paziņojumus: Ledusskapji · 181–205 cm");
     expect(m.text).toContain(`${BASE}/pazinot/`);
     expect(m.text).toContain("bez apstiprinājuma neko nesūtīsim");
     expect(m.html).toContain(`${BASE}/email/logo.png`);
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
       consent: "notify.bodySearch@2026-10-31",
-      offers: true,
+      offers: false,
       confirmedAt: null,
     });
     // Nothing exists for that address yet: no account, nothing saved.
@@ -105,12 +121,12 @@ run("notify requests", () => {
     ).toHaveLength(0);
   });
 
-  it("every category is a sourcing one by default: a kettle's consent covers Trilio's offers too", async () => {
+  it("every category is a sourcing one by default: a product's consent covers Trilio's offers too", async () => {
     await requestNotify(
       db,
       {
         email: `jon@${DOMAIN}`,
-        target: kettle,
+        target: await productTarget(),
         returnPath: "/",
         locale: "lv",
         visitorHash: null,
@@ -120,8 +136,9 @@ run("notify requests", () => {
     );
     expect(await requestByToken(db, tokenOf())).toMatchObject({
       offers: true,
-      consent: "notify.bodySearch@2026-10-31",
+      consent: "notify.body@2026-10-31",
     });
+    expect(mail.sent.at(-1)!.subject).toMatch(/^Apstiprini, un meklēsim labāku cenu: /);
   });
 
   it("where the file leaves a category out, the consent covers price e-mails only", async () => {
@@ -140,7 +157,7 @@ run("notify requests", () => {
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
       offers: false,
-      consent: "notify.bodySearchPlain@2026-10-31",
+      consent: "notify.bodySearch@2026-10-31",
       returnPath: null,
       locale: "en",
     });
@@ -192,7 +209,7 @@ run("notify requests", () => {
       db,
       {
         email: `fia@${DOMAIN}`,
-        target: fridge,
+        target: await productTarget(),
         returnPath: "/rezultati?sub=fridge",
         locale: "lv",
         visitorHash: null,

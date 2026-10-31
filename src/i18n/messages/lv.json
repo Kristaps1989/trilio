@@ -313,8 +313,8 @@
     "reliabilityValue": "{grade}/5",
     "glossaryLabel": "Kas tas ir?",
     "trilioCanOffer": "Pieprasi labāku cenu: Trilio pajautās izplatītājam un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali.",
-    "notifySearchTitle": "Pieprasīt labāku cenu visam meklējumam?",
-    "notifySearchSub": "Uzrakstīsim, ja kādu variantu varēsim piedāvāt lētāk vai kad parādīsies lētāks. Ne biežāk kā reizi dienā."
+    "notifySearchTitle": "Paziņot, kad šajā meklējumā parādīsies lētāks variants?",
+    "notifySearchSub": "Viens e-pasts, ne biežāk kā reizi dienā."
   },
   "waitlist": {
     "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",
@@ -1265,12 +1265,10 @@
     "alertsOff": "Cenu paziņojumus nesūtām. Saglabātās preces un cenu vēsture darbojas arī bez tiem.",
     "notify": "Pieprasīt labāku cenu",
     "notifying": "Pieprasīts · meklējam labāku cenu",
-    "notifySearch": "Pieprasīt labāku cenu šim meklējumam",
-    "notifyingSearch": "Pieprasīts · meklējam lētāku variantu",
+    "notifySearch": "Paziņot par lētāku variantu",
+    "notifyingSearch": "Paziņosim par lētāku variantu",
     "notifyDrop": "Paziņot, kad cena samazināsies",
-    "notifyingDrop": "Paziņosim, kad cena samazināsies",
-    "notifySearchDrop": "Paziņot, kad parādīsies lētāks variants",
-    "notifyingSearchDrop": "Paziņosim par lētākiem variantiem"
+    "notifyingDrop": "Paziņosim, kad cena samazināsies"
   },
   "offerEmail": {
     "subject": "{product} par {price}",
@@ -2343,8 +2341,7 @@
     "titleSignedInPlain": "Paziņot uz {email}?",
     "body": "Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali, vai kad tās cena veikalos samazināsies. Tikai par šo preci, ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
     "bodyPlain": "Uzrakstīsim, kad šīs preces cena veikalos samazināsies. Tikai par šo preci, ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
-    "bodySearch": "Pajautāsim izplatītājam par piemērotākajiem variantiem un uzrakstīsim, tiklīdz kādu varēsim piedāvāt lētāk nekā veikali, vai kad šajā meklējumā parādīsies lētāks variants. Ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
-    "bodySearchPlain": "Uzrakstīsim, kad šajā meklējumā parādīsies lētāks variants. Ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
+    "bodySearch": "Uzrakstīsim, kad šajā meklējumā parādīsies lētāks variants. Ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
     "email": "E-pasts",
     "submit": "Pieprasīt labāku cenu",
     "submitPlain": "Paziņot man",
@@ -2360,8 +2357,7 @@
     "confirmTitlePlain": "Apstiprini cenu paziņojumus",
     "confirmProduct": "Tu pieprasīji labāku cenu: {name}. Pajautāsim izplatītājam un uzrakstīsim uz {email}, ja varēsim piedāvāt lētāk nekā veikali vai kad cena veikalos samazināsies.",
     "confirmProductPlain": "Paziņosim uz {email}, kad samazināsies cena: {name}.",
-    "confirmSearch": "Tu pieprasīji labāku cenu šim meklējumam: {name}. Uzrakstīsim uz {email}, ja kādu variantu varēsim piedāvāt lētāk nekā veikali vai kad parādīsies lētāks.",
-    "confirmSearchPlain": "Paziņosim uz {email}, kad šajā meklējumā parādīsies lētāks variants: {name}.",
+    "confirmSearch": "Paziņosim uz {email}, kad šajā meklējumā parādīsies lētāks variants: {name}.",
     "confirmButton": "Apstiprināt",
     "confirmGone": "Šī saite vairs nav derīga. Atver preci vēlreiz un spied „Pieprasīt labāku cenu”.",
     "toHome": "Uz sākumu"
@@ -2373,8 +2369,7 @@
     "subjectPlain": "Apstiprini cenu paziņojumus: {product}",
     "product": "Tu pieprasīji labāku cenu šai precei. Pajautāsim izplatītājam un uzrakstīsim, ja varēsim piedāvāt lētāk nekā veikali vai kad cena veikalos samazināsies.",
     "productPlain": "Tu lūdzi paziņot, kad samazināsies šīs preces cena.",
-    "search": "Tu pieprasīji labāku cenu šim meklējumam. Uzrakstīsim, ja kādu variantu varēsim piedāvāt lētāk nekā veikali vai kad parādīsies lētāks.",
-    "searchPlain": "Tu lūdzi paziņot, kad šajā meklējumā parādīsies lētāks variants.",
+    "search": "Tu lūdzi paziņot, kad šajā meklējumā parādīsies lētāks variants.",
     "now": "Šobrīd no {price}",
     "cta": "Apstiprini ar vienu klikšķi, un viss būs gatavs.",
     "button": "Apstiprināt",

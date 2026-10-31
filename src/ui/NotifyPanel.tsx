@@ -29,13 +29,7 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
   const [sent, setSent] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const search = target.kind === "search";
-  const body = search
-    ? offers
-      ? t("bodySearch")
-      : t("bodySearchPlain")
-    : offers
-      ? t("body")
-      : t("bodyPlain");
+  const body = search ? t("bodySearch") : offers ? t("body") : t("bodyPlain");
 
   if (sent)
     return (

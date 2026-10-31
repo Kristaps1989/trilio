@@ -37,8 +37,15 @@ describe("notify rules", () => {
       key: `notify.bodyPlain@${CONSENT_VERSION}`,
       offers: false,
     });
-    expect(consentFor("search", true).key).toBe(`notify.bodySearch@${CONSENT_VERSION}`);
-    expect(consentFor("search", false).key).toBe(`notify.bodySearchPlain@${CONSENT_VERSION}`);
+    // A search is a watch, never a request to a partner.
+    expect(consentFor("search", true)).toEqual({
+      key: `notify.bodySearch@${CONSENT_VERSION}`,
+      offers: false,
+    });
+    expect(consentFor("search", false)).toEqual({
+      key: `notify.bodySearch@${CONSENT_VERSION}`,
+      offers: false,
+    });
   });
 
   it("returns only to a path on this site", () => {

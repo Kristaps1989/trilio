@@ -24,7 +24,7 @@ export function composeNotifyConfirmEmail(input: {
   const m = input.lang === "en" ? en.notifyEmail : lv.notifyEmail;
   const c = input.offers
     ? m
-    : { ...m, title: m.titlePlain, subject: m.subjectPlain, product: m.productPlain, search: m.searchPlain };
+    : { ...m, title: m.titlePlain, subject: m.subjectPlain, product: m.productPlain };
   const t = input.target;
   const url = `${input.baseUrl}${localizedPath(`/pazinot/${input.token}`, input.lang)}`;
   const name = t.kind === "product" ? offerProductName(t.name) : t.label;

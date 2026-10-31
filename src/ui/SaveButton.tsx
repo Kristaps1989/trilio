@@ -85,7 +85,8 @@ export function SaveButton({
     setSaved(initial);
   }
   const search = target.kind === "search";
-  const key = `${saved ? "notifying" : "notify"}${search ? "Search" : ""}${offers ? "" : "Drop"}` as const;
+  // A search is a watch for a cheaper option; only a product is a request to a partner.
+  const key = `${saved ? "notifying" : "notify"}${search ? "Search" : offers ? "" : "Drop"}` as const;
   const text = t(key);
 
   function run(next: boolean, consent = false) {
@@ -122,7 +123,7 @@ export function SaveButton({
       className={`${className} ${saved ? "text-lime" : ""}`}
       data-notify-button
     >
-      {offers && variant !== "icon" ? <Tag filled={saved} /> : <Heart filled={saved} />}
+      {offers && !search && variant !== "icon" ? <Tag filled={saved} /> : <Heart filled={saved} />}
       {variant === "icon" ? null : <span>{text}</span>}
     </button>
   );
@@ -134,12 +135,12 @@ export function SaveButton({
         <NotifyPanel
           target={target}
           email={panel.email}
-          offers={offers}
+          offers={offers && !search}
           onConsent={() => run(true, true)}
           onClose={() => setPanel(null)}
         />
       ) : note && saved ? (
-        <SavedAlertNote email={note.email} offers={offers} />
+        <SavedAlertNote email={note.email} offers={offers && !search} />
       ) : null}
     </div>
   );
