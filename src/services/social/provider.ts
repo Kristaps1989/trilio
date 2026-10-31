@@ -13,15 +13,28 @@ export type Insight = {
   linkClicks: number;
 };
 
+/** One slide; `card` makes it a clickable card of a Facebook link carousel. */
+export type CarouselImage = {
+  url: string;
+  alt?: string;
+  card?: { link: string; name: string; description?: string; picture: string };
+};
+
 export interface SocialProvider {
   name: "meta" | "mock";
   /** A photo post: Meta fetches the image from a public URL (JPEG for Instagram). */
   publishImage(network: Network, imageUrl: string, caption: string, alt?: string): Promise<PublishResult>;
-  /** 2–10 images: a carousel on Instagram, a multi-photo post on the page. */
+  /**
+   * 2–10 images: a carousel on Instagram (no links: Instagram has none in
+   * posts); on the page a link carousel, each card with its own picture,
+   * headline and link, when every image carries `card`; otherwise a
+   * multi-photo post.
+   */
   publishCarousel(
     network: Network,
-    images: { url: string; alt?: string }[],
+    images: CarouselImage[],
     caption: string,
+    link?: string,
   ): Promise<PublishResult>;
   /** A video the owner uploaded: a Reel on Instagram, a video post on the page. */
   publishVideo(network: Network, videoUrl: string, caption: string): Promise<PublishResult>;

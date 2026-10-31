@@ -1,4 +1,4 @@
-import type { Insight, Network, PublishResult, SocialProvider } from "./provider";
+import type { CarouselImage, Insight, Network, PublishResult, SocialProvider } from "./provider";
 
 // Meta's Graph API for the Trilio page and its Instagram business account
 // (docs/SOCIAL_PLAN.md §7–8). One system-user token from Business Manager;
@@ -138,7 +138,7 @@ export function metaProvider(
         return fail(err);
       }
     },
-    async publishCarousel(network: Network, images: { url: string; alt?: string }[], caption: string) {
+    async publishCarousel(network: Network, images: CarouselImage[], caption: string, link?: string) {
       try {
         if (network === "instagram") {
           // Each image is a carousel item first, then one container holds them all.
@@ -158,8 +158,38 @@ export function metaProvider(
           }
           return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);
         }
-        // The page: each photo uploaded unpublished, then one feed post with all of them.
         const token = await page();
+        if (link && images.every((i) => i.card)) {
+          // A link carousel: every card opens its own page (multi-link share, child_attachments).
+          // The order is ours (not "optimized"), and no extra end card is added.
+          try {
+            const r = await call(
+              "POST",
+              `${cfg.pageId}/feed`,
+              {
+                message: caption,
+                link,
+                child_attachments: JSON.stringify(
+                  images.map(({ card }) => ({
+                    link: card!.link,
+                    name: card!.name,
+                    ...(card!.description ? { description: card!.description } : {}),
+                    picture: card!.picture,
+                  })),
+                ),
+                multi_share_optimized: "false",
+                multi_share_end_card: "false",
+              },
+              token,
+            );
+            return { ok: true, id: String(r.id) };
+          } catch (err) {
+            // A token or page problem fails the same way below; anything else
+            // (the format refused) still posts the slides, without links.
+            if (err instanceof Error && /\b(190|200|10)\b|#(190|200|10)\b/.test(err.message)) throw err;
+          }
+        }
+        // The page: each photo uploaded unpublished, then one feed post with all of them.
         const media: Record<string, string> = {};
         for (const [i, { url }] of images.entries()) {
           const photo = await call("POST", `${cfg.pageId}/photos`, { url, published: "false" }, token);

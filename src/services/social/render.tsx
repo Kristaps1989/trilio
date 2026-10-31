@@ -16,6 +16,14 @@ import { brandFonts, Drawing, LogoMark, Wordmark } from "@/services/ads/creative
 // shot on white); without a photo, the category drawing stands in.
 
 export const POST_SIZE = { width: 1080, height: 1350 } as const;
+/**
+ * A Facebook link carousel shows square cards. The slide is laid out on a
+ * 1350 × 1350 canvas (the portrait's height, so every layout keeps its
+ * vertical rhythm, only wider) and scaled to 1080 × 1080.
+ */
+export const SQUARE_CANVAS = 1350;
+export const SQUARE_SIZE = 1080;
+export type Shape = "portrait" | "square";
 
 const NIGHT = "#0F2A2E";
 const NIGHT_DEEP = "#0A1F22";
@@ -659,7 +667,7 @@ function Rank(c: PostCard) {
   );
 }
 
-type Slide = Omit<PostCard, "slides"> & { photo?: string };
+type Slide = Omit<PostCard, "slides"> & { photo?: string; width?: number };
 
 function PhoneSlide(c: Slide) {
   return (
@@ -714,7 +722,11 @@ function ProductHero({ c, size }: { c: Slide; size: number }) {
       }}
     >
       {c.photo ? (
-        <Photo src={c.photo} width={POST_SIZE.width - 2 * PAD} height={size} />
+        <Photo
+          src={c.photo}
+          width={Math.min(c.width ?? POST_SIZE.width, POST_SIZE.width) - 2 * PAD}
+          height={size}
+        />
       ) : c.hero ? (
         <Hero subcategoryId={c.hero} size={size} />
       ) : null}
@@ -894,7 +906,9 @@ export async function renderPost(
   card: Omit<PostCard, "slides">,
   index = 0,
   total = 1,
+  shape: Shape = "portrait",
 ): Promise<ImageResponse> {
+  const size = shape === "square" ? { width: SQUARE_CANVAS, height: SQUARE_CANVAS } : POST_SIZE;
   const Layout = card.layout ? LAYOUTS[card.layout] : Legacy;
   const photo = await loadPhoto(card.image ?? (card.phone?.kind === "card" ? card.phone.image : undefined));
   const cue =
@@ -905,9 +919,9 @@ export async function renderPost(
         : undefined;
   return new ImageResponse(
     <Frame index={index} total={total} cue={cue}>
-      <Layout {...card} photo={photo} />
+      <Layout {...card} photo={photo} width={size.width} />
     </Frame>,
-    { ...POST_SIZE, fonts: await brandFonts() },
+    { ...size, fonts: await brandFonts() },
   );
 }
 
@@ -916,8 +930,14 @@ export const slidesOf = (card: PostCard): Omit<PostCard, "slides">[] =>
   card.slides?.length ? card.slides : [card];
 
 /** Instagram takes JPEG only; Facebook takes either. */
-export async function renderPostJpeg(card: Omit<PostCard, "slides">, index = 0, total = 1): Promise<Buffer> {
-  const png = Buffer.from(await (await renderPost(card, index, total)).arrayBuffer());
+export async function renderPostJpeg(
+  card: Omit<PostCard, "slides">,
+  index = 0,
+  total = 1,
+  shape: Shape = "portrait",
+): Promise<Buffer> {
+  const png = Buffer.from(await (await renderPost(card, index, total, shape)).arrayBuffer());
   const sharp = (await import("sharp")).default;
-  return sharp(png).jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+  const img = shape === "square" ? sharp(png).resize(SQUARE_SIZE, SQUARE_SIZE) : sharp(png);
+  return img.jpeg({ quality: 90, mozjpeg: true }).toBuffer();
 }

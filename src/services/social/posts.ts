@@ -4,7 +4,14 @@ import { z } from "zod";
 import type { Db } from "@/db/client";
 import { appFlags, socialInsights, socialPosts, type SocialKind, type SocialPost } from "@/db/schema";
 import { leaks } from "@/domain/social/anonymise";
-import { composePost, lintContext, slideAlt, type PostCard, type PostFacts } from "@/domain/social/captions";
+import {
+  composePost,
+  lintContext,
+  slideAlt,
+  utmLink,
+  type PostCard,
+  type PostFacts,
+} from "@/domain/social/captions";
 import { lintPost } from "@/domain/social/lint";
 import {
   DRAFT_AHEAD_MS,
@@ -366,6 +373,41 @@ export const slideUrls = (baseUrl: string, id: string, n: number) =>
     i === 0 ? imageUrl(baseUrl, id) : `${baseUrl}/api/social/${id}/${i + 1}/image.jpg`,
   );
 
+/** The square picture of a slide, for a Facebook link carousel card (1:1). */
+export const squareUrl = (baseUrl: string, id: string, n: number) =>
+  `${baseUrl}/api/social/${id}/${n}/square.jpg`;
+
+/** The site page a post links to: its stored link without host and tags. */
+function sitePath(post: SocialPost): string {
+  try {
+    return new URL(post.link).pathname || "/";
+  } catch {
+    return "/";
+  }
+}
+
+const clip = (s: string, n: number) => (s.length <= n ? s : `${s.slice(0, n - 1).trimEnd()}…`);
+
+/** One card of a Facebook link carousel: the slide's square picture, a short headline, its own link. */
+export function carouselCard(
+  baseUrl: string,
+  post: SocialPost,
+  slide: Omit<PostCard, "slides">,
+  i: number,
+): { link: string; name: string; description?: string; picture: string } {
+  const name =
+    slide.layout === "cover" || slide.layout === "closing" || slide.layout === "phone"
+      ? [slide.headline, slide.headlineAccent].filter(Boolean).join(" ") || slide.title
+      : slide.title;
+  const description = slide.stat ? `${slide.stat.label}: ${slide.stat.value}` : slide.sub;
+  return {
+    link: utmLink(baseUrl, slide.link ?? sitePath(post), "facebook", post.kind, `${post.id}-${i + 1}`),
+    name: clip(name, 60),
+    ...(description ? { description: clip(description, 90) } : {}),
+    picture: squareUrl(baseUrl, post.id, i + 1),
+  };
+}
+
 /** Sends to the networks that do not have the post yet, so a retry never posts twice. */
 export async function publishPost(
   db: Db,
@@ -384,8 +426,15 @@ export async function publishPost(
       : slides > 1
         ? provider.publishCarousel(
             n,
-            slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({ url, alt: alts[i] })),
+            slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({
+              url,
+              alt: alts[i],
+              ...(n === "facebook" ? { card: carouselCard(deps.baseUrl, post, card.slides![i]!, i) } : {}),
+            })),
             caption,
+            n === "facebook"
+              ? utmLink(deps.baseUrl, sitePath(post), "facebook", post.kind, post.id)
+              : undefined,
           )
         : provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption, post.alt);
   const errors: string[] = [];

@@ -1,12 +1,21 @@
 import { and, eq, gte, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { appFlags, offerOrders, socialInsights, socialPosts, specialOffers, visitDaily } from "@/db/schema";
+import {
+  appFlags,
+  offerOrders,
+  socialInsights,
+  socialPosts,
+  specialOffers,
+  visitDaily,
+  type SocialPost,
+} from "@/db/schema";
 import { leaks } from "@/domain/social/anonymise";
 import { FIRST_CATEGORIES, rigaTime } from "@/domain/social/schedule";
 import { mockPosts, mockSocialProvider } from "./mock";
 import {
   approvePost,
+  carouselCard,
   createPost,
   draftUpcoming,
   editCaptions,
@@ -300,6 +309,53 @@ run("social posts", () => {
         `${BASE}/api/social/${id}/3/image.jpg`,
         `${BASE}/api/social/${id}/4/image.jpg`,
       ]);
+    // Facebook: a link carousel, every card tagged with its own position; Instagram has no links.
+    const fb = media.find((m) => m.network === "facebook")!;
+    expect(fb.links).toEqual(
+      [1, 2, 3, 4].map(
+        (n) =>
+          `${BASE}/izvelies/kitchen/dish?utm_source=facebook&utm_medium=social&utm_campaign=picks&utm_content=${id}-${n}`,
+      ),
+    );
+    expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
+  });
+
+  it("a card of the link carousel: square picture, short name, the slide's own page", () => {
+    const post = { id: "p", kind: "top_categories", link: `${BASE}/?utm_source=instagram` } as SocialPost;
+    const c = carouselCard(
+      BASE,
+      post,
+      {
+        layout: "rank",
+        chip: "1. vieta",
+        title: "Ledusskapji",
+        link: "/izvelies/cool/fridge",
+        stat: { label: "Cenas partneru veikalos no", value: "199 €" },
+        lines: [],
+      },
+      1,
+    );
+    expect(c).toEqual({
+      link: `${BASE}/izvelies/cool/fridge?utm_source=facebook&utm_medium=social&utm_campaign=top_categories&utm_content=p-2`,
+      name: "Ledusskapji",
+      description: "Cenas partneru veikalos no: 199 €",
+      picture: `${BASE}/api/social/p/2/square.jpg`,
+    });
+    const cover = carouselCard(
+      BASE,
+      post,
+      {
+        layout: "cover",
+        chip: "x",
+        title: "T",
+        headline: "Ko Latvija",
+        headlineAccent: "meklēja šonedēļ.",
+        lines: [],
+      },
+      0,
+    );
+    expect(cover.name).toBe("Ko Latvija meklēja šonedēļ.");
+    expect(cover.link).toContain(`${BASE}/?utm_source=facebook`);
   });
 
   it("refuses an edit that breaks the rules", async () => {
