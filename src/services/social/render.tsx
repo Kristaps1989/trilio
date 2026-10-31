@@ -864,7 +864,11 @@ function Legacy(c: PostCard) {
       </div>
       <div style={{ display: "flex", flex: 1 }} />
       <Rows
-        rows={c.lines.map((l, i) => ({ n: `0${i + 1}`, label: l.main, side: l.side }))}
+        rows={c.lines.map((l, i) => ({
+          n: `0${i + 1}`,
+          label: l.main.replace(/^\d+\.\s+/, ""),
+          side: l.side,
+        }))}
         compact={c.lines.length > 3}
       />
       {c.note ? (

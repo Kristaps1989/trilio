@@ -39,6 +39,11 @@ const SOCIAL_RULES: { re: RegExp; why: string; unless?: RegExp }[] = [
     re: /(?<![\p{L}])(tu|tev|tevi|tavs|tava|tavu|tavam|tavai|tavā|tavas|tavi|taviem|tavus)(?![\p{L}])/iu,
     why: "informal address: captions avoid the pronoun, or use “jūs”",
   },
+  {
+    // English function words that are not Latvian words: a line the model wrote in English.
+    re: /(?<![\p{L}])(the|you|your|is|are|and|of|with|for|an|it|this|does|do|in)(?![\p{L}])/iu,
+    why: "not Latvian",
+  },
 ];
 
 /** Emojis that sell urgency or hype; Trilio's honesty rules have no use for them. */

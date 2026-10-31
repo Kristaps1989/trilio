@@ -65,26 +65,40 @@ export function metaProvider(
     error: err instanceof Error ? err.message : String(err),
   });
 
-  /** Instagram: a container, (for video) wait until Meta has fetched it, then publish. */
+  /**
+   * Instagram: a container, wait until Meta has fetched the media (an image
+   * too: a carousel of five slides takes seconds, and publishing before
+   * "FINISHED" fails with #9007 "Media ID is not available"), then publish;
+   * a #9007 on publishing is the same wait, tried again.
+   */
+  async function ready(container: string, video: boolean): Promise<void> {
+    for (let i = 0; i < (video ? 30 : 12); i++) {
+      const s = await call("GET", container, { fields: "status_code" }, cfg.token);
+      if (s.status_code === "FINISHED") return;
+      if (s.status_code === "ERROR" || s.status_code === "EXPIRED")
+        throw new Error(`Instagram ${video ? "video" : "media"} ${String(s.status_code)}`);
+      await wait(5_000);
+    }
+  }
+
   async function instagram(params: Record<string, string>, video: boolean): Promise<PublishResult> {
     const created = await call("POST", `${cfg.igUserId}/media`, params, cfg.token);
     const container = String(created.id);
-    if (video) {
-      for (let i = 0; i < 30; i++) {
-        const s = await call("GET", container, { fields: "status_code" }, cfg.token);
-        if (s.status_code === "FINISHED") break;
-        if (s.status_code === "ERROR" || s.status_code === "EXPIRED")
-          throw new Error(`Instagram video ${String(s.status_code)}`);
+    await ready(container, video);
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const published = await call(
+          "POST",
+          `${cfg.igUserId}/media_publish`,
+          { creation_id: container },
+          cfg.token,
+        );
+        return { ok: true, id: String(published.id) };
+      } catch (err) {
+        if (attempt >= 4 || !(err instanceof Error && /#9007\b/.test(err.message))) throw err;
         await wait(5_000);
       }
     }
-    const published = await call(
-      "POST",
-      `${cfg.igUserId}/media_publish`,
-      { creation_id: container },
-      cfg.token,
-    );
-    return { ok: true, id: String(published.id) };
   }
 
   const num = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -138,6 +152,8 @@ export function metaProvider(
                 cfg.token,
               ),
             );
+            // Each item must be fetched before the carousel container is made from them.
+            await ready(String(item.id), false);
             children.push(String(item.id));
           }
           return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);

@@ -154,7 +154,7 @@ async function claudeLead(caller: StructuredCaller | null | undefined, f: PostFa
     purpose: "social_copy",
     system: [
       "You write the first line of a Latvian Facebook and Instagram post for Trilio (trilio.lv), which helps people choose household appliances: a few questions, then three suitable options from partner shops, and a button to ask Trilio for a better price.",
-      "One sentence, at most 90 characters, in correct Latvian. A concrete worry or wish of someone buying this category, in everyday words. No pronoun of address at all: no 'tu', 'tev', 'jūs', 'jums'. Statements or questions without them.",
+      "One sentence, at most 90 characters, written only in Latvian (never English, not even a part of it). A concrete worry or wish of someone buying this category, in everyday words. No pronoun of address at all: no 'tu', 'tev', 'jūs', 'jums'. Statements or questions without them.",
       "Honest only: no 'labākais', 'lētākais', 'garantēti', no discounts, percentages, urgency, prices or numbers, no shop or competitor names, no exclamation marks.",
     ].join("\n\n"),
     user: wrapUntrusted(
