@@ -89,11 +89,30 @@ export function metaProvider(
 
   const num = (v: unknown) => (typeof v === "number" ? v : 0);
 
+  /**
+   * Instagram takes alt text with an image (`alt_text`). Should Meta refuse
+   * the field for an account or version, the image goes out without it
+   * rather than not at all.
+   */
+  async function withAlt<T>(
+    alt: string | undefined,
+    run: (a: Record<string, string>) => Promise<T>,
+  ): Promise<T> {
+    if (!alt) return run({});
+    try {
+      return await run({ alt_text: alt.slice(0, 1000) });
+    } catch (err) {
+      if (err instanceof Error && /alt_text/i.test(err.message)) return run({});
+      throw err;
+    }
+  }
+
   return {
     name: "meta",
-    async publishImage(network: Network, imageUrl: string, caption: string) {
+    async publishImage(network: Network, imageUrl: string, caption: string, alt?: string) {
       try {
-        if (network === "instagram") return await instagram({ image_url: imageUrl, caption }, false);
+        if (network === "instagram")
+          return await withAlt(alt, (a) => instagram({ image_url: imageUrl, caption, ...a }, false));
         const r = await call(
           "POST",
           `${cfg.pageId}/photos`,
@@ -105,17 +124,19 @@ export function metaProvider(
         return fail(err);
       }
     },
-    async publishCarousel(network: Network, imageUrls: string[], caption: string) {
+    async publishCarousel(network: Network, images: { url: string; alt?: string }[], caption: string) {
       try {
         if (network === "instagram") {
           // Each image is a carousel item first, then one container holds them all.
           const children: string[] = [];
-          for (const url of imageUrls) {
-            const item = await call(
-              "POST",
-              `${cfg.igUserId}/media`,
-              { image_url: url, is_carousel_item: "true" },
-              cfg.token,
+          for (const img of images) {
+            const item = await withAlt(img.alt, (a) =>
+              call(
+                "POST",
+                `${cfg.igUserId}/media`,
+                { image_url: img.url, is_carousel_item: "true", ...a },
+                cfg.token,
+              ),
             );
             children.push(String(item.id));
           }
@@ -124,7 +145,7 @@ export function metaProvider(
         // The page: each photo uploaded unpublished, then one feed post with all of them.
         const token = await page();
         const media: Record<string, string> = {};
-        for (const [i, url] of imageUrls.entries()) {
+        for (const [i, { url }] of images.entries()) {
           const photo = await call("POST", `${cfg.pageId}/photos`, { url, published: "false" }, token);
           media[`attached_media[${i}]`] = JSON.stringify({ media_fbid: String(photo.id) });
         }

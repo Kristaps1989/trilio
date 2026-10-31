@@ -16,9 +16,13 @@ export type Insight = {
 export interface SocialProvider {
   name: "meta" | "mock";
   /** A photo post: Meta fetches the image from a public URL (JPEG for Instagram). */
-  publishImage(network: Network, imageUrl: string, caption: string): Promise<PublishResult>;
+  publishImage(network: Network, imageUrl: string, caption: string, alt?: string): Promise<PublishResult>;
   /** 2–10 images: a carousel on Instagram, a multi-photo post on the page. */
-  publishCarousel(network: Network, imageUrls: string[], caption: string): Promise<PublishResult>;
+  publishCarousel(
+    network: Network,
+    images: { url: string; alt?: string }[],
+    caption: string,
+  ): Promise<PublishResult>;
   /** A video the owner uploaded: a Reel on Instagram, a video post on the page. */
   publishVideo(network: Network, videoUrl: string, caption: string): Promise<PublishResult>;
   insights(network: Network, id: string): Promise<Insight | null>;

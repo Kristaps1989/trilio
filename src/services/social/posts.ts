@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Db } from "@/db/client";
 import { appFlags, socialInsights, socialPosts, type SocialKind, type SocialPost } from "@/db/schema";
 import { leaks } from "@/domain/social/anonymise";
-import { composePost, lintContext, type PostCard, type PostFacts } from "@/domain/social/captions";
+import { composePost, lintContext, slideAlt, type PostCard, type PostFacts } from "@/domain/social/captions";
 import { lintPost } from "@/domain/social/lint";
 import {
   DRAFT_AHEAD_MS,
@@ -375,13 +375,19 @@ export async function publishPost(
 ): Promise<SocialPost> {
   const provider = deps.provider;
   if (!provider) return post;
-  const slides = (post.card as unknown as PostCard).slides?.length ?? 0;
+  const card = post.card as unknown as PostCard;
+  const slides = card.slides?.length ?? 0;
+  const alts = card.slides?.map(slideAlt) ?? [];
   const send = async (n: Network, caption: string) =>
     post.videoUrl
       ? provider.publishVideo(n, post.videoUrl, caption)
       : slides > 1
-        ? provider.publishCarousel(n, slideUrls(deps.baseUrl, post.id, slides), caption)
-        : provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption);
+        ? provider.publishCarousel(
+            n,
+            slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({ url, alt: alts[i] })),
+            caption,
+          )
+        : provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption, post.alt);
   const errors: string[] = [];
   let fb = post.fbPostId;
   let ig = post.igMediaId;

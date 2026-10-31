@@ -103,7 +103,11 @@ describe("meta provider", () => {
       return { json: { id: `id${++n}` } };
     });
     const p = metaProvider(cfg, http, noWait);
-    expect(await p.publishCarousel("instagram", ["u1", "u2"], "Teksts")).toMatchObject({ ok: true });
+    const imgs = [
+      { url: "u1", alt: "Trauku mazgājamās mašīnas, cena" },
+      { url: "u2", alt: "Bosch SMV2ITX22E, 529,99 €" },
+    ];
+    expect(await p.publishCarousel("instagram", imgs, "Teksts")).toMatchObject({ ok: true });
     const ig = calls.filter((c) => c.url.startsWith(`${G}/IG`));
     expect(ig.map((c) => c.body.is_carousel_item ?? c.body.media_type ?? "publish")).toEqual([
       "true",
@@ -112,7 +116,9 @@ describe("meta provider", () => {
       "publish",
     ]);
     expect(ig[2]!.body).toMatchObject({ children: "id1,id2", caption: "Teksts" });
-    expect(await p.publishCarousel("facebook", ["u1", "u2"], "Teksts")).toEqual({
+    // Every slide carries its own alt text on Instagram.
+    expect(ig.slice(0, 2).map((c) => c.body.alt_text)).toEqual([imgs[0]!.alt, imgs[1]!.alt]);
+    expect(await p.publishCarousel("facebook", imgs, "Teksts")).toEqual({
       ok: true,
       id: "PAGE_feed1",
     });
@@ -121,6 +127,26 @@ describe("meta provider", () => {
     const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
     expect(feed.body.message).toBe("Teksts");
     expect(JSON.parse(feed.body["attached_media[1]"]!)).toEqual({ media_fbid: "id6" });
+  });
+
+  it("an image goes out without alt text when Meta refuses the field", async () => {
+    let refused = 0;
+    const { http, calls } = fakeFetch((c) => {
+      if (c.url === `${G}/IG/media` && c.body.alt_text) {
+        refused++;
+        return { status: 400, json: { error: { message: "(#100) Param alt_text is not supported" } } };
+      }
+      return { json: { id: "m1" } };
+    });
+    expect(await metaProvider(cfg, http, noWait).publishImage("instagram", "u", "Teksts", "Alt")).toEqual({
+      ok: true,
+      id: "m1",
+    });
+    expect(refused).toBe(1);
+    expect(calls.filter((c) => c.url === `${G}/IG/media`).map((c) => c.body.alt_text ?? null)).toEqual([
+      "Alt",
+      null,
+    ]);
   });
 
   it("returns Meta's error as text, and a failed video stops waiting", async () => {

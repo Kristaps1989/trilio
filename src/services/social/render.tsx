@@ -28,7 +28,7 @@ function Line({ l, compact }: { l: CardLine; compact: boolean }) {
         background: "#FFFFFF",
         color: NIGHT,
         borderRadius: 28,
-        padding: compact ? "20px 30px" : "30px 34px",
+        padding: compact ? "24px 32px" : "30px 34px",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
@@ -38,7 +38,7 @@ function Line({ l, compact }: { l: CardLine; compact: boolean }) {
               display: "flex",
               fontFamily: "Space Grotesk",
               fontWeight: 700,
-              fontSize: compact ? 34 : 38,
+              fontSize: compact ? 38 : 42,
               lineHeight: 1.12,
             }}
           >
@@ -96,7 +96,7 @@ function Line({ l, compact }: { l: CardLine; compact: boolean }) {
 
 export async function renderPost(card: Omit<PostCard, "slides">): Promise<ImageResponse> {
   const many = card.lines.length > 3;
-  const text = card.lines.length === 1 && !card.lines[0]!.side;
+  const text = card.lines.length === 1 && !card.lines[0]!.side && !card.lines[0]!.buttons?.length;
   return new ImageResponse(
     <div
       style={{
@@ -146,6 +146,15 @@ export async function renderPost(card: Omit<PostCard, "slides">): Promise<ImageR
           {card.title}
         </div>
       </div>
+      {card.icons?.length ? (
+        <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+          {card.icons.slice(0, 6).map((id) => (
+            <div key={id} style={{ display: "flex", background: MIST, borderRadius: 24, padding: 12 }}>
+              <Drawing subcategoryId={id} size={96} />
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div
         style={{
           display: "flex",
@@ -180,7 +189,7 @@ export async function renderPost(card: Omit<PostCard, "slides">): Promise<ImageR
             maxWidth: 640,
           }}
         >
-          {TAGLINE}
+          {card.plainFooter ? "" : TAGLINE}
         </div>
         <div style={{ display: "flex", fontFamily: "Space Grotesk", fontWeight: 700, fontSize: 40 }}>
           trilio.lv

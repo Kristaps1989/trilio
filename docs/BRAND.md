@@ -21,6 +21,8 @@
 - **"Bez maksas" only next to the service** (padoms, pieprasījums, paziņojums), never next to "tehnika", "prece" or "ierīce": next to goods it reads as free appliances.
 - **Never "labākais piedāvājums" together with "labāka cena".** Trilio finds the most suitable product; the price is what the team works on.
 - **People in posts:** "pircējs", never a name, not even a changed one (docs/SOCIAL_PLAN.md §5).
+- **Emojis (owner, 31 Oct 2026):** at most two in a post, each with a job: one marking the topic at the start (🏷️ picks and products, 📉 price drop, 💡 advice, 📦 offer, 🔎 what is searched) and 👉 before the Facebook link. Never instead of words, never hype or urgency (🔥 ⏰ 🚨 💥 ‼️ ❗ ⚡). The post lint enforces both.
+- **Captions:** the fact first (the first ~125 characters show before "… vairāk"), the words people search for (category, product, "cena"), one question that invites a comment ("… Rakstiet komentāros."), then the link. Five hashtags, Instagram's limit.
 
 ## Social profiles (owner, 31 Oct 2026)
 

@@ -42,8 +42,13 @@ export type PostFacts =
       month: string;
       path: string;
     }
-  | { kind: "top_categories"; categories: { id: string; label: string }[]; path: string }
-  | { kind: "top_products"; products: (PickLine & { id: string })[]; path: string }
+  | {
+      kind: "top_categories";
+      /** `fromCents`: the lowest current price in the category, for its slide. */
+      categories: { id: string; label: string; fromCents?: number | null }[];
+      path: string;
+    }
+  | { kind: "top_products"; products: (PickLine & { id: string; subcategoryId?: string })[]; path: string }
   | { kind: "reel"; caption: string; videoUrl: string; path: string };
 
 export type CardLine = {
@@ -65,7 +70,20 @@ export type PostCard = {
   subcategoryId?: string;
   /** A carousel: every slide is a card of its own; `lines` above stay the facts to re-check. */
   slides?: Omit<PostCard, "slides">[];
+  /** The slide's own alt text (keywords: category, product, price); made from its content when absent. */
+  alt?: string;
+  /** Category illustrations in a row under the title. */
+  icons?: string[];
+  /** The closing slide says the line itself, so the footer shows trilio.lv only. */
+  plainFooter?: boolean;
 };
+
+/** Alt text for a slide from what it shows: the words people search for, nothing invented. */
+export function slideAlt(c: Omit<PostCard, "slides">): string {
+  if (c.alt) return c.alt;
+  const lines = c.lines.map((l) => [l.main, l.side, l.sub, ...(l.chips ?? [])].filter(Boolean).join(", "));
+  return [c.title, ...lines].filter(Boolean).join(". ").slice(0, 900);
+}
 
 export type ComposedPost = {
   card: PostCard;
@@ -274,41 +292,87 @@ function parts(
         sub: f.subcategoryId,
       };
     }
-    case "top_categories":
+    case "top_categories": {
+      const [a] = f.categories;
+      const slides: PostCard["slides"] = [
+        {
+          chip: "Ko meklē šonedēļ",
+          title: "Šonedēļ visbiežāk meklētais",
+          icons: f.categories.map((c) => c.id),
+          lines: f.categories.map((c, i) => ({ main: `${i + 1}. ${c.label}` })),
+        },
+        ...f.categories.map((c, i) => ({
+          chip: `${i + 1}. vieta`,
+          title: c.label,
+          subcategoryId: c.id,
+          lines: [
+            ...(c.fromCents ? [{ main: "Cenas partneru veikalos no", side: eur(c.fromCents) }] : []),
+            { main: "Daži jautājumi, un trīs piemērotākie varianti" },
+          ],
+        })),
+        {
+          chip: "Sākt izvēli",
+          title: "Daži jautājumi, un trīs piemērotākie varianti",
+          icons: f.categories.map((c) => c.id),
+          lines: [
+            {
+              main: "Pērc uzreiz vai pieprasi labāku cenu",
+              sub: "Padoms bez maksas, bez konta",
+              buttons: ["Sākt izvēli · trilio.lv"],
+            },
+          ],
+          plainFooter: true,
+        },
+      ];
       return {
         body: [
-          "Ko Trilio lietotāji šonedēļ meklēja visvairāk:",
+          `Šonedēļ Trilio visvairāk meklētā kategorija: ${lower(a!.label)}.`,
           f.categories.map((c, i) => `${ORDER[i]} ${c.label}`).join("\n"),
         ],
         cta: "Katrai kategorijai trīs piemērotākie varianti pēc dažiem jautājumiem:",
-        card: {
-          chip: "Ko meklē šonedēļ",
-          title: "Šonedēļ meklētākās kategorijas",
-          lines: f.categories.map((c, i) => ({ main: `${i + 1}. ${c.label}` })),
-        },
-        alt: `Šonedēļ meklētākās kategorijas: ${f.categories.map((c) => c.label).join(", ")}.`,
-        prices: [],
+        card: { ...slides[0]!, slides },
+        alt: `Šonedēļ visbiežāk meklētās kategorijas: ${f.categories.map((c) => c.label).join(", ")}.`,
+        prices: f.categories.flatMap((c) => (c.fromCents ? [c.fromCents] : [])),
         numbers: [4, 5],
-        names: f.categories.map((c) => c.label),
+        names: f.categories.flatMap((c) => [c.label, lower(c.label)]),
       };
-    case "top_products":
+    }
+    case "top_products": {
+      const card: PostCard = {
+        chip: "Nedēļas interesantākās",
+        title: "Šonedēļ visvairāk interesēja",
+        lines: f.products.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop })),
+        note: "Cenas šodien partneru veikalos",
+      };
+      const slides: PostCard["slides"] = [
+        { ...card },
+        ...f.products.map((p, i) => ({
+          chip: `${i + 1}.`,
+          title: p.name,
+          subcategoryId: p.subcategoryId,
+          lines: [
+            {
+              main: p.shop,
+              side: eur(p.priceCents),
+              buttons: [`Pirkt — ${p.shop}`, "Pieprasīt labāku cenu"],
+            },
+          ],
+          note: "Cena šodien partneru veikalā",
+        })),
+      ];
       return {
         body: [
-          "Šonedēļ Trilio lietotājus visvairāk interesēja:",
+          `Šonedēļ Trilio lietotājus visvairāk interesēja ${f.products[0]!.name}.`,
           f.products.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
         ],
         cta: "Var pirkt uzreiz veikalā vai pieprasīt labāku cenu:",
-        card: {
-          chip: "Nedēļas interesantākās",
-          title: "Šonedēļ visvairāk interesēja",
-          lines: f.products.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop })),
-          note: "Cenas šodien partneru veikalos",
-        },
+        card: { ...card, slides },
         alt: `Šonedēļ visvairāk interesēja: ${f.products.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
         prices: f.products.map((p) => p.priceCents),
         numbers: [],
         names: f.products.flatMap((p) => [p.name, p.shop]),
       };
+    }
     case "reel":
       return {
         body: [f.caption],
@@ -329,14 +393,44 @@ export function lintContext(f: PostFacts): PostLintContext {
 }
 
 /** One post, both networks: Facebook carries the link, Instagram "saite profilā" and five tags. */
+/**
+ * One emoji per kind, at the start of the first line, and 👉 before the
+ * Facebook link: at most two in a caption, each marking something (owner,
+ * 31 Oct 2026). Never hype (🔥 ⏰ 🚨); the lint refuses those.
+ */
+export const KIND_EMOJI: Record<SocialKind, string> = {
+  picks: "🏷️",
+  price_drop: "📉",
+  advice: "💡",
+  offer: "📦",
+  top_categories: "🔎",
+  top_products: "🏷️",
+  reel: "",
+};
+
+/** One question per post, without "tu": comments and saves carry the reach. */
+export const KIND_QUESTION: Partial<Record<SocialKind, string>> = {
+  picks: "Kuru no trim izvēlētos jūs? Rakstiet komentāros.",
+  price_drop: "Kuras preces cenu pieskatīt nākamo? Rakstiet komentāros.",
+  advice: "Kam jūs pievēršat uzmanību pirms pirkuma? Rakstiet komentāros.",
+  top_categories: "Kuru kategoriju izvērtēt nākamo? Rakstiet komentāros.",
+  top_products: "Kura no tām būtu jūsu izvēle? Rakstiet komentāros.",
+};
+
 export function composePost(
   f: PostFacts,
   opts: { postId: string; baseUrl: string; lead?: string },
 ): ComposedPost {
   const p = parts(f, opts.lead);
   const fbLink = utmLink(opts.baseUrl, f.path, "facebook", f.kind, opts.postId);
-  const body = p.body.join("\n\n");
-  const captionFb = [body, p.cta ? `${p.cta}\n${fbLink}` : fbLink].join("\n\n");
+  const emoji = KIND_EMOJI[f.kind];
+  const lines = [...p.body];
+  if (emoji && lines[0]) lines[0] = `${emoji} ${lines[0]}`;
+  const question = KIND_QUESTION[f.kind];
+  if (question) lines.push(question);
+  const body = lines.join("\n\n");
+  const pointed = f.kind === "reel" ? fbLink : `👉 ${fbLink}`;
+  const captionFb = [body, p.cta ? `${p.cta}\n${pointed}` : pointed].join("\n\n");
   const captionIg = [
     body,
     p.cta ? `${p.cta} Saite profilā.` : "Saite profilā.",

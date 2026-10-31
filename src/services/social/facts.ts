@@ -216,13 +216,29 @@ export async function paidOfferFacts(
   };
 }
 
+/** The lowest current price in a category today (fresh feeds only), for its carousel slide. */
+async function lowestPrice(db: Db, subcategoryId: string, now: Date): Promise<number | null> {
+  let low: number | null = null;
+  for (const p of await loadCandidates(db, subcategoryId)) {
+    const o = currentOffer(p);
+    if (o && fresh(o.lastSeenAt, now) && (low === null || o.priceCents < low)) low = o.priceCents;
+  }
+  return low;
+}
+
 /** Type E: the five most-viewed categories, when the first clears the threshold. */
 export async function topCategoriesFacts(db: Db, now: Date): Promise<PostFacts | null> {
   const top = (await categoriesByTraffic(db, now)).slice(0, 5);
   if (top.length < 3 || (top[0]?.views ?? 0) < MIN_CATEGORY_VIEWS) return null;
   return {
     kind: "top_categories",
-    categories: top.map((c) => ({ id: c.id, label: categoryLabel(c.id) })),
+    categories: await Promise.all(
+      top.map(async (c) => ({
+        id: c.id,
+        label: categoryLabel(c.id),
+        fromCents: await lowestPrice(db, c.id, now),
+      })),
+    ),
     path: "/",
   };
 }
@@ -273,7 +289,13 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
   if (products.length < 2) return null;
   return {
     kind: "top_products",
-    products: products.map((p) => ({ id: p.id, name: p.name, priceCents: p.priceCents, shop: p.shop })),
+    products: products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      priceCents: p.priceCents,
+      shop: p.shop,
+      subcategoryId: p.sub,
+    })),
     path: flowPath(products[0]!.sub),
   };
 }
