@@ -83,6 +83,7 @@ import {
   type TextContext,
 } from "./confidence-text";
 import { FilterBar, type Chip } from "./FilterBar";
+import { SWIPE_ROW } from "@/ui/swipeRow";
 import { HowWeRank } from "./HowWeRank";
 import { cardMedia } from "./card-media";
 import { trilioSources } from "@/domain/offers/sourcing";
@@ -986,25 +987,18 @@ export default async function ResultsPage({ searchParams }: Props) {
         <Kicker>{t("kicker", { count: result.matchingCount })}</Kicker>
         <PageTitle scale="results">{t("title")}</PageTitle>
         {coverageLine ? (
-          <p className="max-w-[760px] text-base font-semibold text-mist" data-coverage>
+          <p className="max-w-[760px] text-[15px] leading-snug font-semibold text-mist" data-coverage>
             {coverageLine}
           </p>
         ) : null}
-        <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
-          {lead}
-          {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
-          {result.picks.length > 0 && result.picks.length < 3 && result.matchingCount > result.picks.length
-            ? ` ${t("leadDominated", { count: result.picks.length })}`
-            : ""}
-          {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
-          {oneWinner ? ` ${t("oneWinner")}` : ""}
-        </p>
+        {/* The products come first (owner, 1 Nov 2026): above them only what changes them, one swipeable
+            row each on a phone; the explanation, the shared facts and "Kā mēs izvēlamies" sit under the cards. */}
         {prioritiesQ && result.picks.length ? (
-          <nav aria-labelledby="priorities-title" className="flex flex-col gap-2">
-            <h2 id="priorities-title" className="text-[15px] font-bold text-mist">
+          <nav aria-labelledby="priorities-title" className={`${SWIPE_ROW} items-center`}>
+            <h2 id="priorities-title" className="shrink-0 text-[15px] font-bold text-mist">
               {t("prioritiesTitle")}
             </h2>
-            <ul className="flex flex-wrap gap-2">
+            <ul className="flex shrink-0 gap-2 sm:shrink sm:flex-wrap">
               {[
                 ...prioritiesQ.options.map((o) => ({
                   value: o.value,
@@ -1025,7 +1019,7 @@ export default async function ResultsPage({ searchParams }: Props) {
                       aria-current={active ? "true" : undefined}
                       data-ga-event="priority_tapped"
                       data-ga-param-priority={o.value || "any"}
-                      className={`flex min-h-11 items-center rounded-full px-[14px] text-sm font-semibold ${
+                      className={`flex min-h-11 items-center rounded-full px-[14px] text-sm font-semibold whitespace-nowrap ${
                         active ? "bg-lime text-night" : "border border-line-30 text-mist hover:bg-lime-18"
                       }`}
                     >
@@ -1038,7 +1032,6 @@ export default async function ResultsPage({ searchParams }: Props) {
           </nav>
         ) : null}
         <FilterBar chips={chips} state={state} subId={sub.id} />
-        <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
       </div>
 
       {relax.length ? (
@@ -1076,14 +1069,6 @@ export default async function ResultsPage({ searchParams }: Props) {
           <h2 id="picks-title" className="sr-only">
             {t("picksLabel")}
           </h2>
-          {sharedBrandLine || shared.length ? (
-            <div className="mb-3 flex flex-col gap-1 text-[15px] text-mist" data-shared-facts>
-              {sharedBrandLine ? <p>{sharedBrandLine}</p> : null}
-              {shared.length ? (
-                <p>{t("sharedFacts", { total: storyCards.length, facts: shared.join(" · ") })}</p>
-              ) : null}
-            </div>
-          ) : null}
           {trilioSources(sub.id) ? (
             <p className="mb-3 flex items-start gap-2 text-[15px] font-semibold text-lime" data-trilio-offer>
               <svg
@@ -1110,8 +1095,30 @@ export default async function ResultsPage({ searchParams }: Props) {
               <ResultCard key={c.productId} card={c} />
             ))}
           </CardRow>
+          {sharedBrandLine || shared.length ? (
+            <div className="mt-4 flex flex-col gap-1 text-[15px] text-mist" data-shared-facts>
+              {sharedBrandLine ? <p>{sharedBrandLine}</p> : null}
+              {shared.length ? (
+                <p>{t("sharedFacts", { total: storyCards.length, facts: shared.join(" · ") })}</p>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       ) : null}
+
+      {/* Why these: read after the products, not before them. */}
+      <div className="flex flex-col gap-2" data-results-why>
+        <p className="max-w-[760px] text-base leading-[1.45] text-stone">
+          {lead}
+          {result.extras.length ? ` ${t("leadExtras", { count: result.extras.length })}` : ""}
+          {result.picks.length > 0 && result.picks.length < 3 && result.matchingCount > result.picks.length
+            ? ` ${t("leadDominated", { count: result.picks.length })}`
+            : ""}
+          {result.picks.length === 0 && result.extras.length === 0 ? ` ${t("leadNone")}` : ""}
+          {oneWinner ? ` ${t("oneWinner")}` : ""}
+        </p>
+        <HowWeRank note={t("eanNote")} toggle={t("howWeRank")} title={t("howTitle")} items={howItems} />
+      </div>
 
       {/* One line after the picks: the search itself, for when a cheaper option appears (docs/PRICE_NOTIFY_PLAN.md). */}
       <section aria-labelledby="notify-search-title" data-notify-search>
