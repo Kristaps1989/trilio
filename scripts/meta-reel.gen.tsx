@@ -33,14 +33,59 @@ import {
 const FPS = Number(process.env.REEL_FPS ?? 30);
 const DURATION = Number(process.env.REEL_SECONDS ?? 14);
 
-type Shape = "story" | "feed";
+type Shape = "story" | "feed" | "wide";
 const SIZE: Record<
   Shape,
   { w: number; h: number; top: number; bottom: number; side: number; head: number; k: number }
 > = {
   story: { w: 1080, h: 1920, top: 300, bottom: 500, side: 72, head: 96, k: 1.06 },
   feed: { w: 1080, h: 1350, top: 90, bottom: 80, side: 72, head: 88, k: 0.96 },
+  /** 16:9 (in-stream, Facebook video feeds on desktop): the text left, the site element right. */
+  wide: { w: 1920, h: 1080, top: 64, bottom: 56, side: 96, head: 80, k: 1.1 },
 };
+/** The text column and the gap of the 16:9 layout. */
+const WIDE_LEFT = 640;
+const WIDE_GAP = 48;
+/** Width the hero (question, tiles, card) can take. */
+const heroWidth = (z: (typeof SIZE)[Shape], shape: Shape) =>
+  shape === "wide" ? z.w - 2 * z.side - WIDE_LEFT - WIDE_GAP : z.w - 2 * z.side;
+
+/**
+ * A scene's body: the words, the site element, a footnote. Stacked in the
+ * vertical shapes; side by side in 16:9, so nothing gets letterboxed.
+ */
+function Body({
+  shape,
+  head,
+  hero,
+  foot,
+}: {
+  shape: Shape;
+  head: ReactNode;
+  hero: ReactNode;
+  foot?: ReactNode;
+}) {
+  if (shape === "wide")
+    return (
+      <div style={{ display: "flex", flex: 1, gap: WIDE_GAP, alignItems: "stretch" }}>
+        <div style={{ display: "flex", flexDirection: "column", width: WIDE_LEFT, flexShrink: 0 }}>
+          {head}
+          <div style={{ display: "flex", flex: 1 }} />
+          {foot}
+        </div>
+        <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center" }}>{hero}</div>
+      </div>
+    );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      {head}
+      <div style={{ display: "flex", flex: 1 }} />
+      {hero}
+      <div style={{ display: "flex", flex: 1 }} />
+      {foot}
+    </div>
+  );
+}
 
 /* ---------- easing ---------- */
 
@@ -234,7 +279,6 @@ const rnd = (i: number, salt: number) => {
 const T = { pile: 0, ask: 3.0, three: 6.2, request: 9.2, end: 12.2 } as const;
 
 function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): ReactNode {
-  const avail = z.w - 2 * z.side;
   const keys = ["product-1", "product-2", "product-3"];
 
   if (t < T.ask) {
@@ -246,7 +290,7 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
       const ay = rnd(i, 2) * (z.h + 300) - 150;
       const fromX = ax + (rnd(i, 3) - 0.5) * 900;
       const fromY = ay + (rnd(i, 4) - 0.5) * 900 + 400;
-      const w = 150 + rnd(i, 5) * 150;
+      const w = (150 + rnd(i, 5) * 150) * Math.sqrt(z.w / 1080);
       const rot = (rnd(i, 6) - 0.5) * 50 + Math.sin(t * 0.8 + i) * 4;
       return (
         <Stray
@@ -299,33 +343,38 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
     return (
       <Ground z={z} dark={false}>
         <TopBar dark={false} t={s} at={0.1} />
-        <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
-          <Line text="Daži jautājumi." size={z.head} color={NIGHT} t={s} at={0.3} />
-          <Line
-            text="Tikai tie, kas izšķir."
-            size={Math.round(z.head * 0.5)}
-            color="#5B6E6A"
-            t={s}
-            at={0.5}
-          />
-        </div>
-        <div style={{ display: "flex", flex: 1 }} />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            opacity: card,
-            transform: `translateY(${(1 - card) * 260}px)`,
-          }}
-        >
-          <Question
-            width={Math.round(700 * z.k)}
-            k={1.12 * z.k}
-            selected={s >= 1.6}
-            tap={s >= 1.45 && s < 1.6}
-          />
-        </div>
-        <div style={{ display: "flex", flex: 1 }} />
+        <Body
+          shape={shape}
+          head={
+            <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
+              <Line text="Daži jautājumi." size={z.head} color={NIGHT} t={s} at={0.3} />
+              <Line
+                text="Tikai tie, kas izšķir."
+                size={Math.round(z.head * 0.5)}
+                color="#5B6E6A"
+                t={s}
+                at={0.5}
+              />
+            </div>
+          }
+          hero={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                opacity: card,
+                transform: `translateY(${(1 - card) * 260}px)`,
+              }}
+            >
+              <Question
+                width={Math.round(700 * z.k)}
+                k={1.12 * z.k}
+                selected={s >= 1.6}
+                tap={s >= 1.45 && s < 1.6}
+              />
+            </div>
+          }
+        />
         <div
           style={{
             position: "absolute",
@@ -344,66 +393,73 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
   if (t < T.request) {
     const s = t - T.three;
     const gap = 18;
-    const w = Math.floor((avail - 2 * gap) / 3);
+    const w = Math.floor((heroWidth(z, shape) - 2 * gap) / 3);
     return (
       <Ground z={z} dark={false}>
         <TopBar dark={false} t={10} />
-        <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
-          <Line text="Trīs, kas der." size={z.head} color={NIGHT} t={s} at={0.1} />
-          <Line
-            text="Ar cenām no veikaliem."
-            size={Math.round(z.head * 0.5)}
-            color="#5B6E6A"
-            t={s}
-            at={0.3}
-          />
-        </div>
-        <div style={{ display: "flex", gap: 12, paddingTop: 26 }}>
-          {CRITERIA.map((c, i) => {
-            const p = pop(s, 0.5 + i * 0.12, 0.5);
-            return (
-              <div
-                key={c}
-                style={{
-                  display: "flex",
-                  padding: "10px 20px",
-                  borderRadius: 999,
-                  border: `2px solid ${NIGHT}`,
-                  color: NIGHT,
-                  fontSize: 24,
-                  fontWeight: 700,
-                  opacity: clamp(p),
-                  transform: `scale(${0.8 + 0.2 * p})`,
-                }}
-              >
-                {c}
-              </div>
-            );
-          })}
-        </div>
-        <div style={{ display: "flex", flex: 1 }} />
-        <div style={{ display: "flex", gap, alignItems: "flex-start" }}>
-          {PICKS.map((p, i) => {
-            const e = ease(s, 0.35 + i * 0.18, 0.7);
-            return (
-              <div
-                key={p.model}
-                style={{ display: "flex", opacity: e, transform: `translateX(${(1 - e) * 420}px)` }}
-              >
-                <Tile
-                  p={p}
-                  photos={ph}
-                  width={w}
-                  photoH={Math.round(250 * z.k)}
-                  k={0.9 * z.k}
-                  priceSize={38}
-                  nameRows={2}
+        <Body
+          shape={shape}
+          head={
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
+                <Line text="Trīs, kas der." size={z.head} color={NIGHT} t={s} at={0.1} />
+                <Line
+                  text="Ar cenām no veikaliem."
+                  size={Math.round(z.head * 0.5)}
+                  color="#5B6E6A"
+                  t={s}
+                  at={0.3}
                 />
               </div>
-            );
-          })}
-        </div>
-        <div style={{ display: "flex", flex: 1 }} />
+              <div style={{ display: "flex", gap: 12, paddingTop: 26, flexWrap: "wrap" }}>
+                {CRITERIA.map((c, i) => {
+                  const p = pop(s, 0.5 + i * 0.12, 0.5);
+                  return (
+                    <div
+                      key={c}
+                      style={{
+                        display: "flex",
+                        padding: "10px 20px",
+                        borderRadius: 999,
+                        border: `2px solid ${NIGHT}`,
+                        color: NIGHT,
+                        fontSize: 24,
+                        fontWeight: 700,
+                        opacity: clamp(p),
+                        transform: `scale(${0.8 + 0.2 * p})`,
+                      }}
+                    >
+                      {c}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          }
+          hero={
+            <div style={{ display: "flex", gap, alignItems: "flex-start" }}>
+              {PICKS.map((p, i) => {
+                const e = ease(s, 0.35 + i * 0.18, 0.7);
+                return (
+                  <div
+                    key={p.model}
+                    style={{ display: "flex", opacity: e, transform: `translateX(${(1 - e) * 420}px)` }}
+                  >
+                    <Tile
+                      p={p}
+                      photos={ph}
+                      width={w}
+                      photoH={Math.round(250 * z.k)}
+                      k={0.9 * z.k}
+                      priceSize={38}
+                      nameRows={2}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          }
+        />
       </Ground>
     );
   }
@@ -416,55 +472,64 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
     const press = s >= tapAt && s < tapAt + 0.12 ? 0.97 : 1;
     const ring = clamp((s - tapAt) / 0.7);
     const tileW = Math.round(660 * z.k);
+    const hw = heroWidth(z, shape);
     return (
       <Ground z={z} dark={false}>
         <TopBar dark={false} t={10} />
-        <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
-          <Line text="Patīk?" size={z.head} color={NIGHT} t={s} at={0.05} />
-          <Line text="Pieprasi labāku cenu." size={z.head} color={NIGHT} t={s} at={0.2} />
-        </div>
-        <div style={{ display: "flex", flex: 1 }} />
-        <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
-          <div style={{ display: "flex", opacity: clamp(e), transform: `scale(${0.9 + 0.1 * e})` }}>
-            <Tile
-              p={PICKS[0]!}
-              photos={ph}
-              width={tileW}
-              photoH={Math.round(300 * z.k)}
-              k={1.05 * z.k * press}
-              buttons
-              requested={requested}
-            />
-          </div>
-          {ring > 0 && ring < 1 ? (
+        <Body
+          shape={shape}
+          head={
+            <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
+              <Line text="Patīk?" size={z.head} color={NIGHT} t={s} at={0.05} />
+              <Line text="Pieprasi labāku cenu." size={z.head} color={NIGHT} t={s} at={0.2} />
+            </div>
+          }
+          hero={
+            <div style={{ display: "flex", width: hw, justifyContent: "center", position: "relative" }}>
+              <div style={{ display: "flex", opacity: clamp(e), transform: `scale(${0.9 + 0.1 * e})` }}>
+                <Tile
+                  p={PICKS[0]!}
+                  photos={ph}
+                  width={tileW}
+                  photoH={Math.round(300 * z.k)}
+                  k={1.05 * z.k * press}
+                  buttons
+                  requested={requested}
+                />
+              </div>
+              {ring > 0 && ring < 1 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: hw / 2 - tileW / 2 + 26 * z.k,
+                    bottom: 26 * z.k,
+                    width: tileW - 52 * z.k,
+                    height: 66 * z.k,
+                    borderRadius: 999,
+                    border: `4px solid ${LIME}`,
+                    opacity: 1 - ring,
+                    transform: `scale(${1 + ring * 0.25})`,
+                  }}
+                />
+              ) : null}
+            </div>
+          }
+          foot={
             <div
               style={{
-                position: "absolute",
-                left: z.w / 2 - z.side - tileW / 2 + 26 * z.k,
-                bottom: 26 * z.k,
-                width: tileW - 52 * z.k,
-                height: 66 * z.k,
-                borderRadius: 999,
-                border: `4px solid ${LIME}`,
-                opacity: 1 - ring,
-                transform: `scale(${1 + ring * 0.25})`,
+                display: "flex",
+                fontSize: 26,
+                color: "#5B6E6A",
+                lineHeight: 1.35,
+                opacity: ease(s, 1.9, 0.5),
+                maxWidth: 820,
               }}
-            />
-          ) : null}
-        </div>
-        <div style={{ display: "flex", flex: 1 }} />
-        <div
-          style={{
-            display: "flex",
-            fontSize: 26,
-            color: "#5B6E6A",
-            lineHeight: 1.35,
-            opacity: ease(s, 1.9, 0.5),
-            maxWidth: 820,
-          }}
-        >
-          Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena kritīs.
-        </div>
+            >
+              Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena
+              kritīs.
+            </div>
+          }
+        />
       </Ground>
     );
   }
@@ -529,6 +594,7 @@ it("renders the Reel frame by frame", async () => {
   for (const [shape, tag] of [
     ["story", "9x16_1080x1920"],
     ["feed", "4x5_1080x1350"],
+    ["wide", "16x9_1920x1080"],
   ] as const) {
     if (only && !only.includes(shape)) continue;
     const z = SIZE[shape];

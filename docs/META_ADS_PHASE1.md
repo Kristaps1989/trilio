@@ -85,7 +85,7 @@ Name every ad exactly as below: the name travels in `utm_content`, so Admin → 
 
 ## R1 · Reel: kā tas strādā (14 s, motion)
 
-- **Files:** `R1-ka-tas-strada/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds); covers `…_cover.jpg`. Made by `npm run creatives:reel` (`scripts/meta-reel.gen.tsx`): every frame is laid out from the time, 30 fps, so entrances ease in, the option gets tapped, the three cards slide in one by one, the lime button is pressed and turns into the site's "Pieprasīts · meklējam labāku cenu".
+- **Files:** `R1-ka-tas-strada/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds), `…_16x9.mp4` (in-stream, desktop video feeds; the text left and the site element right); covers `…_cover.jpg`. In the Crop step: Vertical → Replace with `_9x16`, Square → keep Original (the 1:1 crop of the 4:5 cuts the footnote of the request scene), Horizontal → Replace with `_16x9`. Made by `npm run creatives:reel` (`scripts/meta-reel.gen.tsx`): every frame is laid out from the time, 30 fps, so entrances ease in, the option gets tapped, the three cards slide in one by one, the lime button is pressed and turns into the site's "Pieprasīts · meklējam labāku cenu".
 - **Scenes:** the pile of product cards ("353 veļas mašīnas 3 veikalos. Kuru izvēlēties?", the site's real count) → the first question, answered ("Daži jautājumi. Tikai tie, kas izšķir.") → the three fitting models with the criteria ("Trīs, kas der. Ar cenām no veikaliem.") → the request ("Patīk? Pieprasi labāku cenu.") → logo, trilio.lv, "Sākt izvēli".
 - **URL:** `https://trilio.lv/izvelies/laundry/washer`
 - **Primary text:**
