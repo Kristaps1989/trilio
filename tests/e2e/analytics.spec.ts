@@ -107,11 +107,13 @@ test("the Google Ads tag loads only after consent and a shop click is its conver
   await page.evaluate(() =>
     document.addEventListener("click", (e) => (e.target as Element).closest("a") && e.preventDefault()),
   );
+  // The first shop click opens the question before the shop; the conversion is the link that leaves.
   await page
     .getByRole("region", { name: "Ieteiktie varianti" })
     .getByRole("link", { name: /^Pirkt/ })
     .first()
     .click();
+  await page.getByRole("dialog").getByRole("link", { name: /^Uz / }).click();
   await expect
     .poll(async () => (await events(page)).find((e) => e.name === "conversion")?.params.send_to)
     .toBe(`${process.env.GOOGLE_ADS_TAG_ID}/shopClickTest`);

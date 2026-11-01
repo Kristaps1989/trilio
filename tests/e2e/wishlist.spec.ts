@@ -204,10 +204,8 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
 test("the question before the shop: one sheet on the first shop click, two equal choices, once per visit", async ({
   page,
 }) => {
+  test.slow(); // a server action, a mail, an axe scan and a second tab
   const email = `e2e-ask-${Date.now()}@example.invalid`;
-  await page.route("https://example.invalid/**", (r) =>
-    r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title>" }),
-  );
   await kettleResults(page);
   const url = page.url();
   const first = picks(page).first();
@@ -245,16 +243,22 @@ test("the question before the shop: one sheet on the first shop click, two equal
     .getByRole("link", { name: /^Pirkt — / });
   await expect(second).not.toHaveAttribute("aria-haspopup", "dialog");
   const tab = await page.context().newPage();
-  await tab.route("https://example.invalid/**", (r) =>
-    r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title>" }),
-  );
+  // The shop redirect itself is covered by flow.spec; here only that the click goes to it, with no sheet.
+  let left = "";
+  await tab.route("**/go/**", (r) => {
+    left = r.request().url();
+    return r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title>" });
+  });
   await tab.goto(url);
+  await tab.waitForLoadState("networkidle");
   const again = picks(tab)
     .first()
     .getByRole("link", { name: /^Pirkt — / });
   await expect(again).not.toHaveAttribute("aria-haspopup", "dialog");
   await again.click();
-  await tab.waitForURL(/^https:\/\/example\.invalid\//);
+  await expect.poll(() => left).toMatch(/\/go\/[0-9a-f-]{36}/);
+  expect(left).not.toContain("ask=1");
+  await expect(tab.getByRole("dialog")).toHaveCount(0);
   await tab.close();
 });
 
