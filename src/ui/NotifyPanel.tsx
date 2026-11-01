@@ -117,7 +117,11 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
-            <button type="submit" disabled={pending} className={buttonClass({ variant: "primary", size: "sm" })}>
+            <button
+              type="submit"
+              disabled={pending}
+              className={buttonClass({ variant: "primary", size: "sm" })}
+            >
               {t(offers ? "submit" : "submitPlain")}
             </button>
             <button type="button" onClick={onClose} className={buttonClass({ variant: "card", size: "sm" })}>
