@@ -108,9 +108,10 @@ export function SaveButton({
     });
   }
 
+  // On a card the request is the lime button (as in the ads), before and after the tap.
   const className =
     variant === "card"
-      ? buttonClass({ variant: "card", size: "sm", block: true })
+      ? buttonClass({ variant: "primary", size: "sm", block: true })
       : variant === "inline"
         ? buttonClass({ variant: "outline", size: "sm" })
         : "inline-flex h-11 w-11 items-center justify-center rounded-full text-lime hover:bg-lime-18";
@@ -122,7 +123,7 @@ export function SaveButton({
       aria-expanded={panel ? true : undefined}
       disabled={pending}
       onClick={() => (panel ? setPanel(null) : run(!saved))}
-      className={`${className} ${saved ? "text-lime" : ""}`}
+      className={`${className} ${saved && variant !== "card" ? "text-lime" : ""}`}
       data-notify-button
     >
       {offers && !search && variant !== "icon" ? <Tag filled={saved} /> : <Heart filled={saved} />}
