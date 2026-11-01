@@ -136,7 +136,7 @@ Urgency is no longer a flow screen. It is the "Piegāde" (delivery) chip on the 
 ## 3. Results
 The results page is the second half of the conversation: it opens on a sensible answer and makes it easy to improve.
 
-**The products come first (owner, 1 Nov 2026).** Above the cards stand only the title, the coverage line, the priority chips and the filter chips. On a phone the priority chips and the filter chips are one swipeable row each, the right edge fading while there is more; from 640 px they wrap. The lead text, the shared facts, the EAN note and "Kā mēs izvēlamies un prioritizējam?" sit directly under the cards. At 360 × 740 the first card starts at about 440 px, inside the first screen; before, it needed more than a screen of scrolling. The items below are listed in their old order; their content is unchanged.
+**The products come first (owner, 1 Nov 2026).** Above the cards stand only the title, the coverage line, the priority chips and the filter chips. On a phone the priority chips and the filter chips are one swipeable row each, the right edge fading while there is more; from 640 px they wrap. The lead text, the shared facts, the EAN note and "Kā mēs izvēlamies un prioritizējam?" sit directly under the cards. At 360 × 740 the first card starts at about 440 px, inside the first screen; before, it needed more than a screen of scrolling. On the card the photo, name and price lead and the verdict sentence follows them. The items below are listed in their old order; their content is unchanged.
 
 Top to bottom:
 

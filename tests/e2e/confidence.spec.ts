@@ -16,7 +16,9 @@ async function expectNoAxeViolations(page: Page) {
 
 const picks = (page: Page) => page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
 
-test("the results page tells its story: coverage, roles, a verdict first and the catch", async ({ page }) => {
+test("the results page tells its story: coverage, roles, the product then its verdict, and the catch", async ({
+  page,
+}) => {
   await page.goto("/rezultati?sub=fridge");
   await expect(page.locator("[data-coverage]")).toHaveText(
     /^Izskatījām \d+ preces? \d+ veikal(ā|os)( \(atjaunots .+\))?\. \d+ der tavām atbildēm un budžetam\. Šie ir labākie — un lūk, kāpēc\.$/,
@@ -24,11 +26,11 @@ test("the results page tells its story: coverage, roles, a verdict first and the
   const cards = picks(page);
   await expect(cards.first()).toBeVisible();
   for (const card of await cards.all()) {
-    // The verdict comes before the product's name on the card.
+    // The product is the hero (owner, 1 Nov 2026): photo, name and price, then the verdict.
     const order = await card.evaluate((e) => {
       const verdict = e.querySelector("[data-verdict]");
-      const name = e.querySelector("h3");
-      return verdict && name ? verdict.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING : 0;
+      const price = e.querySelector("[data-price-cents]");
+      return verdict && price ? price.compareDocumentPosition(verdict) & Node.DOCUMENT_POSITION_FOLLOWING : 0;
     });
     expect(order).toBeTruthy();
     await expect(card.locator("[data-proofs] li").first()).toBeVisible();

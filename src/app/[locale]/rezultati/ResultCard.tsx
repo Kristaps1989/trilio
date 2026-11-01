@@ -138,7 +138,7 @@ function BoltIcon() {
   );
 }
 
-/** Spec §3.2 result card, prototype layout: one of up to three cards in a row. */
+/** Spec §3.2 result card: one of up to three cards in a row; photo, name and price lead, the verdict follows. */
 export async function ResultCard({ card }: { card: CardModel }) {
   if (card.refurbished) return <RefurbishedCard card={card} />;
   const t = await getTranslations("results");
@@ -169,12 +169,6 @@ export async function ResultCard({ card }: { card: CardModel }) {
           ))}
           {card.recommended ? <li className={`${pill} bg-lime text-night`}>{t("recommended")}</li> : null}
         </ul>
-      ) : null}
-
-      {card.verdict ? (
-        <p className="text-[17px] leading-snug font-semibold" data-verdict>
-          {card.verdict}
-        </p>
       ) : null}
 
       <ProductImage src={card.image.src} alt={card.name} fallback={card.image.fallback} size="card" />
@@ -221,6 +215,13 @@ export async function ResultCard({ card }: { card: CardModel }) {
           </p>
         )}
       </div>
+
+      {/* The product is the hero (owner, 1 Nov 2026): photo, name and price first, then why this one. */}
+      {card.verdict ? (
+        <p className="text-[17px] leading-snug font-semibold" data-verdict>
+          {card.verdict}
+        </p>
+      ) : null}
 
       {card.upgrade ? (
         <div
