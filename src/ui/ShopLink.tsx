@@ -14,11 +14,13 @@ import { useRequest } from "./useRequest";
 // §8.4): the first shop click of a visit opens one sheet with two equal
 // choices, request a better price from Trilio or go to the shop. Neither is
 // hidden or shamed; Esc and the backdrop close it, and after any answer every
-// shop link goes straight through for the rest of the session. A product
-// already requested never asks. The link stays a real <a href="/go/…">, so
+// shop link goes straight through for a day, in every tab (owner, 1 Nov 2026:
+// once per visitor, not once per click). A product already requested never asks. The link stays a real <a href="/go/…">, so
 // crawlers, middle clicks and modifier clicks behave as before.
 
-const SESSION_KEY = "trilio_ask_shop";
+const ASK_KEY = "trilio_ask_shop";
+/** How long one answer holds. */
+const ASK_TTL_MS = 24 * 60 * 60 * 1000;
 
 type Props = {
   href: string;
@@ -42,7 +44,8 @@ const subscribe = (cb: () => void) => {
 
 function answered(): boolean {
   try {
-    return sessionStorage.getItem(SESSION_KEY) === "1";
+    const at = Number(localStorage.getItem(ASK_KEY));
+    return at > 0 && Date.now() - at < ASK_TTL_MS;
   } catch {
     return true;
   }
@@ -50,9 +53,9 @@ function answered(): boolean {
 
 function remember() {
   try {
-    sessionStorage.setItem(SESSION_KEY, "1");
+    localStorage.setItem(ASK_KEY, String(Date.now()));
   } catch {
-    /* private mode: the question is simply asked again */
+    /* storage blocked: the question is simply asked again */
   }
   for (const l of listeners) l();
 }

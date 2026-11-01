@@ -239,13 +239,23 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await sheet.getByRole("button", { name: "Aizvērt" }).click();
   await expect(sheet).toBeHidden();
 
-  // Answered once: for the rest of the visit every shop link goes straight to the shop.
+  // Answered once: for a day every shop link, in a new tab too, goes straight to the shop.
   const second = picks(page)
     .nth(1)
     .getByRole("link", { name: /^Pirkt — / });
   await expect(second).not.toHaveAttribute("aria-haspopup", "dialog");
-  await second.click();
-  await page.waitForURL(/^https:\/\/example\.invalid\//);
+  const tab = await page.context().newPage();
+  await tab.route("https://example.invalid/**", (r) =>
+    r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title>" }),
+  );
+  await tab.goto(url);
+  const again = picks(tab)
+    .first()
+    .getByRole("link", { name: /^Pirkt — / });
+  await expect(again).not.toHaveAttribute("aria-haspopup", "dialog");
+  await again.click();
+  await tab.waitForURL(/^https:\/\/example\.invalid\//);
+  await tab.close();
 });
 
 test("wishlist: save a search and a product, see today's offer, remove, switch price e-mails", async ({
