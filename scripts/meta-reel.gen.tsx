@@ -523,13 +523,14 @@ it("renders the Reel frame by frame", async () => {
   };
   const fonts = await brandFonts();
   const dir = path.join(OUT, "R1-ka-tas-strada");
-  rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   const frames = Math.round(DURATION * FPS);
+  const only = process.env.REEL_SHAPES?.split(",");
   for (const [shape, tag] of [
     ["story", "9x16_1080x1920"],
     ["feed", "4x5_1080x1350"],
   ] as const) {
+    if (only && !only.includes(shape)) continue;
     const z = SIZE[shape];
     const tmp = path.join(OUT, `.frames-${shape}`);
     rmSync(tmp, { recursive: true, force: true });
