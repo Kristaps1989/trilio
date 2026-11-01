@@ -20,6 +20,7 @@ import { OptionRow } from "@/ui/OptionRow";
 import { SingleRange } from "@/ui/RangeSlider";
 import { useLiveCount } from "@/ui/useLiveCount";
 import { RadioGroup } from "@/ui/RadioGroup";
+import { SWIPE_ROW } from "@/ui/swipeRow";
 
 // Results you can adjust in place (docs/FILTERS_PLAN.md §4.1): one chip per
 // choice; a chip opens a sheet (a modal dialog: focus stays inside, Esc
@@ -64,14 +65,14 @@ export function FilterBar({ chips, state, subId }: { chips: Chip[]; state: FlowS
   const [open, setOpen] = useState<Chip | null>(null);
   return (
     <nav aria-label={t("filters")}>
-      <ul className="flex flex-wrap gap-2">
+      <ul className={SWIPE_ROW}>
         {chips.map((c) => (
-          <li key={c.id}>
+          <li key={c.id} className="shrink-0">
             <button
               type="button"
               onClick={() => setOpen(c)}
               aria-haspopup="dialog"
-              className={`flex min-h-11 items-center gap-1.5 rounded-full px-[14px] text-sm transition-colors ${
+              className={`flex min-h-11 items-center gap-1.5 rounded-full px-[14px] text-sm whitespace-nowrap transition-colors ${
                 c.active
                   ? "bg-lime-18 font-semibold text-mist ring-1 ring-lime"
                   : "bg-chip text-mist hover:bg-lime-18"

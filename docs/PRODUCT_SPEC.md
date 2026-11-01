@@ -134,7 +134,11 @@ Urgency is no longer a flow screen. It is the "Piegāde" (delivery) chip on the 
 - **Never use "this week" wording.** It is wrong when someone fills the form in on a Sunday.
 
 ## 3. Results
-The results page is the second half of the conversation: it opens on a sensible answer and makes it easy to improve. Top to bottom:
+The results page is the second half of the conversation: it opens on a sensible answer and makes it easy to improve.
+
+**The products come first (owner, 1 Nov 2026).** Above the cards stand only the title, the coverage line, the priority chips and the filter chips. On a phone the priority chips and the filter chips are one swipeable row each, the right edge fading while there is more; from 640 px they wrap. The lead text, the shared facts, the EAN note and "Kā mēs izvēlamies un prioritizējam?" sit directly under the cards. At 360 × 740 the first card starts at about 440 px, inside the first screen; before, it needed more than a screen of scrolling. On the card the photo, name and price lead and the verdict sentence follows them. The items below are listed in their old order; their content is unchanged.
+
+Top to bottom:
 
 - **Title:** "Trīs labākie varianti tev" (your three best options).
 - **Lead text:** says how many products match the price range and whether there are over-budget extras. When the picks are too close in price for tiers to mean anything, it says so instead: "Šie varianti ir līdzīgā cenā, ap 390 € — izvēlies pēc tā, kas tev svarīgāk." (these options cost about the same, around €390 — choose by what matters more to you).

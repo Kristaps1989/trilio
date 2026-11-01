@@ -67,7 +67,7 @@ The shop names come from the `stores` table (configuration, never code) and are 
 
 Rules: a pill appears only when the role is genuinely earned against the pool; a product may earn several roles, in which case fewer cards are shown and the lead says "Šoreiz viens variants pārspēj visus pārējos" (one option beats all the others this time); cards stay sorted by price; the 10 % tier-gap rule and dominated-pick rule stay. Price tiers remain as the sort order and as the `tier` data attribute the e2e suite checks.
 
-**A3. The verdict line.** One sentence per card, first on the card, built by code from a per-category template grammar in the message files (LV and EN) and the shopper's own answers. Every verdict must echo at least one answer and contain at most two numbers. Patterns, with the data each one needs:
+**A3. The verdict line.** One sentence per card, directly under the photo, name and price (owner, 1 Nov 2026: the product is the hero; before, it was first on the card), built by code from a per-category template grammar in the message files (LV and EN) and the shopper's own answers. Every verdict must echo at least one answer and contain at most two numbers. Patterns, with the data each one needs:
 
 - Fit from the household answer: "Četriem cilvēkiem 300 L ir īstais izmērs." (`household` answer × `volume_l` thresholds from C1).
 - Leads on the priority: "Klusākais no trim: 36 dB — klusa istaba." (`priorities=quiet`, `noise_db`, threshold words from C1).
