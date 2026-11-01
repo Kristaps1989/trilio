@@ -154,6 +154,14 @@ export type NotifyRequestResult =
   | { ok: true; email: string; lead?: string }
   | { ok: false; reason: "invalid" | "too_many" | "email_failed" | "unknown" };
 
+/** The question before the shop was shown for this item (docs/PRICE_NOTIFY_PLAN.md §8.4); people only, no cookie. */
+export async function askShownAction(raw: SaveTarget): Promise<void> {
+  const target = Target.safeParse(raw);
+  if (!target.success) return;
+  const sub = await subcategoryOf(target.data);
+  await recordUiEvent(db, await who(), "ask_shown", sub).catch(() => undefined);
+}
+
 /** The e-mail field on a card, signed out: one confirmation e-mail, nothing else until it is clicked. */
 export async function requestNotifyAction(
   raw: SaveTarget,

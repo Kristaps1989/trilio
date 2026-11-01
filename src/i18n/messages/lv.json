@@ -1638,7 +1638,9 @@
       "funnelTaps": "Spieda „Paziņot”",
       "funnelSent": "Ievadīja e-pastu",
       "funnelConfirmed": "Apstiprināja",
-      "funnelMethod": "Apmeklētāji bez sīkdatnēm, katru dienu atsevišķi, tāpat kā apmeklējumu skaitā. „Spieda” skaita arī ienākušos; „Ievadīja e-pastu” un „Apstiprināja” attiecas uz tiem, kam konta vēl nebija. Rezultātu apmeklējumi glabājas 35 dienas."
+      "funnelMethod": "Apmeklētāji bez sīkdatnēm, katru dienu atsevišķi, tāpat kā apmeklējumu skaitā. „Spieda” skaita arī ienākušos; „Ievadīja e-pastu” un „Apstiprināja” attiecas uz tiem, kam konta vēl nebija. Rezultātu apmeklējumi glabājas 35 dienas. „Jautājums pirms veikala” ir pirmais „Pirkt” klikšķis apmeklējumā, kas atver jautājumu; „Izvēlējās veikalu” ir tie, kas tajā spieda „Uz veikalu”.",
+      "funnelAskShown": "Jautājums pirms veikala",
+      "funnelAskShop": "Izvēlējās veikalu"
     },
     "users": {
       "title": "Lietotāji",
@@ -2456,5 +2458,18 @@
     "link": "Apstiprināt: {url}",
     "valid": "Saite derīga 7 dienas.",
     "notYou": "Ja tas nebiji tu, nekas nav jādara: bez apstiprinājuma neko nesūtīsim."
+  },
+  "ask": {
+    "title": "Pieprasīt labāku cenu, pirms ej uz veikalu?",
+    "titlePlain": "Paziņot, kad cena samazināsies?",
+    "product": "{name} · {price} veikalā {shop}",
+    "body": "Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu uz e-pastu; ja ne, paziņosim, kad cena veikalos samazināsies. Bez maksas, bez konta.",
+    "bodyPlain": "Uzrakstīsim, kad šīs preces cena veikalos samazināsies. Bez maksas, bez konta.",
+    "request": "Pieprasīt labāku cenu",
+    "requestPlain": "Paziņot man",
+    "toShop": "Uz {shop}",
+    "done": "Pieprasīts. Meklējam labāku cenu un uzrakstīsim.",
+    "donePlain": "Saglabāts. Paziņosim, kad cena samazināsies.",
+    "close": "Aizvērt"
   }
 }

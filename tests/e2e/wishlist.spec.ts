@@ -201,6 +201,53 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   await deleteAccount(page);
 });
 
+test("the question before the shop: one sheet on the first shop click, two equal choices, once per visit", async ({
+  page,
+}) => {
+  const email = `e2e-ask-${Date.now()}@example.invalid`;
+  await page.route("https://example.invalid/**", (r) =>
+    r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title>" }),
+  );
+  await kettleResults(page);
+  const url = page.url();
+  const first = picks(page).first();
+  const buy = first.getByRole("link", { name: /^Pirkt — / });
+  const shop = ((await buy.textContent()) ?? "").replace(/^Pirkt — /, "").trim();
+  await buy.click();
+
+  // One sheet, the page stays; the request and the shop are two buttons of the same size, nothing is shamed.
+  const sheet = page.getByRole("dialog", { name: "Pieprasīt labāku cenu, pirms ej uz veikalu?" });
+  await expect(sheet).toBeVisible();
+  await expect(page).toHaveURL(url);
+  await expect(sheet).toContainText("Bez maksas, bez konta.");
+  await expect(sheet.getByRole("button", { name: "Pieprasīt labāku cenu" })).toBeVisible();
+  await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toHaveAttribute(
+    "href",
+    /^\/go\/[0-9a-f-]{36}\?.*ask=1/,
+  );
+  await expectNoAxeViolations(page);
+
+  // The request inside the sheet is the card's own flow: the e-mail field, then the confirmation link.
+  await sheet.getByRole("button", { name: "Pieprasīt labāku cenu" }).click();
+  const panel = sheet.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
+  await panel.getByLabel("E-pasts").fill(email);
+  await panel.getByRole("button", { name: "Pieprasīt labāku cenu" }).click();
+  await expect(sheet.getByRole("status")).toHaveText(
+    `Nosūtījām apstiprinājuma saiti uz ${email}. Atver to, un sāksim meklēt labāku cenu.`,
+  );
+  await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toBeVisible();
+  await sheet.getByRole("button", { name: "Aizvērt" }).click();
+  await expect(sheet).toBeHidden();
+
+  // Answered once: for the rest of the visit every shop link goes straight to the shop.
+  const second = picks(page)
+    .nth(1)
+    .getByRole("link", { name: /^Pirkt — / });
+  await expect(second).not.toHaveAttribute("aria-haspopup", "dialog");
+  await second.click();
+  await page.waitForURL(/^https:\/\/example\.invalid\//);
+});
+
 test("wishlist: save a search and a product, see today's offer, remove, switch price e-mails", async ({
   page,
 }) => {

@@ -2,10 +2,10 @@ import { getTranslations } from "next-intl/server";
 import type { EnergyLabel } from "@/domain/catalog/media";
 import type { PriceLine } from "@/domain/pricing/omnibus";
 import { formatEur, formatEurDelta } from "@/i18n/format";
-import { buttonClass } from "@/ui/Button";
 import { EnergyBadge } from "@/ui/EnergyBadge";
 import { ProductImage } from "@/ui/ProductImage";
 import { SaveButton } from "@/ui/SaveButton";
+import { ShopLink } from "@/ui/ShopLink";
 import type { CardImage } from "./card-media";
 
 // Spec §3.2 result card and §3.3 refurbished card. Server component: all
@@ -330,14 +330,17 @@ export async function ResultCard({ card }: { card: CardModel }) {
       ) : null}
 
       <div className="mt-auto flex flex-col gap-2 pt-1">
-        <a
+        <ShopLink
           href={goHref(card)}
-          rel="sponsored noopener"
-          {...offerAnalytics(card)}
-          className={buttonClass({ variant: "dark", block: true })}
-        >
-          {t("buy", { shop: card.best.storeName })}
-        </a>
+          label={t("buy", { shop: card.best.storeName })}
+          shop={card.best.storeName}
+          name={card.name}
+          price={formatEur(card.best.priceCents)}
+          target={{ kind: "product", productId: card.productId }}
+          saved={card.saved}
+          offers={!!card.trilioOffer}
+          analytics={offerAnalytics(card)}
+        />
         <SaveButton
           target={{ kind: "product", productId: card.productId }}
           saved={card.saved}

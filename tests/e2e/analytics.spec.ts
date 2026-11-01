@@ -158,11 +158,17 @@ test.describe("Meta Pixel", () => {
     await page.evaluate(() =>
       document.addEventListener("click", (e) => (e.target as Element).closest("a") && e.preventDefault()),
     );
+    // The first shop click opens the question before the shop (docs/PRICE_NOTIFY_PLAN.md §8.4); the
+    // shop click is counted on the link that actually leaves, "Uz {Shop}", and not before.
     await page
       .getByRole("region", { name: "Ieteiktie varianti" })
       .getByRole("link", { name: /^Pirkt/ })
       .first()
       .click();
+    const sheet = page.getByRole("dialog");
+    await expect(sheet).toBeVisible();
+    expect((await fbqCalls(page)).find((c) => c[0] === "trackCustom")).toBeUndefined();
+    await sheet.getByRole("link", { name: /^Uz / }).click();
     await expect
       .poll(async () => (await fbqCalls(page)).find((c) => c[0] === "trackCustom"))
       .toEqual(["trackCustom", "ShopClick", { content_category: "kettle" }]);

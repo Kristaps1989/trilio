@@ -301,12 +301,18 @@ run("notify requests", () => {
       { day, visitorHash: "notify-test-b", event: "notify_tap", subcategoryId: "fridge" },
       { day, visitorHash: "notify-test-a", event: "notify_sent", subcategoryId: "fridge" },
       { day, visitorHash: "notify-test-a", event: "notify_confirmed", subcategoryId: "fridge" },
+      // The question before the shop: shown to two visitors, one went to the shop from it.
+      { day, visitorHash: "notify-test-a", event: "ask_shown", subcategoryId: "fridge" },
+      { day, visitorHash: "notify-test-b", event: "ask_shown", subcategoryId: "fridge" },
+      { day, visitorHash: "notify-test-b", event: "ask_shop", subcategoryId: "fridge" },
     ]);
     const rows = await notifyFunnel(db, day, day);
     const f = rows.find((r) => r.subcategoryId === "fridge")!;
     expect(f.taps).toBeGreaterThanOrEqual(2);
     expect(f.sent).toBeGreaterThanOrEqual(1);
     expect(f.confirmed).toBeGreaterThanOrEqual(1);
+    expect(f.askShown).toBeGreaterThanOrEqual(2);
+    expect(f.askShop).toBeGreaterThanOrEqual(1);
   });
 
   it("unconfirmed saves never happen: nothing is saved for a request nobody clicked", async () => {
