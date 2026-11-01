@@ -108,10 +108,10 @@ export function SaveButton({
     });
   }
 
-  // On a card the request is the lime button (as in the ads); once requested it steps back to outlined.
+  // On a card the request is the lime button (as in the ads), before and after the tap.
   const className =
     variant === "card"
-      ? buttonClass({ variant: saved ? "card" : "primary", size: "sm", block: true })
+      ? buttonClass({ variant: "primary", size: "sm", block: true })
       : variant === "inline"
         ? buttonClass({ variant: "outline", size: "sm" })
         : "inline-flex h-11 w-11 items-center justify-center rounded-full text-lime hover:bg-lime-18";

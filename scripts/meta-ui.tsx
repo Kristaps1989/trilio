@@ -130,7 +130,7 @@ export async function photo(name: string, max = 900): Promise<string> {
   const buf = await sharp(path.join(SRC, `${name}.webp`))
     .flatten({ background: "#FFFFFF" })
     .trim({ threshold: 12 })
-    .resize(max, max, { fit: "inside", withoutEnlargement: true })
+    .resize(max, max, { fit: "contain", background: "#FFFFFF" })
     .png()
     .toBuffer();
   return `data:image/png;base64,${buf.toString("base64")}`;
@@ -253,15 +253,27 @@ export function Button({ text, kind, k = 1 }: { text: string; kind: "dark" | "li
         gap: 12 * k,
         height: 66 * k,
         borderRadius: 999,
-        background: kind === "dark" ? NIGHT : kind === "done" ? "#FFFFFF" : LIME,
-        border: kind === "done" ? `2px solid ${LINE}` : "none",
+        background: kind === "dark" ? NIGHT : LIME,
         color: kind === "dark" ? "#FFFFFF" : NIGHT,
         fontSize: 25 * k,
         fontWeight: 700,
         boxShadow: kind === "lime" ? "0 14px 34px rgba(216,244,90,0.35)" : "none",
       }}
     >
-      {kind !== "dark" ? (
+      {kind === "done" ? (
+        <svg
+          width={26 * k}
+          height={26 * k}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={NIGHT}
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4 12.5l5 5L20 6.5" />
+        </svg>
+      ) : kind === "lime" ? (
         <svg
           width={26 * k}
           height={26 * k}
