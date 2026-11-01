@@ -9,7 +9,7 @@ Files: `assets/ads/meta-phase1/` (regenerate with `npm run creatives:meta`, sour
 The first set (drawings, category icons) was rejected as template-like, and "secību nenosaka komisija" as misleading: there is no commission. This set is **product-led and designed**, not screenshots: the site's own elements (the first question, the recommendation card, the two buttons) are drawn at poster scale with **real data** from trilio.lv/rezultati?sub=washer on 1 Nov 2026 (three picks for 3–4 people, front loading, 300–700 €: Gorenje W11NHPI84AS 324 €, LG F4X1009NWB 360 €, LG F4X5011TWB 432 €, all at Tet) and the shops' product photos. Every picture with a price carries the date. Source: `scripts/meta-phase1.gen.tsx`, data in `assets/ads/meta-phase1-src/`.
 
 - **Five distinct ideas:** the three recommendations (A1), the request (A2), the question (A3), fit to criteria (A4), the four-swipe story (A5), and one Reel through all of it (R1). Meta's ad retrieval treats near-identical ads as one, so each ad has its own angle, not a colour variant.
-- **Every placement has its own shape** in one ad: **4:5** Feeds, **9:16** Stories/Reels (content inside Meta's interface margins: top 280 px, bottom 480 px), **1:1** right column, Search, Marketplace.
+- **Every placement has its own shape** in one ad: **4:5** Feeds, **9:16** Stories/Reels (content inside Meta's interface margins: top 280 px, bottom 480 px), **1:1** right column, Search, Marketplace, **1.91:1** (1200×628, the text left and the site element right) Audience Network, Messenger, in-stream and the desktop right column. In the Crop step choose **Replace** under Square, Vertical and Horizontal and upload the `_1x1`, `_9x16` and `_1.91x1` files; the 4:5 is the main file. Never let Meta crop the 4:5 for Horizontal: it cuts the headline.
 - **One hero per ad**, the lime "Pieprasīt labāku cenu" button is the hero of the request ad; no decoration beyond the brand glow.
 - **Text:** the point in the headline, no pronoun of address, at most one emoji in primary text, no "lētākais" claims (the label "Lētākais, ko paši pirktu" is the site's own tier name on the card, not an ad claim). Every line below passed `lintPost`.
 
@@ -29,7 +29,7 @@ Name every ad exactly as below: the name travels in `utm_content`, so Admin → 
 
 ## A1 · Trīs ieteikumi
 
-- **Files:** `A1-tris-ieteikumi/…_4x5`, `…_9x16`, `…_1x1`
+- **Files:** `A1-tris-ieteikumi/…_4x5`, `…_9x16`, `…_1x1`, `…_1.91x1`
 - **URL:** `https://trilio.lv/izvelies/laundry/washer`
 - **Primary text:**
   1. Priekšējā ielāde, 3–4 cilvēki, noteikts budžets. Pēc dažiem jautājumiem Trilio parāda trīs piemērotākās veļas mašīnas no Latvijas veikaliem.

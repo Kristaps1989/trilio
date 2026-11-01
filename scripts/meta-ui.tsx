@@ -22,7 +22,7 @@ export const MUTED = "#5B6E6A";
 export const LINE = "#DCE4E1";
 export const HEAD = "Space Grotesk";
 
-export type Shape = "feed" | "story" | "square";
+export type Shape = "feed" | "story" | "square" | "wide";
 export type Z = {
   w: number;
   h: number;
@@ -77,6 +77,20 @@ export const SIZE: Record<Shape, Z> = {
     oneP: 220,
     threeP: 185,
     threeK: 0.74,
+  },
+  /** 1.91:1 (Audience Network, Messenger, in-stream, right column on desktop): the text left, the hero right. */
+  wide: {
+    w: 1200,
+    h: 628,
+    top: 40,
+    bottom: 36,
+    side: 56,
+    head: 48,
+    k: 0.62,
+    one: 470,
+    oneP: 165,
+    threeP: 150,
+    threeK: 0.6,
   },
 };
 
