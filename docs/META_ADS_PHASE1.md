@@ -83,9 +83,10 @@ Name every ad exactly as below: the name travels in `utm_content`, so Admin → 
   3. Pie katra: kāpēc tieši šis · Ieteikumi pēc atbildēm
   4. Pieprasi labāku cenu · Pieprasījums bez maksas
 
-## R1 · Reel: kā tas strādā (15,6 s)
+## R1 · Reel: kā tas strādā (14 s, motion)
 
-- **Files:** `R1-ka-tas-strada/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds); covers `…_cover.jpg`
+- **Files:** `R1-ka-tas-strada/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds); covers `…_cover.jpg`. Made by `npm run creatives:reel` (`scripts/meta-reel.gen.tsx`): every frame is laid out from the time, 30 fps, so entrances ease in, the option gets tapped, the three cards slide in one by one, the lime button is pressed and turns into the site's "Pieprasīts · meklējam labāku cenu".
+- **Scenes:** the pile of product cards ("353 veļas mašīnas 3 veikalos. Kuru izvēlēties?", the site's real count) → the first question, answered ("Daži jautājumi. Tikai tie, kas izšķir.") → the three fitting models with the criteria ("Trīs, kas der. Ar cenām no veikaliem.") → the request ("Patīk? Pieprasi labāku cenu.") → logo, trilio.lv, "Sākt izvēli".
 - **URL:** `https://trilio.lv/izvelies/laundry/washer`
 - **Primary text:**
   1. Veļas mašīna trīs soļos: daži jautājumi, trīs ieteikumi, un pēc tam pērc uzreiz vai pieprasi labāku cenu.
