@@ -46,3 +46,7 @@ next-env.d.ts
 /playwright-report
 /test-results
 /coverage
+
+# Frame scratch of the Reel generator (scripts/meta-reel.gen.tsx)
+assets/ads/meta-phase1/.frames-*
+assets/ads/meta-phase1/.board
