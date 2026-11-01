@@ -1581,5 +1581,18 @@
     "link": "Confirm: {url}",
     "valid": "The link is valid for 7 days.",
     "notYou": "If this wasn't you, there's nothing to do: we send nothing without confirmation."
+  },
+  "ask": {
+    "title": "Ask for a better price before the shop?",
+    "titlePlain": "Tell you when the price drops?",
+    "product": "{name} · {price} at {shop}",
+    "body": "We'll ask the distributor. If we can do better, we'll e-mail the offer; if not, we'll write when the shop price drops. Free, no account needed.",
+    "bodyPlain": "We'll write when this product's shop price drops. Free, no account needed.",
+    "request": "Ask for a better price",
+    "requestPlain": "Tell me",
+    "toShop": "Go to {shop}",
+    "done": "Requested. We're looking for a better price and will write.",
+    "donePlain": "Saved. We'll write when the price drops.",
+    "close": "Close"
   }
 }

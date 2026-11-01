@@ -5,6 +5,7 @@ import { db, offers, products, stores } from "@/db";
 import { isBot } from "@/domain/analytics/visits";
 import { adLandingFor } from "@/services/growth/landings";
 import { clientKey } from "@/services/rate-limit";
+import { recordUiEvent } from "@/services/notify/events";
 import { countBot, recordShopClick } from "@/services/visits/visits";
 
 // "Pirkt — {Shop}" affiliate link. The target is built from the database
@@ -34,6 +35,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
       template: stores.affiliateTemplateUrl,
       active: stores.active,
       ean: products.ean,
+      subcategoryId: products.subcategoryId,
     })
     .from(offers)
     .innerJoin(stores, eq(stores.id, offers.storeId))
@@ -41,7 +43,10 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
     .where(eq(offers.id, parsed.data.offerId));
   if (!row || !row.active) return new NextResponse(null, { status: 404 });
 
-  const sessionId = new URL(request.url).searchParams.get("s");
+  const params = new URL(request.url).searchParams;
+  const sessionId = params.get("s");
+  // "Uz {Shop}" chosen in the question before the shop (docs/PRICE_NOTIFY_PLAN.md §8.4).
+  const fromAsk = params.get("ask") === "1";
   const userAgent = request.headers.get("user-agent");
   // Every requester is sent on to the shop; only people are counted (bots, and a
   // visitor's repeat click on the same product within 30 minutes, are not).
@@ -58,6 +63,8 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
       searchSessionId: z.string().uuid().safeParse(sessionId).success ? sessionId : null,
       adLandingId,
     }).catch(() => undefined);
+    if (fromAsk)
+      after(() => recordUiEvent(db, { ip, userAgent }, "ask_shop", row.subcategoryId).catch(() => undefined));
   }
 
   const target = buildAffiliateUrl(row.template, row.url, row.ean);

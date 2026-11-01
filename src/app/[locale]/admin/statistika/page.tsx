@@ -43,8 +43,10 @@ export default async function AdminStats({ searchParams }: Props) {
       taps: a.taps + f.taps,
       sent: a.sent + f.sent,
       confirmed: a.confirmed + f.confirmed,
+      askShown: a.askShown + f.askShown,
+      askShop: a.askShop + f.askShop,
     }),
-    { results: 0, taps: 0, sent: 0, confirmed: 0 },
+    { results: 0, taps: 0, sent: 0, confirmed: 0, askShown: 0, askShop: 0 },
   );
   const share = (n: number, of: number) => (of ? `${formatInt(Math.round((n / of) * 100))} %` : "—");
   const botTotal = bots.visit + bots.search + bots.click;
@@ -125,6 +127,8 @@ export default async function AdminStats({ searchParams }: Props) {
           <Stat label={t("funnelTaps")} value={formatInt(funnelTotal.taps)} />
           <Stat label={t("funnelSent")} value={formatInt(funnelTotal.sent)} />
           <Stat label={t("funnelConfirmed")} value={formatInt(funnelTotal.confirmed)} />
+          <Stat label={t("funnelAskShown")} value={formatInt(funnelTotal.askShown)} />
+          <Stat label={t("funnelAskShop")} value={formatInt(funnelTotal.askShop)} />
         </Stats>
         <Table
           caption={t("notifyFunnel")}
@@ -135,6 +139,8 @@ export default async function AdminStats({ searchParams }: Props) {
             t("funnelTaps"),
             t("funnelSent"),
             t("funnelConfirmed"),
+            t("funnelAskShown"),
+            t("funnelAskShop"),
           ]}
           empty={t("empty")}
           rows={funnel.map((f) => [
@@ -144,6 +150,8 @@ export default async function AdminStats({ searchParams }: Props) {
             `${formatInt(f.taps)} (${share(f.taps, f.resultsVisitors)})`,
             formatInt(f.sent),
             formatInt(f.confirmed),
+            formatInt(f.askShown),
+            `${formatInt(f.askShop)} (${share(f.askShop, f.askShown)})`,
           ])}
         />
         <p className="text-sm text-stone">{t("funnelMethod")}</p>

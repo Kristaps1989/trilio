@@ -1,15 +1,11 @@
 "use client";
 
-import { track } from "@/ui/analytics/track";
-import { metaTrack } from "@/ui/analytics/meta";
-import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
-import { toggleSavedAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
 import { SavedAlertNote } from "./SavedAlertNote";
+import { useRequest } from "./useRequest";
 
 // "Pieprasīt labāku cenu" (docs/PRICE_NOTIFY_PLAN.md §8.3): one tap saves a
 // product or a whole search, asks Trilio for a better price and turns price
@@ -74,39 +70,11 @@ export function SaveButton({
   offers?: boolean;
 }) {
   const t = useTranslations("wishlist");
-  const router = useRouter();
-  const [saved, setSaved] = useState(initial);
-  const [pending, start] = useTransition();
-  const [note, setNote] = useState<{ email: string } | null>(null);
-  const [panel, setPanel] = useState<{ email: string | null } | null>(null);
-  // Another button for the same item (and the refresh after a tap) brings the server's state.
-  const [prevInitial, setPrevInitial] = useState(initial);
-  if (initial !== prevInitial) {
-    setPrevInitial(initial);
-    setSaved(initial);
-  }
+  const { saved, pending, note, panel, run, closePanel } = useRequest(target, initial, variant !== "icon");
   const search = target.kind === "search";
   // A search is a watch for a cheaper option; only a product is a request to a partner.
   const key = `${saved ? "notifying" : "notify"}${search ? "Search" : offers ? "" : "Drop"}` as const;
   const text = t(key);
-
-  function run(next: boolean, consent = false) {
-    setSaved(next); // optimistic
-    start(async () => {
-      const r = await toggleSavedAction(target, next, consent);
-      if (!r.ok) {
-        setSaved(!next);
-        if (r.reason === "auth") setPanel({ email: null });
-        else if (r.reason === "consent") setPanel({ email: r.email });
-        return;
-      }
-      setPanel(null);
-      if (r.saved) track("save_item", { item: target.kind });
-      if (r.lead) metaTrack("Lead", {}, r.lead);
-      setNote(r.saved && r.alerts && r.email && variant !== "icon" ? { email: r.email } : null);
-      router.refresh();
-    });
-  }
 
   // On a card the request is the lime button (as in the ads), before and after the tap.
   const className =
@@ -122,7 +90,7 @@ export function SaveButton({
       aria-label={variant === "icon" ? `${text}: ${name}` : undefined}
       aria-expanded={panel ? true : undefined}
       disabled={pending}
-      onClick={() => (panel ? setPanel(null) : run(!saved))}
+      onClick={() => (panel ? closePanel() : run(!saved))}
       className={`${className} ${saved && variant !== "card" ? "text-lime" : ""}`}
       data-notify-button
     >
@@ -140,7 +108,7 @@ export function SaveButton({
           email={panel.email}
           offers={offers && !search}
           onConsent={() => run(true, true)}
-          onClose={() => setPanel(null)}
+          onClose={closePanel}
         />
       ) : note && saved ? (
         <SavedAlertNote email={note.email} offers={offers && !search} />

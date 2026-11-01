@@ -9,7 +9,14 @@ import { saltFor } from "@/services/visits/visits";
 // step is a row with the day's anonymous visitor hash, the same hash the
 // visit statistics use, so results visitors and taps line up per day.
 
-export const NOTIFY_EVENTS = ["notify_tap", "notify_sent", "notify_confirmed"] as const;
+/** The request's steps, and the question before the shop (shown; answered with the shop). */
+export const NOTIFY_EVENTS = [
+  "notify_tap",
+  "notify_sent",
+  "notify_confirmed",
+  "ask_shown",
+  "ask_shop",
+] as const;
 export type NotifyEvent = (typeof NOTIFY_EVENTS)[number];
 
 export type Who = { ip: string; userAgent: string | null; now?: Date };
@@ -51,6 +58,9 @@ export type FunnelRow = {
   confirmed: number;
   /** Of the visitors who saw results, how many came from an ad. */
   adVisitors: number;
+  /** Saw the question before the shop (docs/PRICE_NOTIFY_PLAN.md §8.4) and went to the shop from it. */
+  askShown: number;
+  askShop: number;
 };
 
 /**
@@ -88,6 +98,8 @@ export async function notifyFunnel(db: Db, from: string, to: string): Promise<Fu
         sent: 0,
         confirmed: 0,
         adVisitors: 0,
+        askShown: 0,
+        askShop: 0,
       });
     return rows.get(sub)!;
   };
@@ -99,6 +111,8 @@ export async function notifyFunnel(db: Db, from: string, to: string): Promise<Fu
     if (e.event === "notify_tap") r.taps += Number(e.n);
     else if (e.event === "notify_sent") r.sent += Number(e.n);
     else if (e.event === "notify_confirmed") r.confirmed += Number(e.n);
+    else if (e.event === "ask_shown") r.askShown += Number(e.n);
+    else if (e.event === "ask_shop") r.askShop += Number(e.n);
   }
   return [...rows.values()].sort(
     (a, b) => b.resultsVisitors - a.resultsVisitors || a.subcategoryId.localeCompare(b.subcategoryId),

@@ -116,6 +116,116 @@ const ADS: Record<string, (z: Z, ph: Photos) => ReactNode> = {
   ),
 };
 
+/**
+ * 1.91:1: the same five ideas laid out side by side, the text in a left
+ * column and the site element on the right, so Meta does not crop the
+ * 4:5 for Audience Network, Messenger and the desktop right column.
+ */
+const WZ = SIZE.wide;
+function WideAd({
+  kicker,
+  lines,
+  accent,
+  left,
+  criteria = false,
+  foot,
+  hero,
+}: {
+  kicker: string;
+  lines: string[];
+  accent?: string;
+  /** Width of the text column; the hero takes the rest. */
+  left: number;
+  criteria?: boolean;
+  foot: string;
+  hero: ReactNode;
+}) {
+  return (
+    <Ground z={WZ}>
+      <Top kicker={kicker} />
+      <div style={{ display: "flex", flex: 1, gap: 36, alignItems: "stretch" }}>
+        <div style={{ display: "flex", flexDirection: "column", width: left, flexShrink: 0 }}>
+          <Headline z={WZ} lines={lines} accent={accent} />
+          {criteria ? (
+            <div style={{ display: "flex", paddingTop: 20 }}>
+              <Criteria k={0.62} />
+            </div>
+          ) : null}
+          <Spacer />
+          <Foot text={foot} />
+        </div>
+        <div style={{ display: "flex", flex: 1, justifyContent: "center", alignItems: "center" }}>{hero}</div>
+      </div>
+    </Ground>
+  );
+}
+
+function ThreeWide({ photos, width }: { photos: Photos; width: number }) {
+  const gap = 14;
+  const w = Math.floor((width - 2 * gap) / 3);
+  return (
+    <div style={{ display: "flex", gap, alignItems: "flex-start" }}>
+      {PICKS.map((p) => (
+        <Tile
+          key={p.model}
+          p={p}
+          photos={photos}
+          width={w}
+          photoH={WZ.threeP}
+          k={WZ.threeK}
+          priceSize={38}
+          nameRows={2}
+        />
+      ))}
+    </div>
+  );
+}
+
+const WIDE: Record<keyof typeof ADS, (ph: Photos) => ReactNode> = {
+  "A1-tris-ieteikumi": (ph) => (
+    <WideAd
+      kicker="Veļas mašīnas"
+      lines={["Daži jautājumi."]}
+      accent="Trīs ieteikumi."
+      left={400}
+      criteria
+      foot={DATED}
+      hero={<ThreeWide photos={ph} width={WZ.w - 2 * WZ.side - 400 - 36} />}
+    />
+  ),
+  "A2-pieprasi-labaku-cenu": (ph) => (
+    <WideAd
+      kicker="Pie katra ieteikuma"
+      lines={["Patīk modelis?"]}
+      accent="Pieprasi labāku cenu."
+      left={540}
+      foot="Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena kritīs."
+      hero={<Tile p={PICKS[0]!} photos={ph} width={WZ.one} photoH={WZ.oneP} k={WZ.k} buttons />}
+    />
+  ),
+  "A3-dazi-jautajumi": () => (
+    <WideAd
+      kicker="Veļas mašīnas"
+      lines={["Kuru izvēlēties?"]}
+      accent="Daži jautājumi."
+      left={520}
+      foot="Tikai jautājumi, kas izšķir izvēli. Pēc tiem trīs piemērotākie modeļi."
+      hero={<Question width={WZ.one + 20} k={WZ.k} />}
+    />
+  ),
+  "A4-piemerotakais-modelis": (ph) => (
+    <WideAd
+      kicker="Veļas mašīnas"
+      lines={["Piemērotākais modelis"]}
+      accent="atbilstoši kritērijiem."
+      left={460}
+      criteria
+      foot={DATED}
+      hero={<Tile p={PICKS[0]!} photos={ph} width={WZ.one + 60} photoH={WZ.oneP + 10} k={WZ.k} reason />}
+    />
+  ),
+};
+
 /** The carousel: four swipes through Trilio, one idea each. */
 const SQ = SIZE.square;
 const CARDS: Record<
@@ -191,6 +301,7 @@ const SHAPES: [Shape, string][] = [
   ["feed", "4x5_1080x1350"],
   ["story", "9x16_1080x1920"],
   ["square", "1x1_1080x1080"],
+  ["wide", "1.91x1_1200x628"],
 ];
 
 it("renders the Meta Phase 1 set", async () => {
@@ -199,16 +310,19 @@ it("renders the Meta Phase 1 set", async () => {
     "product-2": await photo("product-2"),
     "product-3": await photo("product-3"),
   };
-  rmSync(OUT, { recursive: true, force: true });
+  // Only the stills: the Reel (R1, npm run creatives:reel) stays as it is.
   for (const [name, ad] of Object.entries(ADS)) {
     const dir = path.join(OUT, name);
+    rmSync(dir, { recursive: true, force: true });
     mkdirSync(dir, { recursive: true });
     for (const [shape, tag] of SHAPES) {
       const z = SIZE[shape];
-      writeFileSync(path.join(dir, `${name}_${tag}.jpg`), await jpeg(ad(z, ph), z.w, z.h));
+      const node = shape === "wide" ? WIDE[name]!(ph) : ad(z, ph);
+      writeFileSync(path.join(dir, `${name}_${tag}.jpg`), await jpeg(node, z.w, z.h));
     }
   }
   const cdir = path.join(OUT, "A5-karuselis");
+  rmSync(cdir, { recursive: true, force: true });
   mkdirSync(cdir, { recursive: true });
   for (const [name, c] of Object.entries(CARDS))
     writeFileSync(

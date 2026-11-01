@@ -171,3 +171,13 @@ Seen live, the owner's verdict: "Trilio var piedāvāt lētāk: iepērkam tieši
 | Wishlist (`wishlist.sub`, `empty`) | …Visiem meklējam labāku cenu. · Spied „Pieprasīt labāku cenu” pie preces. |
 
 The honesty guards: every promise is conditional ("ja varēsim piedāvāt lētāk"), and the price-drop e-mail stays in the same sentence, so the request always has a true outcome even when the distributor is not cheaper. The consent text changed, so `CONSENT_VERSION` is `2026-10-31`; earlier requests keep the version they were shown. Where `data/offers.json` leaves a category out, the `…Plain` and `…Drop` keys keep the old price-watch wording and the heart, because there Trilio asks nobody.
+
+### 8.4 The question before the shop (owner, 1 Nov 2026)
+
+Search visitors were good and nobody requested a price: a shopper who already knows the model takes the one-step path, "Pirkt — Tet", and Trilio is gone. The owner asked for a step at that moment. Built as one sheet, not a pop-up on arrival (an entry interstitial is what Google penalises on mobile and what rule 4 forbids):
+
+- **When:** the first "Pirkt — {Shop}" click of a visit, on a product not yet requested. Middle and modifier clicks, crawlers and bots get the plain `/go/…` link as before.
+- **What:** `ask.title` "Pieprasīt labāku cenu, pirms ej uz veikalu?", the product line "{name} · {price} veikalā {shop}", the conditional promise ("Ja varēsim lētāk… ja ne, paziņosim… Bez maksas, bez konta."), and **two buttons of equal size**: "Pieprasīt labāku cenu" (lime) and "Uz {Shop}" (dark). No "Nē, paldies", no countdown, no second ask. Esc, the backdrop and the close button leave without choosing. Where Trilio does not source, the sheet is the price watch (`…Plain` keys).
+- **Then:** the request runs the card's own flow inside the sheet (`useRequest`: e-mail field signed out, one yes signed in), and "Uz {Shop}" stays visible under it. Any answer or dismissal is remembered for 24 hours in `localStorage.trilio_ask_shop` (a timestamp, no personal data), after which every shop link in every tab goes straight through: once per visitor, not once per click (owner, 1 Nov 2026). A product already requested never asks.
+- **Measured** with the same first-party events: `ask_shown` (server action on open) and `ask_shop` (`/go/{offer}?ask=1`, recorded by the redirect for people only). Admin → Statistika → "Ceļš līdz paziņojumam" has two new columns, "Jautājums pirms veikala" and "Izvēlējās veikalu (%)"; the request path is counted in the existing "Spieda" and "Ievadīja e-pastu".
+- **Code:** `src/ui/ShopLink.tsx` (the link and the sheet), `src/ui/useRequest.ts` (the request state shared with `SaveButton`), `src/app/go/[offerId]/route.ts`, `src/services/notify/events.ts`.
