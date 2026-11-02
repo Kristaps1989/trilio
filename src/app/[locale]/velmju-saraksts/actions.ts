@@ -5,7 +5,7 @@ import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth, currentUserId } from "@/auth";
+import { auth, currentUserId, enabledProviders, signIn } from "@/auth";
 import { isAdminEmail } from "@/config/admin";
 import { db, savedItems, users } from "@/db";
 import { adLandingFor } from "@/services/growth/landings";
@@ -27,6 +27,7 @@ import { metaPixelId } from "@/config/analytics";
 import { capiConfigFromEnv, newEventId, sendCapiEvent } from "@/services/meta/capi";
 import { CONSENT_COOKIE } from "@/ui/analytics/consent";
 import { keyOf, saveTarget, type SaveTarget } from "./save";
+import { withPending } from "@/ui/pendingRequest";
 
 // "Pieprasīt labāku cenu" and the e-mail settings. Every action checks the session and
 // writes only the signed-in user's rows.
@@ -233,4 +234,63 @@ export async function setOffersOptInAction(optIn: boolean): Promise<boolean> {
   revalidatePath("/velmju-saraksts");
   revalidatePath("/konts");
   return true;
+}
+
+// "Turpināt ar Google" in the e-mail step (docs/PRICE_NOTIFY_PLAN.md §8.6): the
+// product waits in a short-lived httpOnly cookie while the shopper signs in, so
+// only this browser's own click can finish it; a link from elsewhere cannot.
+const PENDING_COOKIE = "trilio_pending_request";
+const PENDING_SECONDS = 15 * 60;
+
+/** Signed out, "Turpināt ar Google": remember the product, then off to Google (the dev login in tests). */
+export async function requestWithGoogleAction(
+  raw: SaveTarget,
+  returnPath: string,
+): Promise<{ ok: false } | { ok: true; go: string } | undefined> {
+  const target = Target.safeParse(raw);
+  if (!target.success || target.data.kind !== "product") return { ok: false };
+  const back = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/";
+  (await cookies()).set(PENDING_COOKIE, target.data.productId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: PENDING_SECONDS,
+  });
+  const redirectTo = withPending(back);
+  // Google leaves the site and comes back with a full page load; the test login does the same through `go`.
+  if (enabledProviders.google) await signIn("google", { redirectTo });
+  if (enabledProviders.dev) {
+    await signIn("dev", { email: GOOGLE_TEST_EMAIL, redirect: false });
+    return { ok: true, go: redirectTo };
+  }
+  return { ok: false };
+}
+
+/** The e-mail a test "Google" sign-in uses where Google is not configured (dev login only). */
+const GOOGLE_TEST_EMAIL = "google-e2e@example.invalid";
+
+export type PendingResult =
+  { ok: true; productId: string; email: string; alerts: boolean; lead?: string } | { ok: false };
+
+/**
+ * Back from Google: the request the shopper asked for, with the consent they gave
+ * on the card (the same sentence as the e-mail field). Needs this browser's
+ * cookie and a signed-in session; the cookie is used once.
+ */
+export async function completePendingRequestAction(): Promise<PendingResult> {
+  const jar = await cookies();
+  const productId = jar.get(PENDING_COOKIE)?.value;
+  if (!productId || !z.string().uuid().safeParse(productId).success) return { ok: false };
+  if (!(await currentUserId())) return { ok: false };
+  jar.delete(PENDING_COOKIE);
+  const target: SaveTarget = { kind: "product", productId };
+  const r = await toggleSavedAction(target, true, true);
+  if (!r.ok || !r.email) return { ok: false };
+  const sub = await subcategoryOf(target);
+  // The e-mail is confirmed by Google: the funnel's "entered" and "confirmed" both happen here.
+  const w = await who();
+  await recordUiEvent(db, w, "notify_sent", sub).catch(() => undefined);
+  await recordUiEvent(db, w, "notify_confirmed", sub).catch(() => undefined);
+  return { ok: true, productId, email: r.email, alerts: r.alerts, ...(r.lead ? { lead: r.lead } : {}) };
 }

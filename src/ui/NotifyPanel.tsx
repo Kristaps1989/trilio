@@ -3,9 +3,10 @@
 import { useTranslations } from "next-intl";
 import { metaTrack } from "@/ui/analytics/meta";
 import { type FormEvent, useId, useState, useTransition } from "react";
-import { requestNotifyAction } from "@/app/[locale]/velmju-saraksts/actions";
+import { requestNotifyAction, requestWithGoogleAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
+import { GoogleLogo } from "./GoogleButton";
 
 // The one step between "Pieprasīt labāku cenu" and the e-mail
 // (docs/PRICE_NOTIFY_PLAN.md §2): signed out, one field on the card; signed in
@@ -20,9 +21,11 @@ type Props = {
   offers: boolean;
   onConsent: () => void;
   onClose: () => void;
+  /** Called before leaving for Google (the question before the shop counts that as an answer). */
+  onGoogle?: () => void;
 };
 
-export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props) {
+export function NotifyPanel({ target, email, offers, onConsent, onClose, onGoogle }: Props) {
   const t = useTranslations("notify");
   const id = useId();
   const [value, setValue] = useState("");
@@ -42,6 +45,17 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
         {t(offers ? "sent" : "sentPlain", { email: sent })}
       </p>
     );
+
+  // "Turpināt ar Google" (owner, 2 Nov 2026): one tap, Google confirms the address, no e-mail to confirm.
+  function google() {
+    setError(null);
+    onGoogle?.();
+    start(async () => {
+      const r = await requestWithGoogleAction(target, `${window.location.pathname}${window.location.search}`);
+      if (r?.ok) window.location.assign(r.go);
+      else if (r) setError(t("failed"));
+    });
+  }
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -92,43 +106,68 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose }: Props
           </button>
         </div>
       ) : (
-        <form onSubmit={submit} className="flex flex-col gap-2" noValidate>
-          <label htmlFor={`${id}-email`} className="text-sm font-semibold">
-            {t("email")}
-          </label>
-          <input
-            id={`${id}-email`}
-            type="email"
-            name="email"
-            autoComplete="email"
-            inputMode="email"
-            required
-            autoFocus
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? `${id}-error` : `${id}-body`}
-            placeholder="tavs@epasts.lv"
-            className="min-h-12 w-full rounded-control border-[1.5px] border-google-line bg-white px-3 text-[16px] text-night"
-          />
-          {error ? (
-            <p id={`${id}-error`} role="alert" className="text-sm font-semibold text-danger-ink">
-              {error}
-            </p>
+        <>
+          {!search ? (
+            <>
+              <button
+                type="button"
+                onClick={google}
+                disabled={pending}
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-control border border-google-line bg-white px-4 text-[16px] font-semibold text-google-text"
+                data-notify-google
+              >
+                <GoogleLogo />
+                <span>{t("google")}</span>
+              </button>
+              <p className="-mt-1 text-center text-[13px] text-muted">{t("googleNote")}</p>
+              <div className="flex items-center gap-3 text-[13px] text-muted" aria-hidden="true">
+                <span className="h-px flex-1 bg-card-line" />
+                {t("orEmail")}
+                <span className="h-px flex-1 bg-card-line" />
+              </div>
+            </>
           ) : null}
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="submit"
-              disabled={pending}
-              className={buttonClass({ variant: "primary", size: "sm" })}
-            >
-              {t(offers ? "submit" : "submitPlain")}
-            </button>
-            <button type="button" onClick={onClose} className={buttonClass({ variant: "card", size: "sm" })}>
-              {t("close")}
-            </button>
-          </div>
-        </form>
+          <form onSubmit={submit} className="flex flex-col gap-2" noValidate>
+            <label htmlFor={`${id}-email`} className="text-sm font-semibold">
+              {t("email")}
+            </label>
+            <input
+              id={`${id}-email`}
+              type="email"
+              name="email"
+              autoComplete="email"
+              inputMode="email"
+              required
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `${id}-error` : `${id}-body`}
+              placeholder="tavs@epasts.lv"
+              className="min-h-12 w-full rounded-control border-[1.5px] border-google-line bg-white px-3 text-[16px] text-night"
+            />
+            {error ? (
+              <p id={`${id}-error`} role="alert" className="text-sm font-semibold text-danger-ink">
+                {error}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="submit"
+                disabled={pending}
+                className={buttonClass({ variant: "primary", size: "sm" })}
+              >
+                {t(offers ? "submit" : "submitPlain")}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className={buttonClass({ variant: "card", size: "sm" })}
+              >
+                {t("close")}
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </div>
   );

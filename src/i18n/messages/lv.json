@@ -2454,7 +2454,10 @@
     "confirmSearch": "Paziņosim uz {email}, kad šajā meklējumā parādīsies lētāks variants: {name}.",
     "confirmButton": "Apstiprināt",
     "confirmGone": "Šī saite vairs nav derīga. Atver preci vēlreiz un spied „Pieprasīt labāku cenu”.",
-    "toHome": "Uz sākumu"
+    "toHome": "Uz sākumu",
+    "google": "Turpināt ar Google",
+    "googleNote": "Viens pieskāriens, bez apstiprinājuma e-pasta.",
+    "orEmail": "vai ar e-pastu"
   },
   "notifyEmail": {
     "title": "Apstiprini, un meklēsim labāku cenu",

@@ -201,6 +201,41 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   await deleteAccount(page);
 });
 
+test("Turpināt ar Google: one tap, back on the same results, that product requested, no e-mail to confirm", async ({
+  page,
+}) => {
+  test.slow();
+  // Without Google keys the test login stands in for Google with one fixed account
+  // (requestWithGoogleAction), so one project runs it: two in parallel would share that account.
+  test.skip(test.info().project.name !== "mobile-360", "one shared test account");
+  const email = "google-e2e@example.invalid";
+  await kettleResults(page);
+  const url = page.url();
+  const card = picks(page).nth(1);
+  const productId = ((await card.getAttribute("id")) ?? "").replace(/^p-/, "");
+  const name = (await card.getAttribute("aria-label")) ?? "";
+  await card.getByRole("button", { name: "Pieprasīt labāku cenu", exact: true }).click();
+  const panel = card.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
+  // The field no longer grabs focus, so a phone keyboard does not cover the Google button.
+  await expect(panel.getByLabel("E-pasts")).not.toBeFocused();
+  await expectNoAxeViolations(page);
+  await panel.getByRole("button", { name: "Turpināt ar Google" }).click();
+
+  // Back on the same results (a full page load, as from Google); the chosen card shows the request, the marker is gone.
+  await page.waitForURL((u) => u.href === url);
+  const back = page.locator(`#p-${productId}`);
+  await expect(back.getByRole("button", { name: "Pieprasīts · meklējam labāku cenu" })).toBeVisible();
+  await expect(back.getByRole("status")).toContainText(email);
+  await page.goto("/velmju-saraksts");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vēlmju saraksts");
+  await expect(page.getByRole("article", { name, exact: true })).toBeVisible();
+
+  // The marker alone (a link from elsewhere) finishes nothing: it needs this browser's own click.
+  await page.goto(`${url}&pieprasits=1`);
+  await expect(page).toHaveURL(url);
+  await deleteAccount(page);
+});
+
 test("the question before the shop: one sheet on the first shop click, two equal choices, once per visit", async ({
   page,
 }) => {
