@@ -15,6 +15,7 @@ import { Footer } from "@/ui/shell/Footer";
 import { Header } from "@/ui/shell/Header";
 import { OG_IMAGE, openGraphBase } from "./seo";
 import "../globals.css";
+import { CompletePendingRequest } from "@/ui/CompletePendingRequest";
 
 // Self-hosted from src/app/fonts (OFL): Latin and Latin Extended, which
 // cover Latvian, Lithuanian and Estonian. Bundled rather than fetched from
@@ -141,6 +142,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
           <Suspense fallback={null}>
             <VisitBeacon />
           </Suspense>
+          <CompletePendingRequest />
           {measurementId || ads || metaPixel ? (
             <Suspense fallback={null}>
               <Analytics measurementId={measurementId} ads={ads} metaPixel={metaPixel} />

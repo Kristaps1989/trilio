@@ -185,3 +185,12 @@ Search visitors were good and nobody requested a price: a shopper who already kn
 ### 8.5 Where each shop click came from (owner, 2 Nov 2026)
 
 The owner saw 14 shop clicks and 1 question shown and could not tell why. Every `/go/` link now carries `from=`: `ask` ("Uz {Shop}" in the question), `card` ("Pirkt" after the question was answered, or for a requested product), `newtab` ("Pirkt" opened with a middle click, Ctrl/⌘-click or a long press, which skips the question), `note` (the advice box under the results), `wishlist`, `refurb`. The redirect stores it in `affiliate_clicks.source` (migration 0021; older clicks are null, shown as "Pirms 2.11.2026"). A signed-in admin's clicks are stored with `internal = true` and left out of every figure in Admin → Statistika, which lists their count under the new table "Klikšķi uz veikaliem pēc saites"; an admin opening the question records no `ask_shown`.
+
+### 8.6 "Turpināt ar Google" in the e-mail step (owner, 2 Nov 2026)
+
+The owner approved the mock-up: signed out, the e-mail step starts with "Turpināt ar Google" (Google's white button), the line "Viens pieskāriens, bez apstiprinājuma e-pasta.", a thin "vai ar e-pastu" divider, then the field as before. The field no longer takes focus, so a phone keyboard does not cover the Google button. Shown for products only; a saved search keeps the field alone.
+
+- **Leaving:** `requestWithGoogleAction` stores the product id in an httpOnly, SameSite=Lax cookie `trilio_pending_request` for 15 minutes, then signs in with Google, returning to the same page with `?pieprasits=1`.
+- **Back:** `CompletePendingRequest` (in the layout) sees the marker, removes it from the address and calls `completePendingRequestAction`, which needs that cookie and a signed-in session, uses the cookie once, and runs the card's own request with the consent given on the card (the same sentence as the e-mail field). The card turns to "Pieprasīts · meklējam labāku cenu" with the line naming the address, and the page scrolls to it. The marker alone, without this browser's own cookie, finishes nothing.
+- **Counted** as `notify_tap`, `notify_sent` and `notify_confirmed` in the funnel (Google confirmed the address), plus the Meta Lead when consent allows.
+- **Tests:** without Google keys the dev login stands in (`google-e2e@example.invalid`), and the e2e round trip runs on the phone project.

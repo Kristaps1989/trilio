@@ -1565,7 +1565,10 @@
     "confirmSearch": "We'll write to {email} when a cheaper option appears in this search: {name}.",
     "confirmButton": "Confirm",
     "confirmGone": "This link is no longer valid. Open the product again and tap “Ask for a better price”.",
-    "toHome": "To the home page"
+    "toHome": "To the home page",
+    "google": "Continue with Google",
+    "googleNote": "One tap, no confirmation e-mail.",
+    "orEmail": "or with e-mail"
   },
   "notifyEmail": {
     "title": "Confirm, and we'll look for a better price",

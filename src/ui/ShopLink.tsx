@@ -181,6 +181,7 @@ export function ShopLink({
                   offers={offers}
                   onConsent={() => run(true, true)}
                   onClose={close}
+                  onGoogle={remember}
                 />
                 {toShop}
               </>

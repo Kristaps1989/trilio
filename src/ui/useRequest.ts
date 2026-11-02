@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "@/i18n/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { REQUESTED_EVENT, type RequestedDetail } from "./pendingRequest";
 import { toggleSavedAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { track } from "@/ui/analytics/track";
@@ -27,6 +28,21 @@ export function useRequest(target: SaveTarget, initial: boolean, withNote = true
     setPrevInitial(initial);
     setSaved(initial);
   }
+
+  // Back from "Turpināt ar Google": this product's request was finished by CompletePendingRequest.
+  const productId = target.kind === "product" ? target.productId : null;
+  useEffect(() => {
+    if (!productId) return;
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<RequestedDetail>).detail;
+      if (d.productId !== productId) return;
+      setSaved(true);
+      setPanel(null);
+      if (withNote) setNote({ email: d.email });
+    };
+    window.addEventListener(REQUESTED_EVENT, on);
+    return () => window.removeEventListener(REQUESTED_EVENT, on);
+  }, [productId, withNote]);
 
   function run(next: boolean, consent = false) {
     setSaved(next); // optimistic
