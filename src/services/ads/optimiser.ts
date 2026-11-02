@@ -52,7 +52,7 @@ export const RUN_AFTER = { hour: 6, minute: 30 };
 
 const SYSTEM = `You manage the Google Search ads of Trilio (trilio.lv), a Latvian site that helps shoppers choose a household appliance: a few questions, then the three best options from partner shops' live inventory, ranked by deterministic code. Trilio earns a commission when a visitor buys after clicking through to a shop, and sells some products itself to people who saved them. Ads must bring visitors who click through to a shop or save a product.
 
-At each review (weekly by default, daily if the owner chose so) you get the account as JSON: the owner's settings, Trilio's own conversions per campaign (shop clicks and saves credited to ad visits, weighted as the settings say), Google's numbers for campaigns, ad groups and keywords over 7 and 28 days, search terms with Claude Haiku's relevance label, and the current ads.
+At each review (weekly by default, daily if the owner chose so) you get the account as JSON: the owner's settings, Trilio's own conversions per campaign tag (shop clicks and saves credited to ad visits, weighted as the settings say; keyed \"source/campaign\": \"google/<id>\" is the Google campaign whose googleId is <id>, \"google/(none)\" a Google click without the campaign tag, any other source (meta, facebook, tv) another channel to leave out of Google decisions), Google's numbers for campaigns, ad groups and keywords over 7 and 28 days, search terms with Claude Haiku's relevance label, and the current ads.
 
 Propose changes that lower the cost per weighted conversion or find more converting searches. Use only these actions, with the ids given in the data:
 - add_negative {campaignId, text, match: phrase|exact}: a search term that spends without converting and is not about buying that appliance (repairs, parts, manuals, jobs, second-hand, other products).
@@ -286,7 +286,9 @@ export async function optimiserContext(db: Db, now = new Date()) {
     trilioConversionsByCampaignTag: ownConversions.reduce<
       Record<string, { visits: number; shopClicks: number; saves: number }>
     >((acc, r) => {
-      const k = r.campaign ?? "(none)";
+      // "source/campaign": Google's Final URL suffix tags its visits with the campaign id
+      // (utm_campaign={campaignid}), matching campaigns[].googleId; other sources are other channels.
+      const k = `${r.source ?? "(none)"}/${r.campaign ?? "(none)"}`;
       acc[k] ??= { visits: 0, shopClicks: 0, saves: 0 };
       acc[k].visits += r.visits;
       acc[k].shopClicks += r.shopClicks;
@@ -295,6 +297,7 @@ export async function optimiserContext(db: Db, now = new Date()) {
     }, {}),
     campaigns: campaigns.map((c) => ({
       id: c.id,
+      googleId: c.googleId,
       name: c.name,
       status: c.status,
       budgetEur: c.budgetCents / 100,

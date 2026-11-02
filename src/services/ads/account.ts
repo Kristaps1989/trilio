@@ -484,38 +484,69 @@ export async function performance(db: Db, now = new Date()): Promise<Performance
   };
 }
 
-/** Shop clicks and saves credited to ad visits, per day and campaign tag. */
+/**
+ * Where an ad visit came from: utm_source, or "google" for a visit that carries
+ * only Google's click id (auto-tagging without the account's Final URL suffix).
+ */
+export const landingSource = sql<
+  string | null
+>`coalesce(${adLandings.utmSource}, case when ${adLandings.gclid} is not null then 'google' end)`;
+
+/** Shop clicks and saves credited to ad visits, per day, source and campaign tag. */
 export async function conversionsByDay(db: Db, from: string, to: string) {
   const clicks = await db
-    .select({ day: adLandings.day, campaign: adLandings.utmCampaign, n: sql<number>`count(*)::int` })
+    .select({
+      day: adLandings.day,
+      source: landingSource,
+      campaign: adLandings.utmCampaign,
+      n: sql<number>`count(*)::int`,
+    })
     .from(affiliateClicks)
     .innerJoin(adLandings, eq(adLandings.id, affiliateClicks.adLandingId))
     .where(and(gte(adLandings.day, from), lte(adLandings.day, to)))
-    .groupBy(adLandings.day, adLandings.utmCampaign);
+    .groupBy(adLandings.day, landingSource, adLandings.utmCampaign);
   const saves = await db
-    .select({ day: adLandings.day, campaign: adLandings.utmCampaign, n: sql<number>`count(*)::int` })
+    .select({
+      day: adLandings.day,
+      source: landingSource,
+      campaign: adLandings.utmCampaign,
+      n: sql<number>`count(*)::int`,
+    })
     .from(savedItems)
     .innerJoin(adLandings, eq(adLandings.id, savedItems.adLandingId))
     .where(and(gte(adLandings.day, from), lte(adLandings.day, to)))
-    .groupBy(adLandings.day, adLandings.utmCampaign);
+    .groupBy(adLandings.day, landingSource, adLandings.utmCampaign);
   const landings = await db
-    .select({ day: adLandings.day, campaign: adLandings.utmCampaign, n: sql<number>`count(*)::int` })
+    .select({
+      day: adLandings.day,
+      source: landingSource,
+      campaign: adLandings.utmCampaign,
+      n: sql<number>`count(*)::int`,
+    })
     .from(adLandings)
     .where(and(gte(adLandings.day, from), lte(adLandings.day, to)))
-    .groupBy(adLandings.day, adLandings.utmCampaign);
-  const key = (d: string, c: string | null) => `${d}|${c ?? ""}`;
+    .groupBy(adLandings.day, landingSource, adLandings.utmCampaign);
+  const key = (d: string, src: string | null, c: string | null) => `${d}|${src ?? ""}|${c ?? ""}`;
   const out = new Map<
     string,
-    { day: string; campaign: string | null; visits: number; shopClicks: number; saves: number }
+    {
+      day: string;
+      source: string | null;
+      campaign: string | null;
+      visits: number;
+      shopClicks: number;
+      saves: number;
+    }
   >();
-  const row = (d: string, c: string | null) => {
-    const k = key(String(d), c);
-    if (!out.has(k)) out.set(k, { day: String(d), campaign: c, visits: 0, shopClicks: 0, saves: 0 });
+  const row = (d: string, src: string | null, c: string | null) => {
+    const k = key(String(d), src, c);
+    if (!out.has(k))
+      out.set(k, { day: String(d), source: src, campaign: c, visits: 0, shopClicks: 0, saves: 0 });
     return out.get(k)!;
   };
-  for (const r of landings) row(r.day, r.campaign).visits += Number(r.n);
-  for (const r of clicks) row(r.day, r.campaign).shopClicks += Number(r.n);
-  for (const r of saves) row(r.day, r.campaign).saves += Number(r.n);
+  for (const r of landings) row(r.day, r.source, r.campaign).visits += Number(r.n);
+  for (const r of clicks) row(r.day, r.source, r.campaign).shopClicks += Number(r.n);
+  for (const r of saves) row(r.day, r.source, r.campaign).saves += Number(r.n);
   return [...out.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 

@@ -191,3 +191,10 @@ Every automated change is written to the admin audit log with the proposal id, s
 | E | Performance Max and Demand Gen campaigns, Meta retargeting | 1 week |
 
 About 6–8 weeks of work plus Google's approval time; ad spend starts at the end of PR B, and the first month runs in Approve mode.
+
+## Campaign attribution (2 Nov 2026)
+
+The weekly memo could not credit Trilio's shop clicks to Google campaigns: Google visits carried only `gclid` (auto-tagging), so `ad_landings.utm_campaign` was empty, and the review had no Google campaign ids to compare a tag with.
+
+- **Owner setting, once, in Google Ads:** Admin → Account settings → Tracking → **Final URL suffix**: `utm_source=google&utm_medium=cpc&utm_campaign={campaignid}`. Auto-tagging stays on. It covers every campaign, PMax included, and new ones.
+- **Code:** visits are keyed `source/campaign`. A visit with only `gclid` counts as `google/(none)`; with the suffix it is `google/<campaign id>`, which the review matches with `campaigns[].googleId`. Other sources (`meta`, `facebook`, `tv`) are listed apart and left out of Google decisions; the Meta tag `120250227220820296` in the 2 Nov memo was the Meta campaign's own id.
