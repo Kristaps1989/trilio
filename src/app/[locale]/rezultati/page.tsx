@@ -84,6 +84,7 @@ import {
 } from "./confidence-text";
 import { FilterBar, type Chip } from "./FilterBar";
 import { SWIPE_ROW } from "@/ui/swipeRow";
+import { withSource } from "@/domain/analytics/click-source";
 import { HowWeRank } from "./HowWeRank";
 import { cardMedia } from "./card-media";
 import { trilioSources } from "@/domain/offers/sourcing";
@@ -1211,7 +1212,7 @@ export default async function ResultsPage({ searchParams }: Props) {
                   </span>
                   {offer ? (
                     <a
-                      href={`/go/${offer.id}${sessionId ? `?s=${sessionId}` : ""}`}
+                      href={withSource(`/go/${offer.id}${sessionId ? `?s=${sessionId}` : ""}`, "note")}
                       rel="sponsored noopener"
                       className="inline-flex min-h-11 items-center rounded-full bg-lime px-4 text-sm font-bold text-night"
                     >

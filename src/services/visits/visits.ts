@@ -92,6 +92,10 @@ export async function recordShopClick(
     userAgent: string | null;
     searchSessionId: string | null;
     adLandingId: string | null;
+    /** Which link it came from (domain/analytics/click-source). */
+    source?: string | null;
+    /** An admin's own click. */
+    internal?: boolean;
     now?: Date;
   },
 ): Promise<boolean> {
@@ -122,6 +126,8 @@ export async function recordShopClick(
     searchSessionId: input.searchSessionId,
     adLandingId: input.adLandingId,
     visitorHash: hash,
+    source: input.source ?? null,
+    internal: input.internal ?? false,
     clickedAt: now,
   });
   return true;

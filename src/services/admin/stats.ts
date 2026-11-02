@@ -233,11 +233,38 @@ export async function shopStats(db: Db, from: string, to: string) {
     .innerJoin(offers, eq(offers.id, affiliateClicks.offerId))
     .innerJoin(stores, eq(stores.id, offers.storeId))
     .where(
-      sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)}`,
+      sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)} and not ${affiliateClicks.internal}`,
     )
     .groupBy(stores.displayName)
     .orderBy(desc(count()));
   return rows.map((r) => ({ store: r.store, clicks: Number(r.clicks) }));
+}
+
+/**
+ * Shop clicks by the link they came from (owner, 2 Nov 2026), and the admins'
+ * own clicks, which every other figure leaves out. `source` null: before the
+ * links carried one.
+ */
+export async function clickSourceStats(db: Db, from: string, to: string) {
+  const rows = await db
+    .select({ source: affiliateClicks.source, internal: affiliateClicks.internal, clicks: count() })
+    .from(affiliateClicks)
+    .where(
+      sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)}`,
+    )
+    .groupBy(affiliateClicks.source, affiliateClicks.internal);
+  const sources = new Map<string | null, number>();
+  let internal = 0;
+  for (const r of rows) {
+    if (r.internal) internal += Number(r.clicks);
+    else sources.set(r.source, (sources.get(r.source) ?? 0) + Number(r.clicks));
+  }
+  return {
+    sources: [...sources.entries()]
+      .map(([source, clicks]) => ({ source, clicks }))
+      .sort((a, b) => b.clicks - a.clicks),
+    internal,
+  };
 }
 
 // ---------------------------------------------------------------- Lietotāji
@@ -408,7 +435,7 @@ export async function confidenceStats(db: Db, from: string, to: string) {
     .select({ n: sql<number>`count(distinct ${affiliateClicks.searchSessionId})::int` })
     .from(affiliateClicks)
     .innerJoin(searchSessions, eq(searchSessions.id, affiliateClicks.searchSessionId))
-    .where(inRange(searchSessions.createdAt));
+    .where(sql`${inRange(searchSessions.createdAt)} and not ${affiliateClicks.internal}`);
   const answers = await db
     .select({ confident: confidenceAnswers.confident, n: sql<number>`count(*)::int` })
     .from(confidenceAnswers)

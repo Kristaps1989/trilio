@@ -36,7 +36,8 @@ test("Googlebot gets the same pages and the shop redirect, and is counted only a
   const bot = await playwright.request.newContext({ baseURL, userAgent: GOOGLEBOT });
   const landing = await bot.get("/kategorija/kettle");
   expect(landing.status()).toBe(200);
-  const go = /href="(\/go\/[0-9a-f-]{36})"/.exec(await landing.text())![1]!;
+  // Shop links carry their source (?from=…); the HTML escapes & as &amp;.
+  const go = /href="(\/go\/[0-9a-f-]{36}[^"]*)"/.exec(await landing.text())![1]!.replaceAll("&amp;", "&");
   const results = await bot.get("/rezultati?sub=kettle");
   expect(results.status()).toBe(200);
   expect(await results.text()).toContain('href="/go/');

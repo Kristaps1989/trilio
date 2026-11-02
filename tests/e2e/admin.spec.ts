@@ -107,6 +107,20 @@ test("own visit counts: a page view shows in Statistika, bots are not counted, C
   await expect(page).toHaveURL(/periods=7/);
   await expect(page.getByRole("img", { name: "Apmeklētāji dienā" })).toBeVisible();
 
+  // An admin's own shop click is kept apart: listed by its count, left out of every other figure.
+  const html = await (await page.request.get("/rezultati?sub=kettle")).text();
+  const go = /href="(\/go\/[0-9a-f-]{36})[^"]*"/.exec(html)![1]!;
+  // A fresh address, so the 30-minute repeat rule cannot swallow it.
+  const own = `203.0.113.${1 + Math.floor(Math.random() * 250)}`;
+  expect(
+    (
+      await page.request.get(`${go}?from=note`, { maxRedirects: 0, headers: { "x-forwarded-for": own } })
+    ).status(),
+  ).toBe(302);
+  await page.goto("/admin/statistika?periods=today");
+  const sources = page.getByRole("region", { name: "Klikšķi uz veikaliem pēc saites" });
+  await expect(sources.getByText(/Administratoru pašu klikšķi \([1-9]\d*\)/)).toBeVisible();
+
   for (const table of ["sections", "categories", "shops"])
     expect((await page.request.get(`/admin/statistika/csv?table=${table}`)).status()).toBe(200);
   expect((await page.request.get("/admin/statistika/csv?table=nope")).status()).toBe(404);

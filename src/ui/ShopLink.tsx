@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } fr
 import { askShownAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { track } from "@/ui/analytics/track";
+import { withSource } from "@/domain/analytics/click-source";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
 import { SavedAlertNote } from "./SavedAlertNote";
@@ -102,7 +103,11 @@ export function ShopLink({
     closePanel();
   }
 
-  const shopHref = `${href}${href.includes("?") ? "&" : "?"}ask=1`;
+  const shopHref = withSource(href, "ask");
+  // A link opened in a new tab (middle click, Ctrl/⌘-click, long press) skips the question: say so in the link.
+  const newTab = (e: { currentTarget: HTMLAnchorElement }) => {
+    e.currentTarget.href = withSource(href, "newtab");
+  };
   const toShop = (
     <a
       href={shopHref}
@@ -119,9 +124,15 @@ export function ShopLink({
   return (
     <>
       <a
-        href={href}
+        href={withSource(href, "card")}
         rel="sponsored noopener"
-        onClick={onClick}
+        onClick={(e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey) newTab(e);
+          else e.currentTarget.href = withSource(href, "card");
+          onClick(e);
+        }}
+        onAuxClick={newTab}
+        onContextMenu={newTab}
         {...(direct ? analytics : { "data-ga-ignore": "" })}
         aria-haspopup={direct ? undefined : "dialog"}
         className={buttonClass({ variant: "dark", block: true })}

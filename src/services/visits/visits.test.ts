@@ -4,6 +4,7 @@ import { createDb, type Db } from "@/db/client";
 import { adLandings, affiliateClicks, botHits, offers, visits } from "@/db/schema";
 import { rigaDay } from "@/domain/analytics/visits";
 import { botStats, clientStats, countBot, recordShopClick, recordVisit } from "./visits";
+import { clickSourceStats, shopStats } from "@/services/admin/stats";
 
 // Bot filtering and de-duplication in Trilio's own statistics.
 
@@ -47,6 +48,23 @@ run("statistics without bots", { timeout: 60_000 }, () => {
       await recordShopClick(db, { ...who, ip: "198.51.100.8", now: new Date(FAR_DAY.getTime() + 60_000) }),
     ).toBe(true);
     expect(await recordShopClick(db, { ...who, now: new Date(FAR_DAY.getTime() + 31 * 60_000) })).toBe(true);
+  });
+
+  it("records each click's link, and leaves an admin's own clicks out of the statistics", async () => {
+    const t0 = new Date(FAR_DAY.getTime() + 3 * 3600_000);
+    const who = { offerId, userAgent: PHONE, searchSessionId: null, adLandingId: null };
+    const day = t0.toLocaleDateString("en-CA", { timeZone: "Europe/Riga" });
+    const total = async () => (await shopStats(db, day, day)).reduce((n, r) => n + r.clicks, 0);
+    const before = await total();
+    await recordShopClick(db, { ...who, ip: "198.51.100.21", source: "ask", now: t0 });
+    await recordShopClick(db, { ...who, ip: "198.51.100.22", source: "newtab", now: t0 });
+    await recordShopClick(db, { ...who, ip: "198.51.100.23", source: "card", internal: true, now: t0 });
+    const s = await clickSourceStats(db, day, day);
+    expect(s.sources.find((x) => x.source === "ask")?.clicks).toBe(1);
+    expect(s.sources.find((x) => x.source === "newtab")?.clicks).toBe(1);
+    expect(s.sources.find((x) => x.source === "card")).toBeUndefined();
+    expect(s.internal).toBe(1);
+    expect((await total()) - before).toBe(2);
   });
 
   it("credits an ad visit recorded after the first click to that click, without counting twice", async () => {
