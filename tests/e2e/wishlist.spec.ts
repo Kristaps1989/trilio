@@ -221,7 +221,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await expect(sheet.getByRole("button", { name: "Pieprasīt labāku cenu" })).toBeVisible();
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toHaveAttribute(
     "href",
-    /^\/go\/[0-9a-f-]{36}\?.*ask=1/,
+    /^\/go\/[0-9a-f-]{36}\?.*from=ask/,
   );
   await expectNoAxeViolations(page);
 
@@ -257,7 +257,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await expect(again).not.toHaveAttribute("aria-haspopup", "dialog");
   await again.click();
   await expect.poll(() => left).toMatch(/\/go\/[0-9a-f-]{36}/);
-  expect(left).not.toContain("ask=1");
+  expect(left).toContain("from=card");
   await expect(tab.getByRole("dialog")).toHaveCount(0);
   await tab.close();
 });

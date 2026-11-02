@@ -4,7 +4,13 @@ import { db } from "@/db";
 import { change, parseRange, rangeDays, RANGES } from "@/domain/admin/stats";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur, formatInt } from "@/i18n/format";
-import { confidenceStats, searchStats, shopStats, visitStats } from "@/services/admin/stats";
+import {
+  clickSourceStats,
+  confidenceStats,
+  searchStats,
+  shopStats,
+  visitStats,
+} from "@/services/admin/stats";
 import { notifyFunnel } from "@/services/notify/events";
 import { botStats, clientStats } from "@/services/visits/visits";
 import { buttonClass } from "@/ui/Button";
@@ -25,7 +31,7 @@ export default async function AdminStats({ searchParams }: Props) {
   const t = await getTranslations("admin.stats");
   const range = parseRange((await searchParams).periods);
   const r = rangeDays(range, new Date());
-  const [visits, prevVisits, searches, prevSearches, shops, confidence, bots, clients, funnel] =
+  const [visits, prevVisits, searches, prevSearches, shops, confidence, bots, clients, funnel, sources] =
     await Promise.all([
       visitStats(db, r.from, r.to),
       visitStats(db, r.prevFrom, r.prevTo),
@@ -36,6 +42,7 @@ export default async function AdminStats({ searchParams }: Props) {
       botStats(db, r.from, r.to),
       clientStats(db, r.from, r.to),
       notifyFunnel(db, r.from, r.to),
+      clickSourceStats(db, r.from, r.to),
     ]);
   const funnelTotal = funnel.reduce(
     (a, f) => ({
@@ -247,6 +254,20 @@ export default async function AdminStats({ searchParams }: Props) {
           empty={t("empty")}
           rows={shops.map((s) => [s.store, formatInt(s.clicks)])}
         />
+      </Section>
+
+      {/* Which link each shop click came from (owner, 2 Nov 2026). */}
+      <Section title={t("clickSources")} id="click-sources">
+        <Table
+          caption={t("clickSources")}
+          head={[t("clickSource"), t("clicks")]}
+          empty={t("empty")}
+          rows={sources.sources.map((s) => [
+            t(`clickSourceName.${s.source ?? "unknown"}` as "clickSourceName.unknown"),
+            formatInt(s.clicks),
+          ])}
+        />
+        <p className="text-sm text-stone">{t("clickSourcesMethod", { internal: sources.internal })}</p>
       </Section>
     </>
   );

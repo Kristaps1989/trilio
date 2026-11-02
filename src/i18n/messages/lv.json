@@ -1640,7 +1640,19 @@
       "funnelConfirmed": "Apstiprināja",
       "funnelMethod": "Apmeklētāji bez sīkdatnēm, katru dienu atsevišķi, tāpat kā apmeklējumu skaitā. „Spieda” skaita arī ienākušos; „Ievadīja e-pastu” un „Apstiprināja” attiecas uz tiem, kam konta vēl nebija. Rezultātu apmeklējumi glabājas 35 dienas. „Jautājums pirms veikala” ir pirmais „Pirkt” klikšķis apmeklējumā, kas atver jautājumu; „Izvēlējās veikalu” ir tie, kas tajā spieda „Uz veikalu”.",
       "funnelAskShown": "Jautājums pirms veikala",
-      "funnelAskShop": "Izvēlējās veikalu"
+      "funnelAskShop": "Izvēlējās veikalu",
+      "clickSources": "Klikšķi uz veikaliem pēc saites",
+      "clickSource": "Saite",
+      "clickSourceName": {
+        "ask": "Jautājums pirms veikala → „Uz veikalu”",
+        "card": "Kartītes „Pirkt” (jautājums jau atbildēts)",
+        "newtab": "Kartītes „Pirkt” jaunā cilnē (bez jautājuma)",
+        "note": "Padomu bloks zem rezultātiem",
+        "wishlist": "Vēlmju saraksts",
+        "refurb": "Atjaunotās preces",
+        "unknown": "Pirms 2.11.2026 (avots nav zināms)"
+      },
+      "clickSourcesMethod": "Visi klikšķi uz veikaliem šajā periodā pēc saites, no kuras tie nāca. Administratoru pašu klikšķi ({internal}) šeit un visos citos skaitļos nav ieskaitīti."
     },
     "users": {
       "title": "Lietotāji",

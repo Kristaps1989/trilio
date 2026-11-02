@@ -5,7 +5,8 @@ import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { currentUserId } from "@/auth";
+import { auth, currentUserId } from "@/auth";
+import { isAdminEmail } from "@/config/admin";
 import { db, savedItems, users } from "@/db";
 import { adLandingFor } from "@/services/growth/landings";
 import { removeSaved } from "@/db/queries/wishlist";
@@ -158,6 +159,8 @@ export type NotifyRequestResult =
 export async function askShownAction(raw: SaveTarget): Promise<void> {
   const target = Target.safeParse(raw);
   if (!target.success) return;
+  // The owner's own look at the question is not a shopper's.
+  if (isAdminEmail((await auth().catch(() => null))?.user?.email ?? "")) return;
   const sub = await subcategoryOf(target.data);
   await recordUiEvent(db, await who(), "ask_shown", sub).catch(() => undefined);
 }

@@ -221,6 +221,10 @@ export const affiliateClicks = pgTable(
     adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
     /** The day's anonymous visitor hash, to count one click per visitor and product per 30 minutes. */
     visitorHash: text("visitor_hash"),
+    /** Which link it came from (CLICK_SOURCES); null for clicks before 2 Nov 2026. */
+    source: text("source"),
+    /** An admin's own click: kept for the record, left out of the statistics. */
+    internal: boolean("internal").notNull().default(false),
     clickedAt: timestamp("clicked_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

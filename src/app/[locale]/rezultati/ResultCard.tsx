@@ -6,6 +6,7 @@ import { EnergyBadge } from "@/ui/EnergyBadge";
 import { ProductImage } from "@/ui/ProductImage";
 import { SaveButton } from "@/ui/SaveButton";
 import { ShopLink } from "@/ui/ShopLink";
+import { withSource } from "@/domain/analytics/click-source";
 import type { CardImage } from "./card-media";
 
 // Spec §3.2 result card and §3.3 refurbished card. Server component: all
@@ -393,7 +394,7 @@ export async function RefurbishedCard({ card }: { card: CardModel }) {
       </div>
       <div className="flex flex-wrap gap-2">
         <a
-          href={goHref(card)}
+          href={withSource(goHref(card), "refurb")}
           rel="sponsored noopener"
           {...offerAnalytics(card)}
           className="inline-flex min-h-12 items-center rounded-control bg-refurb px-5 font-bold text-white"

@@ -5,6 +5,9 @@ import { db, offers, products, stores } from "@/db";
 import { isBot } from "@/domain/analytics/visits";
 import { adLandingFor } from "@/services/growth/landings";
 import { clientKey } from "@/services/rate-limit";
+import { auth } from "@/auth";
+import { isAdminEmail } from "@/config/admin";
+import { clickSource } from "@/domain/analytics/click-source";
 import { recordUiEvent } from "@/services/notify/events";
 import { countBot, recordShopClick } from "@/services/visits/visits";
 
@@ -45,8 +48,9 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
 
   const params = new URL(request.url).searchParams;
   const sessionId = params.get("s");
-  // "Uz {Shop}" chosen in the question before the shop (docs/PRICE_NOTIFY_PLAN.md §8.4).
-  const fromAsk = params.get("ask") === "1";
+  // Which link it came from; "ask" is "Uz {Shop}" in the question before the shop (docs/PRICE_NOTIFY_PLAN.md §8.4).
+  const source = clickSource(params);
+  const fromAsk = source === "ask";
   const userAgent = request.headers.get("user-agent");
   // Every requester is sent on to the shop; only people are counted (bots, and a
   // visitor's repeat click on the same product within 30 minutes, are not).
@@ -56,14 +60,18 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
     const ip = clientKey(request);
     // Credited to today's ad visit of the same visitor, if any (docs/GROWTH_PLAN.md, Phase 0).
     const adLandingId = await adLandingFor(db, { ip, userAgent }).catch(() => null);
+    // The owner's own clicks are kept for the record but left out of the statistics.
+    const internal = isAdminEmail((await auth().catch(() => null))?.user?.email ?? "");
     await recordShopClick(db, {
       offerId: parsed.data.offerId,
       ip,
       userAgent,
       searchSessionId: z.string().uuid().safeParse(sessionId).success ? sessionId : null,
       adLandingId,
+      source,
+      internal,
     }).catch(() => undefined);
-    if (fromAsk)
+    if (fromAsk && !internal)
       after(() => recordUiEvent(db, { ip, userAgent }, "ask_shop", row.subcategoryId).catch(() => undefined));
   }
 

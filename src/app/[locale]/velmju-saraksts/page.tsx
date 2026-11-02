@@ -1,4 +1,5 @@
 import { cleanName } from "@/domain/catalog/naming";
+import { withSource } from "@/domain/analytics/click-source";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
@@ -242,7 +243,7 @@ export default async function WishlistPage() {
                           </p>
                         </div>
                         <a
-                          href={`/go/${offer.id}`}
+                          href={withSource(`/go/${offer.id}`, "wishlist")}
                           rel="sponsored noopener"
                           className={buttonClass({ variant: "dark", size: "sm" })}
                         >
