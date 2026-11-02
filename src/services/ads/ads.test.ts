@@ -32,6 +32,7 @@ import {
   syncAccount,
   updateSettings,
   dayOffset,
+  conversionsByDay,
 } from "./account";
 import { adsOverview } from "./overview";
 import { approveCreative, createCreatives, createPmax, templateCopy, writeCopy } from "./creatives";
@@ -451,5 +452,40 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     expect(await adLandingFor(db, { ...who, ip: "198.51.100.1" })).toBeNull();
     const later = new Date(Date.now() + 91 * 86_400_000);
     expect(await purgeAdLandings(db, later)).toBeGreaterThanOrEqual(1);
+  });
+
+  it("keys ad visits by source and campaign: a bare Google click id counts as Google, Meta stays apart", async () => {
+    const who = { ip: "203.0.113.9", userAgent: "Mozilla/5.0 test" };
+    await recordAdLanding(db, {
+      ...who,
+      path: "/e2e-ads/gclid-only",
+      params: adParams({ gclid: "test-click-5678" })!,
+    });
+    await recordAdLanding(db, {
+      ...who,
+      path: "/e2e-ads/suffix",
+      params: adParams({
+        gclid: "test-click-9012",
+        utm_source: "google",
+        utm_medium: "cpc",
+        utm_campaign: "23001",
+      })!,
+    });
+    await recordAdLanding(db, {
+      ...who,
+      path: "/e2e-ads/meta",
+      params: adParams({
+        utm_source: "meta",
+        utm_medium: "paid_social",
+        utm_campaign: "120250227220820296",
+      })!,
+    });
+    const today = dayOffset(new Date(), 0);
+    const rows = await conversionsByDay(db, today, today);
+    const has = (source: string, campaign: string | null) =>
+      rows.some((r) => r.source === source && r.campaign === campaign && r.visits > 0);
+    expect(has("google", null)).toBe(true);
+    expect(has("google", "23001")).toBe(true);
+    expect(has("meta", "120250227220820296")).toBe(true);
   });
 });
