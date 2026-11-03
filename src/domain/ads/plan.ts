@@ -24,7 +24,7 @@ const GENERIC_HEADLINES = [
   "Bez konta un bez maksas",
   "Redzi, kāpēc tieši šie",
   "Secību nenosaka komisija",
-  "Paziņosim, kad cena krīt",
+  "Paziņosim, kad cena samazinās",
   "Trilio — izvēlies gudri",
 ];
 
@@ -66,7 +66,7 @@ export function competitorAd(): AdText {
         "Secību nenosaka komisija",
         "Bez konta un bez maksas",
         "Redzi, kāpēc tieši šie",
-        "Paziņosim, kad cena krīt",
+        "Paziņosim, kad cena samazinās",
       ],
       "headline",
       RSA_LIMITS.headlines,
@@ -76,7 +76,7 @@ export function competitorAd(): AdText {
         "Trilio ir neatkarīgs palīgs tehnikas izvēlē: dažas atbildes un 3 piemērotākie varianti.",
         "Redzi, kāpēc ieteikts katrs variants, un salīdzini cenas partneru veikalos.",
         "Ledusskapji, veļas mašīnas, putekļsūcēji un cita tehnika: 3 varianti tavām vajadzībām.",
-        "Bez konta un bez maksas. Saglabā variantu un saņem ziņu, kad tā cena krīt.",
+        "Bez konta un bez maksas. Saglabā variantu un saņem ziņu, kad tā cena samazinās.",
       ],
       "description",
       RSA_LIMITS.descriptions,
@@ -163,7 +163,7 @@ export function templateAd(short: string, keywords: string[] = [], budgetStepsEu
       "Atbildi uz dažiem jautājumiem un saņem 3 piemērotākos variantus ar cenām veikalos.",
       "Secību nenosaka veikalu komisija. Katram variantam redzi, kāpēc tas ieteikts.",
       `${short}: salīdzini cenas partneru veikalos un izvēlies pēc tā, kas tev svarīgs.`,
-      "Bez konta un bez maksas. Saglabā variantu un saņem ziņu, kad tā cena krīt.",
+      "Bez konta un bez maksas. Saglabā variantu un saņem ziņu, kad tā cena samazinās.",
       // Only when the category's name makes the line above too long.
       "Salīdzini cenas partneru veikalos un izvēlies pēc tā, kas tev svarīgs.",
     ],

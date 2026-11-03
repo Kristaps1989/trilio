@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { setPriceAlertsAction } from "@/app/[locale]/velmju-saraksts/actions";
 
 // Under a button just tapped (docs/TRUST_POLISH_PLAN.md §1): saving is the
-// request for a better price, or outside sourcing to hear when the price
+// request for a lower price, or outside sourcing to hear when the price
 // drops, said plainly, with the way out in the same line and the way back
 // after it.
 

@@ -18,7 +18,7 @@ export function composeNotifyConfirmEmail(input: {
   company?: string;
   token: string;
   target: NotifyTarget;
-  /** The consent covered Trilio's offers: the e-mail promises a better price, not only the price e-mail. */
+  /** The consent covered Trilio's offers: the e-mail promises a lower price, not only the price e-mail. */
   offers: boolean;
 }): EmailMessage {
   const m = input.lang === "en" ? en.notifyEmail : lv.notifyEmail;

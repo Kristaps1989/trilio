@@ -8,7 +8,7 @@ import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { track } from "@/ui/analytics/track";
 import { metaTrack } from "@/ui/analytics/meta";
 
-// The "Pieprasīt labāku cenu" state machine, shared by the card button and
+// The "Pajautāt cenu" state machine, shared by the card button and
 // the question before the shop (docs/PRICE_NOTIFY_PLAN.md §8.3, §8.4): a tap
 // saves and asks; signed out it opens the e-mail field (`panel.email` null);
 // signed in where Trilio sources, the first tap asks the one yes

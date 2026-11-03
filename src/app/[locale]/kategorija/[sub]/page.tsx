@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { categoryGender } from "@/i18n/format";
 import { pageMetadata } from "../../seo";
+import { trilioSources } from "@/domain/offers/sourcing";
+import { OFFER_DISCOUNT_UP_TO_PCT } from "@/domain/offers/discount";
 import { LandingPage } from "../LandingPage";
 import { activeLocale } from "@/i18n/active";
 import { initLocale } from "@/i18n/init";
@@ -32,7 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata(
     `/kategorija/${sub.id}`,
     t("metaTitle", { category, gender, year: new Date().getFullYear() }),
-    t("description", { category, gender }),
+    // Where Trilio sources, the description names the request and its "up to" discount (docs/PRICE_NOTIFY_PLAN.md §8.7).
+    trilioSources(sub.id)
+      ? t("descriptionOffers", { category, gender, pct: OFFER_DISCOUNT_UP_TO_PCT })
+      : t("description", { category, gender }),
   );
 }
 

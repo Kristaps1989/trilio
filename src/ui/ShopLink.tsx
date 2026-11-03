@@ -16,7 +16,7 @@ import { useRequest } from "./useRequest";
 
 // "Pirkt — {Shop}" with the question before the shop (docs/PRICE_NOTIFY_PLAN.md
 // §8.4): the first shop click of a visit opens one sheet with two equal
-// choices, request a better price from Trilio or go to the shop. Neither is
+// choices, request a lower price from Trilio or go to the shop. Neither is
 // hidden or shamed; Esc and the backdrop close it, and after any answer every
 // shop link goes straight through for a day, in every tab (owner, 1 Nov 2026:
 // once per visitor, not once per click). A product already requested never asks. The link stays a real <a href="/go/…">, so

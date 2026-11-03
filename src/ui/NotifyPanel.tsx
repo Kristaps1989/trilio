@@ -8,7 +8,7 @@ import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 import { GoogleLogo } from "./GoogleButton";
 
-// The one step between "Pieprasīt labāku cenu" and the e-mail
+// The one step between "Pajautāt cenu" and the e-mail
 // (docs/PRICE_NOTIFY_PLAN.md §2): signed out, one field on the card; signed in
 // where Trilio sources, the same sentence with the address already known. The
 // sentence says exactly what will be sent; the button is the yes.

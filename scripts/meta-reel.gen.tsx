@@ -481,7 +481,7 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
           head={
             <div style={{ display: "flex", flexDirection: "column", paddingTop: 34 }}>
               <Line text="Patīk?" size={z.head} color={NIGHT} t={s} at={0.05} />
-              <Line text="Pieprasi labāku cenu." size={z.head} color={NIGHT} t={s} at={0.2} />
+              <Line text="Pajautā lētāku cenu." size={z.head} color={NIGHT} t={s} at={0.2} />
             </div>
           }
           hero={
@@ -525,8 +525,8 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
                 maxWidth: 820,
               }}
             >
-              Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena
-              kritīs.
+              Sazināsimies ar izplatītāju. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena
+              samazināsies.
             </div>
           }
         />
@@ -555,7 +555,7 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
             maxWidth: 860,
           }}
         >
-          Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.
+          Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.
         </div>
         <div style={{ display: "flex", width: 300, opacity: ease(s, 0.9, 0.45) }}>
           <Button text="Sākt izvēli" kind="lime" k={1.1} />

@@ -78,13 +78,13 @@ const ADS: Record<string, (z: Z, ph: Photos) => ReactNode> = {
   "A2-pieprasi-labaku-cenu": (z, ph) => (
     <Ground z={z}>
       <Top kicker="Pie katra ieteikuma" />
-      <Headline z={z} lines={["Patīk modelis?"]} accent="Pieprasi labāku cenu." />
+      <Headline z={z} lines={["Patīk modelis?"]} accent="Pajautā lētāku cenu." />
       <Spacer />
       <Centre>
         <Tile p={PICKS[0]!} photos={ph} width={z.one} photoH={z.oneP} k={z.k} buttons />
       </Centre>
       <Spacer />
-      <Foot text="Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena kritīs." />
+      <Foot text="Sazināsimies ar izplatītāju. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazināsies." />
     </Ground>
   ),
   "A3-dazi-jautajumi": (z) => (
@@ -197,9 +197,9 @@ const WIDE: Record<keyof typeof ADS, (ph: Photos) => ReactNode> = {
     <WideAd
       kicker="Pie katra ieteikuma"
       lines={["Patīk modelis?"]}
-      accent="Pieprasi labāku cenu."
+      accent="Pajautā lētāku cenu."
       left={540}
-      foot="Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena kritīs."
+      foot="Sazināsimies ar izplatītāju. Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazināsies."
       hero={<Tile p={PICKS[0]!} photos={ph} width={WZ.one} photoH={WZ.oneP} k={WZ.k} buttons />}
     />
   ),
@@ -261,13 +261,13 @@ const CARDS: Record<
   "4-pieprasi-labaku-cenu": {
     kicker: "4 / 4",
     lines: ["Patīk?"],
-    accent: "Pieprasi labāku cenu.",
+    accent: "Pajautā lētāku cenu.",
     body: (ph) => (
       <Centre>
         <Tile p={PICKS[0]!} photos={ph} width={SQ.one} photoH={SQ.oneP - 40} k={SQ.k} buttons />
       </Centre>
     ),
-    foot: "Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena kritīs.",
+    foot: "Ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazināsies.",
   },
 };
 
