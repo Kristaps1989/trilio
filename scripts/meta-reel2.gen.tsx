@@ -8,19 +8,19 @@ import { it } from "vitest";
 import { brandFonts, Wordmark } from "@/services/ads/creatives";
 import { OFFER_DISCOUNT_UP_TO_PCT, maxOfferSavingCents } from "@/domain/offers/discount";
 import { formatEur } from "@/i18n/format";
-import { Button, HEAD, LIME, MUTED, NIGHT, OUT, PICKS, STONE, Tile, photo, type Photos } from "./meta-ui";
+import { Button, HEAD, LIME, MUTED, NIGHT, OUT, PICKS, Tile, photo, type Photos } from "./meta-ui";
 import { Body, Ground, Line, SIZE, TopBar, clamp, ease, heroWidth, pop, type Shape } from "./reel-kit";
 import { renderAudio, writeWav, type Cue } from "./reel-audio";
 
 // R2, the request Reel (docs/META_ADS_PHASE1.md R2, owner 3 Nov 2026): how a
 // shopper gets a lower price by leaving an e-mail, shown as the site does it.
-// Six scenes, 20 s, with sound: the shop button → the question before the
+// Six scenes, 22 s, with sound: the shop button → the question before the
 // shop with "līdz −10 %" → the e-mail → "Pajautāts" → an example offer e-mail
 // (labelled as an example) → trilio.lv. Every word on the sheet is the site's
 // own copy. Run: npm run creatives:reel2 (REEL_SHAPES=story,feed,wide).
 
 const FPS = Number(process.env.REEL_FPS ?? 30);
-const DURATION = 20;
+const DURATION = 22;
 const NAME = "R2-pajauta-cenu";
 
 const P = PICKS[0]!;
@@ -625,34 +625,110 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
     );
   }
 
+  // The brand: the mark, the tagline in its three beats, what Trilio stands for, the address.
   const s = t - T.end;
   const fade = 1 - ease(s, 0, 0.35);
-  const logo = pop(s, 0.2, 0.7);
+  const logo = pop(s, 0.25, 0.7);
+  const big = shape === "wide" ? 86 : Math.round(z.head * 1.02);
+  const beat = (text: string, at: number, color: string) => {
+    const p = ease(s, at, 0.5);
+    return (
+      <div
+        style={{
+          display: "flex",
+          fontFamily: HEAD,
+          fontWeight: 700,
+          fontSize: big,
+          lineHeight: 1.04,
+          letterSpacing: "-0.03em",
+          color,
+          opacity: p,
+          transform: `translateY(${(1 - p) * 36}px)`,
+          maxWidth: shape === "wide" ? 1500 : z.w - 2 * z.side,
+        }}
+      >
+        {text}
+      </div>
+    );
+  };
   return (
     <Ground z={z} dark>
-      <div style={{ display: "flex", flex: 1 }} />
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 26 }}>
-        <div style={{ display: "flex", opacity: clamp(logo), transform: `scale(${0.8 + 0.2 * logo})` }}>
-          <Wordmark u={2.2} />
-        </div>
-        <Line text="trilio.lv" size={z.head} color={LIME} t={s} at={0.45} />
-        <div
-          style={{
-            display: "flex",
-            fontSize: 30,
-            color: STONE,
-            lineHeight: 1.35,
-            opacity: ease(s, 0.7, 0.45),
-            maxWidth: 860,
-          }}
-        >
-          Pajautā cenu bez maksas. Pirkt nav obligāti.
-        </div>
-        <div style={{ display: "flex", width: 320, opacity: ease(s, 0.9, 0.45) }}>
-          <Button text="Pajautāt cenu" kind="lime" k={1.1} />
-        </div>
+      <div style={{ display: "flex", opacity: clamp(logo), transform: `scale(${0.85 + 0.15 * logo})` }}>
+        <Wordmark u={shape === "feed" ? 1.7 : 2} />
       </div>
       <div style={{ display: "flex", flex: 1 }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: shape === "feed" ? 2 : 8 }}>
+        {beat("Daži jautājumi.", 0.6, "#FFFFFF")}
+        {beat("3 ieteikumi.", 1.0, "#FFFFFF")}
+        {beat("Pērc uzreiz vai pajautā lētāku cenu.", 1.4, LIME)}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: shape === "wide" ? "row" : "column",
+          gap: shape === "wide" ? 40 : 16,
+          marginTop: shape === "feed" ? 34 : 54,
+        }}
+      >
+        {VALUES.map((v, i) => {
+          const p = ease(s, 2.1 + i * 0.25, 0.45);
+          return (
+            <div
+              key={v}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                fontSize: shape === "feed" ? 30 : 34,
+                fontWeight: 700,
+                color: "#E8EFEC",
+                opacity: p,
+                transform: `translateX(${(1 - p) * 30}px)`,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  width: 40,
+                  height: 40,
+                  borderRadius: 999,
+                  background: LIME,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={NIGHT}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 12.5l5 5L20 6.5" />
+                </svg>
+              </div>
+              {v}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", flex: 1 }} />
+      <div
+        style={{
+          display: "flex",
+          fontFamily: HEAD,
+          fontWeight: 700,
+          fontSize: shape === "feed" ? 56 : 64,
+          color: LIME,
+          letterSpacing: "-0.02em",
+          opacity: ease(s, 3.0, 0.5),
+        }}
+      >
+        trilio.lv
+      </div>
       <div
         style={{
           position: "absolute",
@@ -668,6 +744,9 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
   );
 }
 
+/** What Trilio stands for, in words the brand already uses (docs/BRAND.md, the ads). */
+const VALUES = ["Secību nenosaka komisija", "Cenas no veikaliem Latvijā", "Padoms bez maksas"];
+
 /* ---------- sound ---------- */
 
 export function cues(): Cue[] {
@@ -679,6 +758,8 @@ export function cues(): Cue[] {
     { at: TAP_REQUEST + 0.18, kind: "success" },
     { at: T.offer + 0.35, kind: "chime" },
     { at: T.end, kind: "riser" },
+    { at: T.end + 0.25, kind: "pop" },
+    { at: T.end + 1.4, kind: "success" },
   ];
   for (let i = 0; i < EMAIL.length; i++) c.push({ at: TYPE_FROM + i * TYPE_EACH, kind: "type" });
   return c;
