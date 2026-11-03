@@ -196,7 +196,7 @@ test.describe("Meta Pixel", () => {
     await first.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
     await first.locator("[data-notify-panel]").getByRole("button", { name: "Pajautāt cenu" }).click();
     await expect(
-      first.getByRole("button", { name: "Pajautāts · meklējam lētāku cenu", exact: true }),
+      first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
     ).toBeEnabled();
     await expect
       .poll(async () => (await fbqCalls(page)).find((c) => c[0] === "track" && c[1] === "Lead"))

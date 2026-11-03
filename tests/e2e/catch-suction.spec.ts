@@ -108,7 +108,7 @@ test("a robot vacuum: the carpet question and strong suction in pascals", async 
   // "Jaudīga sūkšana" is one of the priorities one tap away.
   await expect(
     page
-      .getByRole("navigation", { name: "Kas tev svarīgāk?" })
+      .getByRole("navigation", { name: "Kas tev ir svarīgāks?" })
       .getByRole("link", { name: "Jaudīga sūkšana" }),
   ).toBeVisible();
   await expectNoAxeViolations(page);

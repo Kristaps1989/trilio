@@ -50,3 +50,6 @@ next-env.d.ts
 # Frame scratch of the Reel generator (scripts/meta-reel.gen.tsx)
 assets/ads/meta-phase1/.frames-*
 assets/ads/meta-phase1/.board
+assets/ads/meta-phase1/.frames2-*
+assets/ads/meta-phase1/.board2
+assets/ads/meta-phase1/.*.wav

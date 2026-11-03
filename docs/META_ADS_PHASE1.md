@@ -38,15 +38,15 @@ Name every ad exactly as below: the name travels in `utm_content`, so Admin → 
 - **Headline:** Daži jautājumi. 3 ieteikumi. · Veļas mašīna dažos jautājumos · Trīs piemērotākās veļas mašīnas
 - **Description:** Padoms bez maksas
 
-## A2 · Pajautā lētāku cenu
+## A2 · Pajautā zemāku cenu
 
 - **Files:** `A2-pieprasi-labaku-cenu/…`
 - **URL:** `https://trilio.lv/izvelies/laundry/washer`
 - **Primary text:**
   1. Cenu var pajautāt. Pie katra Trilio ieteikuma ir poga „Pajautāt cenu”: pajautāsim izplatītājam, un, ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu.
-  2. Piemērots modelis atrasts? Var pirkt uzreiz veikalā vai pajautāt lētāku cenu. Ja lētāk nesanāks, paziņosim, kad cena veikalos samazināsies.
+  2. Piemērots modelis atrasts? Var pirkt uzreiz veikalā vai pajautāt zemāku cenu. Ja lētāk nesanāks, paziņosim, kad cena veikalos samazināsies.
   3. 🏷️ Pieprasījums bez maksas. Ja varēsim piedāvāt lētāk nekā veikalā, piedāvājums atnāks uz e-pastu; ja ne, ziņa par cenas kritumu.
-- **Headline:** Pajautā lētāku cenu · Cenu var pajautāt · Tā pati prece, iespējams lētāk
+- **Headline:** Pajautā zemāku cenu · Cenu var pajautāt · Tā pati prece, iespējams lētāk
 - **Description:** Pieprasījums bez maksas
 
 ## A3 · Daži jautājumi
@@ -76,23 +76,38 @@ Name every ad exactly as below: the name travels in `utm_content`, so Admin → 
 - **Format:** Carousel, 4 cards, **1:1** (`A5-karuselis/`). "Show the best-performing cards first": **off**. "Add a card at the end with your Page profile picture": **off**.
 - **Primary text:**
   1. Kā tas notiek: daži jautājumi, trīs piemērotākie modeļi, pie katra kāpēc, un poga „Pajautāt cenu”. Četri soļi bildēs.
-  2. Veļas mašīna trīs soļos: daži jautājumi, trīs ieteikumi, un pēc tam pērc uzreiz vai pajautā lētāku cenu.
+  2. Veļas mašīna trīs soļos: daži jautājumi, trīs ieteikumi, un pēc tam pērc uzreiz vai pajautā zemāku cenu.
 - **Cards** (headline · description · URL, all to `https://trilio.lv/izvelies/laundry/washer`):
   1. Daži jautājumi · Tikai tie, kas izšķir izvēli
   2. Trīs piemērotākie modeļi · Cenas partneru veikalos
   3. Pie katra: kāpēc tieši šis · Ieteikumi pēc atbildēm
-  4. Pajautā lētāku cenu · Pieprasījums bez maksas
+  4. Pajautā zemāku cenu · Pieprasījums bez maksas
 
 ## R1 · Reel: kā tas strādā (14 s, motion)
 
-- **Files:** `R1-ka-tas-strada/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds), `…_16x9.mp4` (in-stream, desktop video feeds; the text left and the site element right); covers `…_cover.jpg`. In the Crop step: Vertical → Replace with `_9x16`, Square → keep Original (the 1:1 crop of the 4:5 cuts the footnote of the request scene), Horizontal → Replace with `_16x9`. Made by `npm run creatives:reel` (`scripts/meta-reel.gen.tsx`): every frame is laid out from the time, 30 fps, so entrances ease in, the option gets tapped, the three cards slide in one by one, the lime button is pressed and turns into the site's "Pajautāts · meklējam lētāku cenu".
-- **Scenes:** the pile of product cards ("353 veļas mašīnas 3 veikalos. Kuru izvēlēties?", the site's real count) → the first question, answered ("Daži jautājumi. Tikai tie, kas izšķir.") → the three fitting models with the criteria ("Trīs, kas der. Ar cenām no veikaliem.") → the request ("Patīk? Pajautā lētāku cenu.") → logo, trilio.lv, "Sākt izvēli".
+- **Files:** `R1-ka-tas-strada/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds), `…_16x9.mp4` (in-stream, desktop video feeds; the text left and the site element right); covers `…_cover.jpg`. In the Crop step: Vertical → Replace with `_9x16`, Square → keep Original (the 1:1 crop of the 4:5 cuts the footnote of the request scene), Horizontal → Replace with `_16x9`. Made by `npm run creatives:reel` (`scripts/meta-reel.gen.tsx`): every frame is laid out from the time, 30 fps, so entrances ease in, the option gets tapped, the three cards slide in one by one, the lime button is pressed and turns into the site's "Pajautāts · meklējam zemāku cenu".
+- **Scenes:** the pile of product cards ("353 veļas mašīnas 3 veikalos. Kuru izvēlēties?", the site's real count) → the first question, answered ("Daži jautājumi. Tikai tie, kas izšķir.") → the three fitting models with the criteria ("Trīs, kas der. Ar cenām no veikaliem.") → the request ("Patīk? Pajautā zemāku cenu.") → logo, trilio.lv, "Sākt izvēli".
 - **URL:** `https://trilio.lv/izvelies/laundry/washer`
 - **Primary text:**
-  1. Veļas mašīna trīs soļos: daži jautājumi, trīs ieteikumi, un pēc tam pērc uzreiz vai pajautā lētāku cenu.
+  1. Veļas mašīna trīs soļos: daži jautājumi, trīs ieteikumi, un pēc tam pērc uzreiz vai pajautā zemāku cenu.
   2. Cenu var pajautāt. Trilio pajautā izplatītājam: ja varēsim lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazināsies.
-- **Headline:** Daži jautājumi. 3 ieteikumi. · Pajautā lētāku cenu
+- **Headline:** Daži jautājumi. 3 ieteikumi. · Pajautā zemāku cenu
 - **Sound:** the file is silent. In the ad, **Add music → choose one calm track yourself** (not "Automatic music").
+
+## R2 · Reel: kā pajautāt cenu (22 s, motion, with sound)
+
+Owner's ask (3 Nov 2026): a dedicated video for the request, showing how a shopper gets a lower price by leaving an e-mail, with sound.
+
+- **Files:** `R2-pajauta-cenu/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds), `…_16x9.mp4` (in-stream, desktop video feeds); covers `…_cover.jpg` (the sheet with "līdz −10 %"). Crop step as for R1. Made by `npm run creatives:reel2` (`scripts/meta-reel2.gen.tsx`; one shape per run with `REEL_SHAPES=story`, `feed` or `wide`).
+- **Scenes (the site's own copy on every screen):** the card and a tap on "Pirkt — Tet" ("Atradi īsto? Spied „Pirkt”.") → the question before the shop slides up: "Pirms pērc — pajautāsim zemāku cenu", the lime strip "līdz −10 % · šai precei tas ir līdz 32,40 € lētāk" and the three steps ("Cena var būt līdz 10 % zemāka.") → "Turpināt ar Google" or the e-mail, typed, then a tap on "Pajautāt cenu" ("Atstāj e-pastu. Vai turpini ar Google.") → "Pajautāts. Meklējam zemāku cenu un uzrakstīsim." ("Mēs sazināmies ar izplatītāju.") → an e-mail notification with the subject the offer e-mail really uses, "Gorenje W11NHPI84AS par 299 €. Lētāk nekā veikalos.", and the two prices, footnoted **"Ilustratīvs piemērs. Ne katrai precei izdodas; ja ne, paziņosim, kad cena samazināsies."** ("Ja atradīsim lētāk, atsūtīsim piedāvājumu.") → the brand (owner, 3 Nov 2026: end on Trilio and its values): the mark, the tagline in its three beats ("Daži jautājumi." · "3 ieteikumi." · "Pērc uzreiz vai pajautā zemāku cenu." in lime), three values with a tick ("Secību nenosaka komisija", "Cenas no veikaliem Latvijā", "Padoms bez maksas") and trilio.lv
+- **Sound (in the file, ours to use):** synthesised in `scripts/reel-audio.ts`, no licence needed. A light C–G–Am–F bed at 100 BPM that builds with the story (pad, then bass, pluck and kick when the sheet opens, hats at the e-mail, claps at "Pajautāts", resolving on the logo), plus interface sounds on the picture's own events: the taps, a whoosh as the sheet opens, a pop on the discount, a key tick per typed letter, a two-note "done" and a three-note chime when the e-mail arrives. Loudness normalised to about −14 LUFS. In Ads Manager keep the video's own sound: **do not add music**. Everything is also readable with the sound off.
+- **Honesty:** the example offer (299 € against 324 €, 25 € less) stays inside "līdz 10 %" and is labelled as an example; the 10 % must stay a discount offers really reach (docs/PRICE_NOTIFY_PLAN.md §8.7).
+- **URL:** `https://trilio.lv/izvelies/laundry/washer`
+- **Primary text:**
+  1. Pirms pirkuma cenu var pajautāt Trilio. Sazināmies ar izplatītāju, un, ja izdodas atrast lētāk (līdz 10 %), piedāvājums atnāk e-pastā. Bez maksas, pirkt nav obligāti.
+  2. Jāatstāj tikai e-pasts: Trilio pajautā izplatītājam cenu tieši šai precei. Ja lētāk nesanāk, paziņojam, kad cena veikalos samazinās.
+- **Headline:** Cena var būt līdz 10 % zemāka · Pajautā zemāku cenu
+- **Optimisation:** this is the request ad, so in Phase 2 it is the one to optimise for the `Lead` event (docs/META_ADS_PLAN.md).
 
 ## Optional 7th ad
 

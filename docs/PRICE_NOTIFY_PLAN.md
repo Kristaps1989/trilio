@@ -163,12 +163,12 @@ Seen live, the owner's verdict: "Trilio var piedāvāt lētāk: iepērkam tieši
 | Where | Now |
 | --- | --- |
 | Line above the picks (`results.trilioCanOffer`) | Pajautā cenu: Trilio sazināsies ar izplatītāju un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali. |
-| Card button (`wishlist.notify` / `notifying`) | Pajautāt cenu → Pajautāts · meklējam lētāku cenu; a price-tag icon, the heart only in the header and the wishlist |
+| Card button (`wishlist.notify` / `notifying`) | Pajautāt cenu → Pajautāts · meklējam zemāku cenu; a price-tag icon, the heart only in the header and the wishlist |
 | Search line (`results.notifySearchTitle`, `wishlist.notifySearch`) | Unchanged in substance: Paziņot, kad šajā meklējumā parādīsies lētāks variants? → Paziņot par lētāku variantu → Paziņosim par lētāku variantu. The owner asked whether a search-level request was too much; it was also untrue, since a lead is a product and nobody can ask a partner about "a search". So the request exists only on a product; a search is a watch, saves at once, and its consent never covers offers. |
 | Panel (`notify.title`, `body`, `submit`) | Uz kādu e-pastu sūtīt piedāvājumu? · Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali, vai kad tās cena veikalos samazināsies… · Pajautāt cenu |
-| Under the card (`wishlist.alertNoteOffers`) | Meklējam lētāku cenu. Uzrakstīsim uz {email}. |
-| Confirmation e-mail and page | Apstiprini, un meklēsim lētāku cenu · Tu pajautāji cenu… |
-| Wishlist (`wishlist.sub`, `empty`) | …Visiem meklējam lētāku cenu. · Spied „Pajautāt cenu” pie preces. |
+| Under the card (`wishlist.alertNoteOffers`) | Meklējam zemāku cenu. Uzrakstīsim uz {email}. |
+| Confirmation e-mail and page | Apstiprini, un meklēsim zemāku cenu · Tu pajautāji cenu… |
+| Wishlist (`wishlist.sub`, `empty`) | …Visiem meklējam zemāku cenu. · Spied „Pajautāt cenu” pie preces. |
 
 The honesty guards: every promise is conditional ("ja varēsim piedāvāt lētāk"), and the price-drop e-mail stays in the same sentence, so the request always has a true outcome even when the distributor is not cheaper. The consent text changed, so `CONSENT_VERSION` is `2026-10-31`; earlier requests keep the version they were shown. Where `data/offers.json` leaves a category out, the `…Plain` and `…Drop` keys keep the old price-watch wording and the heart, because there Trilio asks nobody.
 
@@ -177,7 +177,7 @@ The honesty guards: every promise is conditional ("ja varēsim piedāvāt lētā
 Search visitors were good and nobody requested a price: a shopper who already knows the model takes the one-step path, "Pirkt — Tet", and Trilio is gone. The owner asked for a step at that moment. Built as one sheet, not a pop-up on arrival (an entry interstitial is what Google penalises on mobile and what rule 4 forbids):
 
 - **When:** the first "Pirkt — {Shop}" click of a visit, on a product not yet requested. Middle and modifier clicks, crawlers and bots get the plain `/go/…` link as before.
-- **What:** `ask.title` "Pieprasīt labāku cenu, pirms ej uz veikalu?" (since 3 Nov 2026 "Pirms pērc — pajautāsim lētāku cenu" with the discount strip, §8.7), the product line "{name} · {price} veikalā {shop}", the conditional promise ("Ja varēsim lētāk… ja ne, paziņosim… Bez maksas, bez konta."), and **two buttons of equal size**: "Pajautāt cenu" (lime) and "Uz {Shop}" (dark). No "Nē, paldies", no countdown, no second ask. Esc, the backdrop and the close button leave without choosing. Where Trilio does not source, the sheet is the price watch (`…Plain` keys).
+- **What:** `ask.title` "Pieprasīt labāku cenu, pirms ej uz veikalu?" (since 3 Nov 2026 "Pirms pērc — pajautāsim zemāku cenu" with the discount strip, §8.7), the product line "{name} · {price} veikalā {shop}", the conditional promise ("Ja varēsim lētāk… ja ne, paziņosim… Bez maksas, bez konta."), and **two buttons of equal size**: "Pajautāt cenu" (lime) and "Uz {Shop}" (dark). No "Nē, paldies", no countdown, no second ask. Esc, the backdrop and the close button leave without choosing. Where Trilio does not source, the sheet is the price watch (`…Plain` keys).
 - **Then:** the request runs the card's own flow inside the sheet (`useRequest`: e-mail field signed out, one yes signed in), and "Uz {Shop}" stays visible under it. Any answer or dismissal is remembered for 24 hours in `localStorage.trilio_ask_shop` (a timestamp, no personal data), after which every shop link in every tab goes straight through: once per visitor, not once per click (owner, 1 Nov 2026). A product already requested never asks.
 - **Measured** with the same first-party events: `ask_shown` (server action on open) and `ask_shop` (`/go/{offer}?ask=1`, recorded by the redirect for people only). Admin → Statistika → "Ceļš līdz paziņojumam" has two new columns, "Jautājums pirms veikala" and "Izvēlējās veikalu (%)"; the request path is counted in the existing "Spieda" and "Ievadīja e-pastu".
 - **Code:** `src/ui/ShopLink.tsx` (the link and the sheet), `src/ui/useRequest.ts` (the request state shared with `SaveButton`), `src/app/go/[offerId]/route.ts`, `src/services/notify/events.ts`.
@@ -191,7 +191,7 @@ The owner saw 14 shop clicks and 1 question shown and could not tell why. Every 
 The owner approved the mock-up: signed out, the e-mail step starts with "Turpināt ar Google" (Google's white button), the line "Viens pieskāriens, bez apstiprinājuma e-pasta.", a thin "vai ar e-pastu" divider, then the field as before. The field no longer takes focus, so a phone keyboard does not cover the Google button. Shown for products only; a saved search keeps the field alone.
 
 - **Leaving:** `requestWithGoogleAction` stores the product id in an httpOnly, SameSite=Lax cookie `trilio_pending_request` for 15 minutes, then signs in with Google, returning to the same page with `?pieprasits=1`.
-- **Back:** `CompletePendingRequest` (in the layout) sees the marker, removes it from the address and calls `completePendingRequestAction`, which needs that cookie and a signed-in session, uses the cookie once, and runs the card's own request with the consent given on the card (the same sentence as the e-mail field). The card turns to "Pajautāts · meklējam lētāku cenu" with the line naming the address, and the page scrolls to it. The marker alone, without this browser's own cookie, finishes nothing.
+- **Back:** `CompletePendingRequest` (in the layout) sees the marker, removes it from the address and calls `completePendingRequestAction`, which needs that cookie and a signed-in session, uses the cookie once, and runs the card's own request with the consent given on the card (the same sentence as the e-mail field). The card turns to "Pajautāts · meklējam zemāku cenu" with the line naming the address, and the page scrolls to it. The marker alone, without this browser's own cookie, finishes nothing.
 - **Counted** as `notify_tap`, `notify_sent` and `notify_confirmed` in the funnel (Google confirmed the address), plus the Meta Lead when consent allows.
 - **Tests:** without Google keys the dev login stands in (`google-e2e@example.invalid`), and the e2e round trip runs on the phone project.
 
@@ -199,7 +199,7 @@ The owner approved the mock-up: signed out, the e-mail step starts with "Turpin�
 
 A friend's point: the sheet asked for an e-mail without saying what it is worth. Four mock-ups were drawn; the owner chose variant C with the discount as a large strip (C2) and set the figure at **10 %**, not the 20 % first suggested. Where Trilio sources, the question before the shop now reads:
 
-- **Title:** "Pirms pērc — pajautāsim lētāku cenu".
+- **Title:** "Pirms pērc — pajautāsim zemāku cenu".
 - **Strip (lime):** "līdz −10 %" in large type, then "šai precei tas ir līdz **3,40 €** lētāk": 10 % of this product's shop price, rounded down (`src/domain/offers/discount.ts`, `OFFER_DISCOUNT_UP_TO_PCT`).
 - **Three steps:** "Tu atstāj e-pastu." · "Mēs prasām izplatītājam cenu šai precei." · "Ja ir lētāk, saņem piedāvājumu; ja ne, paziņosim, kad cena veikalā samazināsies. Pirkt nav obligāti."
 - **Fine print:** "Ne katrai precei izdodas. Bez maksas, tikai par šo preci, ne biežāk kā reizi dienā; atteikties var jebkurā brīdī."
@@ -207,15 +207,15 @@ A friend's point: the sheet asked for an e-mail without saying what it is worth.
 
 **Honesty (rule 4 and EU guidance on "up to" claims):** the 10 % must be a discount a fair share of Trilio's offers actually reach. Change the constant only with the offers it describes; if offers stop reaching it, lower it or remove the strip.
 
-### 8.8 "Pajautāt cenu" everywhere, "lētāka cena", "cena samazinās" (owner, 3 Nov 2026)
+### 8.8 "Pajautāt cenu" everywhere, "zemāka cena", "cena samazinās" (owner, 3 Nov 2026)
 
-The owner asked that the button read **"Pajautāt cenu"** everywhere, matching the sheet's "pajautāsim lētāku cenu", and that the copy use words with the exact meaning: **"lētāka cena"** rather than "labāka cena", and **"cena samazinās"** rather than "cena krīt". Applied across the site (`lv.json`, and the LT/EE placeholder copies), e-mail subjects ("Cena samazinājusies: …"), the page title, tagline, home description and Open Graph text, social captions, Google Ads copy (`src/domain/ads/plan.ts`) and the Meta ad sources (re-rendered). The current wording:
+The owner asked that the button read **"Pajautāt cenu"** everywhere, matching the sheet's "pajautāsim zemāku cenu", and that the copy use words with the exact meaning: **"zemāka cena"** rather than "labāka cena", and **"cena samazinās"** rather than "cena krīt". Applied across the site (`lv.json`, and the LT/EE placeholder copies), e-mail subjects ("Cena samazinājusies: …"), the page title, tagline, home description and Open Graph text, social captions, Google Ads copy (`src/domain/ads/plan.ts`) and the Meta ad sources (re-rendered). The current wording:
 
-- Button → state: "Pajautāt cenu" → "Pajautāts · meklējam lētāku cenu"; in the sheet: "Pajautāts. Meklējam lētāku cenu un uzrakstīsim."
+- Button → state: "Pajautāt cenu" → "Pajautāts · meklējam zemāku cenu"; in the sheet: "Pajautāts. Meklējam zemāku cenu un uzrakstīsim."
 - Line above the picks: "Pajautā cenu: Trilio sazināsies ar izplatītāju un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali."
-- Confirmation: "Apstiprini, un meklēsim lētāku cenu" · "Tu pajautāji cenu: {name}. Sazināsimies ar izplatītāju…"
-- Tagline and title: "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu."
-- Home description: "Atbildi uz dažiem jautājumiem un saņem trīs labākos sadzīves tehnikas variantus partneru veikalos. Pērc uzreiz vai pajautā mums lētāku cenu."
+- Confirmation: "Apstiprini, un meklēsim zemāku cenu" · "Tu pajautāji cenu: {name}. Sazināsimies ar izplatītāju…"
+- Tagline and title: "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu."
+- Home description: "Atbildi uz dažiem jautājumiem un saņem trīs labākos sadzīves tehnikas variantus partneru veikalos. Pērc uzreiz vai pajautā mums zemāku cenu."
 - Category pages where Trilio sources (`landing.descriptionOffers`): "…Pērc uzreiz vai pajautā mums cenu līdz 10 % lētāk." (the percentage is `OFFER_DISCOUNT_UP_TO_PCT`); elsewhere the description is unchanged.
 - English mirrors it: "Ask for a price", "a lower price".
 

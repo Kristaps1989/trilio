@@ -146,7 +146,7 @@ export type ComposedPost = {
   issues: string[];
 };
 
-export const TAGLINE = "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.";
+export const TAGLINE = "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu.";
 
 const eur = (cents: number) => formatEur(cents, "lv");
 
@@ -222,12 +222,12 @@ function parts(
               rows: [
                 { n: "01", label: "Daži jautājumi" },
                 { n: "02", label: "Trīs piemērotākie varianti" },
-                { n: "03", label: "Pērc uzreiz vai pajautā lētāku cenu" },
+                { n: "03", label: "Pērc uzreiz vai pajautā zemāku cenu" },
               ],
               lines: [
                 { main: "1. Daži jautājumi" },
                 { main: "2. Trīs ieteikumi" },
-                { main: "3. Pērc uzreiz vai pajautā lētāku cenu" },
+                { main: "3. Pērc uzreiz vai pajautā zemāku cenu" },
               ],
               subcategoryId: f.subcategoryId,
             },
@@ -263,9 +263,9 @@ function parts(
               layout: "phone",
               chip: "3. solis",
               eyebrow: "3. solis",
-              title: "Pērc uzreiz vai pajautā lētāku cenu",
+              title: "Pērc uzreiz vai pajautā zemāku cenu",
               headline: "Pērc uzreiz.",
-              headlineAccent: "Vai pajautā lētāku cenu.",
+              headlineAccent: "Vai pajautā zemāku cenu.",
               sub: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazinās.",
               phone: {
                 kind: "card",
@@ -273,7 +273,7 @@ function parts(
                 shop: first.shop,
                 price: eur(first.priceCents),
                 buttons: [`Pirkt — ${first.shop}`, "Pajautāt cenu"],
-                note: "Meklējam lētāku cenu. Ja atradīsim, atsūtīsim piedāvājumu.",
+                note: "Meklējam zemāku cenu. Ja atradīsim, atsūtīsim piedāvājumu.",
                 ...(first.imageUrl ? { image: first.imageUrl } : {}),
               },
               lines: [
@@ -293,10 +293,10 @@ function parts(
           head,
           f.picks.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
           slides
-            ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pajautāt lētāku cenu."
+            ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pajautāt zemāku cenu."
             : "Cenas šodien partneru veikalos.",
         ],
-        cta: "Var pirkt uzreiz veikalā vai pajautāt lētāku cenu: tad sazināsimies ar izplatītāju.",
+        cta: "Var pirkt uzreiz veikalā vai pajautāt zemāku cenu: tad sazināsimies ar izplatītāju.",
         card: {
           layout: "cover",
           chip: "3 ieteikumi",
@@ -452,12 +452,12 @@ function parts(
           title: "Daži jautājumi, un trīs piemērotākie varianti",
           headline: "Daži jautājumi.",
           headlineAccent: "Trīs ieteikumi.",
-          sub: "Pērc uzreiz vai pajautā lētāku cenu. Padoms bez maksas, bez konta.",
+          sub: "Pērc uzreiz vai pajautā zemāku cenu. Padoms bez maksas, bez konta.",
           icons: f.categories.map((c) => c.id),
           buttons: ["Sākt izvēli"],
           lines: [
             {
-              main: "Pērc uzreiz vai pajautā lētāku cenu",
+              main: "Pērc uzreiz vai pajautā zemāku cenu",
               sub: "Padoms bez maksas, bez konta",
               buttons: ["Sākt izvēli · trilio.lv"],
             },
@@ -521,7 +521,7 @@ function parts(
           `Šonedēļ Trilio lietotājus visvairāk interesēja ${f.products[0]!.name}.`,
           f.products.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
         ],
-        cta: "Var pirkt uzreiz veikalā vai pajautāt lētāku cenu:",
+        cta: "Var pirkt uzreiz veikalā vai pajautāt zemāku cenu:",
         card: { ...card, slides },
         alt: `Šonedēļ visvairāk interesēja: ${f.products.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
         prices: f.products.map((p) => p.priceCents),

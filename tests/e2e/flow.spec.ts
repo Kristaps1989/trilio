@@ -88,7 +88,7 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   await show.click();
 
   await expect(page).toHaveURL(/\/rezultati\?sub=fridge/);
-  await expect(h1(page)).toHaveText("Labākie varianti tev");
+  await expect(h1(page)).toHaveText("Tev piemērotākie varianti");
   await expect(picks(page).first()).toBeVisible();
   for (const card of await picks(page).all()) {
     expect(await heightOf(card)).toBeGreaterThanOrEqual(150);

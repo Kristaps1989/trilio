@@ -90,7 +90,7 @@ test("wishlist shows the saved product's photo", async ({ page }) => {
   await first.locator("[data-notify-panel]").getByRole("button", { name: "Pajautāt cenu" }).click();
   // Enabled again once the save has reached the server (the heart fills at once).
   await expect(
-    first.getByRole("button", { name: "Pajautāts · meklējam lētāku cenu", exact: true }),
+    first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
   ).toBeEnabled();
 
   await page.goto("/velmju-saraksts");
