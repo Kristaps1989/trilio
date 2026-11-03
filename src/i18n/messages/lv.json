@@ -1,8 +1,8 @@
 {
   "meta": {
-    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.",
-    "description": "Atbildi uz dažiem jautājumiem un saņem trīs labākos sadzīves tehnikas variantus partneru veikalos. Pērc uzreiz vai pajautā mums lētāku cenu.",
-    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.",
+    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu.",
+    "description": "Atbildi uz dažiem jautājumiem un saņem trīs labākos sadzīves tehnikas variantus partneru veikalos. Pērc uzreiz vai pajautā mums zemāku cenu.",
+    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu.",
     "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
     "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },
@@ -1240,7 +1240,7 @@
   "wishlist": {
     "title": "Vēlmju saraksts",
     "kicker": "Saglabāti: {count}",
-    "sub": "Saglabātās preces un meklējumi ar šī brīža labāko piedāvājumu un cenu vēsturi. Visiem meklējam lētāku cenu.",
+    "sub": "Saglabātās preces un meklējumi ar šī brīža labāko piedāvājumu un cenu vēsturi. Visiem meklējam zemāku cenu.",
     "signedOutTitle": "Tavs vēlmju saraksts",
     "signedOut": "Ienāc, lai saglabātu preces un meklējumus un redzētu tos no jebkuras ierīces.",
     "signIn": "Ienākt",
@@ -1265,7 +1265,7 @@
     "accountLine": "Ienācis kā {email} · {provider}",
     "offersTitle": "Personīgi piedāvājumi",
     "alertNote": "Paziņosim uz {email}, kad cena samazināsies. ·",
-    "alertNoteOffers": "Meklējam lētāku cenu. Ja atradīsim, atsūtīsim piedāvājumu uz {email}; ja ne, uzrakstīsim, kad cena veikalos samazināsies. ·",
+    "alertNoteOffers": "Meklējam zemāku cenu. Ja atradīsim, atsūtīsim piedāvājumu uz {email}; ja ne, uzrakstīsim, kad cena veikalos samazināsies. ·",
     "alertNoteOff": "Saglabāts. Cenu paziņojumus nesūtīsim. ·",
     "alertStop": "Nesūtīt",
     "alertResume": "Tomēr sūtīt",
@@ -1273,7 +1273,7 @@
     "alertsOn": "Bez maksas. Sūtām uz {email} ne biežāk kā reizi dienā, tikai par cenu samazinājumiem.",
     "alertsOff": "Cenu paziņojumus nesūtām. Saglabātās preces un cenu vēsture darbojas arī bez tiem.",
     "notify": "Pajautāt cenu",
-    "notifying": "Pajautāts · meklējam lētāku cenu",
+    "notifying": "Pajautāts · meklējam zemāku cenu",
     "notifySearch": "Paziņot par lētāku variantu",
     "notifyingSearch": "Paziņosim par lētāku variantu",
     "notifyDrop": "Paziņot, kad cena samazināsies",
@@ -1704,7 +1704,7 @@
       "product": "Prece",
       "savers": "Saglabājuši",
       "optedIn": "{count} piekrīt piedāvājumiem",
-      "best": "Lētākā cena veikalos",
+      "best": "Zemākā cena veikalos",
       "low30": "Zemākā 30 d.",
       "noOffer": "Nav veikalos",
       "offerAll": "Piedāvāt visiem ({count})",
@@ -2441,14 +2441,14 @@
     "submit": "Pajautāt cenu",
     "submitPlain": "Paziņot man",
     "close": "Aizvērt",
-    "sent": "Nosūtījām apstiprinājuma saiti uz {email}. Atver to, un sāksim meklēt lētāku cenu.",
+    "sent": "Nosūtījām apstiprinājuma saiti uz {email}. Atver to, un sāksim meklēt zemāku cenu.",
     "sentPlain": "Nosūtījām apstiprinājuma saiti uz {email}. Atver to, un paziņosim, kad cena samazināsies.",
     "invalid": "Lūdzu, ievadi derīgu e-pasta adresi.",
     "tooMany": "Pārāk daudz pieprasījumu. Mēģini vēlreiz pēc stundas.",
     "failed": "Neizdevās nosūtīt. Mēģini vēlreiz.",
-    "confirmKicker": "Lētāka cena",
+    "confirmKicker": "Zemāka cena",
     "confirmKickerPlain": "Cenu paziņojumi",
-    "confirmTitle": "Apstiprini, un meklēsim lētāku cenu",
+    "confirmTitle": "Apstiprini, un meklēsim zemāku cenu",
     "confirmTitlePlain": "Apstiprini cenu paziņojumus",
     "confirmProduct": "Tu pajautāji cenu: {name}. Sazināsimies ar izplatītāju un uzrakstīsim uz {email}, ja varēsim piedāvāt lētāk nekā veikali vai kad cena veikalos samazināsies.",
     "confirmProductPlain": "Paziņosim uz {email}, kad samazināsies cena: {name}.",
@@ -2461,9 +2461,9 @@
     "orEmail": "vai ar e-pastu"
   },
   "notifyEmail": {
-    "title": "Apstiprini, un meklēsim lētāku cenu",
+    "title": "Apstiprini, un meklēsim zemāku cenu",
     "titlePlain": "Apstiprini cenu paziņojumus",
-    "subject": "Apstiprini, un meklēsim lētāku cenu: {product}",
+    "subject": "Apstiprini, un meklēsim zemāku cenu: {product}",
     "subjectPlain": "Apstiprini cenu paziņojumus: {product}",
     "product": "Tu pajautāji cenu šai precei. Sazināsimies ar izplatītāju un uzrakstīsim, ja varēsim piedāvāt lētāk nekā veikali vai kad cena veikalos samazināsies.",
     "productPlain": "Tu lūdzi paziņot, kad samazināsies šīs preces cena.",
@@ -2476,7 +2476,7 @@
     "notYou": "Ja tas nebiji tu, nekas nav jādara: bez apstiprinājuma neko nesūtīsim."
   },
   "ask": {
-    "title": "Pirms pērc — pajautāsim lētāku cenu",
+    "title": "Pirms pērc — pajautāsim zemāku cenu",
     "titlePlain": "Paziņot, kad cena samazināsies?",
     "product": "{name} · {price} veikalā {shop}",
     "upTo": "līdz −{pct} %",
@@ -2490,7 +2490,7 @@
     "request": "Pajautāt cenu",
     "requestPlain": "Paziņot man",
     "toShop": "Uz {shop}",
-    "done": "Pajautāts. Meklējam lētāku cenu un uzrakstīsim.",
+    "done": "Pajautāts. Meklējam zemāku cenu un uzrakstīsim.",
     "donePlain": "Saglabāts. Paziņosim, kad cena samazināsies.",
     "close": "Aizvērt"
   }

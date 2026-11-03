@@ -73,7 +73,7 @@ test("a lead from a saved product: found by EAN, marked for a partner, noted, of
     // The first tap asks the one yes (every category covers Trilio's offers).
     await first.locator("[data-notify-panel]").getByRole("button", { name: "Pajautāt cenu" }).click();
     await expect(
-      first.getByRole("button", { name: "Pajautāts · meklējam lētāku cenu", exact: true }),
+      first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
     ).toBeEnabled();
   });
 

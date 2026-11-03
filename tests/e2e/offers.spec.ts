@@ -86,7 +86,7 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
       .getByRole("button", { name: "Pajautāt cenu" })
       .click();
     await expect(
-      first.getByRole("button", { name: "Pajautāts · meklējam lētāku cenu", exact: true }),
+      first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
     ).toBeEnabled();
     await page.goto("/velmju-saraksts");
     await expect(

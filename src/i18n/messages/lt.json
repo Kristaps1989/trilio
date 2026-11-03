@@ -1,9 +1,9 @@
 {
   "__status": "pending_translation",
   "meta": {
-    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.",
+    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu.",
     "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
-    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.",
+    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu.",
     "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
     "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },
@@ -1569,7 +1569,7 @@
       "product": "Prece",
       "savers": "Saglabājuši",
       "optedIn": "{count} piekrīt piedāvājumiem",
-      "best": "Lētākā cena veikalos",
+      "best": "Zemākā cena veikalos",
       "low30": "Zemākā 30 d.",
       "noOffer": "Nav veikalos",
       "offerAll": "Piedāvāt visiem ({count})",
