@@ -141,9 +141,9 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await expect(page.getByRole("region", { name: "Saglabātās preces" }).getByRole("article")).toHaveCount(1);
   await expect(page.getByRole("article", { name })).toBeVisible();
   await expect(
-    page
-      .locator("[data-price-alerts]")
-      .getByRole("checkbox", { name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants" }),
+    page.locator("[data-price-alerts]").getByRole("checkbox", {
+      name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants",
+    }),
   ).toBeChecked();
   // The one yes covered Trilio's offers too, as the sentence said.
   await expect(page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm")).toBeChecked();
@@ -404,9 +404,9 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // The account page has the same switch.
   await page.goto("/konts");
   await expect(
-    page
-      .locator("[data-price-alerts]")
-      .getByRole("checkbox", { name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants" }),
+    page.locator("[data-price-alerts]").getByRole("checkbox", {
+      name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants",
+    }),
   ).toBeChecked();
 
   // GDPR export carries the wishlist and the setting.
