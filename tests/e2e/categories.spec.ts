@@ -57,7 +57,7 @@ for (const { group, sub } of all) {
         if (await radios.count()) {
           const checked = page.getByRole("main").getByRole("radio", { checked: true });
           await expect(checked).toHaveCount(1);
-          await expect(checked).not.toContainText("Pašlaik nav pieejams");
+          await expect(checked).not.toContainText("Pašlaik nav preču");
         }
         await page.getByRole("button", { name: "Tālāk", exact: true }).click();
       }
@@ -65,7 +65,7 @@ for (const { group, sub } of all) {
     }
 
     await expect(page).toHaveURL(new RegExp(`/rezultati\\?sub=${sub.id}`));
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākie varianti tev");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tev piemērotākie varianti");
     const picks = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article");
     await expect(picks.first()).toBeVisible();
     // One tap asks to hear when the search or any pick gets cheaper.

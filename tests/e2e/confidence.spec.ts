@@ -46,7 +46,7 @@ test("the results page tells its story: coverage, roles, the product then its ve
 
 test("priorities are one tap away and re-rank with the same URL", async ({ page }) => {
   await page.goto("/rezultati?sub=fridge");
-  const row = page.getByRole("navigation", { name: "Kas tev svarīgāk?" });
+  const row = page.getByRole("navigation", { name: "Kas tev ir svarīgāks?" });
   await expect(row.getByRole("link", { name: "Vienalga" })).toHaveAttribute("aria-current", "true");
   await row.getByRole("link", { name: "Klusums" }).click();
   await expect(page).toHaveURL(/rezultati\?sub=fridge&a=/);
@@ -55,7 +55,7 @@ test("priorities are one tap away and re-rank with the same URL", async ({ page 
   const quiet = page.locator('article[data-roles~="priority"]');
   if ((await quiet.count()) > 0) {
     await expect(
-      quiet.locator("[data-role-pill]").filter({ hasText: "Ja klusums ir galvenais" }),
+      quiet.locator("[data-role-pill]").filter({ hasText: "Ja svarīgākais ir klusums" }),
     ).toHaveCount(1);
     await expect(quiet.locator("[data-verdict]")).toContainText(/Klusākais/);
   }
@@ -117,12 +117,12 @@ test("the English page argues in English", async ({ page }) => {
 test("the confidence question is one tap, and the admin sees the answer", async ({ page }) => {
   test.skip(test.info().project.name !== "desktop", "one project writes the shared answers");
   await page.goto("/rezultati?sub=fridge");
-  const q = page.getByRole("region", { name: "Vai šie varianti deva pārliecību izvēlēties?" });
+  const q = page.getByRole("region", { name: "Vai šie varianti palīdzēja tev izvēlēties?" });
   const note = `e2e: pietrūka ${Date.now()}`;
   await q.getByRole("button", { name: "Nē, kaut kā pietrūka" }).click();
   await q.getByLabel("Kā pietrūka? (nav obligāti)").fill(note);
   await q.getByRole("button", { name: "Nosūtīt" }).click();
-  await expect(q.getByRole("status")).toHaveText("Paldies — tas palīdz mums kļūt labākiem.");
+  await expect(q.getByRole("status")).toHaveText("Paldies — tas palīdz mums uzlabot Trilio.");
   expect(
     (
       await page.request.post("/api/confidence", { data: { subcategoryId: "nope", confident: true } })

@@ -28,7 +28,9 @@ test("category landing page renders three ranked cards with structured data and 
   expect(first.offers.offerCount).toBeGreaterThan(0);
   expect(first.description).toBeTruthy();
   expect(data.itemListElement[0].item.gtin13).toMatch(/^\d{13}$/);
-  await expect(page.getByText("Atbildi uz dažiem jautājumiem, un atlasīsim tieši tev")).toBeVisible();
+  await expect(
+    page.getByText("Atbildi uz dažiem jautājumiem. Mēs atlasīsim tev piemērotākos variantus."),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Sākt izvēli" })).toHaveAttribute(
     "href",
     "/izvelies/cool/fridge",
@@ -93,7 +95,7 @@ test("no-budget landing stays in the usual price range, agrees in gender and lin
   await page.goto("/kategorija/freezer");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākās saldētavas");
   await expect(page).toHaveTitle(/^Labākās saldētavas \d{4}: cenas un salīdzinājums · Trilio$/);
-  const lead = await page.getByText(/biežākajā cenu robežā līdz/).textContent();
+  const lead = await page.getByText(/populārākajā cenu klasē līdz/).textContent();
   const max = Number(/līdz ([\d\s ]+)\s€/.exec(lead ?? "")![1]!.replace(/\D/g, "")) * 100;
   const prices = await page
     .getByRole("article")

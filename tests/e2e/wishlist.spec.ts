@@ -91,7 +91,7 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   // The home page says both promises.
   await page.goto("/");
   await expect(
-    page.getByText("Izvērtēsim trīs piemērotākos produktus un paziņosim, kad cena samazināsies!"),
+    page.getByText("Atlasīsim trīs piemērotākās preces. Ja vēlies, paziņosim, kad cena samazināsies."),
   ).toBeVisible();
 
   await kettleResults(page);
@@ -101,7 +101,7 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   const productId = ((await first.getAttribute("id")) ?? "").replace(/^p-/, "");
   // Every category promises Trilio's own offer (owner, 30 Oct 2026).
   await expect(page.locator("[data-trilio-offer]")).toHaveText(
-    "Pajautā cenu: Trilio sazināsies ar izplatītāju un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali.",
+    "Pajautā cenu, un mēs sazināsimies ar izplatītāju. Ja varēsim piedāvāt lētāk nekā veikali, uzrakstīsim.",
   );
   await first.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
 
@@ -109,7 +109,7 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await expect(page).toHaveURL(url);
   const panel = first.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
   await expect(panel).toContainText(
-    "Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali, vai kad tās cena veikalos samazināsies.",
+    "Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali vai kad tās cena veikalos samazināsies.",
   );
   await expectNoAxeViolations(page);
   await panel.getByLabel("E-pasts").fill("nav-epasts");
@@ -118,13 +118,15 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await panel.getByLabel("E-pasts").fill(email);
   await panel.getByRole("button", { name: "Pajautāt cenu" }).click();
   await expect(first.getByRole("status")).toHaveText(
-    `Nosūtījām apstiprinājuma saiti uz ${email}. Atver to, un sāksim meklēt zemāku cenu.`,
+    `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
   );
 
   // The e-mailed link opens one button; mail scanners that open links confirm nothing.
   const link = await confirmationLink(page, email);
   await page.goto(link);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Apstiprini, un meklēsim zemāku cenu");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Apstiprini, lai sāktu meklēt zemāku cenu",
+  );
   await expect(page.getByText(`Tu pajautāji cenu:`)).toBeVisible();
   await expectNoAxeViolations(page);
   await page.getByRole("button", { name: "Apstiprināt" }).click();
@@ -141,7 +143,7 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await expect(
     page
       .locator("[data-price-alerts]")
-      .getByRole("checkbox", { name: "Sūtīt e-pastu, kad saglabātās preces vai meklējuma cena samazinās" }),
+      .getByRole("checkbox", { name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants" }),
   ).toBeChecked();
   // The one yes covered Trilio's offers too, as the sentence said.
   await expect(page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm")).toBeChecked();
@@ -159,7 +161,7 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   await devLogin(page, email, "/");
   await fridgeResults(page);
   await expect(page.locator("[data-trilio-offer]")).toHaveText(
-    "Pajautā cenu: Trilio sazināsies ar izplatītāju un uzrakstīs, ja varēs piedāvāt lētāk nekā veikali.",
+    "Pajautā cenu, un mēs sazināsimies ar izplatītāju. Ja varēsim piedāvāt lētāk nekā veikali, uzrakstīsim.",
   );
   // The search's own line sits right after the three picks, not at the bottom of the page.
   const order = await page.evaluate(() => {
@@ -258,7 +260,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
     /šai precei tas ir līdz \d+(,\d{2})?\s€ lētāk/,
   );
   await expect(sheet.getByRole("listitem")).toHaveCount(3);
-  await expect(sheet).toContainText("Ne katrai precei izdodas.");
+  await expect(sheet).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
   await expect(sheet.getByRole("button", { name: "Pajautāt cenu" })).toBeVisible();
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toHaveAttribute(
     "href",
@@ -272,7 +274,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await panel.getByLabel("E-pasts").fill(email);
   await panel.getByRole("button", { name: "Pajautāt cenu" }).click();
   await expect(sheet.getByRole("status")).toHaveText(
-    `Nosūtījām apstiprinājuma saiti uz ${email}. Atver to, un sāksim meklēt zemāku cenu.`,
+    `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
   );
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toBeVisible();
   await sheet.getByRole("button", { name: "Aizvērt" }).click();
@@ -384,7 +386,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // Price e-mails are free and on, with no plan and no threshold to pick; off and on again from the list.
   const alerts = page.locator("[data-price-alerts]");
   const box = alerts.getByRole("checkbox", {
-    name: "Sūtīt e-pastu, kad saglabātās preces vai meklējuma cena samazinās",
+    name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants",
   });
   await expect(box).toBeChecked();
   await expect(alerts.getByText(`Bez maksas. Sūtām uz ${email}`)).toBeVisible();
@@ -404,7 +406,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   await expect(
     page
       .locator("[data-price-alerts]")
-      .getByRole("checkbox", { name: "Sūtīt e-pastu, kad saglabātās preces vai meklējuma cena samazinās" }),
+      .getByRole("checkbox", { name: "Sūtīt e-pastu, kad samazinās saglabātās preces cena vai meklējumā parādās lētāks variants" }),
   ).toBeChecked();
 
   // GDPR export carries the wishlist and the setting.
