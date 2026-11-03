@@ -441,11 +441,12 @@ function Note({ text, t, at }: { text: string; t: number; at: number }) {
   );
 }
 
-function Head({ a, b, t, z }: { a: string; b: string; t: number; z: (typeof SIZE)[Shape] }) {
+function Head({ a, b, c, t, z }: { a: string; b: string; c?: string; t: number; z: (typeof SIZE)[Shape] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", paddingTop: 30 }}>
       <Line text={a} size={z.head} color={NIGHT} t={t} at={0.05} />
       <Line text={b} size={z.head} color={NIGHT} t={t} at={0.2} />
+      {c ? <Line text={c} size={z.head} color={NIGHT} t={t} at={0.35} /> : null}
     </div>
   );
 }
@@ -594,7 +595,7 @@ function Scene(t: number, z: (typeof SIZE)[Shape], ph: Photos, shape: Shape): Re
         <TopBar dark={false} t={10} />
         <Body
           shape={shape}
-          head={<Head a="Ja atrodam lētāk," b="saņem piedāvājumu." t={s} z={z} />}
+          head={<Head a="Ja atradīsim lētāk," b="atsūtīsim" c="piedāvājumu." t={s} z={z} />}
           hero={
             <div
               style={{
