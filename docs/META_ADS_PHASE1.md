@@ -94,6 +94,21 @@ Name every ad exactly as below: the name travels in `utm_content`, so Admin → 
 - **Headline:** Daži jautājumi. 3 ieteikumi. · Pajautā lētāku cenu
 - **Sound:** the file is silent. In the ad, **Add music → choose one calm track yourself** (not "Automatic music").
 
+## R2 · Reel: kā pajautāt cenu (20 s, motion, with sound)
+
+Owner's ask (3 Nov 2026): a dedicated video for the request, showing how a shopper gets a lower price by leaving an e-mail, with sound.
+
+- **Files:** `R2-pajauta-cenu/…_9x16.mp4` (Stories, Reels), `…_4x5.mp4` (Feeds), `…_16x9.mp4` (in-stream, desktop video feeds); covers `…_cover.jpg` (the sheet with "līdz −10 %"). Crop step as for R1. Made by `npm run creatives:reel2` (`scripts/meta-reel2.gen.tsx`; one shape per run with `REEL_SHAPES=story`, `feed` or `wide`).
+- **Scenes (the site's own copy on every screen):** the card and a tap on "Pirkt — Tet" ("Atradi īsto? Spied „Pirkt”.") → the question before the shop slides up: "Pirms pērc — pajautāsim lētāku cenu", the lime strip "līdz −10 % · šai precei tas ir līdz 32,40 € lētāk" and the three steps ("Cena var būt līdz 10 % zemāka.") → "Turpināt ar Google" or the e-mail, typed, then a tap on "Pajautāt cenu" ("Atstāj e-pastu. Vai turpini ar Google.") → "Pajautāts. Meklējam lētāku cenu un uzrakstīsim." ("Mēs sazināmies ar izplatītāju.") → an e-mail notification with the subject the offer e-mail really uses, "Gorenje W11NHPI84AS par 299 €. Lētāk nekā veikalos.", and the two prices, footnoted **"Ilustratīvs piemērs. Ne katrai precei izdodas; ja ne, paziņosim, kad cena samazināsies."** ("Ja atrodam lētāk, saņem piedāvājumu.") → trilio.lv, "Pajautā cenu bez maksas. Pirkt nav obligāti."
+- **Sound (in the file, ours to use):** synthesised in `scripts/reel-audio.ts`, no licence needed. A light C–G–Am–F bed at 100 BPM that builds with the story (pad, then bass, pluck and kick when the sheet opens, hats at the e-mail, claps at "Pajautāts", resolving on the logo), plus interface sounds on the picture's own events: the taps, a whoosh as the sheet opens, a pop on the discount, a key tick per typed letter, a two-note "done" and a three-note chime when the e-mail arrives. Loudness normalised to about −14 LUFS. In Ads Manager keep the video's own sound: **do not add music**. Everything is also readable with the sound off.
+- **Honesty:** the example offer (299 € against 324 €, 25 € less) stays inside "līdz 10 %" and is labelled as an example; the 10 % must stay a discount offers really reach (docs/PRICE_NOTIFY_PLAN.md §8.7).
+- **URL:** `https://trilio.lv/izvelies/laundry/washer`
+- **Primary text:**
+  1. Pirms pirkuma cenu var pajautāt Trilio. Sazināmies ar izplatītāju, un, ja izdodas atrast lētāk (līdz 10 %), piedāvājums atnāk e-pastā. Bez maksas, pirkt nav obligāti.
+  2. Jāatstāj tikai e-pasts: Trilio pajautā izplatītājam cenu tieši šai precei. Ja lētāk nesanāk, paziņojam, kad cena veikalos samazinās.
+- **Headline:** Cena var būt līdz 10 % zemāka · Pajautā lētāku cenu
+- **Optimisation:** this is the request ad, so in Phase 2 it is the one to optimise for the `Lead` event (docs/META_ADS_PLAN.md).
+
 ## Optional 7th ad
 
 Your best organic link post of the week as an ad ("Use existing post"): it keeps its likes and comments.
