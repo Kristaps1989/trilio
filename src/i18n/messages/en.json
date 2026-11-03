@@ -1586,9 +1586,15 @@
     "notYou": "If this wasn't you, there's nothing to do: we send nothing without confirmation."
   },
   "ask": {
-    "title": "Ask for a better price before the shop?",
+    "title": "Before you buy, let us ask for a lower price",
     "titlePlain": "Tell you when the price drops?",
     "product": "{name} · {price} at {shop}",
+    "upTo": "up to −{pct}%",
+    "saving": "for this product that's up to <b>{amount}</b> less",
+    "step1": "You leave your e-mail.",
+    "step2": "We ask the distributor for a price on this product.",
+    "step3": "If it's lower, you get the offer; if not, we'll write when the shop price drops. No need to buy.",
+    "fine": "It doesn't work for every product. Free, only about this product, at most once a day; stop at any time.",
     "body": "We'll ask the distributor. If we can do better, we'll e-mail the offer; if not, we'll write when the shop price drops. Free, no account needed.",
     "bodyPlain": "We'll write when this product's shop price drops. Free, no account needed.",
     "request": "Ask for a better price",

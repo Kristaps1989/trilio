@@ -23,9 +23,11 @@ type Props = {
   onClose: () => void;
   /** Called before leaving for Google (the question before the shop counts that as an answer). */
   onGoogle?: () => void;
+  /** The sheet above already explains the request (steps and fine print): keep the title for screen readers only. */
+  compact?: boolean;
 };
 
-export function NotifyPanel({ target, email, offers, onConsent, onClose, onGoogle }: Props) {
+export function NotifyPanel({ target, email, offers, onConsent, onClose, onGoogle, compact = false }: Props) {
   const t = useTranslations("notify");
   const id = useId();
   const [value, setValue] = useState("");
@@ -83,12 +85,12 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose, onGoogl
       className="flex flex-col gap-2 rounded-control bg-card-soft px-3 py-3 text-night"
       data-notify-panel
     >
-      <p id={`${id}-title`} className="text-[16px] font-bold">
+      <p id={`${id}-title`} className={compact ? "sr-only" : "text-[16px] font-bold"}>
         {email
           ? t(offers ? "titleSignedIn" : "titleSignedInPlain", { email })
           : t(offers ? "title" : "titlePlain")}
       </p>
-      <p className="text-sm" id={`${id}-body`}>
+      <p className={compact ? "sr-only" : "text-sm"} id={`${id}-body`}>
         {body}
       </p>
       {email ? (

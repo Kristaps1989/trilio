@@ -338,6 +338,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
           shop={card.best.storeName}
           name={card.name}
           price={formatEur(card.best.priceCents)}
+          priceCents={card.best.priceCents}
           target={{ kind: "product", productId: card.productId }}
           saved={card.saved}
           offers={!!card.trilioOffer}
