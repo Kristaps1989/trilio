@@ -249,10 +249,16 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await buy.click();
 
   // One sheet, the page stays; the request and the shop are two buttons of the same size, nothing is shamed.
-  const sheet = page.getByRole("dialog", { name: "Pieprasīt labāku cenu, pirms ej uz veikalu?" });
+  const sheet = page.getByRole("dialog", { name: "Pirms pērc — pajautāsim lētāku cenu" });
   await expect(sheet).toBeVisible();
   await expect(page).toHaveURL(url);
-  await expect(sheet).toContainText("Bez maksas, bez konta.");
+  // The discount in euro for this product (10 % of its price, rounded down), the three steps and the fine print.
+  await expect(sheet.locator("[data-ask-discount]")).toContainText("līdz −10 %");
+  await expect(sheet.locator("[data-ask-discount]")).toContainText(
+    /šai precei tas ir līdz \d+(,\d{2})?\s€ lētāk/,
+  );
+  await expect(sheet.getByRole("listitem")).toHaveCount(3);
+  await expect(sheet).toContainText("Ne katrai precei izdodas.");
   await expect(sheet.getByRole("button", { name: "Pieprasīt labāku cenu" })).toBeVisible();
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toHaveAttribute(
     "href",

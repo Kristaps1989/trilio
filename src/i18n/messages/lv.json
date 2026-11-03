@@ -2475,9 +2475,15 @@
     "notYou": "Ja tas nebiji tu, nekas nav jādara: bez apstiprinājuma neko nesūtīsim."
   },
   "ask": {
-    "title": "Pieprasīt labāku cenu, pirms ej uz veikalu?",
+    "title": "Pirms pērc — pajautāsim lētāku cenu",
     "titlePlain": "Paziņot, kad cena samazināsies?",
     "product": "{name} · {price} veikalā {shop}",
+    "upTo": "līdz −{pct} %",
+    "saving": "šai precei tas ir līdz <b>{amount}</b> lētāk",
+    "step1": "Tu atstāj e-pastu.",
+    "step2": "Mēs prasām izplatītājam cenu šai precei.",
+    "step3": "Ja ir lētāk, saņem piedāvājumu; ja ne, paziņosim, kad cena veikalā kritīsies. Pirkt nav obligāti.",
+    "fine": "Ne katrai precei izdodas. Bez maksas, tikai par šo preci, ne biežāk kā reizi dienā; atteikties var jebkurā brīdī.",
     "body": "Pajautāsim izplatītājam. Ja varēsim lētāk, atsūtīsim piedāvājumu uz e-pastu; ja ne, paziņosim, kad cena veikalos samazināsies. Bez maksas, bez konta.",
     "bodyPlain": "Uzrakstīsim, kad šīs preces cena veikalos samazināsies. Bez maksas, bez konta.",
     "request": "Pieprasīt labāku cenu",
