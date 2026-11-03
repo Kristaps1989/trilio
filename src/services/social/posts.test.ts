@@ -216,7 +216,7 @@ run("social posts", () => {
     const p = made.ok ? made.post : null;
     const all = [p!.captionFb, p!.captionIg, p!.alt, JSON.stringify(p!.card)].join("\n");
     expect(leaks(all, [...Object.values(personal), "Līga"])).toEqual([]);
-    expect(p!.captionFb).toMatch(/Pircējs \p{L}+ī pieprasīja labāku cenu/u);
+    expect(p!.captionFb).toMatch(/Pircējs \p{L}+ī pajautāja cenu/u);
     // Told once: the same order is not offered again.
     const again = await factsFor(db, "offer", new Date());
     expect(again?.facts && "specialOfferId" in again.facts ? again.facts.specialOfferId : null).not.toBe(

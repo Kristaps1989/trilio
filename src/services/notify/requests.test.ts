@@ -138,7 +138,7 @@ run("notify requests", () => {
       offers: true,
       consent: "notify.body@2026-10-31",
     });
-    expect(mail.sent.at(-1)!.subject).toMatch(/^Apstiprini, un meklēsim labāku cenu: /);
+    expect(mail.sent.at(-1)!.subject).toMatch(/^Apstiprini, un meklēsim lētāku cenu: /);
   });
 
   it("where the file leaves a category out, the consent covers price e-mails only", async () => {

@@ -26,7 +26,7 @@ export default async function ConfirmNotify({ params }: Props) {
   const t = await getTranslations("notify");
   const request = await requestByToken(db, token);
   const ok = !!request && requestState(request, new Date()).confirmable;
-  // The page repeats the promise the request was made under: a better price where Trilio sources, else the price e-mail.
+  // The page repeats the promise the request was made under: a lower price where Trilio sources, else the price e-mail.
   const p = request?.offers === false ? "Plain" : "";
   return (
     <Page size="narrow">

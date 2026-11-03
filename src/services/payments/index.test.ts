@@ -24,7 +24,7 @@ describe("paymentsProvider", () => {
 describe("job texts", () => {
   it("interpolate placeholders from the Latvian messages", () => {
     const w = wishlistTexts();
-    expect(w.subjectOne({ name: "Bosch", price: "599 €" })).toBe("Cena kritusi: Bosch tagad 599 €");
+    expect(w.subjectOne({ name: "Bosch", price: "599 €" })).toBe("Cena samazinājusies: Bosch tagad 599 €");
     expect(w.searchLine({ label: "Tējkannas", name: "X", price: "1 €", shop: "S", old: "2 €" })).toContain(
       "bija 2 €",
     );

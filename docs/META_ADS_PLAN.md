@@ -1,4 +1,4 @@
-# Meta ads: getting to know Trilio + "Pieprasīt labāku cenu" (plan, 31 Oct 2026)
+# Meta ads: getting to know Trilio + "Pajautāt cenu" (plan, 31 Oct 2026)
 
 Owner's goal: paid Facebook and Instagram ads that bring people **to the site**, so they get to know Trilio (a few questions, three suitable picks) and **request a better price** on a product. Organic posts already run (docs/SOCIAL_PLAN.md); this plan is the paid layer.
 
@@ -10,7 +10,7 @@ Sources for "2026 practice" are Meta's own Ads Manager behaviour plus agency wri
 |---|---|---|
 | Arrive | Landing page views from Meta (`utm_source=meta`) | Meta Ads Manager; Admin → Statistika (`ad_landings`) |
 | Get to know | Visits that answer the first question / reach results | GA4 `answer_question`, results `page_view` |
-| **Request** | "Pieprasīt labāku cenu" registered (e-mail given), then confirmed | Admin notify funnel (`notify_tap` → `notify_sent` → `notify_confirmed`); Meta event `Lead` |
+| **Request** | "Pajautāt cenu" registered (e-mail given), then confirmed | Admin notify funnel (`notify_tap` → `notify_sent` → `notify_confirmed`); Meta event `Lead` |
 | Money | Shop clicks, paid Trilio offers | `select_offer`, orders |
 
 The one number to steer by is **cost per request** (`Lead`). Clicks and views are only health checks.
@@ -33,7 +33,7 @@ This part decides whether the campaign can learn. Today the site sends events to
 
 ## 3. Strategy
 
-**Message, two halves, always together:** what Trilio is (*daži jautājumi, trīs piemērotākie varianti no veikaliem*) and the one thing nobody else offers (*pieprasi labāku cenu: pajautāsim izplatītājam; ja varēsim lētāk, atsūtīsim piedāvājumu*). The tagline carries both: "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu."
+**Message, two halves, always together:** what Trilio is (*daži jautājumi, trīs piemērotākie varianti no veikaliem*) and the one thing nobody else offers (*pajautā lētāku cenu: pajautāsim izplatītājam; ja varēsim lētāk, atsūtīsim piedāvājumu*). The tagline carries both: "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu."
 
 **Structure: few campaigns, broad audience, many different creatives.** Since Meta's Andromeda change, the ad system picks *who* to show an ad to largely from the creative itself; splitting people into many ad sets mostly splits the learning. So: one main campaign, one ad set, 8–10 genuinely different ads, plus a small test campaign later.
 
@@ -43,7 +43,7 @@ This part decides whether the campaign can learn. Today the site sends events to
 - Why not Leads yet: Meta wants roughly 50 optimisation events a week per ad set to leave the learning phase. A new brand in Latvia will not have 50 requests a week from ads on day one; optimising for a rare event with no history wastes the first budget.
 - **Budget:** 15–20 € a day on the campaign (Advantage campaign budget), about 250 € for the two weeks. Latvian CPMs are usually low compared with Western Europe, but this is a guess until we see our own numbers.
 
-### Phase 2 · from week 3: "Pieprasi labāku cenu" (optimise for requests)
+### Phase 2 · from week 3: "Pajautā lētāku cenu" (optimise for requests)
 
 - Switch when the Phase 1 campaign plus organic traffic gives **about 25–50 `Lead` events a week** (Meta counts all sources for learning).
 - **Objective: Leads → Conversion location Website → Conversion event `Lead`.**
@@ -53,7 +53,7 @@ This part decides whether the campaign can learn. Today the site sends events to
 ### Phase 3 · from week 4: a small "come back" ad set (optional)
 
 - Audience: website visitors of the last 30 days (only those who accepted cookies) + people who engaged with the page or Instagram in 90 days; exclude people who already requested.
-- Message: only the request ("Patika kāds variants? Var pieprasīt labāku cenu.").
+- Message: only the request ("Patika kāds variants? Var pajautāt lētāku cenu.").
 - 3–5 € a day. In Latvia with consent-gated tracking this audience will be small; if Meta says "audience too small", skip it: the main campaign already shows ads to warm people.
 
 ## 4. Audience and placements
@@ -74,7 +74,7 @@ Rules for all: Latvian; the first 2 seconds / first line say the point; captions
 | R3 | "Esam jauni" — owner to camera: who we are, ranking not bought (C3) | Reel 9:16, 20 s | home |
 | R4 | "Pārdevējs" — the "tikai šodien" joke, then the honest way (C4) | Reel 9:16, 15 s | a category flow (fridge) |
 | R5 | "Piedāvājums" — a real offer e-mail (C5); **only once a real offer exists** | Reel 9:16, 18 s | home |
-| S1 | Tagline card: "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu." | Image 4:5 + 9:16 | home |
+| S1 | Tagline card: "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu." | Image 4:5 + 9:16 | home |
 | S2 | "3 ieteikumi: veļas mašīnas" with today's prices (from Admin → Sociālie tīkli, square slides) | Carousel 1:1, 4 cards, each its own link | washer flow |
 | S3 | The best-performing **organic link post** of the month, used as an ad ("Use existing post"): it keeps its likes and comments | Existing post | its own link |
 
@@ -82,10 +82,10 @@ Videos can be made on a phone; real hands, real screen, real kitchen beat polish
 
 **Ad text (variants; Meta rotates them):**
 
-- Primary 1: "Daži jautājumi, un trīs piemērotākie varianti no Latvijas veikaliem. Patīk kāds? Var pirkt uzreiz vai pieprasīt labāku cenu: pajautāsim izplatītājam."
-- Primary 2: "Cenu var pajautāt. Pie katra ieteikuma ir poga „Pieprasīt labāku cenu”. Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena veikalos kritīs."
-- Primary 3: "Secību nenosaka veikalu komisija. Trilio rāda, kas der, un palīdz pajautāt labāku cenu. Padoms bez maksas."
-- Headline: "Daži jautājumi. 3 ieteikumi." / "Pieprasi labāku cenu" / "Sadzīves tehnika bez minēšanas"
+- Primary 1: "Daži jautājumi, un trīs piemērotākie varianti no Latvijas veikaliem. Patīk kāds? Var pirkt uzreiz vai pajautāt lētāku cenu: pajautāsim izplatītājam."
+- Primary 2: "Cenu var pajautāt. Pie katra ieteikuma ir poga „Pajautāt cenu”. Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena veikalos samazināsies."
+- Primary 3: "Secību nenosaka veikalu komisija. Trilio rāda, kas der, un palīdz pajautāt lētāku cenu. Padoms bez maksas."
+- Headline: "Daži jautājumi. 3 ieteikumi." / "Pajautā lētāku cenu" / "Sadzīves tehnika bez minēšanas"
 - Description: "trilio.lv · padoms bez maksas"
 - Button: **Uzzināt vairāk** (Learn more).
 

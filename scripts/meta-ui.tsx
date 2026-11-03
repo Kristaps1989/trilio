@@ -333,7 +333,7 @@ export function Tile({
   priceSize?: number;
   /** Lines reserved for the name, so tiles in a row stay equal. */
   nameRows?: 1 | 2;
-  /** The site's state after the tap: "Pieprasīts · meklējam labāku cenu". */
+  /** The site's state after the tap: "Pajautāts · meklējam lētāku cenu". */
   requested?: boolean;
 }) {
   const pad = 26 * k;
@@ -400,7 +400,7 @@ export function Tile({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 * k, paddingTop: 8 * k }}>
           <Button text={`Pirkt — ${p.shop}`} kind="dark" k={k} />
           <Button
-            text={requested ? "Pieprasīts · meklējam labāku cenu" : "Pieprasīt labāku cenu"}
+            text={requested ? "Pajautāts · meklējam lētāku cenu" : "Pajautāt cenu"}
             kind={requested ? "done" : "lime"}
             k={k}
           />

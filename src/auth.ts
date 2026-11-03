@@ -50,7 +50,7 @@ function providers(): NextAuthConfig["providers"] {
       },
     }),
   );
-  // "Pieprasīt labāku cenu" without an account (docs/PRICE_NOTIFY_PLAN.md): the
+  // "Pajautāt cenu" without an account (docs/PRICE_NOTIFY_PLAN.md): the
   // confirmation link was e-mailed to that address, so right after the click it signs in, once.
   list.push(
     Credentials({

@@ -1,16 +1,16 @@
 # TikTok ads test: strategy and creatives (31 Oct 2026)
 
-Owner's ask: test ads on TikTok. The brand is new and unknown; the business interest is Trilio's own special offers, which start with a shopper tapping "Pieprasīt labāku cenu" on a product.
+Owner's ask: test ads on TikTok. The brand is new and unknown; the business interest is Trilio's own special offers, which start with a shopper tapping "Pajautāt cenu" on a product.
 
 ## 1. What TikTok is good for here, and what it is not
 
 Google Search catches people who already type "trauku mazgājamā mašīna". TikTok reaches people who are not shopping today, so it cannot sell a dishwasher; it can plant one idea: **you can ask Trilio for a better price than the shops, and it is free**. An unknown brand on TikTok wins only when the ad is about the mechanism and the viewer's gain, never about the brand. The brand is learned as a by-product.
 
-So the test is not "does TikTok sell appliances"; it is "does a 15-second explanation of the request make people come and tap `Pieprasīt labāku cenu`, and at what cost". That tap is the event every creative is judged on.
+So the test is not "does TikTok sell appliances"; it is "does a 15-second explanation of the request make people come and tap `Pajautāt cenu`, and at what cost". That tap is the event every creative is judged on.
 
 ## 2. The offer in one sentence (the ad's job)
 
-> Atradi preci, nospied „Pieprasīt labāku cenu”, un Trilio pajautās izplatītājam. Ja būs lētāk, atsūtīsim piedāvājumu; ja ne, uzrakstīsim, kad cena veikalos samazināsies. Bez maksas.
+> Atradi preci, nospied „Pajautāt cenu”, un Trilio pajautās izplatītājam. Ja būs lētāk, atsūtīsim piedāvājumu; ja ne, uzrakstīsim, kad cena veikalos samazināsies. Bez maksas.
 
 Everything in the ads is a variation of this; nothing promises a price, a percentage or a deadline (CLAUDE.md rule 4, `src/domain/ads/honesty.ts`).
 
@@ -43,10 +43,10 @@ Spark Ads (boosting the organic post) over ordinary in-feed ads whenever the pos
 
 1. **Hook in the first second**, spoken and on screen, and it is a claim about the viewer's money, not about Trilio.
 2. **One idea per video.** The idea is the request. Not the ranking, not the three tiers, not the energy cost.
-3. **Show the tap.** Every video includes 3–4 seconds of real screen recording: the result card, the thumb on "Pieprasīt labāku cenu", the panel, the note "Meklējam labāku cenu…". People believe what they see done.
+3. **Show the tap.** Every video includes 3–4 seconds of real screen recording: the result card, the thumb on "Pajautāt cenu", the panel, the note "Meklējam lētāku cenu…". People believe what they see done.
 4. **Talk like a person, not a brand.** Phone footage, one speaker, no logo intro, no music bed louder than the voice. The logo appears at the end for one second.
-5. **Say the catch.** "Ja nebūs lētāk, pateiksim, kad cena kritīs." Honesty is the differentiator for an unknown brand; the ad that admits the limit is the one that gets trusted.
-6. **CTA is the button's own words:** "Pieprasīt labāku cenu", never "Uzzini vairāk".
+5. **Say the catch.** "Ja nebūs lētāk, pateiksim, kad cena samazināsies." Honesty is the differentiator for an unknown brand; the ad that admits the limit is the one that gets trusted.
+6. **CTA is the button's own words:** "Pajautāt cenu", never "Uzzini vairāk".
 7. **Captions and voice in Latvian**, informal "tu", infinitive buttons, as on the site.
 
 ## 6. The five creatives
@@ -56,44 +56,44 @@ Each: hook (0–2 s), body, screen part, close. Spoken lines in Latvian; on-scre
 ### C1 · "Pajautā" (mechanism, 18 s)
 
 - **Hook (0–2 s):** Speaker to camera, phone in hand: "Vai zināji, ka cenu veikalā var pajautāt?" — **Cenu var pajautāt.**
-- **Body (2–9 s):** "Trilio parāda trīs piemērotākos variantus no veikaliem. Un pie katra ir šī poga." Cut to screen: results card, thumb hovers on **Pieprasīt labāku cenu**.
-- **Screen (9–14 s):** Tap, panel opens, e-mail typed, button. Note appears: **Meklējam labāku cenu.** Voice: "Mēs pajautājam izplatītājam. Ja ir lētāk, atsūtām piedāvājumu."
-- **Close (14–18 s):** Back to camera: "Ja nav, pateiksim, kad cena kritīs. Bez maksas." — **Bez maksas · trilio.lv**, logo 1 s.
+- **Body (2–9 s):** "Trilio parāda trīs piemērotākos variantus no veikaliem. Un pie katra ir šī poga." Cut to screen: results card, thumb hovers on **Pajautāt cenu**.
+- **Screen (9–14 s):** Tap, panel opens, e-mail typed, button. Note appears: **Meklējam lētāku cenu.** Voice: "Mēs pajautājam izplatītājam. Ja ir lētāk, atsūtām piedāvājumu."
+- **Close (14–18 s):** Back to camera: "Ja nav, pateiksim, kad cena samazināsies. Bez maksas." — **Bez maksas · trilio.lv**, logo 1 s.
 
 ### C2 · "Trīs jautājumi" (the short flow, 20 s)
 
 - **Hook:** Over-the-shoulder, phone on a kitchen table: "Trauku mazgājamā mašīna trīs jautājumos." — **3 jautājumi.**
 - **Body:** Screen recording of the flow: household size, built-in or not, budget; results appear. Voice counts the taps: "Cik cilvēku. Iebūvējama vai ne. Budžets. Gatavs."
-- **Screen:** Card, tap on **Pieprasīt labāku cenu**. "Un tad lūdzam labāku cenu nekā veikalā."
-- **Close:** "Ja atradīsim, piedāvājums būs tavā e-pastā." — **Pieprasīt labāku cenu · trilio.lv**.
+- **Screen:** Card, tap on **Pajautāt cenu**. "Un tad lūdzam lētāku cenu nekā veikalā."
+- **Close:** "Ja atradīsim, piedāvājums būs tavā e-pastā." — **Pajautāt cenu · trilio.lv**.
 
 ### C3 · "Esam jauni" (founder, trust, 22 s)
 
 - **Hook:** Owner to camera, no script feel: "Mēs esam jauns uzņēmums, un tu par mums neko neesi dzirdējis." — **Jauni. Godīgi.**
 - **Body:** "Tāpēc īsi: Trilio nepārdod savas preces. Rāda, kas ir veikalos, un secību nenosaka komisija." (This sentence is the site's own "Kā mēs izvēlamies" promise.)
-- **Screen:** Card and the tap. "Ja prece patīk, nospied šo, un mēs pajautāsim izplatītājam labāku cenu."
+- **Screen:** Card and the tap. "Ja prece patīk, nospied šo, un mēs pajautāsim izplatītājam lētāku cenu."
 - **Close:** "Dažreiz izdodas, dažreiz ne. Abos gadījumos tu uzzināsi pirmais." — **trilio.lv**.
 
 ### C4 · "Pārdevējs" (relatable, humour, 15 s)
 
 - **Hook:** Text-only on black for 1 s: **„Šī cena ir tikai šodien.”** Speaker rolls eyes: "Jā, jā."
 - **Body:** "Tā vietā: atrod to pašu modeli Trilio, nospied pogu." Screen: the model, the tap.
-- **Screen:** Note **Meklējam labāku cenu.** Voice: "Mēs pajautājam izplatītājam un pasakām, ja ir lētāk."
-- **Close:** "Vai kad cena tiešām kritīs. Nevis „tikai šodien”." — **trilio.lv**. (The quoted line is the salesman's, not Trilio's claim; it is the point of the joke. Keep it in quotes on screen.)
+- **Screen:** Note **Meklējam lētāku cenu.** Voice: "Mēs pajautājam izplatītājam un pasakām, ja ir lētāk."
+- **Close:** "Vai kad cena tiešām samazināsies. Nevis „tikai šodien”." — **trilio.lv**. (The quoted line is the salesman's, not Trilio's claim; it is the point of the joke. Keep it in quotes on screen.)
 
 ### C5 · "Piedāvājums" (the e-mail, proof, 18 s)
 
 - **Hook:** Phone screen, the real Trilio offer e-mail opened (one actual sent offer, with the shopper's name hidden; the saving line "Tā pati prece. Par X € mazāk." as it was, because it is real). Voice: "Šādi izskatās, kad izdodas." — **Tā pati prece. Lētāk.**
 - **Body:** Scroll the e-mail: price, delivery days, warranty line. "Tā pati prece, tā pati garantija, mūsu piegāde."
 - **Screen:** Cut back to the card: "Sākas ar vienu pogu." Tap.
-- **Close:** "Ja lētāk nebūs, pateiksim, kad būs." — **Pieprasīt labāku cenu · trilio.lv**.
+- **Close:** "Ja lētāk nebūs, pateiksim, kad būs." — **Pajautāt cenu · trilio.lv**.
 - Rule: the number in C5 must be a real offer that was sent; never a mock-up. If there is no real offer yet, C5 waits.
 
 ### Ad text (under the video, 100 characters) and CTA
 
-- Primary: "Pieprasi labāku cenu nekā veikalā. Pajautāsim izplatītājam. Bez maksas." (CTA button: *Pieteikties* is TikTok's closest; set display name "Trilio".)
-- Variant: "Trīs piemērotākie varianti no veikaliem un viena poga: labāku cenu."
-- Variant: "Jauni un godīgi: ja lētāk nebūs, pateiksim, kad cena kritīs."
+- Primary: "Pajautā lētāku cenu nekā veikalā. Sazināsimies ar izplatītāju. Bez maksas." (CTA button: *Pieteikties* is TikTok's closest; set display name "Trilio".)
+- Variant: "Trīs piemērotākie varianti no veikaliem un viena poga: lētāku cenu."
+- Variant: "Jauni un godīgi: ja lētāk nebūs, pateiksim, kad cena samazināsies."
 
 All three pass `lintAdText` (no superlatives, no percentages, no urgency, no discount claims). Every new line goes through the same lint before upload.
 

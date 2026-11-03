@@ -7,8 +7,8 @@ import { NotifyPanel } from "./NotifyPanel";
 import { SavedAlertNote } from "./SavedAlertNote";
 import { useRequest } from "./useRequest";
 
-// "Pieprasīt labāku cenu" (docs/PRICE_NOTIFY_PLAN.md §8.3): one tap saves a
-// product or a whole search, asks Trilio for a better price and turns price
+// "Pajautāt cenu" (docs/PRICE_NOTIFY_PLAN.md §8.3): one tap saves a
+// product or a whole search, asks Trilio for a lower price and turns price
 // e-mails on; a second tap stops it. Where Trilio does not source (data/
 // offers.json "except") the button only promises the price e-mail, with the
 // heart. Signed out, the card opens one e-mail field instead of a sign-in
@@ -32,7 +32,7 @@ function Heart({ filled }: { filled: boolean }) {
   );
 }
 
-// A price tag with an arrow down: the request is for a better price, not a wish.
+// A price tag with an arrow down: the request is for a lower price, not a wish.
 function Tag({ filled }: { filled: boolean }) {
   return (
     <svg

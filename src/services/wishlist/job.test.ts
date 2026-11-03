@@ -104,7 +104,7 @@ run("runWishlistJob", () => {
     const mine = email.sent.filter((m) => m.to.startsWith("wishlist-job-"));
     expect(mine).toHaveLength(1);
     expect(mine[0]!.to).toContain("wishlist-job-a-");
-    expect(mine[0]!.subject).toMatch(/^Cena kritusi: WishBrand WB-1 tējkanna tagad 50\s€$/);
+    expect(mine[0]!.subject).toMatch(/^Cena samazinājusies: WishBrand WB-1 tējkanna tagad 50\s€$/);
     expect(mine[0]!.text).toMatch(/bija 60\s€/);
     expect(mine[0]!.text).toContain("https://trilio.example/velmju-saraksts");
     // One-click unsubscribe (RFC 8058) and a link in the text.

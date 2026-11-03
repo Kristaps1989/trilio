@@ -146,7 +146,7 @@ export type ComposedPost = {
   issues: string[];
 };
 
-export const TAGLINE = "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.";
+export const TAGLINE = "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.";
 
 const eur = (cents: number) => formatEur(cents, "lv");
 
@@ -222,12 +222,12 @@ function parts(
               rows: [
                 { n: "01", label: "Daži jautājumi" },
                 { n: "02", label: "Trīs piemērotākie varianti" },
-                { n: "03", label: "Pērc uzreiz vai pieprasi labāku cenu" },
+                { n: "03", label: "Pērc uzreiz vai pajautā lētāku cenu" },
               ],
               lines: [
                 { main: "1. Daži jautājumi" },
                 { main: "2. Trīs ieteikumi" },
-                { main: "3. Pērc uzreiz vai pieprasi labāku cenu" },
+                { main: "3. Pērc uzreiz vai pajautā lētāku cenu" },
               ],
               subcategoryId: f.subcategoryId,
             },
@@ -263,17 +263,17 @@ function parts(
               layout: "phone",
               chip: "3. solis",
               eyebrow: "3. solis",
-              title: "Pērc uzreiz vai pieprasi labāku cenu",
+              title: "Pērc uzreiz vai pajautā lētāku cenu",
               headline: "Pērc uzreiz.",
-              headlineAccent: "Vai pieprasi labāku cenu.",
-              sub: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena krīt.",
+              headlineAccent: "Vai pajautā lētāku cenu.",
+              sub: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazinās.",
               phone: {
                 kind: "card",
                 name: first.name,
                 shop: first.shop,
                 price: eur(first.priceCents),
-                buttons: [`Pirkt — ${first.shop}`, "Pieprasīt labāku cenu"],
-                note: "Meklējam labāku cenu. Ja atradīsim, atsūtīsim piedāvājumu.",
+                buttons: [`Pirkt — ${first.shop}`, "Pajautāt cenu"],
+                note: "Meklējam lētāku cenu. Ja atradīsim, atsūtīsim piedāvājumu.",
                 ...(first.imageUrl ? { image: first.imageUrl } : {}),
               },
               lines: [
@@ -281,10 +281,10 @@ function parts(
                   main: first.name,
                   side: eur(first.priceCents),
                   sub: first.shop,
-                  buttons: [`Pirkt — ${first.shop}`, "Pieprasīt labāku cenu"],
+                  buttons: [`Pirkt — ${first.shop}`, "Pajautāt cenu"],
                 },
               ],
-              note: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena krīt",
+              note: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazinās",
             },
           ]
         : undefined;
@@ -293,10 +293,10 @@ function parts(
           head,
           f.picks.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
           slides
-            ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pieprasīt labāku cenu."
+            ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pajautāt lētāku cenu."
             : "Cenas šodien partneru veikalos.",
         ],
-        cta: "Var pirkt uzreiz veikalā vai pieprasīt labāku cenu: tad pajautāsim izplatītājam.",
+        cta: "Var pirkt uzreiz veikalā vai pajautāt lētāku cenu: tad sazināsimies ar izplatītāju.",
         card: {
           layout: "cover",
           chip: "3 ieteikumi",
@@ -376,14 +376,14 @@ function parts(
           : `Trilio piedāvāja ${eur(f.trilioPriceCents)}`;
       return {
         body: [
-          "Pieprasīts un atrasts.",
-          `Pircējs ${f.month} pieprasīja labāku cenu precei ${f.product}. ${shopLine}, piegāde ${f.deliveryDays} darba dienās.`,
+          "Pajautāja un atradām.",
+          `Pircējs ${f.month} pajautāja cenu precei ${f.product}. ${shopLine}, piegāde ${f.deliveryDays} darba dienās.`,
         ],
-        cta: "Ja varam lētāk, piedāvājam; ja ne, paziņojam, kad cena veikalos krīt.",
+        cta: "Ja varam lētāk, piedāvājam; ja ne, paziņojam, kad cena veikalos samazinās.",
         card: {
           layout: "offer",
-          chip: "Pieprasīts un atrasts",
-          eyebrow: "Pieprasīts un atrasts",
+          chip: "Pajautāja un atradām",
+          eyebrow: "Pajautāja un atradām",
           title: f.product,
           headline: f.product,
           hero: f.subcategoryId,
@@ -452,12 +452,12 @@ function parts(
           title: "Daži jautājumi, un trīs piemērotākie varianti",
           headline: "Daži jautājumi.",
           headlineAccent: "Trīs ieteikumi.",
-          sub: "Pērc uzreiz vai pieprasi labāku cenu. Padoms bez maksas, bez konta.",
+          sub: "Pērc uzreiz vai pajautā lētāku cenu. Padoms bez maksas, bez konta.",
           icons: f.categories.map((c) => c.id),
           buttons: ["Sākt izvēli"],
           lines: [
             {
-              main: "Pērc uzreiz vai pieprasi labāku cenu",
+              main: "Pērc uzreiz vai pajautā lētāku cenu",
               sub: "Padoms bez maksas, bez konta",
               buttons: ["Sākt izvēli · trilio.lv"],
             },
@@ -504,13 +504,13 @@ function parts(
           hero: p.subcategoryId,
           ...(p.imageUrl ? { image: p.imageUrl } : {}),
           stat: { label: `Cena šodien · ${p.shop}`, value: eur(p.priceCents) },
-          buttons: [`Pirkt — ${p.shop}`, "Pieprasīt labāku cenu"],
+          buttons: [`Pirkt — ${p.shop}`, "Pajautāt cenu"],
           subcategoryId: p.subcategoryId,
           lines: [
             {
               main: p.shop,
               side: eur(p.priceCents),
-              buttons: [`Pirkt — ${p.shop}`, "Pieprasīt labāku cenu"],
+              buttons: [`Pirkt — ${p.shop}`, "Pajautāt cenu"],
             },
           ],
           note: "Cena šodien partneru veikalā",
@@ -521,7 +521,7 @@ function parts(
           `Šonedēļ Trilio lietotājus visvairāk interesēja ${f.products[0]!.name}.`,
           f.products.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
         ],
-        cta: "Var pirkt uzreiz veikalā vai pieprasīt labāku cenu:",
+        cta: "Var pirkt uzreiz veikalā vai pajautāt lētāku cenu:",
         card: { ...card, slides },
         alt: `Šonedēļ visvairāk interesēja: ${f.products.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
         prices: f.products.map((p) => p.priceCents),

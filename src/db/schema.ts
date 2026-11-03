@@ -1129,7 +1129,7 @@ export type AdCreative = typeof adCreatives.$inferSelect;
 export type AdProposal = typeof adProposals.$inferSelect;
 
 /**
- * "Pieprasīt labāku cenu" without an account (docs/PRICE_NOTIFY_PLAN.md):
+ * "Pajautāt cenu" without an account (docs/PRICE_NOTIFY_PLAN.md):
  * the e-mail a shopper typed, what they asked about and the exact consent text
  * shown, until they confirm by the link e-mailed to that address. Nothing is
  * sent to the address before that click; unconfirmed requests expire in 7 days.

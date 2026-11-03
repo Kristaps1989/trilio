@@ -1,9 +1,9 @@
 {
   "__status": "pending_translation",
   "meta": {
-    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.",
+    "title": "Trilio — daži jautājumi, 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.",
     "description": "Pastāsti, kas tev vajadzīgs, un mēs atradīsim trīs labākos sadzīves tehnikas variantus partneru veikalos.",
-    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pieprasi labāku cenu.",
+    "tagline": "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā lētāku cenu.",
     "groupDescription": "{group}: atbildi uz dažiem jautājumiem un saņem trīs labākos variantus partneru veikalos, ar cenām pēc EAN un elektrības izmaksām.",
     "modelDescription": "Ievadi modeli vai veikala saiti: pārbaudīsim cenu partneru veikalos un parādīsim, vai par to pašu naudu ir labāks variants."
   },
@@ -150,7 +150,7 @@
     "upgradeTradeoffs": "Bet: {items}",
     "upgradeNoGain": "Kopvērtējumā nedaudz augstāks, bet nevienā parametrā būtiski labāks.",
     "onlyBrand": "atšķirība galvenokārt zīmolā un dizainā",
-    "noHistory": "Cenu vēsture vēl krājas — radars paziņos par kritumu",
+    "noHistory": "Cenu vēsture vēl krājas — radars paziņos par cenas samazinājumu",
     "refurbGrade": "Stāvoklis: {grade}",
     "refurbWarranty": "{months, plural, =1 {# mēn. garantija} other {# mēn. garantija}}",
     "refurbSaving": "Ietaupi {amount} pret jaunu",
@@ -230,7 +230,7 @@
     "moreShowFirst": "Rādīt vairāk variantus ({total})",
     "moreShow": "{count, plural, one {Rādīt vēl # variantu} other {Rādīt vēl # variantus}} no {total}",
     "saveTitle": "Saglabā šo meklējumu",
-    "saveSub": "Vēlmju sarakstā redzēsi šī brīža labāko piedāvājumu un cenu vēsturi. Ja vēlies, par {price}/mēn. paziņosim e-pastā, kad cenas kritīs.",
+    "saveSub": "Vēlmju sarakstā redzēsi šī brīža labāko piedāvājumu un cenu vēsturi. Ja vēlies, par {price}/mēn. paziņosim e-pastā, kad cenas samazināsies.",
     "externalEprel": "(EPREL, atveras jaunā cilnē)",
     "coverage": "Izskatījām {products, plural, one {# preci} other {# preces}} {shops, plural, one {# veikalā} other {# veikalos}}{updated}. {matching, plural, =0 {Neviena neder} one {# der} other {# der}} tavām atbildēm un budžetam.",
     "coverageUpdated": " (atjaunots {when})",
@@ -611,9 +611,9 @@
     "alertsTitle": "Cenu e-pasti"
   },
   "email": {
-    "dropSubject": "Cena kritusi: {name} tagad {price}",
+    "dropSubject": "Cena samazinājusies: {name} tagad {price}",
     "dropBody": "{name} ({shop}) tagad maksā {price} — par {delta} mazāk nekā tad, kad sāki sekot.",
-    "similarSubject": "Līdzīgs modelis par labāku cenu: {name}",
+    "similarSubject": "Līdzīgs modelis par zemāku cenu: {name}",
     "similarBody": "{name} atbilst tavām prasībām un maksā {price} ({shop}).",
     "view": "Skatīt radaru",
     "receiptSubject": "Trilio Cenu radars — maksājums {amount}",
@@ -621,8 +621,8 @@
     "failedSubject": "Cenu radara maksājums neizdevās",
     "failedBody": "Neizdevās norakstīt {amount}. Mēģināsim vēlreiz {next}. Ja karte mainījusies, atjauno to radara lapā.",
     "unsubscribe": "Pārtraukt paziņojumus",
-    "wishlistSubjectOne": "Cena kritusi: {name} tagad {price}",
-    "wishlistSubjectMany": "Cenas kritušas {count} saglabātajām precēm",
+    "wishlistSubjectOne": "Cena samazinājusies: {name} tagad {price}",
+    "wishlistSubjectMany": "Cenas samazinājušās {count} saglabātajām precēm",
     "wishlistProductLine": "{name} — {price} ({shop}), bija {old}",
     "wishlistSearchLine": "{label}: labākais variants tagad {name} — {price} ({shop}), bija {old}",
     "wishlistView": "Skatīt vēlmju sarakstu",
@@ -819,7 +819,7 @@
           "h": "Vēlmju saraksts un cenu e-pasti",
           "items": [
             "Vēlmju saraksts un cenu e-pasti ir bez maksas.",
-            "Saglabājot preci vai meklējumu, tu lūdz mums paziņot, kad tās cena samazinās. Sūtām ne biežāk kā reizi dienā un tikai par cenu kritumiem, bez reklāmām.",
+            "Saglabājot preci vai meklējumu, tu lūdz mums paziņot, kad tās cena samazinās. Sūtām ne biežāk kā reizi dienā un tikai par cenu samazinājumiem, bez reklāmām.",
             "E-pastus vari atslēgt jebkurā brīdī: ar “Nesūtīt” pie saglabātās preces, vēlmju sarakstā, sadaļā “Konts” vai ar saiti katra e-pasta beigās.",
             "Personīgus piedāvājumus no Trilio sūtām tikai tad, ja to atsevišķi atļauj. Tā ir cita piekrišana, un to var atsaukt tāpat."
           ]
@@ -1155,20 +1155,20 @@
     "saveSearch": "Saglabāt meklējumu",
     "searchSaved": "Meklējums saglabāts",
     "notifyTitle": "E-pasta paziņojumi",
-    "notifyOffTitle": "Saņem e-pastu, kad cenas krīt",
-    "notifyOffBody": "Reizi dienā viens kopsavilkums par saglabāto preču un meklējumu cenu kritumiem. Bez reklāmām.",
+    "notifyOffTitle": "Saņem e-pastu, kad cenas samazinās",
+    "notifyOffBody": "Reizi dienā viens kopsavilkums par saglabāto preču un meklējumu cenu samazinājumiem. Bez reklāmām.",
     "notifyCta": "Ieslēgt paziņojumus · {price}/mēn.",
     "notifyOn": "Paziņojumi ieslēgti. Sūtām uz {email}.",
-    "thresholdTitle": "Par kādiem kritumiem ziņot?",
-    "thresholdAny": "Par jebkuru kritumu",
+    "thresholdTitle": "Par kādiem samazinājumiem ziņot?",
+    "thresholdAny": "Par jebkuru cenas samazinājumu",
     "threshold5": "Vismaz par 5 %",
     "threshold10": "Vismaz par 10 %",
-    "paidBanner": "Paziņojumi ieslēgti! E-pasts pienāks, kad kāda saglabātā cena kritīs.",
+    "paidBanner": "Paziņojumi ieslēgti! E-pasts pienāks, kad kāda saglabātā cena samazināsies.",
     "confirmTitle": "Paziņojumi ieslēgti!",
-    "confirmBody": "Reizi dienā sūtīsim kopsavilkumu, ja kāda saglabātā cena kritīs.",
+    "confirmBody": "Reizi dienā sūtīsim kopsavilkumu, ja kāda saglabātā cena samazināsies.",
     "toList": "Uz vēlmju sarakstu",
     "subscribe": "Ieslēgt paziņojumus",
-    "feature1": "Viens e-pasts dienā tikai par cenu kritumiem",
+    "feature1": "Viens e-pasts dienā tikai par cenu samazinājumiem",
     "feature2": "Visas saglabātās preces un meklējumi, visos partneru veikalos",
     "feature3": "Atslēgt vari jebkurā brīdī",
     "account": "Konts",
@@ -1179,7 +1179,7 @@
     "alertStop": "Nesūtīt",
     "alertResume": "Tomēr sūtīt",
     "alertsLabel": "Sūtīt e-pastu, kad saglabātās preces vai meklējuma cena samazinās",
-    "alertsOn": "Bez maksas. Sūtām uz {email} ne biežāk kā reizi dienā, tikai par cenu kritumiem.",
+    "alertsOn": "Bez maksas. Sūtām uz {email} ne biežāk kā reizi dienā, tikai par cenu samazinājumiem.",
     "alertsOff": "Cenu e-pastus nesūtām. Vēlmju saraksts un cenu vēsture darbojas arī bez tiem."
   },
   "offerEmail": {
@@ -2038,7 +2038,7 @@
   "alertsUnsubscribe": {
     "kicker": "Trilio",
     "title": "Nesūtīt vairs cenu e-pastus?",
-    "body": "Vairs nesūtīsim e-pastus par saglabāto preču cenu kritumiem. Vēlmju saraksts un konts paliek.",
+    "body": "Vairs nesūtīsim e-pastus par saglabāto preču cenu samazinājumiem. Vēlmju saraksts un konts paliek.",
     "confirm": "Nesūtīt",
     "doneTitle": "Gatavs",
     "doneBody": "Cenu e-pastus vairs nesūtīsim. Ja pārdomāsi, tos var ieslēgt vēlmju sarakstā."
