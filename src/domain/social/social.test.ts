@@ -243,7 +243,7 @@ describe("composePost", () => {
     ]);
     // Honest about the example: no answers were given for these picks.
     expect(p.card.slides![2]!.note).toContain("Piemērs bez atbildēm");
-    expect(p.card.slides![3]!.lines[0]!.buttons).toEqual(["Pirkt — Veikals A", "Iegūt lētāk"]);
+    expect(p.card.slides![3]!.lines[0]!.buttons).toEqual(["Iegūt lētāk", "Pirkt — Veikals A"]);
     expect(p.captionFb).toContain("Kā tas notiek, redzams bildēs");
     // The facts to re-check before sending stay the three prices.
     expect(p.card.lines.map((l) => l.side)).toHaveLength(3);
@@ -302,7 +302,7 @@ describe("composePost", () => {
     expect(top.card.slides![3]!.lines).toHaveLength(1);
     const prod = composePost(kinds[4]!, base);
     expect(prod.card.slides?.length).toBe(3);
-    expect(prod.card.slides![1]!.lines[0]!.buttons).toEqual(["Pirkt — Veikals A", "Iegūt lētāk"]);
+    expect(prod.card.slides![1]!.lines[0]!.buttons).toEqual(["Iegūt lētāk", "Pirkt — Veikals A"]);
     // Alt text per slide, from what it shows.
     expect(slideAlt(top.card.slides![1]!)).toBe(
       "Ledusskapji. Cenas partneru veikalos no, 199\u00a0€. Daži jautājumi, un trīs piemērotākie varianti",
