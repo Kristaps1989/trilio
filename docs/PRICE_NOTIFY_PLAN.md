@@ -134,7 +134,7 @@ Steps: cancel any active subscription at period end and e-mail those users that 
 - Price-drop e-mails about a product the person asked about are a service message; Trilio's own offers are a commercial communication (Information Society Services Law art. 9, GDPR). One yes covers both only because the sentence above the button names both plainly and the button "Paziņot man" itself is the affirmative act. The exact text and its version are stored with the request. The lawyer confirms the wording once before PR 2 ships.
 - Double opt-in: nothing goes to an address until its owner clicks the confirmation link. This protects strangers whose address someone typed, and it is what the magic link already does.
 - Every e-mail keeps one-click unsubscribe (RFC 8058) and the "Nesūtīt" link in the wishlist.
-- No "cena kritīs", no "tikai šodien", no pre-ticked boxes, no pop-up on leaving the page, no interstitial on the way to the shop. The shop button stays first and unchanged.
+- No "cena kritīs", no "tikai šodien", no pre-ticked boxes, no pop-up on leaving the page, no interstitial on the way to the shop. The shop button stays unchanged (since 4 Nov 2026 it comes second, under "Iegūt lētāk": §8.10).
 
 ## 7. Open points for the owner
 
@@ -226,3 +226,7 @@ Words still right as they are: "pieprasījums" as a noun (a request, in the priv
 - **Button:** "Pajautāt cenu" was confusing next to a price already on the card; the owner chose **"Iegūt lētāk"** (EN "Get it cheaper") for the card button, the sheet's request button and the e-mail step's submit. The state after the tap stays "Pajautāts · meklējam zemāku cenu", and the fine print "Zemāku cenu ne vienmēr izdodas panākt." stays under every request, so the button is not read as a guaranteed discount.
 - **Same screen on the card:** where Trilio sources, tapping "Iegūt lētāk" on a card opens the "līdz −10 %" strip, the three steps and the fine print above the e-mail field, as in the question before the shop (`src/ui/OfferPitch.tsx`, used by `ShopLink` and `SaveButton`).
 - **One click in the e-mail:** the confirmation page used to need a second "Apstiprināt". It now sends its one-button form by itself as soon as the page is shown in a browser (`AutoConfirm`), and the shopper lands back on the card. A mail scanner that only fetches the link still confirms nothing (the e2e test fetches the link first and checks); without scripts the button stays.
+
+### 8.10 "Iegūt lētāk" first, "Pirkt" second (owner, 4 Nov 2026)
+
+On the result card the lime "Iegūt lētāk" now comes first and the dark "Pirkt — {Shop}" second, both full width and the same size: the request is what only Trilio offers, and the shop is one tap away. The question before the shop stays (once a day); after a week, if most people answer it with "Uz {Shop}", it goes. Social card images follow the same order.

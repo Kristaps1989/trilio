@@ -332,6 +332,14 @@ export async function ResultCard({ card }: { card: CardModel }) {
       ) : null}
 
       <div className="mt-auto flex flex-col gap-2 pt-1">
+        {/* The request first, the shop second (owner, 4 Nov 2026): both full width, same size, nothing hidden. */}
+        <SaveButton
+          target={{ kind: "product", productId: card.productId }}
+          saved={card.saved}
+          name={card.name}
+          offers={card.trilioOffer}
+          priceCents={card.best.priceCents}
+        />
         <ShopLink
           href={goHref(card)}
           label={t("buy", { shop: card.best.storeName })}
@@ -343,13 +351,6 @@ export async function ResultCard({ card }: { card: CardModel }) {
           saved={card.saved}
           offers={!!card.trilioOffer}
           analytics={offerAnalytics(card)}
-        />
-        <SaveButton
-          target={{ kind: "product", productId: card.productId }}
-          saved={card.saved}
-          name={card.name}
-          offers={card.trilioOffer}
-          priceCents={card.best.priceCents}
         />
       </div>
     </article>
