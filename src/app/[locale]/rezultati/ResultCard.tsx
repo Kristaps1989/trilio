@@ -349,6 +349,7 @@ export async function ResultCard({ card }: { card: CardModel }) {
           saved={card.saved}
           name={card.name}
           offers={card.trilioOffer}
+          priceCents={card.best.priceCents}
         />
       </div>
     </article>

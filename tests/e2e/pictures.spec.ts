@@ -85,9 +85,9 @@ test("wishlist shows the saved product's photo", async ({ page }) => {
   await kettleResults(page);
   const first = picks(page).first();
   const name = (await first.getAttribute("aria-label")) ?? "";
-  await first.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   // The first tap asks the one yes (every category covers Trilio's offers).
-  await first.locator("[data-notify-panel]").getByRole("button", { name: "Pajautāt cenu" }).click();
+  await first.locator("[data-notify-panel]").getByRole("button", { name: "Iegūt lētāk" }).click();
   // Enabled again once the save has reached the server (the heart fills at once).
   await expect(
     first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),

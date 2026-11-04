@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-// "Pajautāt cenu" (docs/PRICE_NOTIFY_PLAN.md): one tap saves
+// "Iegūt lētāk" (docs/PRICE_NOTIFY_PLAN.md): one tap saves
 // a product or a whole search and turns free price e-mails on; signed out, the
 // card asks for an e-mail and one confirmation link does the rest; where
 // Trilio sources (fridges), the one yes also covers Trilio's own offers. The
@@ -101,35 +101,39 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   const productId = ((await first.getAttribute("id")) ?? "").replace(/^p-/, "");
   // Every category promises Trilio's own offer (owner, 30 Oct 2026).
   await expect(page.locator("[data-trilio-offer]")).toHaveText(
-    "Pajautā cenu, un mēs sazināsimies ar izplatītāju. Ja varēsim piedāvāt lētāk nekā veikali, uzrakstīsim.",
+    "Spied „Iegūt lētāk”: sazināsimies ar izplatītāju un uzrakstīsim, ja varēsim piedāvāt zemāku cenu nekā veikali.",
   );
-  await first.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
 
   // No sign-in page: the card asks for the address, says exactly what will be sent, nothing more.
   await expect(page).toHaveURL(url);
+  // The same screen as the question before the shop: what the e-mail is worth, then the steps.
+  const pitch = first.locator("[data-offer-pitch]");
+  await expect(pitch.locator("[data-ask-discount]")).toContainText("līdz −10 %");
+  await expect(pitch.getByRole("listitem")).toHaveCount(3);
+  await expect(pitch).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
   const panel = first.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
   await expect(panel).toContainText(
     "Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali vai kad tās cena veikalos samazināsies.",
   );
   await expectNoAxeViolations(page);
   await panel.getByLabel("E-pasts").fill("nav-epasts");
-  await panel.getByRole("button", { name: "Pajautāt cenu" }).click();
+  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
   await expect(panel.getByRole("alert")).toHaveText("Lūdzu, ievadi derīgu e-pasta adresi.");
   await panel.getByLabel("E-pasts").fill(email);
-  await panel.getByRole("button", { name: "Pajautāt cenu" }).click();
+  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
   await expect(first.getByRole("status")).toHaveText(
     `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
   );
 
-  // The e-mailed link opens one button; mail scanners that open links confirm nothing.
+  // A mail scanner that only fetches the link confirms nothing: the page is the one-button form.
   const link = await confirmationLink(page, email);
+  const scanned = await page.request.get(link);
+  const html = await scanned.text();
+  expect(html).toContain("Apstiprini, lai sāktu meklēt zemāku cenu");
+  expect(html).toContain("Tu pajautāji cenu:");
+  // In a browser the e-mail's "Apstiprināt" is the only click (owner, 4 Nov 2026): the page confirms by itself.
   await page.goto(link);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Apstiprini, lai sāktu meklēt zemāku cenu",
-  );
-  await expect(page.getByText(`Tu pajautāji cenu:`)).toBeVisible();
-  await expectNoAxeViolations(page);
-  await page.getByRole("button", { name: "Apstiprināt" }).click();
 
   // Back on the same results, at the same card, signed in, and the card says what will happen.
   await page.waitForURL((u) => u.pathname === "/rezultati" && u.hash === `#p-${productId}`);
@@ -161,7 +165,7 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   await devLogin(page, email, "/");
   await fridgeResults(page);
   await expect(page.locator("[data-trilio-offer]")).toHaveText(
-    "Pajautā cenu, un mēs sazināsimies ar izplatītāju. Ja varēsim piedāvāt lētāk nekā veikali, uzrakstīsim.",
+    "Spied „Iegūt lētāk”: sazināsimies ar izplatītāju un uzrakstīsim, ja varēsim piedāvāt zemāku cenu nekā veikali.",
   );
   // The search's own line sits right after the three picks, not at the bottom of the page.
   const order = await page.evaluate(() => {
@@ -177,11 +181,11 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   expect(order).toEqual({ afterPicks: true, beforeMore: true });
 
   const first = picks(page).first();
-  await first.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   const panel = first.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
   await expect(panel).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
   await expectNoAxeViolations(page);
-  await panel.getByRole("button", { name: "Pajautāt cenu" }).click();
+  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
   await expect(
     first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
   ).toBeVisible();
@@ -190,7 +194,7 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   );
   // Asked once: the next product saves at the first tap.
   const second = picks(page).nth(1);
-  await second.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await second.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   // The heart fills at once; enabled again once the save has reached the server.
   await expect(
     second.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
@@ -216,7 +220,7 @@ test("Turpināt ar Google: one tap, back on the same results, that product reque
   const card = picks(page).nth(1);
   const productId = ((await card.getAttribute("id")) ?? "").replace(/^p-/, "");
   const name = (await card.getAttribute("aria-label")) ?? "";
-  await card.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await card.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   const panel = card.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
   // The field no longer grabs focus, so a phone keyboard does not cover the Google button.
   await expect(panel.getByLabel("E-pasts")).not.toBeFocused();
@@ -261,7 +265,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
   );
   await expect(sheet.getByRole("listitem")).toHaveCount(3);
   await expect(sheet).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
-  await expect(sheet.getByRole("button", { name: "Pajautāt cenu" })).toBeVisible();
+  await expect(sheet.getByRole("button", { name: "Iegūt lētāk" })).toBeVisible();
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toHaveAttribute(
     "href",
     /^\/go\/[0-9a-f-]{36}\?.*from=ask/,
@@ -269,10 +273,10 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await expectNoAxeViolations(page);
 
   // The request inside the sheet is the card's own flow: the e-mail field, then the confirmation link.
-  await sheet.getByRole("button", { name: "Pajautāt cenu" }).click();
+  await sheet.getByRole("button", { name: "Iegūt lētāk" }).click();
   const panel = sheet.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
   await panel.getByLabel("E-pasts").fill(email);
-  await panel.getByRole("button", { name: "Pajautāt cenu" }).click();
+  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
   await expect(sheet.getByRole("status")).toHaveText(
     `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
   );
@@ -323,11 +327,11 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   await expect(search.locator("[data-notify-panel]")).toHaveCount(0);
   const product = picks(page).first();
   const productName = (await product.getAttribute("aria-label")) ?? "";
-  await product.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await product.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   // The first product tap asks the one yes, with the address already known; it covers Trilio's offers too.
   const ask = product.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
   await expect(ask).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
-  await ask.getByRole("button", { name: "Pajautāt cenu" }).click();
+  await ask.getByRole("button", { name: "Iegūt lētāk" }).click();
   await expect(
     product.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
   ).toBeVisible();
@@ -344,8 +348,8 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   await expect(note).toHaveAttribute("data-alert-note", "on");
   // A second tap stops it; a third starts it again.
   await product.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }).click();
-  await expect(product.getByRole("button", { name: "Pajautāt cenu", exact: true })).toBeVisible();
-  await product.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+  await expect(product.getByRole("button", { name: "Iegūt lētāk", exact: true })).toBeVisible();
+  await product.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   await expect(
     product.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
   ).toBeVisible();
