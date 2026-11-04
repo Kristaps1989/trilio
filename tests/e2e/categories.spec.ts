@@ -70,7 +70,7 @@ for (const { group, sub } of all) {
     await expect(picks.first()).toBeVisible();
     // One tap asks to hear when the search or any pick gets cheaper.
     await expect(page.getByRole("button", { name: "Paziņot par lētāku variantu" })).toBeVisible();
-    await expect(picks.first().getByRole("button", { name: "Pajautāt cenu", exact: true })).toBeVisible();
+    await expect(picks.first().getByRole("button", { name: "Iegūt lētāk", exact: true })).toBeVisible();
 
     // The chosen price range is a chip; every pick inside it, unless labelled over budget.
     const chips = page.getByRole("navigation", { name: "Tavas izvēles" }).getByRole("button");

@@ -1,4 +1,4 @@
-// "Pajautāt cenu" without an account (docs/PRICE_NOTIFY_PLAN.md):
+// "Iegūt lētāk" without an account (docs/PRICE_NOTIFY_PLAN.md):
 // the rules that need no database. One yes covers Trilio's own offers only
 // where the text shown said so, and that text is stored with its version.
 

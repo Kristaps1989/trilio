@@ -79,11 +79,11 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
     const first = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").first();
     product = (await first.getAttribute("aria-label")) ?? "";
-    await first.getByRole("button", { name: "Pajautāt cenu", exact: true }).click();
+    await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
     // One yes on the card covers price e-mails and Trilio's own offers.
     await first
       .getByRole("group", { name: `Sūtīt piedāvājumu uz ${shopper}?` })
-      .getByRole("button", { name: "Pajautāt cenu" })
+      .getByRole("button", { name: "Iegūt lētāk" })
       .click();
     await expect(
       first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),

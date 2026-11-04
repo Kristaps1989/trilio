@@ -29,7 +29,7 @@ import { CONSENT_COOKIE } from "@/ui/analytics/consent";
 import { keyOf, saveTarget, type SaveTarget } from "./save";
 import { withPending } from "@/ui/pendingRequest";
 
-// "Pajautāt cenu" and the e-mail settings. Every action checks the session and
+// "Iegūt lētāk" and the e-mail settings. Every action checks the session and
 // writes only the signed-in user's rows.
 
 const Target = z.discriminatedUnion("kind", [
@@ -108,7 +108,7 @@ export type ToggleResult =
   | { ok: false; reason: "consent"; email: string };
 
 /**
- * "Pajautāt cenu" (docs/PRICE_NOTIFY_PLAN.md): saves the item
+ * "Iegūt lētāk" (docs/PRICE_NOTIFY_PLAN.md): saves the item
  * and turns price e-mails on. Signed out, the card opens the e-mail field
  * instead. Signed in where Trilio sources, the first tap shows the one
  * sentence that also covers Trilio's offers; `consent` is that sentence's yes.

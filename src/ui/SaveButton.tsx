@@ -4,10 +4,11 @@ import { useTranslations } from "next-intl";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
+import { OfferFine, OfferPitch } from "./OfferPitch";
 import { SavedAlertNote } from "./SavedAlertNote";
 import { useRequest } from "./useRequest";
 
-// "Pajautāt cenu" (docs/PRICE_NOTIFY_PLAN.md §8.3): one tap saves a
+// "Iegūt lētāk" (docs/PRICE_NOTIFY_PLAN.md §8.3): one tap saves a
 // product or a whole search, asks Trilio for a lower price and turns price
 // e-mails on; a second tap stops it. Where Trilio does not source (data/
 // offers.json "except") the button only promises the price e-mail, with the
@@ -59,6 +60,7 @@ export function SaveButton({
   variant = "card",
   name,
   offers = false,
+  priceCents,
 }: {
   target: SaveTarget;
   saved: boolean;
@@ -68,6 +70,8 @@ export function SaveButton({
   name: string;
   /** Trilio sources this category (data/offers.json): the consent sentence covers its offers too. */
   offers?: boolean;
+  /** The shop price: the request shows what it can be worth ("līdz −10 %", in euro). */
+  priceCents?: number;
 }) {
   const t = useTranslations("wishlist");
   const { saved, pending, note, panel, run, closePanel } = useRequest(target, initial, variant !== "icon");
@@ -103,13 +107,29 @@ export function SaveButton({
     <div className="flex w-full flex-col gap-2">
       {button}
       {panel ? (
-        <NotifyPanel
-          target={target}
-          email={panel.email}
-          offers={offers && !search}
-          onConsent={() => run(true, true)}
-          onClose={closePanel}
-        />
+        // Where Trilio sources, the same screen as the question before the shop (owner, 4 Nov 2026): the discount and the steps first.
+        offers && !search && variant !== "icon" ? (
+          <div className="flex flex-col gap-3 text-night" data-offer-pitch>
+            <OfferPitch priceCents={priceCents} />
+            <NotifyPanel
+              target={target}
+              email={panel.email}
+              offers
+              onConsent={() => run(true, true)}
+              onClose={closePanel}
+              compact={!panel.email}
+            />
+            <OfferFine />
+          </div>
+        ) : (
+          <NotifyPanel
+            target={target}
+            email={panel.email}
+            offers={offers && !search}
+            onConsent={() => run(true, true)}
+            onClose={closePanel}
+          />
+        )
       ) : note && saved ? (
         <SavedAlertNote email={note.email} offers={offers && !search} />
       ) : null}

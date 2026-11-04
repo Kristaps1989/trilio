@@ -7,10 +7,12 @@ import { offerProductName } from "@/services/offers/compose";
 import { Button, ButtonLink } from "@/ui/Button";
 import { Kicker, Page, PageTitle } from "@/ui/layout";
 import { confirmNotifyAction } from "./actions";
+import { AutoConfirm } from "./AutoConfirm";
 
 // The link in the confirmation e-mail (docs/PRICE_NOTIFY_PLAN.md §2 step 5).
-// A page with one button, not a GET that confirms: mail scanners open links,
-// and only the person should say yes.
+// Not a GET that confirms: mail scanners open links, and only the person
+// should say yes. The page holds one button and, in a browser, presses it
+// itself (AutoConfirm), so the e-mail's "Apstiprināt" is the only click.
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +35,7 @@ export default async function ConfirmNotify({ params }: Props) {
       <Kicker>{t(`confirmKicker${p}`)}</Kicker>
       <PageTitle>{t(`confirmTitle${p}`)}</PageTitle>
       {ok ? (
-        <form action={confirmNotifyAction} className="flex flex-col gap-5">
+        <AutoConfirm action={confirmNotifyAction} busy={t("confirming")}>
           <input type="hidden" name="token" value={token} />
           <p className="text-[17px] text-mist">
             {request.kind === "product"
@@ -43,7 +45,7 @@ export default async function ConfirmNotify({ params }: Props) {
           <Button type="submit" size="lg">
             {t("confirmButton")}
           </Button>
-        </form>
+        </AutoConfirm>
       ) : (
         <>
           <p className="text-[17px] text-stone" role="status">
