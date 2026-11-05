@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  brandFromTitle,
+  brandIsTypeWord,
   cleanName,
   displayName,
   modelStem,
@@ -88,5 +90,30 @@ describe("shortName and sameModel", () => {
     expect(sameModel(pick, { brand: "Dreame", modelCode: "DZ30-BK", name: "Dreame DZ30" })).toBe(false);
     expect(sameModel(pick, { brand: "Tristar", modelCode: "AF30", name: "x" })).toBe(false);
     expect(modelStem("FR-9073")).toBe("FR9073");
+  });
+});
+
+describe("brandFromTitle (a shop without a brand field, m79.lv)", () => {
+  it("reads the brand from the title, not its first word", () => {
+    const title = "Elektriskā tējkanna Concept RK4100 ar temp.kontr. 1.7L 2200W";
+    expect(brandFromTitle(title, "rk4100", [])).toBe("Concept");
+    expect(brandFromTitle("Veļas mašīna Bosch WGG244ZCSN", "WGG244ZCSN", [])).toBe("Bosch");
+    expect(brandFromTitle("Bosch WGG244ZCSN veļas mašīna", "", [])).toBe("Bosch");
+    // Without the code in the title: the first capitalised word that is not Latvian.
+    expect(brandFromTitle("Tējkanna Tefal Express", "", [])).toBe("Tefal");
+    // A known brand anywhere in the title wins.
+    expect(brandFromTitle("Robots putekļu sūcējs Xiaomi S10", "", ["Xiaomi"])).toBe("Xiaomi");
+    expect(brandFromTitle("", "")).toBe("");
+  });
+
+  it("knows an old guess that was really the type word", () => {
+    expect(brandIsTypeWord("Elektriskā")).toBe(true);
+    expect(brandIsTypeWord("Veļas")).toBe(true);
+    expect(brandIsTypeWord("Concept")).toBe(false);
+  });
+
+  it("names the product with its brand and the code as the title writes it", () => {
+    const title = "Elektriskā tējkanna Concept RK4100 ar temp.kontr. 1.7L 2200W";
+    expect(cleanName(title, "Concept", "rk4100")).toBe("Concept RK4100");
   });
 });

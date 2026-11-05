@@ -1,4 +1,5 @@
 import { normalizeEan } from "@/domain/catalog/ean";
+import { brandFromTitle } from "@/domain/catalog/naming";
 import { normaliseProduct, sanityCheck } from "@/domain/catalog/normalise";
 import { detectSubcategory, getSubcategory } from "@/domain/questions/catalog";
 import { acceptRow, type AdapterStore, type ParseResult } from "./types";
@@ -123,8 +124,11 @@ export function recordToOffer(
   if (!condition) return void result.rejected.push({ reason: "condition", raw });
 
   const ean = normalizeEan(record.gtin);
-  const brand = record.brand?.trim() || record.title?.split(/\s+/)[0] || "";
   const modelCode = record.mpn?.trim() || "";
+  // A shop without a brand field (m79.lv): the brand is read from the title, not its first word.
+  const brand = record.brand?.trim() || brandFromTitle(record.title ?? "", modelCode);
+  // What older runs stored as the brand (the title's first word), so those products are still found.
+  const legacyBrand = record.brand?.trim() ? undefined : record.title?.split(/\s+/)[0];
   if (!ean && !modelCode) return void result.rejected.push({ reason: "no_identity", raw });
 
   // Typed attributes from the spec table and product text (data/attributes.json),
@@ -147,6 +151,7 @@ export function recordToOffer(
       externalId: record.id,
       ean,
       brand,
+      ...(legacyBrand && legacyBrand !== brand ? { legacyBrand } : {}),
       modelCode: modelCode || ean,
       name: record.title?.trim(),
       description: record.description?.trim() || null,

@@ -12,6 +12,8 @@ export const NormalisedOfferSchema = z.object({
     .regex(/^\d{13,14}$/)
     .nullable(),
   brand: z.string().min(1),
+  /** The brand older runs guessed for this row (the title's first word): upsert still finds products stored under it. */
+  legacyBrand: z.string().min(1).optional(),
   modelCode: z.string().min(1),
   name: z.string().min(1),
   description: z.string().nullable().default(null),
@@ -55,12 +57,18 @@ export type NormalisedOffer = z.infer<typeof NormalisedOfferSchema>;
 /** What upsertOffers accepts: provenance and the spec table are optional (sample data, tests). */
 export type UpsertRow = Omit<
   NormalisedOffer,
-  "attributeSources" | "specTable" | "shopCategory" | "eprelId" | "ratingX10" | "ratingCount"
+  "attributeSources" | "specTable" | "shopCategory" | "eprelId" | "ratingX10" | "ratingCount" | "legacyBrand"
 > &
   Partial<
     Pick<
       NormalisedOffer,
-      "attributeSources" | "specTable" | "shopCategory" | "eprelId" | "ratingX10" | "ratingCount"
+      | "attributeSources"
+      | "specTable"
+      | "shopCategory"
+      | "eprelId"
+      | "ratingX10"
+      | "ratingCount"
+      | "legacyBrand"
     >
   >;
 
