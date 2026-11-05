@@ -1,5 +1,6 @@
 import type { SocialKind } from "@/db/schema";
 import { formatEur } from "@/i18n/format";
+import { OFFER_DISCOUNT_UP_TO_PCT, maxOfferSavingCents } from "@/domain/offers/discount";
 import { lintPost, type PostLintContext } from "./lint";
 
 // The words of each post type (docs/SOCIAL_PLAN.md §3), from facts the job
@@ -79,6 +80,8 @@ export type PhoneScreen =
       price: string;
       buttons: string[];
       note: string;
+      /** The site's "līdz −10 %" strip under the request (docs/PRICE_NOTIFY_PLAN.md §8.7). */
+      strip?: { upTo: string; saving: string };
       /** The product's photo on the card, as on the site. */
       image?: string;
     };
@@ -266,14 +269,23 @@ function parts(
               title: "Pērc uzreiz vai pajautā zemāku cenu",
               headline: "Pērc uzreiz.",
               headlineAccent: "Vai pajautā zemāku cenu.",
-              sub: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazinās.",
+              sub: "Ja izplatītājs piedāvās zemāku cenu, atsūtīsim piedāvājumu. Ja ne, paziņosim, kad cena samazināsies.",
               phone: {
                 kind: "card",
                 name: first.name,
                 shop: first.shop,
                 price: eur(first.priceCents),
                 buttons: ["Iegūt lētāk", `Pirkt — ${first.shop}`],
-                note: "Meklējam zemāku cenu. Ja atradīsim, atsūtīsim piedāvājumu.",
+                // The site's card after the tap: the discount, then the fine print.
+                ...(maxOfferSavingCents(first.priceCents) > 0
+                  ? {
+                      strip: {
+                        upTo: `līdz −${OFFER_DISCOUNT_UP_TO_PCT} %`,
+                        saving: eur(maxOfferSavingCents(first.priceCents)),
+                      },
+                    }
+                  : {}),
+                note: "Zemāku cenu ne vienmēr izdodas panākt.",
                 ...(first.imageUrl ? { image: first.imageUrl } : {}),
               },
               lines: [
@@ -284,7 +296,7 @@ function parts(
                   buttons: ["Iegūt lētāk", `Pirkt — ${first.shop}`],
                 },
               ],
-              note: "Ja varēsim piedāvāt lētāk, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena samazinās",
+              note: "Ja izplatītājs piedāvās zemāku cenu, atsūtīsim piedāvājumu. Ja ne, paziņosim, kad cena samazināsies.",
             },
           ]
         : undefined;
@@ -296,7 +308,7 @@ function parts(
             ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pajautāt zemāku cenu."
             : "Cenas šodien partneru veikalos.",
         ],
-        cta: "Var pirkt uzreiz veikalā vai pajautāt zemāku cenu: tad sazināsimies ar izplatītāju.",
+        cta: "Var pirkt uzreiz veikalā vai spiest „Iegūt lētāk”: tad sazināsimies ar izplatītāju.",
         card: {
           layout: "cover",
           chip: "3 ieteikumi",
@@ -335,15 +347,15 @@ function parts(
           ...(f.imageUrl ? { image: f.imageUrl } : {}),
           stat: { label: `Tagad · ${f.shop}`, value: eur(f.priceCents) },
           stat2: { label: "Zemākā cena pēdējās 30 dienās", value: eur(f.lowCents) },
-          sub: "Salīdzināts ar šī veikala zemāko cenu 30 dienās.",
+          sub: "Salīdzināts ar šī veikala zemāko cenu pēdējās 30 dienās.",
           lines: [
             { main: "Tagad", side: eur(f.priceCents), sub: f.shop },
-            { main: "Zemākā cena 30 dienās", side: eur(f.lowCents) },
+            { main: "Zemākā cena pēdējās 30 dienās", side: eur(f.lowCents) },
           ],
-          note: "Salīdzināts ar zemāko cenu 30 dienās (Omnibus)",
+          note: "Salīdzināts ar zemāko cenu pēdējās 30 dienās (Omnibus)",
           subcategoryId: f.subcategoryId,
         },
-        alt: `${f.product}: tagad ${eur(f.priceCents)} veikalā ${f.shop}, zemākā cena 30 dienās ${eur(f.lowCents)}.`,
+        alt: `${f.product}: tagad ${eur(f.priceCents)} veikalā ${f.shop}, zemākā cena pēdējās 30 dienās ${eur(f.lowCents)}.`,
         prices: [f.priceCents, f.lowCents],
         numbers: [30],
         names: [f.product, f.shop],
@@ -379,7 +391,7 @@ function parts(
           "Pajautāja un atradām.",
           `Pircējs ${f.month} pajautāja cenu precei ${f.product}. ${shopLine}, piegāde ${f.deliveryDays} darba dienās.`,
         ],
-        cta: "Ja varam lētāk, piedāvājam; ja ne, paziņojam, kad cena veikalos samazinās.",
+        cta: "Ja izdodas atrast zemāku cenu, atsūtām piedāvājumu; ja ne, paziņojam, kad cena veikalos samazinās.",
         card: {
           layout: "offer",
           chip: "Pajautāja un atradām",
@@ -423,7 +435,7 @@ function parts(
           title: "Šonedēļ visbiežāk meklētais",
           headline: "Ko Latvija",
           headlineAccent: "meklēja šonedēļ.",
-          sub: "Trilio lietotāju meklētākās kategorijas, pēc kārtas.",
+          sub: "Trilio lietotāju meklētākās kategorijas pēc kārtas.",
           rows: f.categories.map((c, i) => ({ n: `0${i + 1}`, label: c.label })),
           icons: f.categories.map((c) => c.id),
           lines: f.categories.map((c, i) => ({ main: `${i + 1}. ${c.label}` })),
@@ -589,7 +601,8 @@ export function composePost(
   const captionFb = [body, p.cta ? `${p.cta}\n${pointed}` : pointed].join("\n\n");
   const captionIg = [
     body,
-    p.cta ? `${p.cta} Saite profilā.` : "Saite profilā.",
+    // A line that leads to the link ends with a colon on Facebook; on Instagram the link is in the profile.
+    p.cta ? `${p.cta.replace(/:$/, ".")} Saite profilā.` : "Saite profilā.",
     hashtags(p.sub).join(" "),
   ].join("\n\n");
   const ctx = { pricesCents: p.prices, numbers: p.numbers, names: p.names };

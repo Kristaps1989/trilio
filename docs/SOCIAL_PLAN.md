@@ -154,3 +154,7 @@ Deviations from the plan, each small:
 5. **Free text in an order** (the owner's greeting, a delivery note) is checked for leaks only as a whole; names and addresses also word by word.
 
 To switch it on: the Meta set-up in §8, then in Railway `FEATURE_SOCIAL=1`, `META_PAGE_ID`, `META_IG_USER_ID`, `META_SYSTEM_USER_TOKEN`. Drafts start appearing the next day; nothing is published until a draft is approved.
+
+### Link preview picture (fix, 5 Nov 2026)
+
+A Facebook link post showed its title but no picture while the same post on Instagram had it: Instagram gets the image uploaded, Facebook draws the preview from the page's `og:image`, which was rendered on every request (1–6 s, plus the shop photo) and Facebook's crawler gave up. Now the rendered images are kept in memory per card (`src/services/social/image.ts`), and before a link post the provider fetches its picture once and asks Facebook to read the link (`POST /?id={link}&scrape=true`), so the post is created with the picture. For a post that already went out without it: Sharing Debugger → paste the link → "Scrape Again".

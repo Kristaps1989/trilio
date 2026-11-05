@@ -201,9 +201,18 @@ export function metaProvider(
         return fail(err);
       }
     },
-    async publishLink(link: string, caption: string) {
+    async publishLink(link: string, caption: string, preview?: string) {
       try {
-        const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, link }, await page());
+        const token = await page();
+        if (preview)
+          await http(preview, { signal: AbortSignal.timeout(30_000) })
+            .then((r) => r.arrayBuffer())
+            .catch(() => undefined);
+        // Facebook reads the link's preview (title, picture) when the post is made, and a slow
+        // picture is left out for good. Asking it to read the link first fills its cache with
+        // the picture, so the post has it. Best effort: the post goes out either way.
+        await call("POST", "", { id: link, scrape: "true" }, token).catch(() => undefined);
+        const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, link }, token);
         return { ok: true, id: String(r.id) };
       } catch (err) {
         return fail(err);

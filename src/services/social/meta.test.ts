@@ -243,6 +243,39 @@ describe("meta provider", () => {
     expect(await metaProvider(cfg, bad.http, noWait).publishLink("x", "y")).toMatchObject({ ok: false });
   });
 
+  it("a link post first draws its picture and has Facebook read the link, so the preview has the picture", async () => {
+    const { http, calls } = fakeFetch((c) =>
+      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : { json: { id: "PAGE_l2" } },
+    );
+    const r = await metaProvider(cfg, http, noWait).publishLink(
+      "https://t/x",
+      "Teksts",
+      "https://t/link.jpg",
+    );
+    expect(r).toEqual({ ok: true, id: "PAGE_l2" });
+    const urls = calls.map((c) => c.url);
+    const pic = urls.indexOf("https://t/link.jpg");
+    const scrape = calls.findIndex(
+      (c) => c.url === `${G}/` && c.body.scrape === "true" && c.body.id === "https://t/x",
+    );
+    const feed = urls.indexOf(`${G}/PAGE/feed`);
+    expect(pic).toBeGreaterThanOrEqual(0);
+    expect(pic).toBeLessThan(scrape);
+    expect(scrape).toBeLessThan(feed);
+    // A refused scrape does not stop the post.
+    const noScrape = fakeFetch((c) =>
+      c.url === `${G}/`
+        ? { status: 400, json: { error: { message: "x", code: 100 } } }
+        : c.url === `${G}/PAGE`
+          ? { json: { access_token: "PT" } }
+          : { json: { id: "PAGE_l3" } },
+    );
+    expect(await metaProvider(cfg, noScrape.http, noWait).publishLink("https://t/x", "T")).toEqual({
+      ok: true,
+      id: "PAGE_l3",
+    });
+  });
+
   it("an image goes out without alt text when Meta refuses the field", async () => {
     let refused = 0;
     const { http, calls } = fakeFetch((c) => {

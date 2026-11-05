@@ -440,7 +440,11 @@ export async function publishPost(
   const send = async (n: Network, caption: string): Promise<PublishResult> => {
     if (n === "facebook" && !post.videoUrl && slides <= 1) {
       // A link post brings people to the site; its preview is this post's own picture (Open Graph).
-      const r = await provider.publishLink(fbLink, withoutLink(caption, fbLink));
+      const r = await provider.publishLink(
+        fbLink,
+        withoutLink(caption, fbLink),
+        `${deps.baseUrl}/api/social/${post.id}/link.jpg`,
+      );
       if (r.ok || TOKEN_ERROR.test(r.error)) return r;
     }
     if (post.videoUrl) return provider.publishVideo(n, post.videoUrl, caption);

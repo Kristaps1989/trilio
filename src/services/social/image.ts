@@ -10,6 +10,16 @@ import { renderPostJpeg, slidesOf, type Shape } from "@/services/social/render";
 // fetches it from the public URL when the post goes out, so an approved or
 // published post's images are public; a draft's are for the admin only.
 
+/** Recently drawn images, oldest first; an edited card has a new key. */
+const rendered = new Map<string, Buffer>();
+const MAX_CACHED = 60;
+
+function hash(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
 /** The JPEG of one slide (1 = the first, the only one for a single image), or a 404. */
 export async function postImage(rawId: string, n: number, shape: Shape = "portrait"): Promise<NextResponse> {
   const id = z.uuid().safeParse(rawId);
@@ -22,10 +32,17 @@ export async function postImage(rawId: string, n: number, shape: Shape = "portra
   const slide = slides[n - 1];
   if (!slide) return new NextResponse(null, { status: 404 });
   // A link preview is one picture: the first slide, without a carousel's counter.
-  const jpeg =
-    shape === "link"
-      ? await renderPostJpeg(slide, 0, 1, shape)
-      : await renderPostJpeg(slide, n - 1, slides.length, shape);
+  // Drawn once per card and kept: Facebook's crawler leaves out a picture that is slow to come.
+  const key = `${p.id}:${n}:${shape}:${hash(JSON.stringify(p.card))}`;
+  let jpeg = rendered.get(key);
+  if (!jpeg) {
+    jpeg =
+      shape === "link"
+        ? await renderPostJpeg(slide, 0, 1, shape)
+        : await renderPostJpeg(slide, n - 1, slides.length, shape);
+    rendered.set(key, jpeg);
+    while (rendered.size > MAX_CACHED) rendered.delete(rendered.keys().next().value!);
+  }
   return new NextResponse(new Uint8Array(jpeg), {
     headers: {
       "content-type": "image/jpeg",
