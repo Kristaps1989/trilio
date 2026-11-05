@@ -321,9 +321,10 @@ export async function loadPhoto(url: string | undefined): Promise<string | undef
 
 /** The site's buttons: lime primary, outlined secondary. */
 function Button({ label, primary, dark = false }: { label: string; primary: boolean; dark?: boolean }) {
-  const fg = dark ? (primary ? "#FFFFFF" : NIGHT) : primary ? NIGHT : MIST;
-  const bgc = dark ? (primary ? NIGHT : "#FFFFFF") : primary ? LIME : "transparent";
-  const border = primary ? "none" : `3px solid ${dark ? NIGHT : MIST}`;
+  // On the phone's white screen as on the site's card: the lime request first, the dark shop button second.
+  const fg = dark ? (primary ? NIGHT : "#FFFFFF") : primary ? NIGHT : MIST;
+  const bgc = dark ? (primary ? LIME : NIGHT) : primary ? LIME : "transparent";
+  const border = primary || dark ? "none" : `3px solid ${MIST}`;
   return (
     <div
       style={{
@@ -486,6 +487,38 @@ function Phone({ screen, photo }: { screen: PhoneScreen; photo?: string }) {
         {screen.buttons.map((b, i) => (
           <Button key={b} label={b} primary={i === 0} dark />
         ))}
+        {screen.strip ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: "12px 16px",
+              borderRadius: 14,
+              background: LIME,
+              color: NIGHT,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontFamily: HEAD,
+                fontWeight: 700,
+                fontSize: 32,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {screen.strip.upTo}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", fontSize: 16, lineHeight: 1.25 }}>
+              <div style={{ display: "flex" }}>šai precei tas ir līdz</div>
+              <div style={{ display: "flex", gap: 5 }}>
+                <div style={{ display: "flex", fontWeight: 800 }}>{screen.strip.saving}</div>
+                <div style={{ display: "flex" }}>lētāk</div>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div style={{ display: "flex", fontSize: 18, color: MUTED, lineHeight: 1.35 }}>{screen.note}</div>
       </div>
     );
