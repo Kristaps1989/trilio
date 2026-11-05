@@ -2,6 +2,7 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { offers, priceSnapshots, products, type Store } from "@/db/schema";
 import { modelKey } from "@/domain/catalog/ean";
+import { brandIsTypeWord } from "@/domain/catalog/naming";
 import { mergeAttributes } from "@/domain/catalog/normalise";
 import { VERSION_KEY } from "./renormalise";
 import type { UpsertRow } from "./types";
@@ -26,12 +27,18 @@ export async function upsertOffers(
   await db.transaction(async (tx) => {
     // Resolve products in bulk: one lookup by EAN, one by model key.
     const eans = [...new Set(rows.map((r) => r.ean).filter((e): e is string => !!e))];
-    const keys = [...new Set(rows.map((r) => modelKey(r.brand, r.modelCode)))];
+    const legacyKey = (r: UpsertRow) => (r.legacyBrand ? modelKey(r.legacyBrand, r.modelCode) : null);
+    const keys = [
+      ...new Set(
+        rows.flatMap((r) => [modelKey(r.brand, r.modelCode), legacyKey(r)].filter((k): k is string => !!k)),
+      ),
+    ];
     const existing = await tx
       .select({
         id: products.id,
         ean: products.ean,
         modelKey: products.modelKey,
+        brand: products.brand,
         name: products.name,
         attributes: products.attributes,
         attributeSources: products.attributeSources,
@@ -45,6 +52,7 @@ export async function upsertOffers(
       );
     const byEan = new Map(existing.filter((p) => p.ean).map((p) => [p.ean!, p.id]));
     const byKey = new Map(existing.map((p) => [p.modelKey, p.id]));
+    const brandOf = new Map(existing.map((p) => [p.id, p.brand]));
     // What each product already knows, updated as rows of this batch are merged in.
     const known = new Map(
       existing.map((p) => [
@@ -56,7 +64,8 @@ export async function upsertOffers(
     const productIdFor = new Map<number, string>();
     for (const [i, row] of rows.entries()) {
       const key = modelKey(row.brand, row.modelCode);
-      let id = (row.ean && byEan.get(row.ean)) || byKey.get(key);
+      const old = legacyKey(row);
+      let id = (row.ean && byEan.get(row.ean)) || byKey.get(key) || (old ? byKey.get(old) : undefined);
       if (!id) {
         const [created] = await tx
           .insert(products)
@@ -123,6 +132,10 @@ export async function upsertOffers(
             imageUrl: row.imageUrl ?? sql`${products.imageUrl}`,
             eprelId: row.eprelId ?? sql`${products.eprelId}`,
             ean: row.ean ?? sql`${products.ean}`,
+            // A brand older runs guessed from the title's first word ("Elektriskā") gives way to the real one.
+            ...(brandIsTypeWord(brandOf.get(id) ?? "") && !brandIsTypeWord(row.brand)
+              ? { brand: row.brand }
+              : {}),
             updatedAt: capturedAt,
           })
           .where(eq(products.id, id));

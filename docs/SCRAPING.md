@@ -199,3 +199,7 @@ shop's terms of use and the EU database right can limit systematic copying
 of a large part of its catalogue. These shops are meant to be affiliate
 partners, so the safest path is to tell each one that `TrilioBot` reads its
 appliance pages at this pace, and to switch to a feed when they offer one.
+
+## Brand when the shop gives none (fix, 5 Nov 2026)
+
+m79.lv's product data (schema.org `Product`) has no `brand`. The import used the title's first word, so "Elektriskā tējkanna Concept RK4100 …" became brand "Elektriskā" and, the name being long, the card read "Elektriskā rk4100". `brandFromTitle` (`src/domain/catalog/naming.ts`) now takes a brand the brand table knows, else the capitalised word just before the model code ("Concept"), else the first capitalised word without Latvian letters, and only then the first word. Rows carry the old guess as `legacyBrand`, so products saved under it are still found (no duplicates), and a stored brand with Latvian letters (a type word) is replaced by the real one on the next run. A rebuilt name keeps the model code as the title writes it ("Concept RK4100"). Existing M79 products correct themselves as the scraper's rotation (about three days) reaches them.

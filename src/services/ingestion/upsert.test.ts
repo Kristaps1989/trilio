@@ -2,7 +2,7 @@ import { eq, inArray, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import { offers, priceSnapshots, products, stores } from "@/db/schema";
-import { gtinCheckDigit } from "@/domain/catalog/ean";
+import { gtinCheckDigit, modelKey } from "@/domain/catalog/ean";
 import { VERSION_KEY } from "./renormalise";
 import { markUnseenOutOfStock, upsertOffers, withCategory } from "./upsert";
 import type { UpsertRow } from "./types";
@@ -175,5 +175,34 @@ run("upsertOffers", () => {
         .from(offers)
         .where(inArray(offers.externalId, ["test:x2", "test:x3"])),
     ).toHaveLength(2);
+  });
+
+  it("finds a product stored under the old guessed brand and corrects the brand", async () => {
+    // An older run guessed the title's first word ("Tējkanna") as the brand.
+    const [old] = await db
+      .insert(products)
+      .values({
+        ean: null,
+        brand: "Tējkanna",
+        modelCode: "TB-LEG1",
+        modelKey: modelKey("Tējkanna", "TB-LEG1"),
+        name: "Tējkanna TestBrandL TB-LEG1",
+        subcategoryId: "kettle",
+      })
+      .returning({ id: products.id });
+    await upsertOffers(db, { id: storeId }, [
+      row({
+        externalId: "test:leg1",
+        ean: null,
+        brand: "TestBrandL",
+        legacyBrand: "Tējkanna",
+        modelCode: "TB-LEG1",
+        name: "Tējkanna TestBrandL TB-LEG1",
+      }),
+    ]);
+    const found = await db.select().from(products).where(eq(products.modelCode, "TB-LEG1"));
+    expect(found).toHaveLength(1);
+    expect(found[0]!.id).toBe(old!.id);
+    expect(found[0]!.brand).toBe("TestBrandL");
   });
 });

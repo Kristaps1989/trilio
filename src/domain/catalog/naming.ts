@@ -1,3 +1,4 @@
+import brandTable from "../../../data/brands.json";
 import { subcategoryAttrs } from "./attributes";
 
 // Card titles must say what the product is (docs/FILTERS_PLAN.md §2.8):
@@ -119,14 +120,19 @@ export function cleanName(name: string, brand = "", modelCode = ""): string {
   // Words before the brand that are not the category's Latvian type word: "Frytkownica beztłuszczowa Tristar …".
   const foreignLead =
     at > 0 && !/[āčēģīķļņšūž]/iu.test(s.slice(0, at)) && /[^\x00-\x7F]/u.test(s.slice(0, at));
+  // The model code as the title writes it ("RK4100"), when the shop's model field has it in lower case.
+  const codeAsWritten =
+    s.split(/\s+/).find((w) => w.replace(/[^\p{L}\d-]/gu, "").toLowerCase() === code.toLowerCase()) ?? code;
   if (b && code && (shouting || foreignLead || s.length > MAX_NAME_LENGTH)) {
     if (foreignLead && !shouting) {
       const rest = s.slice(at + b.length).trim();
       const rebuilt = `${canonicalBrand(b)} ${rest}`.trim();
-      const withCode = rebuilt.toLowerCase().includes(code.toLowerCase()) ? rebuilt : `${rebuilt} ${code}`;
+      const withCode = rebuilt.toLowerCase().includes(code.toLowerCase())
+        ? rebuilt
+        : `${rebuilt} ${codeAsWritten}`;
       if (withCode.length <= MAX_NAME_LENGTH) return withCode;
     }
-    return `${canonicalBrand(b)} ${code}`;
+    return `${canonicalBrand(b)} ${codeAsWritten}`;
   }
   return s;
 }
@@ -200,4 +206,47 @@ export function canonicalBrand(raw: string, known: readonly string[] = []): stri
   if (trimmed === trimmed.toUpperCase() || trimmed === trimmed.toLowerCase())
     return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
   return trimmed;
+}
+
+/** Brands the brand table knows (graded or skipped): a title that contains one names its brand. */
+const KNOWN_BRANDS: readonly string[] = [
+  ...Object.keys((brandTable as { brands?: Record<string, unknown> }).brands ?? {}),
+  ...Object.keys((brandTable as { skipped?: Record<string, unknown> }).skipped ?? {}),
+];
+
+/** Latvian letters: a word with one is the product type ("Elektriskā tējkanna"), not a brand. */
+const LATVIAN = /[āčēģīķļņšūž]/i;
+
+/** True when a stored brand is really the first word of a Latvian product type (an old guess). */
+export function brandIsTypeWord(brand: string): boolean {
+  return LATVIAN.test(brand);
+}
+
+/**
+ * The brand when the shop gives none (m79.lv's product data has no brand):
+ * a known brand in the title; else the capitalised word just before the
+ * model code ("Elektriskā tējkanna Concept RK4100" → "Concept"); else the
+ * first capitalised word that is not Latvian; else the first word.
+ */
+export function brandFromTitle(
+  title: string,
+  modelCode = "",
+  known: readonly string[] = KNOWN_BRANDS,
+): string {
+  const words = title.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "";
+  const bare = (w: string) => w.replace(/^[^\p{L}\d]+|[^\p{L}\d]+$/gu, "");
+  for (const w of words) {
+    const hit = known.find((k) => k.toLowerCase() === bare(w).toLowerCase());
+    if (hit) return hit;
+  }
+  const looksLikeBrand = (w: string) =>
+    /^\p{Lu}/u.test(w) && !LATVIAN.test(w) && !/\d/.test(w) && w.length >= 2;
+  const code = modelCode.trim().toLowerCase();
+  if (code) {
+    const at = words.findIndex((w) => bare(w).toLowerCase() === code);
+    if (at > 0 && looksLikeBrand(bare(words[at - 1]!))) return bare(words[at - 1]!);
+  }
+  const first = words.map(bare).find(looksLikeBrand);
+  return first ?? bare(words[0]!);
 }
