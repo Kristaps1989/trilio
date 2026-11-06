@@ -55,7 +55,14 @@ export async function generateMetadata({ params }: Omit<LayoutProps, "children">
     title: { default: t("title"), template: `%s · Trilio` },
     description: t("description"),
     applicationName: "Trilio",
-    icons: { icon: "/icon.svg" },
+    // The Trilio mark everywhere: favicon.ico (src/app, what Google Search shows), SVG, PNG sizes, Apple touch icon.
+    icons: {
+      icon: [
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      ],
+      apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+    },
     // No canonical here: it would be inherited by every page. Pages set their own (src/app/[locale]/seo.ts).
     openGraph: { ...openGraphBase(locale), title: t("title"), description: t("description") },
     twitter: { card: "summary_large_image", images: [OG_IMAGE.url] },
@@ -96,7 +103,8 @@ export default async function RootLayout({ children, params }: LayoutProps) {
       "@type": "Organization",
       name: "Trilio",
       url: base,
-      logo: `${base}/icon.svg`,
+      // A raster logo of at least 112 px, as Google asks for the logo in search results.
+      logo: `${base}/icon-512.png`,
       slogan: t("tagline"),
     },
     {
