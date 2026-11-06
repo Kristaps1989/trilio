@@ -852,8 +852,16 @@ export const tvCampaigns = pgTable("tv_campaigns", {
   /** Where the short link leads, e.g. "/izvelies" or "/kategorija/fridge". */
   landingPath: text("landing_path").notNull().default("/"),
   salt: text("salt").notNull(),
+  /**
+   * The sessions the site had per 10-minute bucket of the day before the
+   * campaign's first impression (docs/TV_ANALYTICS_PLAN.md §2): the fixed
+   * comparison for the uplift. Null until the first nightly rollup after it.
+   */
+  baseline: jsonb("baseline").$type<TvBaseline>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export type TvBaseline = { from: string; to: string; days: number; sessions: number[] };
 
 /** Daily counts per campaign: "impression" (pixel hits) and "link" (short-link opens). */
 export const tvDaily = pgTable(
@@ -884,6 +892,48 @@ export const tvViewers = pgTable(
     viewerHash: text("viewer_hash").notNull(),
   },
   (t) => [primaryKey({ columns: [t.slug, t.day, t.viewerHash] })],
+);
+
+/** Impressions per campaign and minute, for the 24-hour profile and the uplift (docs/TV_ANALYTICS_PLAN.md). */
+export const tvImpressions = pgTable(
+  "tv_impressions",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    minute: timestamp("minute", { withTimezone: true }).notNull(),
+    hits: integer("hits").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.slug, t.minute] })],
+);
+
+/**
+ * One row per campaign and day with the uplift figures (docs/TV_ANALYTICS_PLAN.md §1),
+ * written by the nightly rollup so they outlive the raw visits. `buckets` is
+ * [impressions, sessions] per 10-minute bucket of the day.
+ */
+export const tvUplift = pgTable(
+  "tv_uplift",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    impressions: integer("impressions").notNull().default(0),
+    tvBuckets: integer("tv_buckets").notNull().default(0),
+    sessionsDay: integer("sessions_day").notNull().default(0),
+    sessionsAfter: integer("sessions_after").notNull().default(0),
+    /** Expected sessions in the after-TV buckets from the baseline; null without a baseline. */
+    expectedAfter: real("expected_after"),
+    uplift: real("uplift"),
+    resultsAfter: integer("results_after").notNull().default(0),
+    clicksAfter: integer("clicks_after").notNull().default(0),
+    phoneAfter: integer("phone_after").notNull().default(0),
+    correlation: real("correlation"),
+    buckets: jsonb("buckets").$type<[number, number][]>().notNull().default([]),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.slug, t.day] })],
 );
 
 export const adModeEnum = pgEnum("ad_mode", ["observe", "approve", "auto"]);

@@ -3,16 +3,18 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { pixelUrl, shortLinkUrl } from "@/domain/growth/tv";
 import { formatInt } from "@/i18n/format";
-import { tvStats } from "@/services/growth/tv";
+import { tvReport, tvStats } from "@/services/growth/tv";
 import { appBaseUrl } from "@/services/payments";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, inputClass, labelClass, Section, Stat, Stats, Table } from "../../ui";
 import { createTvCampaignAction, deleteTvCampaignAction } from "../actions";
 import { AdsNav, Outcome } from "../shared";
+import { EffectDays, EffectSummary, ReportLink } from "./Effect";
 
 // Reklāma → TV (docs/GROWTH_PLAN.md, TV): addressable TV campaigns (Go3) with
-// Trilio's own impression tracker and short link.
+// Trilio's own impression tracker and short link, and each campaign's effect
+// on the site's traffic (docs/TV_ANALYTICS_PLAN.md).
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "TV · Reklāma" };
@@ -25,6 +27,11 @@ export default async function AdsTv({ searchParams }: Props) {
   const sp = await searchParams;
   const base = appBaseUrl();
   const campaigns = await tvStats(db);
+  const reports = new Map(
+    await Promise.all(
+      campaigns.map(async (c) => [c.campaign.slug, await tvReport(db, c.campaign.slug)] as const),
+    ),
+  );
   const err = sp.err ? (t.has(`err.${sp.err}`) ? t(`err.${sp.err}`) : sp.err) : null;
   return (
     <>
@@ -98,6 +105,17 @@ export default async function AdsTv({ searchParams }: Props) {
               />
             </label>
             <p className="text-sm text-stone">{t("leadsTo", { path: c.campaign.landingPath })}</p>
+            {reports.get(c.campaign.slug) ? (
+              <Section
+                title={t("effect")}
+                id={`tv-effect-${c.campaign.slug}`}
+                action={<ReportLink slug={c.campaign.slug} />}
+              >
+                <EffectSummary report={reports.get(c.campaign.slug)!} tone="dark" />
+                <EffectDays report={reports.get(c.campaign.slug)!} />
+                <p className="max-w-3xl text-sm text-stone">{t("method")}</p>
+              </Section>
+            ) : null}
             <Table
               caption={t("perDay")}
               head={[t("day"), t("impressions"), t("reachDay"), t("linkOpens")]}

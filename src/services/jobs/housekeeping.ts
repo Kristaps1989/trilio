@@ -4,7 +4,7 @@ import { runOffersJob, type OffersJobResult } from "@/services/offers/job";
 import { trackersFromEnv } from "@/services/offers/tracking";
 import { rollupVisits } from "@/services/visits/visits";
 import { purgeAdLandings } from "@/services/growth/landings";
-import { purgeTvViewers } from "@/services/growth/tv";
+import { purgeTvViewers, rollupTvUplift } from "@/services/growth/tv";
 import { purgeUiEvents } from "@/services/notify/events";
 import { purgeNotifyRequests } from "@/services/notify/requests";
 
@@ -17,6 +17,8 @@ export type HousekeepingResult = {
   offers: OffersJobResult;
   adLandingsPurged: number;
   tvViewersPurged: number;
+  /** TV uplift day rows written (docs/TV_ANALYTICS_PLAN.md). */
+  tvUpliftDays: number;
   notifyRequestsPurged: number;
   uiEventsPurged: number;
 };
@@ -26,9 +28,18 @@ export async function runHousekeeping(db: Db, now = new Date()): Promise<Houseke
   const offers = await runOffersJob(db, { ...offerMailDeps(), trackers: trackersFromEnv(), now });
   const adLandingsPurged = await purgeAdLandings(db, now);
   const tvViewersPurged = await purgeTvViewers(db, now);
+  const tvUpliftDays = await rollupTvUplift(db, now);
   const notifyRequestsPurged = await purgeNotifyRequests(db, now);
   const uiEventsPurged = await purgeUiEvents(db, now);
-  return { visits, offers, adLandingsPurged, tvViewersPurged, notifyRequestsPurged, uiEventsPurged };
+  return {
+    visits,
+    offers,
+    adLandingsPurged,
+    tvViewersPurged,
+    tvUpliftDays,
+    notifyRequestsPurged,
+    uiEventsPurged,
+  };
 }
 
 export function eventful(r: HousekeepingResult): boolean {
@@ -36,6 +47,7 @@ export function eventful(r: HousekeepingResult): boolean {
     r.visits.purged > 0 ||
     r.adLandingsPurged > 0 ||
     r.tvViewersPurged > 0 ||
+    r.tvUpliftDays > 0 ||
     r.notifyRequestsPurged > 0 ||
     r.uiEventsPurged > 0 ||
     Object.values(r.offers).some((n) => n > 0)
