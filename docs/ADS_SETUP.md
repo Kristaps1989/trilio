@@ -160,6 +160,14 @@ short-link openings, visits and shop clicks, per day. The device id, IP and user
 agent are never stored: only a hash with the campaign's own salt, deleted after
 90 days. The privacy policy describes this.
 
+TV is not clickable: most viewers type trilio.lv later, so the tab also shows
+the campaign's **effect** (`docs/TV_ANALYTICS_PLAN.md`): sessions starting in
+the 20 minutes after impressions against the same minutes in the 14 days
+before the campaign, the 24-hour profile of impressions and sessions, and
+**Pārskats Go3**, a printable case-study page (the browser's "Save as PDF").
+The baseline is set by the first nightly run after the first impression, so
+create the campaign and hand Go3 the pixel before the spots start.
+
 ## Alternative: a personal OAuth login
 
 If a service account is not possible, Trilio also accepts an OAuth client of

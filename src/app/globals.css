@@ -227,3 +227,22 @@ h3,
 article:target {
   animation: card-landed 2.5s ease-out;
 }
+
+/* Printed documents (the TV report, invoices, packing slips): the page itself, nothing of the shell. */
+@media print {
+  body {
+    background: #fff;
+  }
+  header,
+  footer,
+  nav,
+  section.fixed,
+  [aria-hidden="true"].sticky,
+  .print\:hidden {
+    display: none !important;
+  }
+  /* A document's own header (its title) stays. */
+  article > header {
+    display: flex !important;
+  }
+}

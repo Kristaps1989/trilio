@@ -3,7 +3,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 // Addressable TV (Go3): the owner creates a campaign, Go3's ad server calls the
 // pixel with a device id, a viewer opens the short link; the admin shows
-// impressions, reach and visits. One project: the campaign is shared state.
+// impressions, reach and visits, the effect on traffic and the printable
+// report. One project: the campaign is shared state.
 
 const SLUG = `e2e-go3-${Date.now().toString(36)}`;
 const FREEWHEEL = "FreeWheel SSAI/1.0";
@@ -80,6 +81,32 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
       ];
     })
     .toEqual(["4", "3", "1", "1"]);
+
+  // The effect (docs/TV_ANALYTICS_PLAN.md): the viewer's session started in the minutes after the
+  // impressions, so it counts as "after TV"; today's row is computed live; the 24-hour profile is drawn.
+  const effect = page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-effect]`);
+  await expect(effect).toBeVisible();
+  expect(Number(await effect.getAttribute("data-tv-sessions-after"))).toBeGreaterThanOrEqual(1);
+  await expect(effect.locator("[data-tv-profile] svg")).toBeVisible();
+  await expect(page.locator(`[data-tv-campaign="${SLUG}"]`).getByText("aprēķināts tagad")).toBeVisible();
+
+  // The printable report for Go3.
+  await page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-report-link]`).click();
+  await page.waitForURL((u) => u.pathname === `/admin/reklama/tv/${SLUG}/parskats`);
+  const study = page.locator("[data-tv-case-study]");
+  await expect(study.getByRole("heading", { level: 1 })).toHaveText(
+    "E2E Go3 ledusskapji: TV kampaņas pārskats",
+  );
+  await expect(study.getByRole("button", { name: "Drukāt vai saglabāt PDF" })).toBeVisible();
+  await expect(study.getByRole("heading", { name: "Metode" })).toBeVisible();
+  await expect(study.locator("[data-tv-profile] svg")).toBeVisible();
+  await expect(study.getByText("Apmeklējumi pēc TV").first()).toBeVisible();
+  await expect(async () => {
+    const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+    expect(axe.violations).toEqual([]);
+  }).toPass({ timeout: 10_000 });
+  await page.getByRole("link", { name: "Uz TV kampaņām" }).click();
+  await page.waitForURL((u) => u.pathname === "/admin/reklama/tv");
 
   await page
     .locator(`[data-tv-campaign="${SLUG}"]`)
