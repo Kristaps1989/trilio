@@ -441,6 +441,8 @@ export async function publishPost(
   deps: SocialDeps,
   post: SocialPost,
   now = new Date(),
+  /** Only these networks (a Facebook re-post leaves Instagram as it is). */
+  only: Network[] = ["facebook", "instagram"],
 ): Promise<SocialPost> {
   const provider = deps.provider;
   if (!provider) return post;
@@ -475,12 +477,12 @@ export async function publishPost(
   const errors: string[] = [];
   let fb = post.fbPostId;
   let ig = post.igMediaId;
-  if (!fb) {
+  if (!fb && only.includes("facebook")) {
     const r = await send("facebook", post.captionFb);
     if (r.ok) fb = r.id;
     else errors.push(`Facebook: ${r.error}`);
   }
-  if (!ig) {
+  if (!ig && only.includes("instagram")) {
     const r = await send("instagram", post.captionIg);
     if (r.ok) ig = r.id;
     else errors.push(`Instagram: ${r.error}`);
@@ -490,8 +492,9 @@ export async function publishPost(
     .set({
       fbPostId: fb,
       igMediaId: ig,
-      status: errors.length ? "failed" : "published",
-      error: errors.length ? errors.join(" · ") : null,
+      // A Facebook-only re-post keeps the post's own status and Instagram's note.
+      status: only.length < 2 ? post.status : errors.length ? "failed" : "published",
+      error: errors.length ? errors.join(" · ") : only.length < 2 ? post.error : null,
       publishedAt: fb || ig ? (post.publishedAt ?? now) : null,
     })
     .where(eq(socialPosts.id, post.id))
@@ -522,6 +525,16 @@ export async function publishDue(
       continue;
     }
     if (now.getTime() - p.slotAt.getTime() > LATE_LIMIT_MS) {
+      // Already on one network (the other failed and was retried): it stays published there;
+      // only the late network is left out.
+      if (p.fbPostId || p.igMediaId) {
+        const missing = p.fbPostId ? "Instagram" : "Facebook";
+        await db
+          .update(socialPosts)
+          .set({ status: "published", error: `${missing}: nokavēts, netika publicēts.` })
+          .where(eq(socialPosts.id, p.id));
+        continue;
+      }
       await skip("Nokavēts: vairāk nekā 6 stundas pēc laika.");
       continue;
     }
@@ -615,7 +628,8 @@ async function publishedFacebookPosts(db: Db, now: Date, id?: string): Promise<S
     .from(socialPosts)
     .where(
       and(
-        eq(socialPosts.status, "published"),
+        // On the page: published, or failed with only its Instagram half (a deleted post is "skipped").
+        inArray(socialPosts.status, ["published", "failed"]),
         isNotNull(socialPosts.fbPostId),
         gte(socialPosts.publishedAt, since),
         ...(id ? [eq(socialPosts.id, id)] : []),
@@ -690,14 +704,14 @@ export async function checkPreviews(db: Db, deps: SocialDeps, now = new Date()):
  */
 export async function repostFacebook(db: Db, deps: SocialDeps, id: string): Promise<boolean> {
   const [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
-  if (!p || !p.fbPostId || p.status !== "published" || !deps.provider) return false;
+  if (!p || !p.fbPostId || !["published", "failed"].includes(p.status) || !deps.provider) return false;
   if (!(await deps.provider.remove("facebook", p.fbPostId))) return false;
   const [cleared] = await db
     .update(socialPosts)
     .set({ fbPostId: null, previewMissing: false })
     .where(eq(socialPosts.id, id))
     .returning();
-  const after = await publishPost(db, deps, cleared!);
+  const after = await publishPost(db, deps, cleared!, new Date(), ["facebook"]);
   return !!after.fbPostId;
 }
 
