@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 import { and, eq, gte, lt, lte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { affiliateClicks, botHits, visitSalts, visits } from "@/db/schema";
+import { clickSuspicion, type ClickSignals } from "@/domain/analytics/click-quality";
+import type { ClickSource } from "@/domain/analytics/click-source";
 import { clientFamily, RAW_RETENTION_DAYS, rigaDay, visitOf, visitorHash } from "@/domain/analytics/visits";
 
 // Counting and rolling up first-party page views (docs/ADMIN_AND_OFFERS_PLAN.md §3).
@@ -78,6 +80,16 @@ export async function clientStats(db: Db, from: string, to: string) {
 /** A visitor's repeat click on the same product within this window counts once. */
 export const CLICK_DEDUP_MS = 30 * 60_000;
 
+/** Whether this visitor hash sent a page view that day (the beacon needs JavaScript and a visible page). */
+export async function pageViewed(db: Db, hash: string, day: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: visits.id })
+    .from(visits)
+    .where(and(eq(visits.visitorHash, hash), sql`${visits.day} = ${day}`))
+    .limit(1);
+  return !!row;
+}
+
 /**
  * Records a click through to a shop, unless the same visitor (the day's
  * anonymous hash) clicked the same offer in the last 30 minutes; such a
@@ -93,7 +105,9 @@ export async function recordShopClick(
     searchSessionId: string | null;
     adLandingId: string | null;
     /** Which link it came from (domain/analytics/click-source). */
-    source?: string | null;
+    source?: ClickSource | null;
+    /** The request's own metadata (domain/analytics/click-quality); with it the click is judged person or suspect. */
+    signals?: ClickSignals | null;
     /** An admin's own click. */
     internal?: boolean;
     now?: Date;
@@ -121,7 +135,18 @@ export async function recordShopClick(
         .where(eq(affiliateClicks.id, recent.id));
     return false;
   }
+  // A click that does not look like a person on a Trilio page is kept, marked, and left out of every figure.
+  const suspect = input.signals
+    ? clickSuspicion({
+        userAgent: input.userAgent,
+        signals: input.signals,
+        source: input.source ?? null,
+        pageViewed: await pageViewed(db, hash, rigaDay(now)),
+      })
+    : null;
   await db.insert(affiliateClicks).values({
+    signals: input.signals ?? null,
+    suspect,
     offerId: input.offerId,
     searchSessionId: input.searchSessionId,
     adLandingId: input.adLandingId,

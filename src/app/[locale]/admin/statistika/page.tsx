@@ -269,6 +269,25 @@ export default async function AdminStats({ searchParams }: Props) {
         />
         <p className="text-sm text-stone">{t("clickSourcesMethod", { internal: sources.internal })}</p>
       </Section>
+
+      {/* Person or script (docs/CLICK_QUALITY_PLAN.md): suspect clicks are kept apart and left out of every figure. */}
+      <Section title={t("clickQuality")} id="click-quality">
+        <div data-click-quality={`${sources.people}/${sources.suspect.reduce((n, r) => n + r.clicks, 0)}`}>
+          <Table
+            caption={t("clickQuality")}
+            head={[t("clickQualityKind"), t("clicks")]}
+            empty={t("empty")}
+            rows={[
+              [t("clickQualityPeople"), formatInt(sources.people)],
+              ...sources.suspect.map((r) => [
+                t(`suspectReason.${r.reason}` as "suspectReason.no_fetch_meta"),
+                formatInt(r.clicks),
+              ]),
+            ]}
+          />
+        </div>
+        <p className="text-sm text-stone">{t("clickQualityMethod", { unchecked: sources.unchecked })}</p>
+      </Section>
     </>
   );
 }

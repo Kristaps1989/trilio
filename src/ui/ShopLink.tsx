@@ -3,13 +3,12 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { askShownAction } from "@/app/[locale]/velmju-saraksts/actions";
+import { AskChoices } from "./AskChoices";
+import { answered, rememberAnswer, subscribeAnswer } from "./askAnswer";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { track } from "@/ui/analytics/track";
 import { withSource } from "@/domain/analytics/click-source";
 import { buttonClass } from "./Button";
-import { NotifyPanel } from "./NotifyPanel";
-import { OfferFine, OfferPitch } from "./OfferPitch";
-import { SavedAlertNote } from "./SavedAlertNote";
 import { useRequest } from "./useRequest";
 
 // "Pirkt — {Shop}" with the question before the shop (docs/PRICE_NOTIFY_PLAN.md
@@ -40,30 +39,6 @@ type Props = {
   analytics: Record<string, string>;
 };
 
-const listeners = new Set<() => void>();
-const subscribe = (cb: () => void) => {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-};
-
-function answered(): boolean {
-  try {
-    const at = Number(localStorage.getItem(ASK_KEY));
-    return at > 0 && Date.now() - at < ASK_TTL_MS;
-  } catch {
-    return true;
-  }
-}
-
-function remember() {
-  try {
-    localStorage.setItem(ASK_KEY, String(Date.now()));
-  } catch {
-    /* storage blocked: the question is simply asked again */
-  }
-  for (const l of listeners) l();
-}
-
 export function ShopLink({
   href,
   label,
@@ -77,10 +52,11 @@ export function ShopLink({
   analytics,
 }: Props) {
   const t = useTranslations("ask");
-  const { saved, pending, note, panel, run, closePanel } = useRequest(target, initial);
+  const request = useRequest(target, initial);
+  const { saved, closePanel } = request;
   const [open, setOpen] = useState(false);
   // In the server HTML and after an answer this is a plain link; the sheet exists only before the first answer.
-  const done = useSyncExternalStore(subscribe, answered, () => true);
+  const done = useSyncExternalStore(subscribeAnswer, answered, () => true);
   const direct = saved || done;
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = `ask-${target.kind === "product" ? target.productId : "s"}`;
@@ -102,41 +78,26 @@ export function ShopLink({
   }
 
   function close() {
-    remember();
+    rememberAnswer();
     setOpen(false);
     closePanel();
   }
 
-  const shopHref = withSource(href, "ask");
   // A link opened in a new tab (middle click, Ctrl/⌘-click, long press) skips the question: say so in the link.
   const newTab = (e: { currentTarget: HTMLAnchorElement }) => {
     e.currentTarget.href = withSource(href, "newtab");
   };
-  const toShop = (
-    <a
-      href={shopHref}
-      rel="sponsored noopener"
-      onClick={remember}
-      {...analytics}
-      className={buttonClass({ variant: "dark", block: true })}
-      data-ask-shop
-    >
-      {t("toShop", { shop })}
-    </a>
-  );
-
-  // Where Trilio sources (owner, 3 Nov 2026, variant C2): the discount first, in euro for this product, then the three steps.
-  const pitch = offers ? <OfferPitch priceCents={priceCents} /> : null;
-  const fine = offers ? <OfferFine /> : null;
+  // Already requested: straight to the shop, and /go/ is told so it does not ask either.
+  const directSource = saved ? "saved" : "card";
 
   return (
     <>
       <a
-        href={withSource(href, "card")}
+        href={withSource(href, directSource)}
         rel="sponsored noopener"
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey || e.shiftKey) newTab(e);
-          else e.currentTarget.href = withSource(href, "card");
+          else e.currentTarget.href = withSource(href, directSource);
           onClick(e);
         }}
         onAuxClick={newTab}
@@ -181,50 +142,16 @@ export function ShopLink({
               </button>
             </div>
             <p className="text-[15px] font-semibold">{t("product", { name, price, shop })}</p>
-            {panel ? (
-              <>
-                {panel.email ? null : pitch}
-                <NotifyPanel
-                  target={target}
-                  email={panel.email}
-                  offers={offers}
-                  onConsent={() => run(true, true)}
-                  onClose={close}
-                  onGoogle={remember}
-                  compact={offers && !panel.email}
-                />
-                {panel.email ? null : fine}
-                {toShop}
-              </>
-            ) : saved ? (
-              <>
-                {note ? (
-                  <SavedAlertNote email={note.email} offers={offers} />
-                ) : (
-                  <p role="status" className="text-[15px]">
-                    {t(offers ? "done" : "donePlain")}
-                  </p>
-                )}
-                {toShop}
-              </>
-            ) : (
-              <>
-                {offers ? pitch : <p className="text-[15px] leading-snug">{t("bodyPlain")}</p>}
-                <div className="flex flex-col gap-2 pt-1">
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => run(true)}
-                    className={buttonClass({ variant: "primary", block: true })}
-                    data-ga-event="ask_request"
-                  >
-                    {t(offers ? "request" : "requestPlain")}
-                  </button>
-                  {toShop}
-                </div>
-                {fine}
-              </>
-            )}
+            <AskChoices
+              request={request}
+              target={target}
+              offers={offers}
+              priceCents={priceCents}
+              shop={shop}
+              shopHref={withSource(href, "ask")}
+              analytics={analytics}
+              onClose={close}
+            />
           </div>
         </dialog>
       ) : null}

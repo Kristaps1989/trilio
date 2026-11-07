@@ -277,7 +277,7 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
     select product_id as "productId", sum(n)::int as n from (
       select o.product_id, count(distinct (ac.visitor_hash, date(ac.clicked_at)))::int as n
         from affiliate_clicks ac join offers o on o.id = ac.offer_id
-       where ac.clicked_at >= ${since.toISOString()}::timestamptz and ac.visitor_hash is not null
+       where ac.clicked_at >= ${since.toISOString()}::timestamptz and ac.visitor_hash is not null and ac.suspect is null
        group by o.product_id
       union all
       select si.product_id, count(*)::int from saved_items si

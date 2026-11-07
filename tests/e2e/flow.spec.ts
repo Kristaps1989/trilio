@@ -130,7 +130,12 @@ test("results: compare table, refurbished block and the affiliate redirect", asy
   const buy = page.getByRole("link", { name: /^Pirkt — / }).first();
   const href = await buy.getAttribute("href");
   expect(href).toMatch(/^\/go\/[0-9a-f-]{36}/);
-  const res = await page.request.get(href!, { maxRedirects: 0 });
+  // Without an answer from the last day, /go/ asks the question first (docs/CLICK_QUALITY_PLAN.md §2);
+  // "Uz {Shop}" then goes to the shop.
+  const ask = await page.request.get(href!, { maxRedirects: 0 });
+  expect(ask.status()).toBe(302);
+  expect(ask.headers()["location"]).toMatch(/\/pirms-veikala\/[0-9a-f-]{36}/);
+  const res = await page.request.get(href!.replace("from=card", "from=ask"), { maxRedirects: 0 });
   expect(res.status()).toBe(302);
   expect(res.headers()["location"]).toMatch(/^https:\/\/example\.invalid\//);
 });

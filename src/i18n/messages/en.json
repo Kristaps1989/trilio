@@ -25,7 +25,8 @@
     "privacy": "Privacy",
     "cookies": "Cookies",
     "contacts": "Contacts",
-    "legalNav": "Legal information"
+    "legalNav": "Legal information",
+    "about": "About Trilio"
   },
   "welcome": {
     "headline": "Tell us what you need.",
@@ -791,7 +792,8 @@
     "howTitle": "How Trilio works",
     "how1": "Answer 3–6 questions about what really matters to you.",
     "how2": "We compare partner shops' stock by the EAN barcode — one model, one product.",
-    "how3": "We show the best three in three price classes, refurbished separately. Shop commissions don't affect the order."
+    "how3": "We show the best three in three price classes, refurbished separately. Shop commissions don't affect the order.",
+    "about": "More about Trilio"
   },
   "legal": {
     "updated": "In force from 31 October 2026",
@@ -1030,6 +1032,11 @@
           "name": "trilio_lang",
           "purpose": "Remembers the language you chose with the switch.",
           "duration": "1 year"
+        },
+        {
+          "name": "trilio_ask",
+          "purpose": "Remembers your answer to the question before the shop (“Get it cheaper” or “Go to the shop”), so it is not asked again the same day.",
+          "duration": "24 hours"
         },
         {
           "name": "_ga",
@@ -1604,6 +1611,26 @@
     "toShop": "Go to {shop}",
     "done": "Requested. We're looking for a lower price and will write.",
     "donePlain": "Saved. We'll write when the price drops.",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back to the results"
+  },
+  "about": {
+    "title": "About Trilio",
+    "metaTitle": "About Trilio — a home appliance buying assistant in Latvia",
+    "description": "Trilio (trilio.lv) is a home appliance buying assistant in Latvia: a few questions, the three best-suited products from partner shops, compared prices and the option to ask for a lower price.",
+    "lead": "Trilio is a home appliance buying assistant in Latvia. Answer a few questions and Trilio picks the three products from partner shops' wide range that suit your needs and budget best.",
+    "whatTitle": "What Trilio does",
+    "what1": "Helps you choose: 3–6 questions about what really matters to you, and three picks at different prices.",
+    "what2": "Compares prices: the same model in different shops is matched by its EAN barcode, and you see where it costs less.",
+    "what3": "“Get it cheaper”: leave your e-mail and we ask the distributor for a lower price. If it works, we send you the offer; if not, we tell you when the price in the shops drops.",
+    "what4": "Refurbished products are shown separately, never mixed with new ones.",
+    "howTitle": "How Trilio chooses",
+    "how": "The picks are calculated by rules, not by advertising: the budget is a hard filter, and we compare specifications, electricity costs and price history. Discounts are measured against the lowest price of the last 30 days.",
+    "companyTitle": "The company",
+    "company": "Trilio operates in Latvia; the service is provided by {company}.",
+    "companyPlain": "Trilio operates in Latvia.",
+    "contacts": "Company details and contacts",
+    "name": "Trilio (trilio.lv) is not affiliated with other companies of the same name in other countries.",
+    "start": "Help me choose"
   }
 }

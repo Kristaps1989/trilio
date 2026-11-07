@@ -26,7 +26,8 @@
     "privacy": "Privātums",
     "cookies": "Sīkdatnes",
     "contacts": "Kontakti",
-    "legalNav": "Juridiskā informācija"
+    "legalNav": "Juridiskā informācija",
+    "about": "Par Trilio"
   },
   "welcome": {
     "headline": "Pastāsti, kas tev vajadzīgs. Trīs labākos variantus atradīsim mēs.",
@@ -792,7 +793,8 @@
     "howTitle": "Kā Trilio strādā",
     "how1": "Atbildi uz 3–6 jautājumiem par to, kas tev patiešām svarīgs.",
     "how2": "Salīdzinām partneru veikalu krājumus pēc EAN svītrkoda — viens modelis, viena prece.",
-    "how3": "Rādām trīs labākos trīs cenu klasēs, atjaunotas preces atsevišķi. Veikalu komisija secību neietekmē."
+    "how3": "Rādām trīs labākos trīs cenu klasēs, atjaunotas preces atsevišķi. Veikalu komisija secību neietekmē.",
+    "about": "Vairāk par Trilio"
   },
   "legal": {
     "updated": "Spēkā no 2026. gada 18. oktobra",
@@ -1029,6 +1031,11 @@
           "name": "trilio_lang",
           "purpose": "Atceras ar pārslēgu izvēlēto valodu.",
           "duration": "1 gads"
+        },
+        {
+          "name": "trilio_ask",
+          "purpose": "Atceras tavu atbildi uz jautājumu pirms veikala („Iegūt lētāk” vai „Uz veikalu”), lai dienas laikā to neuzdotu atkārtoti.",
+          "duration": "24 stundas"
         },
         {
           "name": "_ga",
@@ -1618,7 +1625,9 @@
         "legal": "Juridiskās lapas",
         "offer": "Piedāvājumi",
         "other": "Cits",
-        "notify": "Paziņojumu apstiprināšana"
+        "notify": "Paziņojumu apstiprināšana",
+        "ask": "Jautājums pirms veikala",
+        "about": "Par Trilio"
       },
       "confidence": "Pārliecība",
       "resultViews": "Rezultātu skatījumi",
@@ -1652,9 +1661,19 @@
         "note": "Padomu bloks zem rezultātiem",
         "wishlist": "Vēlmju saraksts",
         "refurb": "Atjaunotās preces",
-        "unknown": "Pirms 2.11.2026 (avots nav zināms)"
+        "unknown": "Pirms 2.11.2026 (avots nav zināms)",
+        "saved": "Kartītes „Pirkt” (prece jau pieprasīta)"
       },
-      "clickSourcesMethod": "Visi klikšķi uz veikaliem šajā periodā pēc saites, no kuras tie nāca. Administratoru pašu klikšķi ({internal}) šeit un visos citos skaitļos nav ieskaitīti."
+      "clickSourcesMethod": "Visi klikšķi uz veikaliem šajā periodā pēc saites, no kuras tie nāca. Administratoru pašu klikšķi ({internal}) šeit un visos citos skaitļos nav ieskaitīti.",
+      "clickQuality": "Klikšķu kvalitāte",
+      "clickQualityKind": "Klikšķi",
+      "clickQualityPeople": "Cilvēki (ieskaitīti visos skaitļos)",
+      "suspectReason": {
+        "no_fetch_meta": "Aizdomīgi: pārlūks bez navigācijas galvenēm (skripts ar pārlūka nosaukumu)",
+        "not_from_page": "Aizdomīgi: saite atvērta ārpus Trilio lapas",
+        "no_page_view": "Aizdomīgi: šis apmeklētājs tajā dienā nevienu lapu nav redzējis"
+      },
+      "clickQualityMethod": "Katram klikšķim pārbaudām, vai tas izskatās pēc cilvēka, kas spiež saiti Trilio lapā: pārlūka navigācijas galvenes (Sec-Fetch), vai saite atvērta no Trilio lapas un vai tas pats apmeklētājs tajā dienā redzējis kādu lapu. Aizdomīgie klikšķi tiek saglabāti, bet nav ieskaitīti nevienā skaitlī. Klikšķi pirms 7. novembra nav pārbaudīti ({unchecked})."
     },
     "users": {
       "title": "Lietotāji",
@@ -2565,6 +2584,26 @@
     "toShop": "Uz {shop}",
     "done": "Pajautāts. Meklējam zemāku cenu un uzrakstīsim.",
     "donePlain": "Saglabāts. Paziņosim, kad cena samazināsies.",
-    "close": "Aizvērt"
+    "close": "Aizvērt",
+    "back": "Atpakaļ uz rezultātiem"
+  },
+  "about": {
+    "title": "Par Trilio",
+    "metaTitle": "Par Trilio — sadzīves tehnikas pirkumu palīgs Latvijā",
+    "description": "Trilio (trilio.lv) ir sadzīves tehnikas pirkumu palīgs Latvijā: daži jautājumi, trīs piemērotākās preces no partneru veikaliem, salīdzinātas cenas un iespēja pajautāt zemāku cenu.",
+    "lead": "Trilio ir sadzīves tehnikas pirkumu palīgs Latvijā. Atbildi uz dažiem jautājumiem, un Trilio no plaša partneru veikalu sortimenta atlasīs trīs piemērotākās preces tavām vajadzībām un budžetam.",
+    "whatTitle": "Ko Trilio dara",
+    "what1": "Palīdz izvēlēties: 3–6 jautājumi par to, kas tev patiešām svarīgs, un trīs ieteikumi dažādās cenās.",
+    "what2": "Salīdzina cenas: to pašu modeli dažādos veikalos atpazīstam pēc EAN svītrkoda un rādām, kur tas maksā mazāk.",
+    "what3": "„Iegūt lētāk”: atstāj e-pastu, un pajautāsim izplatītājam zemāku cenu. Ja izdosies, atsūtīsim piedāvājumu; ja ne, paziņosim, kad cena veikalos samazināsies.",
+    "what4": "Atjaunotas preces rādām atsevišķi, nekad kopā ar jaunām.",
+    "howTitle": "Kā Trilio izvēlas",
+    "how": "Ieteikumus aprēķina noteikumi, nevis reklāma: budžets ir stingrs filtrs, salīdzinām parametrus, elektrības izmaksas un cenu vēsturi. Atlaidi rēķinām no zemākās cenas pēdējās 30 dienās.",
+    "companyTitle": "Uzņēmums",
+    "company": "Trilio darbojas Latvijā; pakalpojumu sniedz {company}.",
+    "companyPlain": "Trilio darbojas Latvijā.",
+    "contacts": "Rekvizīti un kontakti",
+    "name": "Trilio (trilio.lv) nav saistīts ar citiem uzņēmumiem ar tādu pašu nosaukumu citās valstīs.",
+    "start": "Palīdzi izvēlēties"
   }
 }

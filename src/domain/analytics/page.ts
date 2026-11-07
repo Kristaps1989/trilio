@@ -31,6 +31,8 @@ const SECTION_BY_FIRST_SEGMENT: Record<string, string> = {
   piedavajumi: "offer",
   pasutijums: "offer",
   pazinot: "notify",
+  "pirms-veikala": "ask",
+  "par-trilio": "about",
 };
 
 const ID = /^[a-z][a-z0-9_-]{0,40}$/;

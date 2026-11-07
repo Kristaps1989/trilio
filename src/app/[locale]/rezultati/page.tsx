@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { isBot } from "@/domain/analytics/visits";
 import { countBot } from "@/services/visits/visits";
 import { getTranslations } from "next-intl/server";
-import { db, searchSessions } from "@/db";
+import { db } from "@/db";
+import { searchSessionFor } from "@/services/visits/search-sessions";
 import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
 import { subcategoryAttrs } from "@/domain/catalog/attributes";
@@ -186,20 +187,20 @@ export default async function ResultsPage({ searchParams }: Props) {
 
   // Saved requirements (spec DATA_MODEL SearchSession); also the click attribution key.
   // A bot gets the same page, but its visit is not saved as a search, only counted as a bot.
-  const bot = isBot((await headers()).get("user-agent"));
+  // One session per visitor and search for 30 minutes, not one per render (docs/CLICK_QUALITY_PLAN.md §3).
+  const h = await headers();
+  const userAgent = h.get("user-agent");
+  const bot = isBot(userAgent);
   if (bot) await countBot(db, "search").catch(() => undefined);
-  const [session] = bot
-    ? []
-    : await db
-        .insert(searchSessions)
-        .values({
-          subcategoryId: sub.id,
-          answers: { ...state.answers, $trailing: state.trailing },
-          budgetCents: budgetCents(state),
-        })
-        .returning({ id: searchSessions.id })
-        .catch(() => [] as { id: string }[]);
-  const sessionId = session?.id ?? null;
+  const sessionId = bot
+    ? null
+    : await searchSessionFor(db, {
+        ip: h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown",
+        userAgent,
+        subcategoryId: sub.id,
+        answers: { ...state.answers, $trailing: state.trailing },
+        budgetCents: budgetCents(state),
+      }).catch(() => null);
 
   // Hearts: which of these products, and whether this very search, are in the wishlist.
   const answersParam = encodeState(state);

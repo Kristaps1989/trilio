@@ -503,7 +503,7 @@ export async function conversionsByDay(db: Db, from: string, to: string) {
     })
     .from(affiliateClicks)
     .innerJoin(adLandings, eq(adLandings.id, affiliateClicks.adLandingId))
-    .where(and(gte(adLandings.day, from), lte(adLandings.day, to)))
+    .where(and(gte(adLandings.day, from), lte(adLandings.day, to), isNull(affiliateClicks.suspect)))
     .groupBy(adLandings.day, landingSource, adLandings.utmCampaign);
   const saves = await db
     .select({

@@ -1,3 +1,4 @@
+import type { ClickSignals } from "@/domain/analytics/click-quality";
 import { sql } from "drizzle-orm";
 import {
   bigint,
@@ -174,13 +175,19 @@ export const ingestionRuns = pgTable("ingestion_runs", {
 });
 
 /** Saved answers; also anonymised demand data. user_id arrives in Phase 2. */
-export const searchSessions = pgTable("search_sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  subcategoryId: text("subcategory_id").notNull(),
-  answers: jsonb("answers").$type<Record<string, unknown>>().notNull(),
-  budgetCents: integer("budget_cents"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const searchSessions = pgTable(
+  "search_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    subcategoryId: text("subcategory_id").notNull(),
+    answers: jsonb("answers").$type<Record<string, unknown>>().notNull(),
+    budgetCents: integer("budget_cents"),
+    /** The day's anonymous visitor hash: one session per visitor and search for 30 minutes (docs/CLICK_QUALITY_PLAN.md §3). */
+    visitorHash: text("visitor_hash"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("search_sessions_visitor_idx").on(t.visitorHash, t.createdAt)],
+);
 
 export const waitlistLeads = pgTable("waitlist_leads", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -225,6 +232,10 @@ export const affiliateClicks = pgTable(
     source: text("source"),
     /** An admin's own click: kept for the record, left out of the statistics. */
     internal: boolean("internal").notNull().default(false),
+    /** The request's Sec-Fetch-*, referrer host and language (docs/CLICK_QUALITY_PLAN.md); null before 7 Nov 2026. */
+    signals: jsonb("signals").$type<ClickSignals>(),
+    /** Why the click does not look like a person on a Trilio page (SUSPECT_REASONS); left out of the statistics. */
+    suspect: text("suspect"),
     clickedAt: timestamp("clicked_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
