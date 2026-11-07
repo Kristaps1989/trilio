@@ -176,6 +176,13 @@
       "when": 1794040657769,
       "tag": "0024_social_partly_sent",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794066864084,
+      "tag": "0025_click_quality",
+      "breakpoints": true
     }
   ]
 }

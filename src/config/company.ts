@@ -22,6 +22,24 @@ export function companyFromEnv(env: Record<string, string | undefined> = process
   };
 }
 
+/**
+ * Trilio's own profiles elsewhere (Facebook, Instagram, LinkedIn, the company
+ * register), for the Organization's `sameAs` (docs/CLICK_QUALITY_PLAN.md §5):
+ * BRAND_PROFILES, separated by commas or spaces. Only https addresses count.
+ */
+export function brandProfiles(env: Record<string, string | undefined> = process.env): string[] {
+  const out: string[] = [];
+  for (const raw of (env.BRAND_PROFILES ?? "").split(/[\s,]+/)) {
+    try {
+      const url = new URL(raw);
+      if (url.protocol === "https:" && !out.includes(url.href)) out.push(url.href);
+    } catch {
+      /* not an address */
+    }
+  }
+  return out;
+}
+
 /** "SIA Trilio · Reģ. Nr. 40000000000 · Rīga, …" for e-mail small print; empty parts are left out. */
 export function companyLine(company: Company): string {
   return [company.name, company.regNo ? `Reģ. Nr. ${company.regNo}` : "", company.address]

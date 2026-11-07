@@ -14,6 +14,8 @@ import { VisitBeacon } from "@/ui/analytics/VisitBeacon";
 import { Footer } from "@/ui/shell/Footer";
 import { Header } from "@/ui/shell/Header";
 import { OG_IMAGE, openGraphBase } from "./seo";
+import { siteJsonLd } from "./site-jsonld";
+import { brandProfiles, companyFromEnv } from "@/config/company";
 import "../globals.css";
 import { CompletePendingRequest } from "@/ui/CompletePendingRequest";
 
@@ -74,6 +76,10 @@ export async function generateMetadata({ params }: Omit<LayoutProps, "children">
       other: {
         "paysera-verify":
           process.env.PAYSERA_SITE_VERIFICATION || "paysera-verify-18dc77756ea8bc89aa990d22e4d3af14",
+        // Bing Webmaster Tools (Edge and Windows search): set BING_SITE_VERIFICATION.
+        ...(process.env.BING_SITE_VERIFICATION
+          ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+          : {}),
       },
     },
   };
@@ -96,30 +102,15 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   const measurementId = analyticsId();
   const ads = adsTag();
   const metaPixel = metaPixelId();
-  // Site-level structured data for search engines and AI assistants.
-  const jsonLd = [
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: "Trilio",
-      url: base,
-      // A raster logo of at least 112 px, as Google asks for the logo in search results.
-      logo: `${base}/icon-512.png`,
-      slogan: t("tagline"),
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: "Trilio",
-      url: base,
-      inLanguage: htmlLang(locale),
-      potentialAction: {
-        "@type": "SearchAction",
-        target: { "@type": "EntryPoint", urlTemplate: `${base}/modelis?q={search_term_string}` },
-        "query-input": "required name=search_term_string",
-      },
-    },
-  ];
+  // Site-level structured data for search engines and AI assistants (site-jsonld.ts).
+  const jsonLd = siteJsonLd({
+    base,
+    inLanguage: htmlLang(locale),
+    tagline: t("tagline"),
+    description: t("description"),
+    company: companyFromEnv(),
+    profiles: brandProfiles(),
+  });
   return (
     <html
       lang={htmlLang(locale)}

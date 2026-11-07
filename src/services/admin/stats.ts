@@ -233,7 +233,7 @@ export async function shopStats(db: Db, from: string, to: string) {
     .innerJoin(offers, eq(offers.id, affiliateClicks.offerId))
     .innerJoin(stores, eq(stores.id, offers.storeId))
     .where(
-      sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)} and not ${affiliateClicks.internal}`,
+      sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)} and not ${affiliateClicks.internal} and ${affiliateClicks.suspect} is null`,
     )
     .groupBy(stores.displayName)
     .orderBy(desc(count()));
@@ -241,29 +241,56 @@ export async function shopStats(db: Db, from: string, to: string) {
 }
 
 /**
- * Shop clicks by the link they came from (owner, 2 Nov 2026), and the admins'
- * own clicks, which every other figure leaves out. `source` null: before the
- * links carried one.
+ * Shop clicks by the link they came from (owner, 2 Nov 2026), the admins' own
+ * clicks and the suspect ones (docs/CLICK_QUALITY_PLAN.md), which every other
+ * figure leaves out. `source` null: before the links carried one.
  */
 export async function clickSourceStats(db: Db, from: string, to: string) {
   const rows = await db
-    .select({ source: affiliateClicks.source, internal: affiliateClicks.internal, clicks: count() })
+    .select({
+      source: affiliateClicks.source,
+      internal: affiliateClicks.internal,
+      suspect: affiliateClicks.suspect,
+      checked: sql<boolean>`${affiliateClicks.signals} is not null`,
+      clicks: count(),
+    })
     .from(affiliateClicks)
     .where(
       sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)}`,
     )
-    .groupBy(affiliateClicks.source, affiliateClicks.internal);
+    .groupBy(
+      affiliateClicks.source,
+      affiliateClicks.internal,
+      affiliateClicks.suspect,
+      sql`${affiliateClicks.signals} is not null`,
+    );
   const sources = new Map<string | null, number>();
+  const suspect = new Map<string, number>();
   let internal = 0;
+  let people = 0;
+  let unchecked = 0;
   for (const r of rows) {
-    if (r.internal) internal += Number(r.clicks);
-    else sources.set(r.source, (sources.get(r.source) ?? 0) + Number(r.clicks));
+    const n = Number(r.clicks);
+    if (r.internal) internal += n;
+    else if (r.suspect) suspect.set(r.suspect, (suspect.get(r.suspect) ?? 0) + n);
+    else {
+      sources.set(r.source, (sources.get(r.source) ?? 0) + n);
+      people += n;
+      if (!r.checked) unchecked += n;
+    }
   }
   return {
     sources: [...sources.entries()]
       .map(([source, clicks]) => ({ source, clicks }))
       .sort((a, b) => b.clicks - a.clicks),
     internal,
+    /** Clicks counted as people. */
+    people,
+    /** Of those, clicks from before the check existed (no signals stored). */
+    unchecked,
+    suspect: [...suspect.entries()]
+      .map(([reason, clicks]) => ({ reason, clicks }))
+      .sort((a, b) => b.clicks - a.clicks),
   };
 }
 
@@ -435,7 +462,9 @@ export async function confidenceStats(db: Db, from: string, to: string) {
     .select({ n: sql<number>`count(distinct ${affiliateClicks.searchSessionId})::int` })
     .from(affiliateClicks)
     .innerJoin(searchSessions, eq(searchSessions.id, affiliateClicks.searchSessionId))
-    .where(sql`${inRange(searchSessions.createdAt)} and not ${affiliateClicks.internal}`);
+    .where(
+      sql`${inRange(searchSessions.createdAt)} and not ${affiliateClicks.internal} and ${affiliateClicks.suspect} is null`,
+    );
   const answers = await db
     .select({ confident: confidenceAnswers.confident, n: sql<number>`count(*)::int` })
     .from(confidenceAnswers)

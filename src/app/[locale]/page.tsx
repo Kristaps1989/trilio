@@ -69,6 +69,12 @@ export default async function WelcomePage() {
               </li>
             ))}
           </ol>
+          <Link
+            href="/par-trilio"
+            className="inline-flex min-h-11 items-center self-start text-base text-lime underline"
+          >
+            {t("home.about")}
+          </Link>
         </section>
 
         <section aria-labelledby="categories-title" className="flex flex-col gap-5">

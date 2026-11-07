@@ -9,6 +9,7 @@ import { appBaseUrl } from "@/services/payments";
 const PRIVATE = [
   "/api/",
   "/go/",
+  "/pirms-veikala/",
   "/px/",
   "/tv/",
   "/velmju-saraksts",

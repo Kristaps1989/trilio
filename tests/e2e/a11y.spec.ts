@@ -24,6 +24,7 @@ const PUBLIC = [
   "/privatums",
   "/sikdatnes",
   "/kontakti",
+  "/par-trilio",
 ];
 const SIGNED_IN = ["/konts", "/konts/pasutijumi", "/velmju-saraksts"];
 

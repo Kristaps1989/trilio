@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import {
   adLandings,
@@ -163,7 +163,7 @@ export async function tvStats(db: Db, range?: DayRange): Promise<TvStats[]> {
         .select({ n: sql<number>`count(*)::int` })
         .from(affiliateClicks)
         .innerJoin(adLandings, eq(adLandings.id, affiliateClicks.adLandingId))
-        .where(fromTv);
+        .where(and(fromTv, isNull(affiliateClicks.suspect)));
       const days = new Map<string, { day: string; impressions: number; reach: number; linkOpens: number }>();
       const at = (day: string) => {
         if (!days.has(day)) days.set(day, { day, impressions: 0, reach: 0, linkOpens: 0 });
@@ -271,6 +271,7 @@ export async function computeTvUpliftDay(db: Db, campaign: TvCampaign, day: stri
         gte(affiliateClicks.clickedAt, start),
         lt(affiliateClicks.clickedAt, end),
         eq(affiliateClicks.internal, false),
+        isNull(affiliateClicks.suspect),
       ),
     );
   return dayUplift({
