@@ -93,7 +93,8 @@ test("a script with a browser's name is sent to the shop but counted apart, in n
   const results = await page.request.get("/rezultati?sub=kettle");
   const go = /href="(\/go\/[0-9a-f-]{36}[^"]*)"/.exec(await results.text())![1]!.replaceAll("&amp;", "&");
   // No Sec-Fetch headers, a Chrome user agent: what a scraper or a link checker sends.
-  const script = await playwright.request.newContext({ baseURL, userAgent: CHROME });
+  // A user agent of its own per run: the same visitor's repeat click on an offer within 30 minutes counts once.
+  const script = await playwright.request.newContext({ baseURL, userAgent: `${CHROME} e2e/${Date.now()}` });
   const res = await script.get(go.replace(/from=\w+/, "from=ask"), { maxRedirects: 0 });
   expect(res.status()).toBe(302);
   expect(res.headers().location).toMatch(/^https:\/\/example\.invalid\//);
