@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { change, daysBetween, paidRatio, parseRange, quartiles, rangeDays, toCsv, topAnswers } from "./stats";
+import {
+  change,
+  daysBetween,
+  paidRatio,
+  parseRange,
+  quartiles,
+  rangeDays,
+  toCsv,
+  topAnswers,
+  parseTvRange,
+  TV_RANGES,
+} from "./stats";
 
 describe("ranges", () => {
   it("parses the period, defaulting to 30 days", () => {
@@ -95,5 +106,15 @@ describe("toCsv", () => {
         ],
       ),
     ).toBe('a,b\r\n"x,y","say ""hi"""\r\n,3\r\n\'=SUM(A1),-2\r\n');
+  });
+});
+
+describe("TV periods", () => {
+  it("offers today, 7 and 30 days, 7 by default", () => {
+    expect(TV_RANGES).toEqual(["today", "7", "30"]);
+    expect(parseTvRange("today")).toBe("today");
+    expect(parseTvRange("30")).toBe("30");
+    expect(parseTvRange(undefined)).toBe("7");
+    expect(parseTvRange("90")).toBe("7");
   });
 });

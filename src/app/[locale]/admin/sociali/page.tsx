@@ -8,7 +8,7 @@ import { requireAdmin } from "../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../ui";
 import { Outcome } from "../reklama/shared";
 import { socialProvider } from "@/services/social";
-import { isLinkPost, slideUrls, socialSettings } from "@/services/social/posts";
+import { slideUrls, socialSettings } from "@/services/social/posts";
 import {
   approveAction,
   captionsAction,
@@ -16,6 +16,7 @@ import {
   reelAction,
   refreshPreviewAction,
   removeAction,
+  repostAction,
   settingsAction,
   skipAction,
 } from "./actions";
@@ -256,7 +257,7 @@ export default async function SocialPage({ searchParams }: Props) {
         title={t("history")}
         id="social-history"
         action={
-          history.some((p) => p.status === "published" && p.fbPostId && isLinkPost(p)) ? (
+          history.some((p) => p.status === "published" && p.fbPostId && !p.videoUrl) ? (
             <form action={refreshPreviewAction}>
               <Button type="submit" size="sm" variant="outline">
                 {t("refreshAll")}
@@ -298,7 +299,15 @@ export default async function SocialPage({ searchParams }: Props) {
               s.clicks,
               p.status === "published" ? (
                 <div key="r" className="flex flex-wrap gap-2">
-                  {p.fbPostId && isLinkPost(p) ? (
+                  {p.fbPostId && p.previewMissing ? (
+                    <form action={repostAction} data-repost={p.id}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <Button type="submit" size="sm">
+                        {t("repost")}
+                      </Button>
+                    </form>
+                  ) : null}
+                  {p.fbPostId && !p.videoUrl ? (
                     <form action={refreshPreviewAction} data-refresh-preview={p.id}>
                       <input type="hidden" name="id" value={p.id} />
                       <Button type="submit" size="sm" variant="outline">

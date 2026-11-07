@@ -12,6 +12,7 @@ import {
   recordTvImpression,
   rollupTvUplift,
   tvReport,
+  tvStats,
 } from "./tv";
 
 // The TV uplift against the database (docs/TV_ANALYTICS_PLAN.md): impressions
@@ -138,6 +139,19 @@ run("TV uplift", { timeout: 60_000 }, () => {
     expect(report.summary.upliftPct).toBe(100);
     expect(report.summary.profile.impressions[120]).toBe(3);
     expect(report.baseline?.days).toBe(2);
+    // A period keeps only its days: none before the campaign's day, the day itself inside it.
+    expect((await tvReport(db, SLUG, now, { from: "2031-05-07", to: "2031-05-08" }))!.days).toEqual([]);
+    expect(
+      (await tvReport(db, SLUG, now, { from: "2031-05-06", to: "2031-05-06" }))!.summary.sessionsAfter,
+    ).toBe(2);
+    const inRange = (await tvStats(db, { from: "2031-05-06", to: "2031-05-06" })).find(
+      (c) => c.campaign.slug === SLUG,
+    )!;
+    expect(inRange.impressions).toBe(3);
+    const outside = (await tvStats(db, { from: "2031-05-07", to: "2031-05-08" })).find(
+      (c) => c.campaign.slug === SLUG,
+    )!;
+    expect(outside).toMatchObject({ impressions: 0, linkOpens: 0, visits: 0, days: [] });
     // Today is computed live.
     const live = (await tvReport(db, SLUG, new Date("2031-05-06T19:00:00Z")))!;
     expect(live.days.map((d) => [d.day, d.live])).toEqual([[DAY, true]]);

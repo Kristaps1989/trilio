@@ -118,7 +118,7 @@ export async function recordTvLinkOpen(db: Db, slug: string, now = new Date()): 
 export type TvStats = {
   campaign: TvCampaign;
   impressions: number;
-  /** Unique devices over the whole campaign. */
+  /** Unique devices over the period (the whole campaign when none is given). */
   reach: number;
   linkOpens: number;
   /** Visits that arrived through the short link (utm_medium=tv). */
@@ -128,24 +128,33 @@ export type TvStats = {
   days: { day: string; impressions: number; reach: number; linkOpens: number }[];
 };
 
-export async function tvStats(db: Db): Promise<TvStats[]> {
+/** Inclusive Riga days ("YYYY-MM-DD") a figure covers; none = the whole campaign. */
+export type DayRange = { from: string; to: string };
+
+export async function tvStats(db: Db, range?: DayRange): Promise<TvStats[]> {
   const campaigns = await db.select().from(tvCampaigns).orderBy(desc(tvCampaigns.createdAt));
+  const within = (col: Parameters<typeof gte>[0]) =>
+    range ? [gte(col, range.from), lte(col, range.to)] : [];
   return Promise.all(
     campaigns.map(async (campaign) => {
       const daily = await db
         .select({ day: tvDaily.day, kind: tvDaily.kind, hits: tvDaily.hits })
         .from(tvDaily)
-        .where(eq(tvDaily.slug, campaign.slug));
+        .where(and(eq(tvDaily.slug, campaign.slug), ...within(tvDaily.day)));
       const reachPerDay = await db
         .select({ day: tvViewers.day, n: sql<number>`count(*)::int` })
         .from(tvViewers)
-        .where(eq(tvViewers.slug, campaign.slug))
+        .where(and(eq(tvViewers.slug, campaign.slug), ...within(tvViewers.day)))
         .groupBy(tvViewers.day);
       const [reach] = await db
         .select({ n: sql<number>`count(distinct ${tvViewers.viewerHash})::int` })
         .from(tvViewers)
-        .where(eq(tvViewers.slug, campaign.slug));
-      const fromTv = and(eq(adLandings.utmMedium, "tv"), eq(adLandings.utmCampaign, campaign.slug));
+        .where(and(eq(tvViewers.slug, campaign.slug), ...within(tvViewers.day)));
+      const fromTv = and(
+        eq(adLandings.utmMedium, "tv"),
+        eq(adLandings.utmCampaign, campaign.slug),
+        ...within(adLandings.day),
+      );
       const [visits] = await db
         .select({ n: sql<number>`count(*)::int` })
         .from(adLandings)
@@ -335,7 +344,12 @@ export type TvReport = {
 };
 
 /** Stored days plus today's live figures, summarised (docs/TV_ANALYTICS_PLAN.md §3). */
-export async function tvReport(db: Db, slug: string, now = new Date()): Promise<TvReport | null> {
+export async function tvReport(
+  db: Db,
+  slug: string,
+  now = new Date(),
+  range?: DayRange,
+): Promise<TvReport | null> {
   const campaign = await getTvCampaign(db, slug);
   if (!campaign) return null;
   const today = rigaDay(now);
@@ -345,7 +359,9 @@ export async function tvReport(db: Db, slug: string, now = new Date()): Promise<
   const days: TvReport["days"] = [];
   if (first) {
     const cutoff = rigaDay(new Date(now.getTime() - (RAW_RETENTION_DAYS - 1) * DAY_MS));
-    for (const day of await impressionDays(db, slug, first, today)) {
+    const from = range && range.from > first ? range.from : first;
+    const to = range && range.to < today ? range.to : today;
+    for (const day of await impressionDays(db, slug, from, to)) {
       const row = have.get(day);
       if (row && day !== today) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the key columns are not figures
@@ -366,7 +382,13 @@ export async function tvReport(db: Db, slug: string, now = new Date()): Promise<
       impressions: sql<number>`sum(${seoQueries.impressions})::int`,
     })
     .from(seoQueries)
-    .where(and(gte(seoQueries.day, brandFrom), sql`${seoQueries.query} ilike '%trilio%'`))
+    .where(
+      and(
+        gte(seoQueries.day, range && range.from > brandFrom ? range.from : brandFrom),
+        ...(range ? [lte(seoQueries.day, range.to)] : []),
+        sql`${seoQueries.query} ilike '%trilio%'`,
+      ),
+    )
     .groupBy(seoQueries.day)
     .orderBy(asc(seoQueries.day));
   return {

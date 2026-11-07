@@ -29,6 +29,18 @@ export function metaProvider(
   wait = (ms: number) => new Promise((r) => setTimeout(r, ms)),
 ): SocialProvider {
   const base = `https://graph.facebook.com/${cfg.version}`;
+  /** Fetches pages and pictures so they are drawn and cached before Facebook's crawler asks. */
+  const warm = async (urls: (string | undefined)[]) => {
+    await Promise.all(
+      urls.map((url) =>
+        url
+          ? http(url, { signal: AbortSignal.timeout(30_000) })
+              .then((r) => r.arrayBuffer())
+              .catch(() => undefined)
+          : undefined,
+      ),
+    );
+  };
   let pageToken: string | null = null;
 
   async function call(
@@ -161,7 +173,10 @@ export function metaProvider(
         const token = await page();
         if (link && images.every((i) => i.card)) {
           // A link carousel: every card opens its own page (multi-link share, child_attachments).
-          // The order is ours (not "optimized"), and no extra end card is added.
+          // The order is ours (not "optimized"), and no extra end card is added. Facebook fetches
+          // every card's picture once, when the post is made, and leaves out one that is slow:
+          // all pictures are drawn first.
+          await warm(images.map((i) => i.card!.picture));
           try {
             const r = await call(
               "POST",
@@ -204,11 +219,7 @@ export function metaProvider(
     async refreshLink(link: string, preview?: string) {
       try {
         const token = await page();
-        for (const url of [link, preview])
-          if (url)
-            await http(url, { signal: AbortSignal.timeout(30_000) })
-              .then((r) => r.arrayBuffer())
-              .catch(() => undefined);
+        await warm([link, preview]);
         await call("POST", "", { id: link, scrape: "true" }, token);
         return true;
       } catch {
@@ -217,11 +228,18 @@ export function metaProvider(
     },
     async linkPreview(postId: string) {
       try {
-        const r = (await call("GET", postId, { fields: "attachments{media,type}" }, await page())) as {
-          attachments?: { data?: { media?: { image?: { src?: string } }; type?: string }[] };
-        };
+        type Media = { media?: { image?: { src?: string } }; type?: string };
+        const r = (await call(
+          "GET",
+          postId,
+          { fields: "attachments{media,type,subattachments{media,type}}" },
+          await page(),
+        )) as { attachments?: { data?: (Media & { subattachments?: { data?: Media[] } })[] } };
         const a = r.attachments?.data?.[0];
         if (!a) return null;
+        // A link carousel: every card must have its picture.
+        const cards = a.subattachments?.data ?? [];
+        if (cards.length) return { image: cards.every((c) => !!c.media?.image?.src) };
         return { image: !!a.media?.image?.src };
       } catch {
         return null;
@@ -232,11 +250,7 @@ export function metaProvider(
         const token = await page();
         // The page and its picture are drawn before Facebook's crawler asks: it leaves out
         // a picture (or a page) that is slow to come, and a first render after a deploy is.
-        for (const url of [link, preview])
-          if (url)
-            await http(url, { signal: AbortSignal.timeout(30_000) })
-              .then((r) => r.arrayBuffer())
-              .catch(() => undefined);
+        await warm([link, preview]);
         // Facebook reads the link's preview (title, picture) when the post is made, and a slow
         // picture is left out for good. Asking it to read the link first fills its cache with
         // the picture, so the post has it. Best effort: the post goes out either way.

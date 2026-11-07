@@ -191,8 +191,14 @@ describe("meta provider", () => {
       { link: "https://t/l1", name: "Karte 1", description: "no 23 €", picture: "https://t/1/square.jpg" },
       { link: "https://t/l2", name: "Karte 2", description: "no 23 €", picture: "https://t/2/square.jpg" },
     ]);
-    // No photos uploaded: the cards carry their own pictures.
+    // No photos uploaded: the cards carry their own pictures, each drawn before the post is made.
     expect(calls.some((c) => c.url === `${G}/PAGE/photos`)).toBe(false);
+    const feedAt = calls.findIndex((c) => c.url === `${G}/PAGE/feed`);
+    for (const n of [1, 2]) {
+      const at = calls.findIndex((c) => c.url === `https://t/${n}/square.jpg`);
+      expect(at).toBeGreaterThanOrEqual(0);
+      expect(at).toBeLessThan(feedAt);
+    }
   });
 
   it("when Meta refuses the link carousel the slides still go out as photos; a token error does not retry", async () => {
@@ -270,6 +276,28 @@ describe("meta provider", () => {
     expect(await p.linkPreview("PAGE_1")).toEqual({ image: true });
     expect(await p.linkPreview("PAGE_2")).toEqual({ image: false });
     expect(await p.linkPreview("PAGE_3")).toBeNull();
+    // A link carousel: every card needs its picture.
+    const cards = (srcs: (string | null)[]) =>
+      fakeFetch((c) =>
+        c.url === `${G}/PAGE`
+          ? { json: { access_token: "PT" } }
+          : {
+              json: {
+                attachments: {
+                  data: [
+                    {
+                      type: "multi_share",
+                      subattachments: { data: srcs.map((s) => (s ? { media: { image: { src: s } } } : {})) },
+                    },
+                  ],
+                },
+              },
+            },
+      );
+    expect(await metaProvider(cfg, cards(["a", "b"]).http, noWait).linkPreview("C")).toEqual({ image: true });
+    expect(await metaProvider(cfg, cards(["a", null]).http, noWait).linkPreview("C")).toEqual({
+      image: false,
+    });
     const down = fakeFetch(() => ({ status: 500, json: { error: { message: "down", code: 2 } } }));
     expect(await metaProvider(cfg, down.http, noWait).refreshLink("https://t/x")).toBe(false);
     expect(await metaProvider(cfg, down.http, noWait).linkPreview("PAGE_1")).toBeNull();

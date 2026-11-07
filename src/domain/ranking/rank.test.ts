@@ -9,6 +9,8 @@ import {
   countMatches,
   mainstreamCeilingCents,
   pickThree,
+  priceCeilingCents,
+  TYPICAL_PERCENTILE,
   rank,
   tiersAreMeaningful,
   type RankInput,
@@ -318,6 +320,13 @@ describe("mainstreamCeilingCents", () => {
     // Eight fridges from 300 € to 900 € and two premium ones at 5 299 € and 9 999 €.
     const prices = [30000, 35000, 42000, 49900, 55000, 61000, 72000, 89950, 529900, 999900];
     expect(mainstreamCeilingCents(prices)).toBe(90000);
+  });
+
+  it("the typical buyer's ceiling is the median: what most people pay, not the premium end", () => {
+    const prices = [30000, 35000, 42000, 49900, 55000, 61000, 72000, 89950, 529900, 999900];
+    expect(priceCeilingCents(prices, TYPICAL_PERCENTILE)).toBe(55000);
+    expect(priceCeilingCents(prices, TYPICAL_PERCENTILE)!).toBeLessThan(mainstreamCeilingCents(prices)!);
+    expect(priceCeilingCents([19999, 1, 2, 3, 4, 5], 0)).toBe(100);
   });
 
   it("needs at least six prices to tell what is usual", () => {

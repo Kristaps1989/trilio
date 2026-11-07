@@ -27,12 +27,14 @@ import {
   refreshPreviews,
   removePost,
   checkPreviews,
+  repostFacebook,
   socialSettings,
   syncInsights,
   updateSocialSettings,
   type SocialDeps,
 } from "./posts";
 import { categoryLabel, picksFacts } from "./facts";
+import { MAINSTREAM_PERCENTILE, priceCeilingCents } from "@/domain/ranking/rank";
 import { loadCandidates } from "@/db/queries/catalog";
 
 // Posts against Postgres with the mock Meta (docs/SOCIAL_PLAN.md §7). The
@@ -158,7 +160,9 @@ run("social posts", () => {
       false,
     );
     expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 1, ok: 1 });
-    expect(await refreshPreviews(db, deps, undefined, day)).toMatchObject({ asked: 1, ok: 1 });
+    const all = await refreshPreviews(db, deps, undefined, day);
+    expect(all.asked).toBeGreaterThanOrEqual(1);
+    expect(all.ok).toBe(all.asked);
     // Older than 30 days: no longer checked or refreshed.
     expect(await refreshPreviews(db, deps, id, rigaTime("2031-03-01", 10))).toEqual({ asked: 0, ok: 0 });
     await db.update(socialPosts).set({ fbPostId: p!.fbPostId }).where(eq(socialPosts.id, id));
@@ -282,6 +286,13 @@ run("social posts", () => {
       if (picks) break;
     }
     if (!picks) return; // seeded feed older than a day: covered in CI, where the seed is fresh
+    // For a typical buyer: no pick above the category's 75th percentile of current prices.
+    if (picks.kind !== "picks") throw new Error("not a picks post");
+    const current = (await loadCandidates(db, picks.subcategoryId))
+      .flatMap((p) => p.offers.filter((o) => now.getTime() - (o.lastSeenAt?.getTime() ?? 0) < 86_400_000))
+      .map((o) => o.priceCents);
+    const p75 = priceCeilingCents(current, MAINSTREAM_PERCENTILE);
+    if (p75 !== null) for (const p of picks.picks) expect(p.priceCents).toBeLessThanOrEqual(p75);
     const slot = new Date(now.getTime() + 3600_000);
     const made = await createPost(db, deps, {
       facts: picks,
@@ -354,6 +365,34 @@ run("social posts", () => {
       ),
     );
     expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
+
+    // Its cards: a refresh asks Facebook to read each card's link with its square picture
+    // (outside /api/); a card picture left out is marked, and re-posting replaces the page post only.
+    // Published "now" (Publicēt tūlīt), so checked against today.
+    const day = new Date();
+    mockRefreshed().length = 0;
+    expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 1, ok: 1 });
+    expect(mockRefreshed()).toEqual(fb.links);
+    mockRefreshed().length = 0;
+    await db
+      .update(socialPosts)
+      .set({ fbPostId: `${sent!.fbPostId}noimg` })
+      .where(eq(socialPosts.id, id));
+    expect(await checkPreviews(db, deps, day)).toBe(1);
+    expect(mockRefreshed()).toEqual([]); // a carousel's cards do not follow a refresh
+    const marked = (await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!;
+    expect(marked.previewMissing).toBe(true);
+    await db.update(socialPosts).set({ fbPostId: sent!.fbPostId }).where(eq(socialPosts.id, id));
+    expect(await repostFacebook(db, deps, id)).toBe(true);
+    const reposted = (await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!;
+    expect(reposted).toMatchObject({
+      status: "published",
+      previewMissing: false,
+      igMediaId: sent!.igMediaId,
+    });
+    expect(reposted.fbPostId).not.toBe(sent!.fbPostId);
+    expect(mockPosts().find((m) => m.id === sent!.fbPostId)?.removed).toBe(true);
+    expect(mockPosts().find((m) => m.id === reposted.fbPostId)?.links).toEqual(fb.links);
   });
 
   it("a link post's caption drops the line with the bare link: the preview is the link", () => {
@@ -381,7 +420,7 @@ run("social posts", () => {
       link: `${BASE}/izvelies/cool/fridge?utm_source=facebook&utm_medium=social&utm_campaign=top_categories&utm_content=p-2`,
       name: "Ledusskapji",
       description: "Cenas partneru veikalos no: 199 €",
-      picture: `${BASE}/api/social/p/2/square.jpg`,
+      picture: `${BASE}/social/p/2/square.jpg`,
     });
     const cover = carouselCard(
       BASE,
