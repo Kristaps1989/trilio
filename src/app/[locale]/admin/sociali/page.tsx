@@ -8,12 +8,13 @@ import { requireAdmin } from "../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../ui";
 import { Outcome } from "../reklama/shared";
 import { socialProvider } from "@/services/social";
-import { slideUrls, socialSettings } from "@/services/social/posts";
+import { isLinkPost, slideUrls, socialSettings } from "@/services/social/posts";
 import {
   approveAction,
   captionsAction,
   generateAction,
   reelAction,
+  refreshPreviewAction,
   removeAction,
   settingsAction,
   skipAction,
@@ -251,7 +252,19 @@ export default async function SocialPage({ searchParams }: Props) {
         )}
       </Section>
 
-      <Section title={t("history")} id="social-history">
+      <Section
+        title={t("history")}
+        id="social-history"
+        action={
+          history.some((p) => p.status === "published" && p.fbPostId && isLinkPost(p)) ? (
+            <form action={refreshPreviewAction}>
+              <Button type="submit" size="sm" variant="outline">
+                {t("refreshAll")}
+              </Button>
+            </form>
+          ) : null
+        }
+      >
         <Table
           caption={t("history")}
           empty={t("historyEmpty")}
@@ -269,8 +282,13 @@ export default async function SocialPage({ searchParams }: Props) {
             const s = sum(p.id);
             return [
               when(p.slotAt),
-              <span key="k">
+              <span key="k" className="inline-flex flex-wrap items-center gap-1.5">
                 {t(`kind_${p.kind}`)} <Chip tone={tone(p.status)}>{t(`status_${p.status}`)}</Chip>
+                {p.previewMissing ? (
+                  <span data-preview-missing>
+                    <Chip tone="warning">{t("previewMissing")}</Chip>
+                  </span>
+                ) : null}
               </span>,
               [p.fbPostId ? "Facebook" : null, p.igMediaId ? "Instagram" : null].filter(Boolean).join(", ") ||
                 "—",
@@ -279,12 +297,22 @@ export default async function SocialPage({ searchParams }: Props) {
               s.comments,
               s.clicks,
               p.status === "published" ? (
-                <form key="r" action={removeAction}>
-                  <input type="hidden" name="id" value={p.id} />
-                  <Button type="submit" size="sm" variant="outline">
-                    {t("remove")}
-                  </Button>
-                </form>
+                <div key="r" className="flex flex-wrap gap-2">
+                  {p.fbPostId && isLinkPost(p) ? (
+                    <form action={refreshPreviewAction}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <Button type="submit" size="sm" variant="outline">
+                        {t("refreshPreview")}
+                      </Button>
+                    </form>
+                  ) : null}
+                  <form action={removeAction}>
+                    <input type="hidden" name="id" value={p.id} />
+                    <Button type="submit" size="sm" variant="outline">
+                      {t("remove")}
+                    </Button>
+                  </form>
+                </div>
               ) : (
                 (p.error ?? "")
               ),

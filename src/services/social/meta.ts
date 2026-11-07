@@ -201,13 +201,42 @@ export function metaProvider(
         return fail(err);
       }
     },
+    async refreshLink(link: string, preview?: string) {
+      try {
+        const token = await page();
+        for (const url of [link, preview])
+          if (url)
+            await http(url, { signal: AbortSignal.timeout(30_000) })
+              .then((r) => r.arrayBuffer())
+              .catch(() => undefined);
+        await call("POST", "", { id: link, scrape: "true" }, token);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    async linkPreview(postId: string) {
+      try {
+        const r = (await call("GET", postId, { fields: "attachments{media,type}" }, await page())) as {
+          attachments?: { data?: { media?: { image?: { src?: string } }; type?: string }[] };
+        };
+        const a = r.attachments?.data?.[0];
+        if (!a) return null;
+        return { image: !!a.media?.image?.src };
+      } catch {
+        return null;
+      }
+    },
     async publishLink(link: string, caption: string, preview?: string) {
       try {
         const token = await page();
-        if (preview)
-          await http(preview, { signal: AbortSignal.timeout(30_000) })
-            .then((r) => r.arrayBuffer())
-            .catch(() => undefined);
+        // The page and its picture are drawn before Facebook's crawler asks: it leaves out
+        // a picture (or a page) that is slow to come, and a first render after a deploy is.
+        for (const url of [link, preview])
+          if (url)
+            await http(url, { signal: AbortSignal.timeout(30_000) })
+              .then((r) => r.arrayBuffer())
+              .catch(() => undefined);
         // Facebook reads the link's preview (title, picture) when the post is made, and a slow
         // picture is left out for good. Asking it to read the link first fills its cache with
         // the picture, so the post has it. Best effort: the post goes out either way.

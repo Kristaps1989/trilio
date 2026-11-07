@@ -17,6 +17,9 @@ export type MockPost = {
 
 const store = globalThis as unknown as { __trilioSocialMock?: MockPost[] };
 export const mockPosts = (): MockPost[] => (store.__trilioSocialMock ??= []);
+const refreshed = globalThis as unknown as { __trilioSocialRefreshed?: string[] };
+/** Links the mock was asked to refresh (refreshLink). */
+export const mockRefreshed = (): string[] => (refreshed.__trilioSocialRefreshed ??= []);
 
 const n = (seed: string, max: number) =>
   createHash("sha256").update(seed).digest().readUInt32BE(0) % (max + 1);
@@ -44,6 +47,14 @@ export function mockSocialProvider(): SocialProvider {
     },
     async publishLink(link, caption) {
       return add("facebook", link, caption, undefined, [link]);
+    },
+    async refreshLink(link) {
+      mockRefreshed().push(link);
+      return true;
+    },
+    async linkPreview(id) {
+      // A post id ending in "noimg" stands for a preview Facebook drew without its picture.
+      return { image: !id.endsWith("noimg") || mockRefreshed().length > 0 };
     },
     async publishVideo(network, videoUrl, caption) {
       return add(network, videoUrl, caption);

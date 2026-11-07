@@ -162,6 +162,13 @@
       "when": 1793973134772,
       "tag": "0022_tv_uplift",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794034298619,
+      "tag": "0023_social_preview",
+      "breakpoints": true
     }
   ]
 }

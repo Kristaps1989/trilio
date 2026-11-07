@@ -10,6 +10,13 @@ import type { PostCard } from "@/domain/social/captions";
 // picture and words instead of the site's default share image. Only for a
 // post that is approved or published (its picture is public then).
 
+/**
+ * The link preview picture of a post (1200 × 630), named in the landing page's
+ * Open Graph tags. Outside /api/: robots.txt closes /api/ and Facebook's
+ * crawler honours it, so a picture there was left out of the preview (7 Nov 2026).
+ */
+export const linkImagePath = (id: string) => `/social/${id}/link.jpg`;
+
 export type SharePreview = {
   title: string;
   description?: string;
@@ -40,6 +47,6 @@ export async function sharePreview(db: Db, search: Search): Promise<SharePreview
   return {
     title,
     ...(description ? { description } : {}),
-    image: { url: `/api/social/${p.id}/link.jpg`, width: 1200, height: 630, alt: p.alt },
+    image: { url: linkImagePath(p.id), width: 1200, height: 630, alt: p.alt },
   };
 }

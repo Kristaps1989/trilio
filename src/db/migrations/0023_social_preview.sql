@@ -1,0 +1,1 @@
+ALTER TABLE "social_posts" ADD COLUMN "preview_missing" boolean DEFAULT false NOT NULL;
