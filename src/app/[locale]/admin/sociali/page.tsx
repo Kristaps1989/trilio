@@ -257,7 +257,9 @@ export default async function SocialPage({ searchParams }: Props) {
         title={t("history")}
         id="social-history"
         action={
-          history.some((p) => p.status === "published" && p.fbPostId && !p.videoUrl) ? (
+          history.some(
+            (p) => (p.status === "published" || p.status === "failed") && p.fbPostId && !p.videoUrl,
+          ) ? (
             <form action={refreshPreviewAction}>
               <Button type="submit" size="sm" variant="outline">
                 {t("refreshAll")}
@@ -297,7 +299,7 @@ export default async function SocialPage({ searchParams }: Props) {
               s.reactions,
               s.comments,
               s.clicks,
-              p.status === "published" ? (
+              p.status === "published" || (p.status === "failed" && p.fbPostId) ? (
                 <div key="r" className="flex flex-wrap gap-2">
                   {p.fbPostId && p.previewMissing ? (
                     <form action={repostAction} data-repost={p.id}>
@@ -314,6 +316,9 @@ export default async function SocialPage({ searchParams }: Props) {
                         {t("refreshPreview")}
                       </Button>
                     </form>
+                  ) : null}
+                  {p.error && p.status !== "published" ? (
+                    <span className="text-sm text-stone">{p.error}</span>
                   ) : null}
                   <form action={removeAction} data-remove-post={p.id}>
                     <input type="hidden" name="id" value={p.id} />

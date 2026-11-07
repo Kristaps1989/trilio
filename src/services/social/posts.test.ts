@@ -178,6 +178,26 @@ run("social posts", () => {
     ).toBe(true);
   });
 
+  it("a late post already on Facebook (its Instagram half failed) stays published there, not skipped", async () => {
+    const at = rigaTime("2031-02-16", 19);
+    const f = await factsFor(db, "advice", at);
+    const made = await createPost(db, deps, { ...f!, slotAt: at, createdBy: "social-test", mode: "approve" });
+    const id = made.ok ? made.post.id : "";
+    // Facebook went out, Instagram failed, then the owner approved it again for a retry.
+    await db
+      .update(socialPosts)
+      .set({ status: "approved", fbPostId: "mock_facebook_partly", igMediaId: null })
+      .where(eq(socialPosts.id, id));
+    expect(await publishDue(db, deps, new Date(at.getTime() + 7 * 3600_000))).toMatchObject({ skipped: 0 });
+    const [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+    expect(p).toMatchObject({
+      status: "published",
+      fbPostId: "mock_facebook_partly",
+      igMediaId: null,
+      error: "Instagram: nokavēts, netika publicēts.",
+    });
+  });
+
   it("an approved post more than 6 hours late is not sent", async () => {
     const mon = rigaTime("2031-01-13", 19);
     const f = await factsFor(db, "advice", mon);

@@ -169,6 +169,13 @@
       "when": 1794034298619,
       "tag": "0023_social_preview",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794040657769,
+      "tag": "0024_social_partly_sent",
+      "breakpoints": true
     }
   ]
 }
