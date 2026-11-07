@@ -80,13 +80,9 @@
         "accounts_user_id_users_id_fk": {
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -94,10 +90,7 @@
       "compositePrimaryKeys": {
         "accounts_provider_provider_account_id_pk": {
           "name": "accounts_provider_provider_account_id_pk",
-          "columns": [
-            "provider",
-            "provider_account_id"
-          ]
+          "columns": ["provider", "provider_account_id"]
         }
       },
       "uniqueConstraints": {},
@@ -174,13 +167,9 @@
         "ad_ads_ad_group_id_ad_groups_id_fk": {
           "name": "ad_ads_ad_group_id_ad_groups_id_fk",
           "tableFrom": "ad_ads",
-          "columnsFrom": [
-            "ad_group_id"
-          ],
+          "columnsFrom": ["ad_group_id"],
           "tableTo": "ad_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -388,9 +377,7 @@
       "uniqueConstraints": {
         "ad_campaigns_name_unique": {
           "name": "ad_campaigns_name_unique",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "nullsNotDistinct": false
         }
       },
@@ -446,13 +433,9 @@
         "ad_changes_proposal_id_ad_proposals_id_fk": {
           "name": "ad_changes_proposal_id_ad_proposals_id_fk",
           "tableFrom": "ad_changes",
-          "columnsFrom": [
-            "proposal_id"
-          ],
+          "columnsFrom": ["proposal_id"],
           "tableTo": "ad_proposals",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -603,11 +586,7 @@
       "compositePrimaryKeys": {
         "ad_daily_stats_day_level_entity_id_pk": {
           "name": "ad_daily_stats_day_level_entity_id_pk",
-          "columns": [
-            "day",
-            "level",
-            "entity_id"
-          ]
+          "columns": ["day", "level", "entity_id"]
         }
       },
       "uniqueConstraints": {},
@@ -699,13 +678,9 @@
         "ad_groups_campaign_id_ad_campaigns_id_fk": {
           "name": "ad_groups_campaign_id_ad_campaigns_id_fk",
           "tableFrom": "ad_groups",
-          "columnsFrom": [
-            "campaign_id"
-          ],
+          "columnsFrom": ["campaign_id"],
           "tableTo": "ad_campaigns",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -834,26 +809,18 @@
         "ad_keywords_campaign_id_ad_campaigns_id_fk": {
           "name": "ad_keywords_campaign_id_ad_campaigns_id_fk",
           "tableFrom": "ad_keywords",
-          "columnsFrom": [
-            "campaign_id"
-          ],
+          "columnsFrom": ["campaign_id"],
           "tableTo": "ad_campaigns",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "ad_keywords_ad_group_id_ad_groups_id_fk": {
           "name": "ad_keywords_ad_group_id_ad_groups_id_fk",
           "tableFrom": "ad_keywords",
-          "columnsFrom": [
-            "ad_group_id"
-          ],
+          "columnsFrom": ["ad_group_id"],
           "tableTo": "ad_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1084,13 +1051,9 @@
         "ad_proposals_run_id_ad_agent_runs_id_fk": {
           "name": "ad_proposals_run_id_ad_agent_runs_id_fk",
           "tableFrom": "ad_proposals",
-          "columnsFrom": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
           "tableTo": "ad_agent_runs",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1163,13 +1126,9 @@
         "ad_search_terms_ad_group_id_ad_groups_id_fk": {
           "name": "ad_search_terms_ad_group_id_ad_groups_id_fk",
           "tableFrom": "ad_search_terms",
-          "columnsFrom": [
-            "ad_group_id"
-          ],
+          "columnsFrom": ["ad_group_id"],
           "tableTo": "ad_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1177,11 +1136,7 @@
       "compositePrimaryKeys": {
         "ad_search_terms_day_ad_group_id_term_pk": {
           "name": "ad_search_terms_day_ad_group_id_term_pk",
-          "columns": [
-            "day",
-            "ad_group_id",
-            "term"
-          ]
+          "columns": ["day", "ad_group_id", "term"]
         }
       },
       "uniqueConstraints": {},
@@ -1491,39 +1446,27 @@
         "affiliate_clicks_offer_id_offers_id_fk": {
           "name": "affiliate_clicks_offer_id_offers_id_fk",
           "tableFrom": "affiliate_clicks",
-          "columnsFrom": [
-            "offer_id"
-          ],
+          "columnsFrom": ["offer_id"],
           "tableTo": "offers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "affiliate_clicks_search_session_id_search_sessions_id_fk": {
           "name": "affiliate_clicks_search_session_id_search_sessions_id_fk",
           "tableFrom": "affiliate_clicks",
-          "columnsFrom": [
-            "search_session_id"
-          ],
+          "columnsFrom": ["search_session_id"],
           "tableTo": "search_sessions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "affiliate_clicks_ad_landing_id_ad_landings_id_fk": {
           "name": "affiliate_clicks_ad_landing_id_ad_landings_id_fk",
           "tableFrom": "affiliate_clicks",
-          "columnsFrom": [
-            "ad_landing_id"
-          ],
+          "columnsFrom": ["ad_landing_id"],
           "tableTo": "ad_landings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1595,10 +1538,7 @@
       "compositePrimaryKeys": {
         "bot_hits_day_kind_pk": {
           "name": "bot_hits_day_kind_pk",
-          "columns": [
-            "day",
-            "kind"
-          ]
+          "columns": ["day", "kind"]
         }
       },
       "uniqueConstraints": {},
@@ -1670,13 +1610,9 @@
         "confidence_answers_search_session_id_search_sessions_id_fk": {
           "name": "confidence_answers_search_session_id_search_sessions_id_fk",
           "tableFrom": "confidence_answers",
-          "columnsFrom": [
-            "search_session_id"
-          ],
+          "columnsFrom": ["search_session_id"],
           "tableTo": "search_sessions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -1740,13 +1676,9 @@
         "eprel_lookups_product_id_products_id_fk": {
           "name": "eprel_lookups_product_id_products_id_fk",
           "tableFrom": "eprel_lookups",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1826,13 +1758,9 @@
         "ingestion_runs_store_id_stores_id_fk": {
           "name": "ingestion_runs_store_id_stores_id_fk",
           "tableFrom": "ingestion_runs",
-          "columnsFrom": [
-            "store_id"
-          ],
+          "columnsFrom": ["store_id"],
           "tableTo": "stores",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -1969,13 +1897,9 @@
         "invoices_order_id_offer_orders_id_fk": {
           "name": "invoices_order_id_offer_orders_id_fk",
           "tableFrom": "invoices",
-          "columnsFrom": [
-            "order_id"
-          ],
+          "columnsFrom": ["order_id"],
           "tableTo": "offer_orders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "restrict"
         }
@@ -1984,9 +1908,7 @@
       "uniqueConstraints": {
         "invoices_number_unique": {
           "name": "invoices_number_unique",
-          "columns": [
-            "number"
-          ],
+          "columns": ["number"],
           "nullsNotDistinct": false
         }
       },
@@ -2058,13 +1980,9 @@
         "lead_notes_product_id_products_id_fk": {
           "name": "lead_notes_product_id_products_id_fk",
           "tableFrom": "lead_notes",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2349,39 +2267,27 @@
         "notify_requests_product_id_products_id_fk": {
           "name": "notify_requests_product_id_products_id_fk",
           "tableFrom": "notify_requests",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "notify_requests_ad_landing_id_ad_landings_id_fk": {
           "name": "notify_requests_ad_landing_id_ad_landings_id_fk",
           "tableFrom": "notify_requests",
-          "columnsFrom": [
-            "ad_landing_id"
-          ],
+          "columnsFrom": ["ad_landing_id"],
           "tableTo": "ad_landings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "notify_requests_user_id_users_id_fk": {
           "name": "notify_requests_user_id_users_id_fk",
           "tableFrom": "notify_requests",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2390,9 +2296,7 @@
       "uniqueConstraints": {
         "notify_requests_token_unique": {
           "name": "notify_requests_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "nullsNotDistinct": false
         }
       },
@@ -2431,13 +2335,9 @@
         "notify_settings_user_id_users_id_fk": {
           "name": "notify_settings_user_id_users_id_fk",
           "tableFrom": "notify_settings",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2524,26 +2424,18 @@
         "offer_events_offer_id_special_offers_id_fk": {
           "name": "offer_events_offer_id_special_offers_id_fk",
           "tableFrom": "offer_events",
-          "columnsFrom": [
-            "offer_id"
-          ],
+          "columnsFrom": ["offer_id"],
           "tableTo": "special_offers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "offer_events_order_id_offer_orders_id_fk": {
           "name": "offer_events_order_id_offer_orders_id_fk",
           "tableFrom": "offer_events",
-          "columnsFrom": [
-            "order_id"
-          ],
+          "columnsFrom": ["order_id"],
           "tableTo": "offer_orders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2864,26 +2756,18 @@
         "offer_orders_offer_id_special_offers_id_fk": {
           "name": "offer_orders_offer_id_special_offers_id_fk",
           "tableFrom": "offer_orders",
-          "columnsFrom": [
-            "offer_id"
-          ],
+          "columnsFrom": ["offer_id"],
           "tableTo": "special_offers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "restrict"
         },
         "offer_orders_user_id_users_id_fk": {
           "name": "offer_orders_user_id_users_id_fk",
           "tableFrom": "offer_orders",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -2892,23 +2776,17 @@
       "uniqueConstraints": {
         "offer_orders_offer_id_unique": {
           "name": "offer_orders_offer_id_unique",
-          "columns": [
-            "offer_id"
-          ],
+          "columns": ["offer_id"],
           "nullsNotDistinct": false
         },
         "offer_orders_number_unique": {
           "name": "offer_orders_number_unique",
-          "columns": [
-            "number"
-          ],
+          "columns": ["number"],
           "nullsNotDistinct": false
         },
         "offer_orders_feedback_token_unique": {
           "name": "offer_orders_feedback_token_unique",
-          "columns": [
-            "feedback_token"
-          ],
+          "columns": ["feedback_token"],
           "nullsNotDistinct": false
         }
       },
@@ -3066,26 +2944,18 @@
         "offers_product_id_products_id_fk": {
           "name": "offers_product_id_products_id_fk",
           "tableFrom": "offers",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "offers_store_id_stores_id_fk": {
           "name": "offers_store_id_stores_id_fk",
           "tableFrom": "offers",
-          "columnsFrom": [
-            "store_id"
-          ],
+          "columnsFrom": ["store_id"],
           "tableTo": "stores",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3207,26 +3077,18 @@
         "partner_requests_product_id_products_id_fk": {
           "name": "partner_requests_product_id_products_id_fk",
           "tableFrom": "partner_requests",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "partner_requests_order_id_offer_orders_id_fk": {
           "name": "partner_requests_order_id_offer_orders_id_fk",
           "tableFrom": "partner_requests",
-          "columnsFrom": [
-            "order_id"
-          ],
+          "columnsFrom": ["order_id"],
           "tableTo": "offer_orders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3422,39 +3284,27 @@
         "payments_subscription_id_subscriptions_id_fk": {
           "name": "payments_subscription_id_subscriptions_id_fk",
           "tableFrom": "payments",
-          "columnsFrom": [
-            "subscription_id"
-          ],
+          "columnsFrom": ["subscription_id"],
           "tableTo": "subscriptions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "payments_offer_order_id_offer_orders_id_fk": {
           "name": "payments_offer_order_id_offer_orders_id_fk",
           "tableFrom": "payments",
-          "columnsFrom": [
-            "offer_order_id"
-          ],
+          "columnsFrom": ["offer_order_id"],
           "tableTo": "offer_orders",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "payments_plan_id_plans_id_fk": {
           "name": "payments_plan_id_plans_id_fk",
           "tableFrom": "payments",
-          "columnsFrom": [
-            "plan_id"
-          ],
+          "columnsFrom": ["plan_id"],
           "tableTo": "plans",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3463,9 +3313,7 @@
       "uniqueConstraints": {
         "payments_order_id_unique": {
           "name": "payments_order_id_unique",
-          "columns": [
-            "order_id"
-          ],
+          "columns": ["order_id"],
           "nullsNotDistinct": false
         }
       },
@@ -3590,13 +3438,9 @@
         "price_snapshots_offer_id_offers_id_fk": {
           "name": "price_snapshots_offer_id_offers_id_fk",
           "tableFrom": "price_snapshots",
-          "columnsFrom": [
-            "offer_id"
-          ],
+          "columnsFrom": ["offer_id"],
           "tableTo": "offers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3794,9 +3638,7 @@
       "uniqueConstraints": {
         "products_ean_unique": {
           "name": "products_ean_unique",
-          "columns": [
-            "ean"
-          ],
+          "columns": ["ean"],
           "nullsNotDistinct": false
         }
       },
@@ -3852,13 +3694,9 @@
         "push_subscriptions_user_id_users_id_fk": {
           "name": "push_subscriptions_user_id_users_id_fk",
           "tableFrom": "push_subscriptions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -3867,9 +3705,7 @@
       "uniqueConstraints": {
         "push_subscriptions_endpoint_unique": {
           "name": "push_subscriptions_endpoint_unique",
-          "columns": [
-            "endpoint"
-          ],
+          "columns": ["endpoint"],
           "nullsNotDistinct": false
         }
       },
@@ -3966,39 +3802,27 @@
         "radar_events_radar_id_radars_id_fk": {
           "name": "radar_events_radar_id_radars_id_fk",
           "tableFrom": "radar_events",
-          "columnsFrom": [
-            "radar_id"
-          ],
+          "columnsFrom": ["radar_id"],
           "tableTo": "radars",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "radar_events_offer_id_offers_id_fk": {
           "name": "radar_events_offer_id_offers_id_fk",
           "tableFrom": "radar_events",
-          "columnsFrom": [
-            "offer_id"
-          ],
+          "columnsFrom": ["offer_id"],
           "tableTo": "offers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "radar_events_product_id_products_id_fk": {
           "name": "radar_events_product_id_products_id_fk",
           "tableFrom": "radar_events",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4144,39 +3968,27 @@
         "radars_user_id_users_id_fk": {
           "name": "radars_user_id_users_id_fk",
           "tableFrom": "radars",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "radars_product_id_products_id_fk": {
           "name": "radars_product_id_products_id_fk",
           "tableFrom": "radars",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "radars_search_session_id_search_sessions_id_fk": {
           "name": "radars_search_session_id_search_sessions_id_fk",
           "tableFrom": "radars",
-          "columnsFrom": [
-            "search_session_id"
-          ],
+          "columnsFrom": ["search_session_id"],
           "tableTo": "search_sessions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4309,39 +4121,27 @@
         "saved_items_user_id_users_id_fk": {
           "name": "saved_items_user_id_users_id_fk",
           "tableFrom": "saved_items",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "saved_items_product_id_products_id_fk": {
           "name": "saved_items_product_id_products_id_fk",
           "tableFrom": "saved_items",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "saved_items_ad_landing_id_ad_landings_id_fk": {
           "name": "saved_items_ad_landing_id_ad_landings_id_fk",
           "tableFrom": "saved_items",
-          "columnsFrom": [
-            "ad_landing_id"
-          ],
+          "columnsFrom": ["ad_landing_id"],
           "tableTo": "ad_landings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -4453,11 +4253,7 @@
       "compositePrimaryKeys": {
         "seo_queries_day_query_page_pk": {
           "name": "seo_queries_day_query_page_pk",
-          "columns": [
-            "day",
-            "query",
-            "page"
-          ]
+          "columns": ["day", "query", "page"]
         }
       },
       "uniqueConstraints": {},
@@ -4493,13 +4289,9 @@
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -4573,13 +4365,9 @@
         "social_insights_post_id_social_posts_id_fk": {
           "name": "social_insights_post_id_social_posts_id_fk",
           "tableFrom": "social_insights",
-          "columnsFrom": [
-            "post_id"
-          ],
+          "columnsFrom": ["post_id"],
           "tableTo": "social_posts",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -4587,11 +4375,7 @@
       "compositePrimaryKeys": {
         "social_insights_post_id_network_day_pk": {
           "name": "social_insights_post_id_network_day_pk",
-          "columns": [
-            "post_id",
-            "network",
-            "day"
-          ]
+          "columns": ["post_id", "network", "day"]
         }
       },
       "uniqueConstraints": {},
@@ -4778,26 +4562,18 @@
         "social_posts_product_id_products_id_fk": {
           "name": "social_posts_product_id_products_id_fk",
           "tableFrom": "social_posts",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "social_posts_special_offer_id_special_offers_id_fk": {
           "name": "social_posts_special_offer_id_special_offers_id_fk",
           "tableFrom": "social_posts",
-          "columnsFrom": [
-            "special_offer_id"
-          ],
+          "columnsFrom": ["special_offer_id"],
           "tableTo": "special_offers",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -5026,26 +4802,18 @@
         "special_offers_user_id_users_id_fk": {
           "name": "special_offers_user_id_users_id_fk",
           "tableFrom": "special_offers",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "special_offers_product_id_products_id_fk": {
           "name": "special_offers_product_id_products_id_fk",
           "tableFrom": "special_offers",
-          "columnsFrom": [
-            "product_id"
-          ],
+          "columnsFrom": ["product_id"],
           "tableTo": "products",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -5054,9 +4822,7 @@
       "uniqueConstraints": {
         "special_offers_token_unique": {
           "name": "special_offers_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "nullsNotDistinct": false
         }
       },
@@ -5175,9 +4941,7 @@
       "uniqueConstraints": {
         "stores_slug_unique": {
           "name": "stores_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false
         }
       },
@@ -5336,26 +5100,18 @@
         "subscriptions_user_id_users_id_fk": {
           "name": "subscriptions_user_id_users_id_fk",
           "tableFrom": "subscriptions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "subscriptions_plan_id_plans_id_fk": {
           "name": "subscriptions_plan_id_plans_id_fk",
           "tableFrom": "subscriptions",
-          "columnsFrom": [
-            "plan_id"
-          ],
+          "columnsFrom": ["plan_id"],
           "tableTo": "plans",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -5452,13 +5208,9 @@
         "tv_daily_slug_tv_campaigns_slug_fk": {
           "name": "tv_daily_slug_tv_campaigns_slug_fk",
           "tableFrom": "tv_daily",
-          "columnsFrom": [
-            "slug"
-          ],
+          "columnsFrom": ["slug"],
           "tableTo": "tv_campaigns",
-          "columnsTo": [
-            "slug"
-          ],
+          "columnsTo": ["slug"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5466,11 +5218,7 @@
       "compositePrimaryKeys": {
         "tv_daily_slug_day_kind_pk": {
           "name": "tv_daily_slug_day_kind_pk",
-          "columns": [
-            "slug",
-            "day",
-            "kind"
-          ]
+          "columns": ["slug", "day", "kind"]
         }
       },
       "uniqueConstraints": {},
@@ -5507,13 +5255,9 @@
         "tv_impressions_slug_tv_campaigns_slug_fk": {
           "name": "tv_impressions_slug_tv_campaigns_slug_fk",
           "tableFrom": "tv_impressions",
-          "columnsFrom": [
-            "slug"
-          ],
+          "columnsFrom": ["slug"],
           "tableTo": "tv_campaigns",
-          "columnsTo": [
-            "slug"
-          ],
+          "columnsTo": ["slug"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5521,10 +5265,7 @@
       "compositePrimaryKeys": {
         "tv_impressions_slug_minute_pk": {
           "name": "tv_impressions_slug_minute_pk",
-          "columns": [
-            "slug",
-            "minute"
-          ]
+          "columns": ["slug", "minute"]
         }
       },
       "uniqueConstraints": {},
@@ -5635,13 +5376,9 @@
         "tv_uplift_slug_tv_campaigns_slug_fk": {
           "name": "tv_uplift_slug_tv_campaigns_slug_fk",
           "tableFrom": "tv_uplift",
-          "columnsFrom": [
-            "slug"
-          ],
+          "columnsFrom": ["slug"],
           "tableTo": "tv_campaigns",
-          "columnsTo": [
-            "slug"
-          ],
+          "columnsTo": ["slug"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5649,10 +5386,7 @@
       "compositePrimaryKeys": {
         "tv_uplift_slug_day_pk": {
           "name": "tv_uplift_slug_day_pk",
-          "columns": [
-            "slug",
-            "day"
-          ]
+          "columns": ["slug", "day"]
         }
       },
       "uniqueConstraints": {},
@@ -5688,13 +5422,9 @@
         "tv_viewers_slug_tv_campaigns_slug_fk": {
           "name": "tv_viewers_slug_tv_campaigns_slug_fk",
           "tableFrom": "tv_viewers",
-          "columnsFrom": [
-            "slug"
-          ],
+          "columnsFrom": ["slug"],
           "tableTo": "tv_campaigns",
-          "columnsTo": [
-            "slug"
-          ],
+          "columnsTo": ["slug"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -5702,11 +5432,7 @@
       "compositePrimaryKeys": {
         "tv_viewers_slug_day_viewer_hash_pk": {
           "name": "tv_viewers_slug_day_viewer_hash_pk",
-          "columns": [
-            "slug",
-            "day",
-            "viewer_hash"
-          ]
+          "columns": ["slug", "day", "viewer_hash"]
         }
       },
       "uniqueConstraints": {},
@@ -5790,13 +5516,9 @@
         "ui_events_ad_landing_id_ad_landings_id_fk": {
           "name": "ui_events_ad_landing_id_ad_landings_id_fk",
           "tableFrom": "ui_events",
-          "columnsFrom": [
-            "ad_landing_id"
-          ],
+          "columnsFrom": ["ad_landing_id"],
           "tableTo": "ad_landings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -5907,23 +5629,17 @@
       "uniqueConstraints": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "nullsNotDistinct": false
         },
         "users_offers_token_unique": {
           "name": "users_offers_token_unique",
-          "columns": [
-            "offers_token"
-          ],
+          "columns": ["offers_token"],
           "nullsNotDistinct": false
         },
         "users_alerts_token_unique": {
           "name": "users_alerts_token_unique",
-          "columns": [
-            "alerts_token"
-          ],
+          "columns": ["alerts_token"],
           "nullsNotDistinct": false
         }
       },
@@ -5959,10 +5675,7 @@
       "compositePrimaryKeys": {
         "verification_tokens_identifier_token_pk": {
           "name": "verification_tokens_identifier_token_pk",
-          "columns": [
-            "identifier",
-            "token"
-          ]
+          "columns": ["identifier", "token"]
         }
       },
       "uniqueConstraints": {},
@@ -6016,10 +5729,7 @@
       "compositePrimaryKeys": {
         "visit_daily_day_path_pk": {
           "name": "visit_daily_day_path_pk",
-          "columns": [
-            "day",
-            "path"
-          ]
+          "columns": ["day", "path"]
         }
       },
       "uniqueConstraints": {},
@@ -6188,123 +5898,67 @@
     "public.ad_campaign_kind": {
       "name": "ad_campaign_kind",
       "schema": "public",
-      "values": [
-        "search",
-        "pmax"
-      ]
+      "values": ["search", "pmax"]
     },
     "public.ad_creative_status": {
       "name": "ad_creative_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "approved",
-        "rejected",
-        "uploaded"
-      ]
+      "values": ["draft", "approved", "rejected", "uploaded"]
     },
     "public.ad_match": {
       "name": "ad_match",
       "schema": "public",
-      "values": [
-        "exact",
-        "phrase",
-        "broad"
-      ]
+      "values": ["exact", "phrase", "broad"]
     },
     "public.ad_mode": {
       "name": "ad_mode",
       "schema": "public",
-      "values": [
-        "observe",
-        "approve",
-        "auto"
-      ]
+      "values": ["observe", "approve", "auto"]
     },
     "public.ad_proposal_status": {
       "name": "ad_proposal_status",
       "schema": "public",
-      "values": [
-        "proposed",
-        "applied",
-        "rejected",
-        "blocked",
-        "failed"
-      ]
+      "values": ["proposed", "applied", "rejected", "blocked", "failed"]
     },
     "public.ad_review_cadence": {
       "name": "ad_review_cadence",
       "schema": "public",
-      "values": [
-        "weekly",
-        "daily"
-      ]
+      "values": ["weekly", "daily"]
     },
     "public.ad_status": {
       "name": "ad_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "enabled",
-        "paused",
-        "removed"
-      ]
+      "values": ["draft", "enabled", "paused", "removed"]
     },
     "public.buyer_kind": {
       "name": "buyer_kind",
       "schema": "public",
-      "values": [
-        "person",
-        "company"
-      ]
+      "values": ["person", "company"]
     },
     "public.condition": {
       "name": "condition",
       "schema": "public",
-      "values": [
-        "new",
-        "refurbished"
-      ]
+      "values": ["new", "refurbished"]
     },
     "public.delivery_method": {
       "name": "delivery_method",
       "schema": "public",
-      "values": [
-        "courier",
-        "locker"
-      ]
+      "values": ["courier", "locker"]
     },
     "public.feed_type": {
       "name": "feed_type",
       "schema": "public",
-      "values": [
-        "sample",
-        "google_xml",
-        "csv",
-        "api",
-        "scrape"
-      ]
+      "values": ["sample", "google_xml", "csv", "api", "scrape"]
     },
     "public.invoice_kind": {
       "name": "invoice_kind",
       "schema": "public",
-      "values": [
-        "invoice",
-        "credit_note"
-      ]
+      "values": ["invoice", "credit_note"]
     },
     "public.offer_status": {
       "name": "offer_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "sent",
-        "opened",
-        "accepted",
-        "paid",
-        "expired",
-        "cancelled"
-      ]
+      "values": ["draft", "sent", "opened", "accepted", "paid", "expired", "cancelled"]
     },
     "public.order_status": {
       "name": "order_status",
@@ -6324,103 +5978,57 @@
     "public.partner_request_status": {
       "name": "partner_request_status",
       "schema": "public",
-      "values": [
-        "requested",
-        "confirmed",
-        "unavailable"
-      ]
+      "values": ["requested", "confirmed", "unavailable"]
     },
     "public.payment_kind": {
       "name": "payment_kind",
       "schema": "public",
-      "values": [
-        "initial",
-        "renewal",
-        "order"
-      ]
+      "values": ["initial", "renewal", "order"]
     },
     "public.payment_provider": {
       "name": "payment_provider",
       "schema": "public",
-      "values": [
-        "paysera",
-        "mock"
-      ]
+      "values": ["paysera", "mock"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "captured",
-        "failed",
-        "canceled"
-      ]
+      "values": ["pending", "captured", "failed", "canceled"]
     },
     "public.plan_interval": {
       "name": "plan_interval",
       "schema": "public",
-      "values": [
-        "month",
-        "year"
-      ]
+      "values": ["month", "year"]
     },
     "public.radar_scope": {
       "name": "radar_scope",
       "schema": "public",
-      "values": [
-        "only",
-        "brand",
-        "any"
-      ]
+      "values": ["only", "brand", "any"]
     },
     "public.radar_threshold": {
       "name": "radar_threshold",
       "schema": "public",
-      "values": [
-        "any",
-        "5",
-        "10"
-      ]
+      "values": ["any", "5", "10"]
     },
     "public.saved_item_kind": {
       "name": "saved_item_kind",
       "schema": "public",
-      "values": [
-        "product",
-        "search"
-      ]
+      "values": ["product", "search"]
     },
     "public.social_post_status": {
       "name": "social_post_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "approved",
-        "published",
-        "skipped",
-        "failed"
-      ]
+      "values": ["draft", "approved", "published", "skipped", "failed"]
     },
     "public.stock": {
       "name": "stock",
       "schema": "public",
-      "values": [
-        "in",
-        "soon",
-        "out"
-      ]
+      "values": ["in", "soon", "out"]
     },
     "public.subscription_status": {
       "name": "subscription_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "active",
-        "past_due",
-        "canceled",
-        "expired"
-      ]
+      "values": ["pending", "active", "past_due", "canceled", "expired"]
     }
   },
   "schemas": {},
