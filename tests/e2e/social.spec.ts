@@ -90,12 +90,12 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   expect(preview.status()).toBe(200);
   expect(preview.headers()["content-type"]).toBe("image/jpeg");
   // The old address still answers, for previews cached with it.
-  expect((await crawler.request.get(`${base}/api/social/${id}/link.jpg`)).headers()["content-type"]).toBe(
-    "image/jpeg",
-  );
+  const old = await crawler.request.get(`${base}/api/social/${id}/link.jpg`);
+  expect(old.status(), await old.text().catch(() => "")).toBe(200);
+  expect(old.headers()["content-type"]).toBe("image/jpeg");
   // robots.txt lets the crawler have the picture and keeps the rest of /api/ closed.
   const robots = await (await crawler.request.get(`${base}/robots.txt`)).text();
-  const group = robots.split(/\n(?=User-Agent:)/i).find((g) => /User-Agent: facebookexternalhit/i.test(g))!;
+  const group = robots.split(/\n\s*\n/).find((g) => /User-Agent: facebookexternalhit/i.test(g))!;
   expect(group).toContain("Allow: /api/social/");
   expect(group).toContain("Disallow: /api/");
   expect(group).not.toMatch(/Disallow: \/social/);
@@ -103,9 +103,11 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   await anon.close();
 
   // The owner can have Facebook read a post's link again (picture included).
-  const history0 = page.getByRole("group", { name: "Publicētie" });
   await page.reload();
-  await history0.getByRole("button", { name: "Atjaunot priekšskatījumu" }).first().click();
+  await page
+    .locator(`[data-refresh-preview="${id}"]`)
+    .getByRole("button", { name: "Atjaunot priekšskatījumu" })
+    .click();
   await expect(page.locator("[data-outcome]")).toHaveText(
     "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā.",
   );
@@ -114,8 +116,8 @@ test("a post from the knowledge base: draft, image, publish now to both networks
     "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā.",
   );
 
-  const history = page.getByRole("group", { name: "Publicētie" });
-  const row = history.getByRole("row").filter({ hasText: "Facebook, Instagram" }).first();
+  // This project's own post: both projects publish in parallel.
+  const row = page.locator(`[data-remove-post="${id}"]`);
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: "Dzēst no tīkliem" }).click();
   await expect(page.locator("[data-outcome]")).toHaveText("Dzēsts no tīkliem.");

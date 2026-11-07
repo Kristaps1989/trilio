@@ -299,14 +299,14 @@ export default async function SocialPage({ searchParams }: Props) {
               p.status === "published" ? (
                 <div key="r" className="flex flex-wrap gap-2">
                   {p.fbPostId && isLinkPost(p) ? (
-                    <form action={refreshPreviewAction}>
+                    <form action={refreshPreviewAction} data-refresh-preview={p.id}>
                       <input type="hidden" name="id" value={p.id} />
                       <Button type="submit" size="sm" variant="outline">
                         {t("refreshPreview")}
                       </Button>
                     </form>
                   ) : null}
-                  <form action={removeAction}>
+                  <form action={removeAction} data-remove-post={p.id}>
                     <input type="hidden" name="id" value={p.id} />
                     <Button type="submit" size="sm" variant="outline">
                       {t("remove")}
