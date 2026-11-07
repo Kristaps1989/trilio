@@ -46,10 +46,6 @@ test("an ad visit is credited with the shop click that follows it", async ({ pag
     .getByRole("link", { name: /^Pirkt/ })
     .first();
   const url = new URL(page.url());
-  // The shop itself is not part of the test.
-  await page.route("https://example.invalid/**", (r) =>
-    r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title>" }),
-  );
   const ad = Object.fromEntries([...url.searchParams].filter(([k]) => k !== "sub"));
 
   const admin = await (await browser.newContext()).newPage();
@@ -71,11 +67,18 @@ test("an ad visit is credited with the shop click that follows it", async ({ pag
         await page.waitForTimeout(1_000);
         // A person's click on the page (a request without the browser's navigation headers
         // counts as suspect, docs/CLICK_QUALITY_PLAN.md): the question first, then the shop.
+        // The shop itself is not part of the test; reaching its address is.
         await page.goto(url.href);
+        const reached = page.waitForRequest((r) => r.url().startsWith("https://example.invalid/"));
         await buy.click();
         const sheet = page.locator("[data-ask-sheet]");
-        if (await sheet.isVisible().catch(() => false)) await sheet.locator("[data-ask-shop]").click();
-        await page.waitForURL(/example\.invalid/);
+        // The first click asks the question; once answered, the card goes straight to the shop.
+        const asked = await sheet.waitFor({ timeout: 3_000 }).then(
+          () => true,
+          () => false,
+        );
+        if (asked) await sheet.locator("[data-ask-shop]").click();
+        await reached;
         return credited();
       },
       { timeout: 120_000, intervals: [2_000, 5_000, 10_000] },

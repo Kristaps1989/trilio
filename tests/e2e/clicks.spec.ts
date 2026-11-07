@@ -22,10 +22,8 @@ test("without JavaScript a card's shop link asks the question first; the answer 
 }) => {
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   const page = await context.newPage();
-  // The shop itself is not part of the test.
-  await page.route("https://example.invalid/**", (r) =>
-    r.fulfill({ status: 200, contentType: "text/html", body: "<title>shop</title><h1>shop</h1>" }),
-  );
+  // The shop itself is not part of the test; reaching its address is (route() does not see redirect targets).
+  const toShopRequest = () => page.waitForRequest((r) => r.url().startsWith("https://example.invalid/"));
   await page.goto("/rezultati?sub=kettle");
   const buy = picks(page)
     .first()
@@ -41,17 +39,19 @@ test("without JavaScript a card's shop link asks the question first; the answer 
   await expect(page.getByRole("button", { name: "Iegūt lētāk" })).toBeVisible();
   const toShop = page.getByRole("link", { name: `Uz ${shop}` });
   await expect(toShop).toHaveAttribute("href", /^\/go\/[0-9a-f-]{36}\?s=[0-9a-f-]{36}&from=ask$/);
+  const reached = toShopRequest();
   await toShop.click();
-  await expect(page).toHaveURL(/^https:\/\/example\.invalid\//);
+  await reached;
   expect((await context.cookies()).find((c) => c.name === "trilio_ask")?.value).toMatch(/^\d+$/);
 
   // Answered: the next card click goes straight to the shop.
   await page.goto("/rezultati?sub=kettle");
+  const direct = toShopRequest();
   await picks(page)
     .nth(1)
     .getByRole("link", { name: /^Pirkt — / })
     .click();
-  await expect(page).toHaveURL(/^https:\/\/example\.invalid\//);
+  await direct;
   await context.close();
 });
 

@@ -60,7 +60,13 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   await ssai.dispose();
 
   // A viewer types the short link: it lands on the campaign page with the TV tags.
-  const viewer = await (await browser.newContext()).newPage();
+  // A viewer of their own: every e2e context shares one address, so a shared user agent would
+  // fold this page view into another test's session and leave "after TV" empty.
+  const viewer = await (
+    await browser.newContext({
+      userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 e2e-tv/${Date.now()}`,
+    })
+  ).newPage();
   const landing = viewer.waitForRequest((r) => r.url().endsWith("/api/visit"));
   await viewer.goto(`/tv/${SLUG}`);
   await expect(viewer).toHaveURL(
