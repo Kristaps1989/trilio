@@ -1329,6 +1329,11 @@ export const socialPosts = pgTable(
     fbPostId: text("fb_post_id"),
     igMediaId: text("ig_media_id"),
     error: text("error"),
+    /**
+     * A Facebook link post whose preview has no picture (Facebook could not
+     * fetch it), seen by the daily check; cleared once a refresh brings it back.
+     */
+    previewMissing: boolean("preview_missing").notNull().default(false),
     createdBy: text("created_by").notNull(),
     approvedBy: text("approved_by"),
     publishedAt: timestamp("published_at", { withTimezone: true }),

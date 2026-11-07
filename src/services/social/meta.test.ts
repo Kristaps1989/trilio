@@ -243,6 +243,38 @@ describe("meta provider", () => {
     expect(await metaProvider(cfg, bad.http, noWait).publishLink("x", "y")).toMatchObject({ ok: false });
   });
 
+  it("refreshes a link's preview (page and picture drawn first) and reads whether a post's preview has its picture", async () => {
+    const { http, calls } = fakeFetch((c) =>
+      c.url === `${G}/PAGE`
+        ? { json: { access_token: "PT" } }
+        : c.url === `${G}/PAGE_1`
+          ? {
+              json: {
+                attachments: { data: [{ type: "share", media: { image: { src: "https://x/p.jpg" } } }] },
+              },
+            }
+          : c.url === `${G}/PAGE_2`
+            ? { json: { attachments: { data: [{ type: "share" }] } } }
+            : c.url === `${G}/PAGE_3`
+              ? { json: {} }
+              : { json: { id: "https://t/x" } },
+    );
+    const p = metaProvider(cfg, http, noWait);
+    expect(await p.refreshLink("https://t/x", "https://t/social/1/link.jpg")).toBe(true);
+    const urls = calls.map((c) => c.url);
+    const scrape = calls.findIndex(
+      (c) => c.url === `${G}/` && c.body.scrape === "true" && c.body.id === "https://t/x",
+    );
+    expect(urls.indexOf("https://t/x")).toBeLessThan(scrape);
+    expect(urls.indexOf("https://t/social/1/link.jpg")).toBeLessThan(scrape);
+    expect(await p.linkPreview("PAGE_1")).toEqual({ image: true });
+    expect(await p.linkPreview("PAGE_2")).toEqual({ image: false });
+    expect(await p.linkPreview("PAGE_3")).toBeNull();
+    const down = fakeFetch(() => ({ status: 500, json: { error: { message: "down", code: 2 } } }));
+    expect(await metaProvider(cfg, down.http, noWait).refreshLink("https://t/x")).toBe(false);
+    expect(await metaProvider(cfg, down.http, noWait).linkPreview("PAGE_1")).toBeNull();
+  });
+
   it("a link post first draws its picture and has Facebook read the link, so the preview has the picture", async () => {
     const { http, calls } = fakeFetch((c) =>
       c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : { json: { id: "PAGE_l2" } },

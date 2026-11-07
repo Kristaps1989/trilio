@@ -15,6 +15,7 @@ import {
   removePost,
   skipPost,
   updateSocialSettings,
+  refreshPreviews,
 } from "@/services/social/posts";
 import { adminOrNull, type Admin } from "../guard";
 
@@ -110,6 +111,17 @@ export async function removeAction(form: FormData) {
   const ok = await removePost(db, deps(), p.data!.id);
   await log(a, "social_remove", p.data!.id, { ok });
   back(ok ? { ok: "removed" } : { err: "failed" });
+}
+
+/** Facebook reads the link of one published link post (or all of the last 30 days) again, picture included. */
+export async function refreshPreviewAction(form: FormData) {
+  const a = await admin();
+  const raw = form.get("id");
+  const p = raw ? Id.safeParse({ id: raw }) : null;
+  if (p && !p.success) back({ err: "invalid" });
+  const r = await refreshPreviews(db, deps(), p?.data?.id);
+  await log(a, "social_refresh_preview", p?.data?.id ?? "all", r);
+  back(r.asked > 0 && r.ok === r.asked ? { ok: "refreshed" } : { err: "failed" });
 }
 
 const Reel = z.object({

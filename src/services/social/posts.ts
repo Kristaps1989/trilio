@@ -35,6 +35,7 @@ import {
   topProductsFacts,
 } from "./facts";
 import type { Network, PublishResult, SocialProvider } from "./provider";
+import { linkImagePath } from "./share";
 
 // Drafting, approving and publishing posts (docs/SOCIAL_PLAN.md §7). A post
 // is drafted from live data a day ahead; right before it goes out its prices
@@ -386,8 +387,18 @@ export function withoutLink(caption: string, link: string): string {
     .trim();
 }
 
-/** The link preview picture of a post (1200 × 630), named in the landing page's Open Graph tags. */
-export const linkImageUrl = (baseUrl: string, id: string) => `${baseUrl}/api/social/${id}/link.jpg`;
+/** The link preview picture's full address (the path: share.ts). */
+export const linkImageUrl = (baseUrl: string, id: string) => `${baseUrl}${linkImagePath(id)}`;
+
+/** A post that goes to the page as a link post: one picture, no video. */
+export function isLinkPost(post: SocialPost): boolean {
+  const slides = (post.card as unknown as PostCard).slides?.length ?? 0;
+  return !post.videoUrl && slides <= 1;
+}
+
+/** The address a Facebook link post opens, with the tags that name its own preview. */
+export const facebookLink = (baseUrl: string, post: SocialPost) =>
+  utmLink(baseUrl, sitePath(post), "facebook", post.kind, post.id);
 
 /** The square picture of a slide, for a Facebook link carousel card (1:1). */
 export const squareUrl = (baseUrl: string, id: string, n: number) =>
@@ -436,14 +447,14 @@ export async function publishPost(
   const card = post.card as unknown as PostCard;
   const slides = card.slides?.length ?? 0;
   const alts = card.slides?.map(slideAlt) ?? [];
-  const fbLink = utmLink(deps.baseUrl, sitePath(post), "facebook", post.kind, post.id);
+  const fbLink = facebookLink(deps.baseUrl, post);
   const send = async (n: Network, caption: string): Promise<PublishResult> => {
-    if (n === "facebook" && !post.videoUrl && slides <= 1) {
+    if (n === "facebook" && isLinkPost(post)) {
       // A link post brings people to the site; its preview is this post's own picture (Open Graph).
       const r = await provider.publishLink(
         fbLink,
         withoutLink(caption, fbLink),
-        `${deps.baseUrl}/api/social/${post.id}/link.jpg`,
+        linkImageUrl(deps.baseUrl, post.id),
       );
       if (r.ok || TOKEN_ERROR.test(r.error)) return r;
     }
@@ -593,6 +604,65 @@ export async function removePost(db: Db, deps: SocialDeps, id: string): Promise<
   return fb && ig;
 }
 
+/** Published Facebook link posts of the last 30 days: the ones whose preview Facebook drew. */
+async function publishedLinkPosts(db: Db, now: Date, id?: string): Promise<SocialPost[]> {
+  const since = new Date(now.getTime() - 30 * 86_400_000);
+  const rows = await db
+    .select()
+    .from(socialPosts)
+    .where(
+      and(
+        eq(socialPosts.status, "published"),
+        isNotNull(socialPosts.fbPostId),
+        gte(socialPosts.publishedAt, since),
+        ...(id ? [eq(socialPosts.id, id)] : []),
+      ),
+    );
+  return rows.filter(isLinkPost);
+}
+
+/**
+ * Has Facebook read a link post's page again (Open Graph, picture included),
+ * so a preview drawn without its picture gets it. One post, or every published
+ * link post of the last 30 days. Returns how many refreshes Facebook accepted.
+ */
+export async function refreshPreviews(
+  db: Db,
+  deps: SocialDeps,
+  id?: string,
+  now = new Date(),
+): Promise<{ asked: number; ok: number }> {
+  const provider = deps.provider;
+  if (!provider) return { asked: 0, ok: 0 };
+  const posts = await publishedLinkPosts(db, now, id);
+  let ok = 0;
+  for (const p of posts)
+    if (await provider.refreshLink(facebookLink(deps.baseUrl, p), linkImageUrl(deps.baseUrl, p.id))) ok++;
+  return { asked: posts.length, ok };
+}
+
+/**
+ * The daily check of published link posts: a preview without its picture is
+ * refreshed at once and marked, so the admin sees it; a later check that finds
+ * the picture clears the mark. Returns how many posts are missing a picture.
+ */
+export async function checkPreviews(db: Db, deps: SocialDeps, now = new Date()): Promise<number> {
+  const provider = deps.provider;
+  if (!provider) return 0;
+  let missing = 0;
+  for (const p of await publishedLinkPosts(db, now)) {
+    const preview = await provider.linkPreview(p.fbPostId!);
+    if (!preview) continue;
+    if (!preview.image) {
+      missing++;
+      await provider.refreshLink(facebookLink(deps.baseUrl, p), linkImageUrl(deps.baseUrl, p.id));
+    }
+    if (preview.image === p.previewMissing)
+      await db.update(socialPosts).set({ previewMissing: !preview.image }).where(eq(socialPosts.id, p.id));
+  }
+  return missing;
+}
+
 /** Reach and reactions for the last two weeks' posts, once a Riga day after 09:00. */
 export async function syncInsights(
   db: Db,
@@ -633,6 +703,7 @@ export async function syncInsights(
       n++;
     }
   }
+  await checkPreviews(db, deps, now).catch((err) => console.error("social: preview check failed", err));
   await setFlag(db, KEYS.insightsDay, day);
   return n;
 }

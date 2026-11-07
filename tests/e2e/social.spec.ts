@@ -77,15 +77,47 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   // Facebook gets a link post: the landing page's Open Graph names this post's own preview picture.
   const base = info.project.use.baseURL ?? "http://localhost:3000";
   const link = /https?:\/\/\S*utm_source=facebook\S*/.exec(fb)![0];
-  const landing = await anon.request.get(`${base}${new URL(link).pathname}${new URL(link).search}`);
+  // As Facebook's crawler reads it (7 Nov 2026: a picture under /api/ was refused by robots.txt).
+  const crawler = await page.context().browser()!.newContext({
+    userAgent: "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+  });
+  const landing = await crawler.request.get(`${base}${new URL(link).pathname}${new URL(link).search}`);
+  expect(landing.status()).toBe(200);
   const html = await landing.text();
-  expect(html).toMatch(new RegExp(`<meta property="og:image" content="[^"]*/api/social/${id}/link\\.jpg"`));
-  const preview = await anon.request.get(`${base}/api/social/${id}/link.jpg`);
+  const og = new RegExp(`<meta property="og:image" content="([^"]*/social/${id}/link\\.jpg)"`).exec(html);
+  expect(og?.[1]).not.toContain("/api/");
+  const preview = await crawler.request.get(og![1]!.replace(/^https?:\/\/[^/]+/, base));
+  expect(preview.status()).toBe(200);
   expect(preview.headers()["content-type"]).toBe("image/jpeg");
+  // The old address still answers, for previews cached with it.
+  const old = await crawler.request.get(`${base}/api/social/${id}/link.jpg`);
+  expect(old.status(), await old.text().catch(() => "")).toBe(200);
+  expect(old.headers()["content-type"]).toBe("image/jpeg");
+  // robots.txt lets the crawler have the picture and keeps the rest of /api/ closed.
+  const robots = await (await crawler.request.get(`${base}/robots.txt`)).text();
+  const group = robots.split(/\n\s*\n/).find((g) => /User-Agent: facebookexternalhit/i.test(g))!;
+  expect(group).toContain("Allow: /api/social/");
+  expect(group).toContain("Disallow: /api/");
+  expect(group).not.toMatch(/Disallow: \/social/);
+  await crawler.close();
   await anon.close();
 
-  const history = page.getByRole("group", { name: "Publicētie" });
-  const row = history.getByRole("row").filter({ hasText: "Facebook, Instagram" }).first();
+  // The owner can have Facebook read a post's link again (picture included).
+  await page.reload();
+  await page
+    .locator(`[data-refresh-preview="${id}"]`)
+    .getByRole("button", { name: "Atjaunot priekšskatījumu" })
+    .click();
+  await expect(page.locator("[data-outcome]")).toHaveText(
+    "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā.",
+  );
+  await page.getByRole("button", { name: "Atjaunot Facebook priekšskatījumus" }).click();
+  await expect(page.locator("[data-outcome]")).toHaveText(
+    "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā.",
+  );
+
+  // This project's own post: both projects publish in parallel.
+  const row = page.locator(`[data-remove-post="${id}"]`);
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: "Dzēst no tīkliem" }).click();
   await expect(page.locator("[data-outcome]")).toHaveText("Dzēsts no tīkliem.");

@@ -12,7 +12,7 @@ import {
 } from "@/db/schema";
 import { leaks } from "@/domain/social/anonymise";
 import { FIRST_CATEGORIES, rigaTime } from "@/domain/social/schedule";
-import { mockPosts, mockSocialProvider } from "./mock";
+import { mockPosts, mockRefreshed, mockSocialProvider } from "./mock";
 import { sharePreview } from "./share";
 import {
   approvePost,
@@ -24,7 +24,9 @@ import {
   factsFor,
   publishDue,
   refresh,
+  refreshPreviews,
   removePost,
+  checkPreviews,
   socialSettings,
   syncInsights,
   updateSocialSettings,
@@ -135,10 +137,31 @@ run("social posts", () => {
     expect(sent.find((m) => m.network === "instagram")!.caption).toContain("Saite profilā.");
     // The landing page names this post's own picture and words for the preview.
     const preview = await sharePreview(db, { utm_source: "facebook", utm_content: id });
-    expect(preview).toMatchObject({ image: { url: `/api/social/${id}/link.jpg`, width: 1200, height: 630 } });
+    expect(preview).toMatchObject({ image: { url: `/social/${id}/link.jpg`, width: 1200, height: 630 } });
     expect(preview!.title.length).toBeGreaterThan(5);
     expect(await sharePreview(db, { utm_source: "instagram", utm_content: id })).toBeNull();
     expect(await sharePreview(db, { utm_source: "facebook", utm_content: "nav-id" })).toBeNull();
+
+    // A preview Facebook drew without its picture: the daily check refreshes it and marks the post;
+    // the next check, finding the picture, clears the mark. The admin's refresh asks for every link post.
+    mockRefreshed().length = 0;
+    await db
+      .update(socialPosts)
+      .set({ fbPostId: `${p!.fbPostId}noimg` })
+      .where(eq(socialPosts.id, id));
+    const day = rigaTime("2031-01-11", 10);
+    expect(await checkPreviews(db, deps, day)).toBe(1);
+    expect(mockRefreshed()).toEqual([fbLink]);
+    expect((await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!.previewMissing).toBe(true);
+    expect(await checkPreviews(db, deps, day)).toBe(0);
+    expect((await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!.previewMissing).toBe(
+      false,
+    );
+    expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 1, ok: 1 });
+    expect(await refreshPreviews(db, deps, undefined, day)).toMatchObject({ asked: 1, ok: 1 });
+    // Older than 30 days: no longer checked or refreshed.
+    expect(await refreshPreviews(db, deps, id, rigaTime("2031-03-01", 10))).toEqual({ asked: 0, ok: 0 });
+    await db.update(socialPosts).set({ fbPostId: p!.fbPostId }).where(eq(socialPosts.id, id));
 
     // Numbers once a day; deleting removes it from both networks.
     expect(await syncInsights(db, deps, rigaTime("2031-01-11", 10), true)).toBe(2);

@@ -2472,7 +2472,11 @@
       "err_invalid": "Pārbaudi laukus.",
       "err_failed": "Neizdevās. Kļūda ir redzama pie ieraksta.",
       "rules": "Noteikumi: tikai dati no Trilio datubāzes, nekādu pircēju personas datu, bez „tu” un „labākais”; „bez maksas” tikai pakalpojumam.",
-      "slideAlt": "Karuseļa {n}. attēls"
+      "slideAlt": "Karuseļa {n}. attēls",
+      "refreshPreview": "Atjaunot priekšskatījumu",
+      "refreshAll": "Atjaunot Facebook priekšskatījumus",
+      "previewMissing": "Facebook bez attēla",
+      "ok_refreshed": "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā."
     }
   },
   "alertsUnsubscribe": {
