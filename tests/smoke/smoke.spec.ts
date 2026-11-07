@@ -93,7 +93,14 @@ test("guided flow: home → category → every question → results → shop", a
   }
   const href = await buy.getAttribute("href");
   expect(href).toMatch(/^\/go\/[0-9a-f-]{36}/);
-  const res = await page.request.get(href!, { maxRedirects: 0 });
+  // Without an answer from the last day, the card's link asks the question first
+  // (docs/CLICK_QUALITY_PLAN.md §2); "Uz {Shop}" (from=ask) then goes to the shop.
+  const ask = await page.request.get(href!, { maxRedirects: 0 });
+  expect(ask.status()).toBe(302);
+  expect(new URL(ask.headers()["location"]!, page.url()).pathname).toMatch(
+    /^\/pirms-veikala\/[0-9a-f-]{36}$/,
+  );
+  const res = await page.request.get(href!.replace(/from=\w+/, "from=ask"), { maxRedirects: 0 });
   expect(res.status()).toBe(302);
   const target = new URL(res.headers()["location"]!);
   expect(target.protocol).toBe("https:");
