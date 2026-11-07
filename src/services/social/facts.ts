@@ -8,7 +8,8 @@ import { cleanName } from "@/domain/catalog/naming";
 import { decodeState } from "@/domain/flow/state";
 import { knowledgeOf } from "@/domain/knowledge/knowledge";
 import { catalog, getSubcategory } from "@/domain/questions/catalog";
-import { rank } from "@/domain/ranking/rank";
+import { bestOffer, eligibleOffers } from "@/domain/ranking/filters";
+import { MAINSTREAM_PERCENTILE, priceCeilingCents, rank, TYPICAL_PERCENTILE } from "@/domain/ranking/rank";
 import { offerStory } from "@/domain/social/anonymise";
 import { composePost, type PostFacts } from "@/domain/social/captions";
 import {
@@ -56,13 +57,31 @@ export async function categoriesByTraffic(db: Db, now: Date): Promise<{ id: stri
     .sort((a, b) => b.views - a.views);
 }
 
-/** Type A: the three picks for a category with its default answers, at today's prices. */
+/**
+ * Type A: three picks for a category with its default answers, at today's
+ * prices, for a typical buyer: only offers seen in the last day are ranked
+ * (a stale shop is left out before ranking, not after, so the three are the
+ * best of what is current), and the picks stay under the category's median
+ * price, or under the usual range (75th percentile) when fewer than three fit
+ * the median. A post speaks to most people, not to the premium end.
+ */
 export async function picksFacts(db: Db, subcategoryId: string, now: Date): Promise<PostFacts | null> {
   const sub = getSubcategory(subcategoryId);
   if (!sub) return null;
-  const products = await loadCandidates(db, subcategoryId);
-  const r = rank(rankInputFromState(products, sub, decodeState(sub, null)));
-  const picks = r.picks.filter((p) => fresh(p.offer.lastSeenAt, now)).slice(0, 3);
+  const products = (await loadCandidates(db, subcategoryId))
+    .map((p) => ({ ...p, offers: p.offers.filter((o) => fresh(o.lastSeenAt, now)) }))
+    .filter((p) => p.offers.length > 0);
+  const prices = products.flatMap((p) => {
+    const best = bestOffer(eligibleOffers(p, "new", "two_weeks"));
+    return best ? [best.priceCents] : [];
+  });
+  const input = rankInputFromState(products, sub, decodeState(sub, null));
+  let picks: ReturnType<typeof rank>["picks"] = [];
+  for (const percentile of [TYPICAL_PERCENTILE, MAINSTREAM_PERCENTILE]) {
+    picks = rank({ ...input, budget: priceCeilingCents(prices, percentile) ?? input.budget }).picks;
+    if (picks.length >= 3) break;
+  }
+  picks = picks.slice(0, 3);
   if (picks.length < 2) return null;
   return {
     kind: "picks",

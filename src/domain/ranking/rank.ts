@@ -221,9 +221,21 @@ export function pickThree(candidates: Candidate[]): Candidate[] {
 export const MAINSTREAM_PERCENTILE = 0.75;
 
 export function mainstreamCeilingCents(prices: number[]): number | null {
+  return priceCeilingCents(prices, MAINSTREAM_PERCENTILE);
+}
+
+/**
+ * What a typical buyer pays: the median price. Social posts ("3 ieteikumi")
+ * pick under it, so they speak to most people, not to the premium end
+ * (owner, 7 Nov 2026: a post with three fridges from 1 299 € to 2 759 €).
+ */
+export const TYPICAL_PERCENTILE = 0.5;
+
+/** A percentile of the prices, rounded up to whole euros; null with fewer than 6 prices. */
+export function priceCeilingCents(prices: number[], percentile: number): number | null {
   if (prices.length < 6) return null;
   const sorted = [...prices].sort((a, b) => a - b);
-  const at = sorted[Math.ceil(sorted.length * MAINSTREAM_PERCENTILE) - 1]!;
+  const at = sorted[Math.max(0, Math.ceil(sorted.length * percentile) - 1)]!;
   return Math.ceil(at / 100) * 100;
 }
 

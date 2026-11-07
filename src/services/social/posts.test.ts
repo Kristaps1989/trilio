@@ -33,6 +33,7 @@ import {
   type SocialDeps,
 } from "./posts";
 import { categoryLabel, picksFacts } from "./facts";
+import { MAINSTREAM_PERCENTILE, priceCeilingCents } from "@/domain/ranking/rank";
 import { loadCandidates } from "@/db/queries/catalog";
 
 // Posts against Postgres with the mock Meta (docs/SOCIAL_PLAN.md §7). The
@@ -282,6 +283,13 @@ run("social posts", () => {
       if (picks) break;
     }
     if (!picks) return; // seeded feed older than a day: covered in CI, where the seed is fresh
+    // For a typical buyer: no pick above the category's 75th percentile of current prices.
+    if (picks.kind !== "picks") throw new Error("not a picks post");
+    const current = (await loadCandidates(db, picks.subcategoryId))
+      .flatMap((p) => p.offers.filter((o) => now.getTime() - (o.lastSeenAt?.getTime() ?? 0) < 86_400_000))
+      .map((o) => o.priceCents);
+    const p75 = priceCeilingCents(current, MAINSTREAM_PERCENTILE);
+    if (p75 !== null) for (const p of picks.picks) expect(p.priceCents).toBeLessThanOrEqual(p75);
     const slot = new Date(now.getTime() + 3600_000);
     const made = await createPost(db, deps, {
       facts: picks,
