@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { formatDateShort, formatInt, formatNumber } from "@/i18n/format";
+import { parseTvRange, rangeDays, TV_RANGES } from "@/domain/admin/stats";
 import { tvReport, tvStats } from "@/services/growth/tv";
 import { PrintButton } from "@/ui/PrintButton";
 import { requireAdmin } from "../../../../guard";
@@ -17,18 +18,28 @@ import { Profile } from "../../Profile";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "TV kampaņas pārskats" };
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+};
+
+/** The report's periods: the whole campaign by default (a case study), or today, 7 or 30 days. */
+const REPORT_RANGES = ["all", ...TV_RANGES] as const;
 
 const fmtDay = (day: string) => formatDateShort(new Date(`${day}T12:00:00+02:00`));
 
-export default async function TvCaseStudy({ params }: Props) {
+export default async function TvCaseStudy({ params, searchParams }: Props) {
   const { slug } = await params;
+  const raw = (await searchParams).periods;
+  const period = raw && (TV_RANGES as readonly string[]).includes(raw) ? parseTvRange(raw) : "all";
+  const span = period === "all" ? null : rangeDays(period, new Date());
   await requireAdmin(`/admin/reklama/tv/${slug}/parskats`);
   const t = await getTranslations("admin.ads.tvReport");
   const tt = await getTranslations("admin.ads.tv");
-  const report = await tvReport(db, slug);
+  const range = span ? { from: span.from, to: span.to } : undefined;
+  const report = await tvReport(db, slug, new Date(), range);
   if (!report) notFound();
-  const stats = (await tvStats(db)).find((c) => c.campaign.slug === slug);
+  const stats = (await tvStats(db, range)).find((c) => c.campaign.slug === slug);
   const s = report.summary;
   const base = report.baseline;
   const hasBase = !!base && base.days > 0;
@@ -64,7 +75,21 @@ export default async function TvCaseStudy({ params }: Props) {
           <h1 className="font-heading text-2xl font-bold">{t("title", { name: report.campaign.name })}</h1>
           <p className="text-sm text-muted">{t("sub")}</p>
         </div>
-        <div className="flex gap-2 print:hidden">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <nav aria-label={tt("period")} className="flex flex-wrap gap-1.5" data-report-period={period}>
+            {REPORT_RANGES.map((k) => (
+              <Link
+                key={k}
+                href={`/admin/reklama/tv/${slug}/parskats${k === "all" ? "" : `?periods=${k}`}`}
+                aria-current={k === period ? "page" : undefined}
+                className={`inline-flex min-h-11 items-center rounded-full border-[1.5px] px-3 text-sm font-semibold ${
+                  k === period ? "border-night bg-night text-white" : "border-[#DCE4E1] text-night"
+                }`}
+              >
+                {tt(`range.${k}`)}
+              </Link>
+            ))}
+          </nav>
           <Link
             href="/admin/reklama/tv"
             className="inline-flex min-h-11 items-center px-2 text-[15px] underline"
@@ -79,6 +104,7 @@ export default async function TvCaseStudy({ params }: Props) {
         <h2 id="cs-facts" className="font-heading text-lg font-semibold">
           {t("facts")}
         </h2>
+        {span ? row(t("period"), `${fmtDay(span.from)} – ${fmtDay(span.to)}`) : null}
         {row(t("firstDay"), first ? fmtDay(first) : "—")}
         {row(t("lastDay"), last ? fmtDay(last) : "—")}
         {row(t("daysWithTv"), formatInt(days.length))}

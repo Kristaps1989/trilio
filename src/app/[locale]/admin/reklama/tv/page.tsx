@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { pixelUrl, shortLinkUrl } from "@/domain/growth/tv";
+import { parseTvRange, rangeDays, TV_RANGES } from "@/domain/admin/stats";
 import { formatInt } from "@/i18n/format";
 import { tvReport, tvStats } from "@/services/growth/tv";
 import { appBaseUrl } from "@/services/payments";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
-import { AdminTitle, inputClass, labelClass, Section, Stat, Stats, Table } from "../../ui";
+import { AdminTitle, FilterLinks, inputClass, labelClass, Section, Stat, Stats, Table } from "../../ui";
 import { createTvCampaignAction, deleteTvCampaignAction } from "../actions";
 import { AdsNav, Outcome } from "../shared";
 import { EffectDays, EffectSummary, ReportLink } from "./Effect";
@@ -26,10 +27,15 @@ export default async function AdsTv({ searchParams }: Props) {
   const t = await getTranslations("admin.ads.tv");
   const sp = await searchParams;
   const base = appBaseUrl();
-  const campaigns = await tvStats(db);
+  const period = parseTvRange(sp.periods);
+  const r = rangeDays(period, new Date());
+  const range = { from: r.from, to: r.to };
+  const campaigns = await tvStats(db, range);
   const reports = new Map(
     await Promise.all(
-      campaigns.map(async (c) => [c.campaign.slug, await tvReport(db, c.campaign.slug)] as const),
+      campaigns.map(
+        async (c) => [c.campaign.slug, await tvReport(db, c.campaign.slug, new Date(), range)] as const,
+      ),
     ),
   );
   const err = sp.err ? (t.has(`err.${sp.err}`) ? t(`err.${sp.err}`) : sp.err) : null;
@@ -37,6 +43,17 @@ export default async function AdsTv({ searchParams }: Props) {
     <>
       <AdminTitle title={t("title")} sub={t("sub")} />
       <AdsNav active="tv" />
+      <div className="flex flex-wrap items-center gap-3" data-tv-period={period}>
+        <FilterLinks
+          label={t("period")}
+          items={TV_RANGES.map((k) => ({
+            href: `/admin/reklama/tv?periods=${k}`,
+            label: t(`range.${k}`),
+            active: k === period,
+          }))}
+        />
+        <span className="text-sm text-stone">{t("periodDays", { from: r.from, to: r.to })}</span>
+      </div>
       <Outcome ok={sp.ok ? t(sp.ok === "deleted" ? "deleted" : "created") : null} err={err} />
 
       <Section title={t("new")} id="tv-new">
@@ -119,7 +136,7 @@ export default async function AdsTv({ searchParams }: Props) {
             <Table
               caption={t("perDay")}
               head={[t("day"), t("impressions"), t("reachDay"), t("linkOpens")]}
-              empty={t("noData")}
+              empty={t("noDataPeriod")}
               rows={c.days
                 .slice(0, 30)
                 .map((d) => [d.day, formatInt(d.impressions), formatInt(d.reach), formatInt(d.linkOpens)])}

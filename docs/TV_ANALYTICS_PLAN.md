@@ -73,6 +73,7 @@ them, against the flat line of the weeks before.
   profile chart for the campaign so far, the per-day table extended with the
   figures of §1, and a link to the case-study page. The short link and pixel
   stay as they are.
+- **Period switch (owner, 7 Nov 2026):** the TV tab has Šodien / 7 dienas / 30 dienas (`?periods=today|7|30`, 7 days by default); impressions, reach, link openings, visits, shop clicks, the effect block, the 24-hour profile and the per-day tables all cover the chosen days. The report adds "Visa kampaņa" (its default, for the case study) and shows the period in its facts.
 - **Reklāma → TV → Pārskats** (`/admin/reklama/tv/<slug>/parskats`): the
   printable case-study page, white on print: campaign facts, the summary
   figures, impressions and uplift per day, the 24-hour profile, brand

@@ -82,6 +82,19 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
     })
     .toEqual(["4", "3", "1", "1"]);
 
+  // The period switch: 7 days by default, today and 30 days by a click; today's figures in each.
+  await expect(page.locator("[data-tv-period]")).toHaveAttribute("data-tv-period", "7");
+  for (const [label, key] of [
+    ["Šodien", "today"],
+    ["30 dienas", "30"],
+    ["7 dienas", "7"],
+  ] as const) {
+    await page.getByRole("link", { name: label, exact: true }).click();
+    await page.waitForURL((u) => u.searchParams.get("periods") === key);
+    await expect(page.locator("[data-tv-period]")).toHaveAttribute("data-tv-period", key);
+    await expect(page.locator(`[data-tv-campaign="${SLUG}"]`)).toHaveAttribute("data-tv-impressions", "4");
+  }
+
   // The effect (docs/TV_ANALYTICS_PLAN.md): the viewer's session started in the minutes after the
   // impressions, so it counts as "after TV"; today's row is computed live; the 24-hour profile is drawn.
   const effect = page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-effect]`);
@@ -98,6 +111,12 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
     "E2E Go3 ledusskapji: TV kampaņas pārskats",
   );
   await expect(study.getByRole("button", { name: "Drukāt vai saglabāt PDF" })).toBeVisible();
+  // The whole campaign by default; a period by a click.
+  await expect(page.locator("[data-report-period]")).toHaveAttribute("data-report-period", "all");
+  await page.locator("[data-report-period]").getByRole("link", { name: "7 dienas" }).click();
+  await page.waitForURL((u) => u.searchParams.get("periods") === "7");
+  await expect(page.locator("[data-report-period]")).toHaveAttribute("data-report-period", "7");
+  await expect(study.getByText("Periods", { exact: true })).toBeVisible();
   await expect(study.getByRole("heading", { name: "Metode" })).toBeVisible();
   await expect(study.locator("[data-tv-profile] svg")).toBeVisible();
   await expect(study.getByText("Apmeklējumi pēc TV").first()).toBeVisible();

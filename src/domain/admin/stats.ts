@@ -107,3 +107,11 @@ export function toCsv(columns: string[], rows: (string | number | null | undefin
   };
   return [columns, ...rows].map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
 }
+
+/** The TV tab's periods (owner, 7 Nov 2026): today, 7 days, 30 days; 7 days by default. */
+export const TV_RANGES = ["today", "7", "30"] as const satisfies readonly RangeKey[];
+export type TvRangeKey = (typeof TV_RANGES)[number];
+
+export function parseTvRange(raw: string | undefined): TvRangeKey {
+  return (TV_RANGES as readonly string[]).includes(raw ?? "") ? (raw as TvRangeKey) : "7";
+}
