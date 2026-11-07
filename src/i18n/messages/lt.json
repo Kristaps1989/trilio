@@ -2477,7 +2477,10 @@
       "refreshPreview": "Atjaunot priekšskatījumu",
       "refreshAll": "Atjaunot Facebook priekšskatījumus",
       "previewMissing": "Facebook bez attēla",
-      "ok_refreshed": "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā."
+      "ok_refreshed": "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā.",
+      "repost": "Publicēt Facebook vēlreiz",
+      "ok_refreshed_missing": "Facebook nolasīs saites vēlreiz. Dažiem ierakstiem attēla joprojām nav (atzīmēti „Facebook bez attēla”): karuselim attēlus Facebook vairs nenolasa, spied „Publicēt Facebook vēlreiz”.",
+      "ok_reposted": "Ieraksts Facebook publicēts vēlreiz ar attēliem; vecais ieraksts dzēsts."
     }
   },
   "alertsUnsubscribe": {

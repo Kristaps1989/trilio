@@ -402,7 +402,7 @@ export const facebookLink = (baseUrl: string, post: SocialPost) =>
 
 /** The square picture of a slide, for a Facebook link carousel card (1:1). */
 export const squareUrl = (baseUrl: string, id: string, n: number) =>
-  `${baseUrl}/api/social/${id}/${n}/square.jpg`;
+  `${baseUrl}/social/${id}/${n}/square.jpg`;
 
 /** The site page a post links to: its stored link without host and tags. */
 function sitePath(post: SocialPost): string {
@@ -604,8 +604,11 @@ export async function removePost(db: Db, deps: SocialDeps, id: string): Promise<
   return fb && ig;
 }
 
-/** Published Facebook link posts of the last 30 days: the ones whose preview Facebook drew. */
-async function publishedLinkPosts(db: Db, now: Date, id?: string): Promise<SocialPost[]> {
+/**
+ * Published Facebook posts of the last 30 days whose pictures Facebook fetched
+ * from the site: link posts (the preview) and link carousels (the cards). Videos are uploaded.
+ */
+async function publishedFacebookPosts(db: Db, now: Date, id?: string): Promise<SocialPost[]> {
   const since = new Date(now.getTime() - 30 * 86_400_000);
   const rows = await db
     .select()
@@ -618,7 +621,18 @@ async function publishedLinkPosts(db: Db, now: Date, id?: string): Promise<Socia
         ...(id ? [eq(socialPosts.id, id)] : []),
       ),
     );
-  return rows.filter(isLinkPost);
+  return rows.filter((p) => !p.videoUrl);
+}
+
+/** What Facebook reads for a post: the link and preview picture, or each carousel card's. */
+function facebookTargets(baseUrl: string, post: SocialPost): { link: string; picture: string }[] {
+  if (isLinkPost(post))
+    return [{ link: facebookLink(baseUrl, post), picture: linkImageUrl(baseUrl, post.id) }];
+  const slides = (post.card as unknown as PostCard).slides ?? [];
+  return slides.map((slide, i) => {
+    const c = carouselCard(baseUrl, post, slide, i);
+    return { link: c.link, picture: c.picture };
+  });
 }
 
 /**
@@ -634,10 +648,14 @@ export async function refreshPreviews(
 ): Promise<{ asked: number; ok: number }> {
   const provider = deps.provider;
   if (!provider) return { asked: 0, ok: 0 };
-  const posts = await publishedLinkPosts(db, now, id);
+  const posts = await publishedFacebookPosts(db, now, id);
   let ok = 0;
-  for (const p of posts)
-    if (await provider.refreshLink(facebookLink(deps.baseUrl, p), linkImageUrl(deps.baseUrl, p.id))) ok++;
+  for (const p of posts) {
+    let all = true;
+    for (const t of facebookTargets(deps.baseUrl, p))
+      if (!(await provider.refreshLink(t.link, t.picture))) all = false;
+    if (all) ok++;
+  }
   return { asked: posts.length, ok };
 }
 
@@ -650,17 +668,37 @@ export async function checkPreviews(db: Db, deps: SocialDeps, now = new Date()):
   const provider = deps.provider;
   if (!provider) return 0;
   let missing = 0;
-  for (const p of await publishedLinkPosts(db, now)) {
+  for (const p of await publishedFacebookPosts(db, now)) {
     const preview = await provider.linkPreview(p.fbPostId!);
     if (!preview) continue;
     if (!preview.image) {
       missing++;
-      await provider.refreshLink(facebookLink(deps.baseUrl, p), linkImageUrl(deps.baseUrl, p.id));
+      // A link post's preview follows a refresh; a carousel's cards do not (re-post it).
+      if (isLinkPost(p))
+        for (const t of facebookTargets(deps.baseUrl, p)) await provider.refreshLink(t.link, t.picture);
     }
     if (preview.image === p.previewMissing)
       await db.update(socialPosts).set({ previewMissing: !preview.image }).where(eq(socialPosts.id, p.id));
   }
   return missing;
+}
+
+/**
+ * Replaces a post on the page whose pictures Facebook left out: the old post is
+ * removed and the post goes out again (pictures drawn first). Instagram is not
+ * touched. False when the old post could not be removed (nothing is posted twice).
+ */
+export async function repostFacebook(db: Db, deps: SocialDeps, id: string): Promise<boolean> {
+  const [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+  if (!p || !p.fbPostId || p.status !== "published" || !deps.provider) return false;
+  if (!(await deps.provider.remove("facebook", p.fbPostId))) return false;
+  const [cleared] = await db
+    .update(socialPosts)
+    .set({ fbPostId: null, previewMissing: false })
+    .where(eq(socialPosts.id, id))
+    .returning();
+  const after = await publishPost(db, deps, cleared!);
+  return !!after.fbPostId;
 }
 
 /** Reach and reactions for the last two weeks' posts, once a Riga day after 09:00. */

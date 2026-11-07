@@ -16,6 +16,8 @@ import {
   skipPost,
   updateSocialSettings,
   refreshPreviews,
+  checkPreviews,
+  repostFacebook,
 } from "@/services/social/posts";
 import { adminOrNull, type Admin } from "../guard";
 
@@ -119,9 +121,23 @@ export async function refreshPreviewAction(form: FormData) {
   const raw = form.get("id");
   const p = raw ? Id.safeParse({ id: raw }) : null;
   if (p && !p.success) back({ err: "invalid" });
-  const r = await refreshPreviews(db, deps(), p?.data?.id);
-  await log(a, "social_refresh_preview", p?.data?.id ?? "all", r);
-  back(r.asked > 0 && r.ok === r.asked ? { ok: "refreshed" } : { err: "failed" });
+  const d = deps();
+  const r = await refreshPreviews(db, d, p?.data?.id);
+  // Which posts still have no picture on Facebook: they get the mark and the re-post button.
+  const missing = await checkPreviews(db, d).catch(() => 0);
+  await log(a, "social_refresh_preview", p?.data?.id ?? "all", { ...r, missing });
+  if (r.asked === 0 || r.ok < r.asked) back({ err: "failed" });
+  back(missing > 0 ? { ok: "refreshed_missing" } : { ok: "refreshed" });
+}
+
+/** Facebook left out a post's pictures: remove it there and post it again (Instagram stays). */
+export async function repostAction(form: FormData) {
+  const a = await admin();
+  const p = Id.safeParse({ id: form.get("id") });
+  if (!p.success) back({ err: "invalid" });
+  const ok = await repostFacebook(db, deps(), p.data!.id);
+  await log(a, "social_repost_facebook", p.data!.id, { ok });
+  back(ok ? { ok: "reposted" } : { err: "failed" });
 }
 
 const Reel = z.object({
