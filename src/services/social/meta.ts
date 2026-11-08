@@ -23,6 +23,9 @@ export function metaConfigFromEnv(env: Record<string, string | undefined> = proc
 type Fetch = typeof fetch;
 type Json = Record<string, unknown>;
 
+/** A link post Facebook drew without its picture: removed, and posted as a photo instead. */
+export const NO_PICTURE = "Facebook preview without its picture";
+
 export function metaProvider(
   cfg: MetaConfig,
   http: Fetch = fetch,
@@ -42,6 +45,34 @@ export function metaProvider(
     );
   };
   let pageToken: string | null = null;
+
+  /**
+   * Has Facebook read a link now (its Open Graph tags and picture) and says
+   * whether it got a picture: the `image` of the URL object it returns. Null
+   * when the scrape itself failed (the post may still go out).
+   */
+  async function scrape(link: string, token: string): Promise<boolean | null> {
+    try {
+      const r = await call("POST", "", { id: link, scrape: "true" }, token);
+      const image = r.image;
+      return Array.isArray(image) && image.length > 0;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Whether a page post just made has its picture (every card's, for a
+   * carousel). Facebook attaches pictures as it reads them, so a first "no" is
+   * read once more after a moment. Null when it cannot be read.
+   */
+  async function previewHasPicture(postId: string, read: (id: string) => Promise<{ image: boolean } | null>) {
+    const first = await read(postId);
+    if (first === null || first.image) return first?.image ?? null;
+    await wait(5_000);
+    const second = await read(postId);
+    return second === null ? false : second.image;
+  }
 
   async function call(
     method: "GET" | "POST" | "DELETE",
@@ -133,6 +164,26 @@ export function metaProvider(
     }
   }
 
+  async function linkPreview(postId: string): Promise<{ image: boolean } | null> {
+    try {
+      type Media = { media?: { image?: { src?: string } }; type?: string };
+      const r = (await call(
+        "GET",
+        postId,
+        { fields: "attachments{media,type,subattachments{media,type}}" },
+        await page(),
+      )) as { attachments?: { data?: (Media & { subattachments?: { data?: Media[] } })[] } };
+      const a = r.attachments?.data?.[0];
+      if (!a) return null;
+      // A link carousel: every card must have its picture.
+      const cards = a.subattachments?.data ?? [];
+      if (cards.length) return { image: cards.every((c) => !!c.media?.image?.src) };
+      return { image: !!a.media?.image?.src };
+    } catch {
+      return null;
+    }
+  }
+
   return {
     name: "meta",
     async publishImage(network: Network, imageUrl: string, caption: string, alt?: string) {
@@ -176,7 +227,12 @@ export function metaProvider(
           // The order is ours (not "optimized"), and no extra end card is added. Facebook fetches
           // every card's picture once, when the post is made, and leaves out one that is slow:
           // all pictures are drawn first.
-          await warm(images.map((i) => i.card!.picture));
+          // Every card's picture and share page are drawn first, then Facebook reads each
+          // card's link (its Open Graph names the picture), so its cache holds the pictures
+          // before the post is made (docs/SOCIAL_PLAN.md §12, 8 Nov 2026).
+          await warm(images.flatMap((i) => [i.card!.picture, i.card!.link]));
+          for (const { card } of images) await scrape(card!.link, token);
+          let posted: string | null = null;
           try {
             const r = await call(
               "POST",
@@ -197,11 +253,19 @@ export function metaProvider(
               },
               token,
             );
-            return { ok: true, id: String(r.id) };
+            posted = String(r.id);
           } catch (err) {
             // A token or page problem fails the same way below; anything else
             // (the format refused) still posts the slides, without links.
             if (err instanceof Error && /\b(190|200|10)\b|#(190|200|10)\b/.test(err.message)) throw err;
+          }
+          if (posted) {
+            // The post is read back: a carousel Facebook drew without its pictures (the grey
+            // boxes) is removed at once and the slides go out as photos instead, so no grey
+            // post is ever left on the page. A preview that cannot be read is kept.
+            const pictures = await previewHasPicture(posted, linkPreview);
+            if (pictures !== false) return { ok: true, id: posted };
+            await call("DELETE", posted, {}, token).catch(() => undefined);
           }
         }
         // The page: each photo uploaded unpublished, then one feed post with all of them.
@@ -226,25 +290,7 @@ export function metaProvider(
         return false;
       }
     },
-    async linkPreview(postId: string) {
-      try {
-        type Media = { media?: { image?: { src?: string } }; type?: string };
-        const r = (await call(
-          "GET",
-          postId,
-          { fields: "attachments{media,type,subattachments{media,type}}" },
-          await page(),
-        )) as { attachments?: { data?: (Media & { subattachments?: { data?: Media[] } })[] } };
-        const a = r.attachments?.data?.[0];
-        if (!a) return null;
-        // A link carousel: every card must have its picture.
-        const cards = a.subattachments?.data ?? [];
-        if (cards.length) return { image: cards.every((c) => !!c.media?.image?.src) };
-        return { image: !!a.media?.image?.src };
-      } catch {
-        return null;
-      }
-    },
+    linkPreview,
     async publishLink(link: string, caption: string, preview?: string) {
       try {
         const token = await page();
@@ -254,9 +300,16 @@ export function metaProvider(
         // Facebook reads the link's preview (title, picture) when the post is made, and a slow
         // picture is left out for good. Asking it to read the link first fills its cache with
         // the picture, so the post has it. Best effort: the post goes out either way.
-        await call("POST", "", { id: link, scrape: "true" }, token).catch(() => undefined);
+        await scrape(link, token);
         const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, link }, token);
-        return { ok: true, id: String(r.id) };
+        const id = String(r.id);
+        // Read back: a preview without its picture is removed, and the caller posts a photo instead.
+        const picture = await previewHasPicture(id, linkPreview);
+        if (picture === false) {
+          await call("DELETE", id, {}, token).catch(() => undefined);
+          return { ok: false, error: NO_PICTURE };
+        }
+        return { ok: true, id };
       } catch (err) {
         return fail(err);
       }

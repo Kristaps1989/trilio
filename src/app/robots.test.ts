@@ -38,6 +38,8 @@ describe("robots.txt", () => {
     ]) {
       expect(allowed(agent, "/izvelies/cool/fridge"), agent).toBe(true);
       expect(allowed(agent, `/social/${ID}/link.jpg`), agent).toBe(true);
+      expect(allowed(agent, `/social/${ID}/2`), agent).toBe(true);
+      expect(allowed(agent, `/social/${ID}/2/square.jpg`), agent).toBe(true);
       expect(allowed(agent, `/api/social/${ID}/link.jpg`), agent).toBe(true);
       expect(allowed(agent, `/api/social/${ID}/1/image.jpg`), agent).toBe(true);
     }
