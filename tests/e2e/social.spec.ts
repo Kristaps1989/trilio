@@ -89,6 +89,28 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   const preview = await crawler.request.get(og![1]!.replace(/^https?:\/\/[^/]+/, base));
   expect(preview.status()).toBe(200);
   expect(preview.headers()["content-type"]).toBe("image/jpeg");
+  // A carousel card's share page (8 Nov 2026): what Facebook reads for the card names the card's
+  // square picture with its size, is never indexed, and sends a person on to the slide's page.
+  const share = await crawler.request.get(`${base}/social/${id}/1`);
+  expect(share.status()).toBe(200);
+  expect(share.headers()["content-type"]).toContain("text/html");
+  expect(share.headers()["x-robots-tag"]).toContain("noindex");
+  const shareHtml = await share.text();
+  expect(shareHtml).toContain(`<meta property="og:image" content="${base}/social/${id}/1/square.jpg">`);
+  expect(shareHtml).toContain('<meta property="og:image:width" content="1080">');
+  expect(shareHtml).toContain('<meta name="robots" content="noindex, nofollow">');
+  expect(shareHtml).toMatch(
+    new RegExp(
+      `href="${base}/[^"]*utm_source=facebook&amp;utm_medium=social&amp;utm_campaign=advice&amp;utm_content=${id}-1"`,
+    ),
+  );
+  const square = await crawler.request.get(`${base}/social/${id}/1/square.jpg`);
+  expect(square.status()).toBe(200);
+  expect(square.headers()["content-type"]).toBe("image/jpeg");
+  // An unknown post's share page is a 404, not a page.
+  expect((await crawler.request.get(`${base}/social/00000000-0000-4000-8000-000000000000/1`)).status()).toBe(
+    404,
+  );
   // The old address still answers, for previews cached with it.
   const old = await crawler.request.get(`${base}/api/social/${id}/link.jpg`);
   expect(old.status(), await old.text().catch(() => "")).toBe(200);

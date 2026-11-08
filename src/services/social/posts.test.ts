@@ -378,12 +378,9 @@ run("social posts", () => {
       ]);
     // Facebook: a link carousel, every card tagged with its own position; Instagram has no links.
     const fb = media.find((m) => m.network === "facebook")!;
-    expect(fb.links).toEqual(
-      [1, 2, 3, 4].map(
-        (n) =>
-          `${BASE}/izvelies/kitchen/dish?utm_source=facebook&utm_medium=social&utm_campaign=picks&utm_content=${id}-${n}`,
-      ),
-    );
+    // Each card links its own share page, whose Open Graph names the card's picture; the page
+    // sends a person on to the slide's page with the card's tags.
+    expect(fb.links).toEqual([1, 2, 3, 4].map((n) => `${BASE}/social/${id}/${n}`));
     expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
 
     // Its cards: a refresh asks Facebook to read each card's link with its square picture
@@ -437,10 +434,11 @@ run("social posts", () => {
       1,
     );
     expect(c).toEqual({
-      link: `${BASE}/izvelies/cool/fridge?utm_source=facebook&utm_medium=social&utm_campaign=top_categories&utm_content=p-2`,
+      link: `${BASE}/social/p/2`,
       name: "Ledusskapji",
       description: "Cenas partneru veikalos no: 199 €",
       picture: `${BASE}/social/p/2/square.jpg`,
+      target: `${BASE}/izvelies/cool/fridge?utm_source=facebook&utm_medium=social&utm_campaign=top_categories&utm_content=p-2`,
     });
     const cover = carouselCard(
       BASE,
@@ -456,7 +454,8 @@ run("social posts", () => {
       0,
     );
     expect(cover.name).toBe("Ko Latvija meklēja šonedēļ.");
-    expect(cover.link).toContain(`${BASE}/?utm_source=facebook`);
+    expect(cover.link).toBe(`${BASE}/social/p/1`);
+    expect(cover.target).toContain(`${BASE}/?utm_source=facebook`);
   });
 
   it("refuses an edit that breaks the rules", async () => {

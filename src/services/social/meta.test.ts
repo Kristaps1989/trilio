@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { metaConfigFromEnv, metaProvider } from "./meta";
+import { metaConfigFromEnv, metaProvider, NO_PICTURE } from "./meta";
 import { socialProvider } from "./index";
 
 // The Graph API client against a fake fetch: the right endpoints, the page
@@ -201,6 +201,81 @@ describe("meta provider", () => {
     }
   });
 
+  it("a link carousel: every card's page is read by Facebook first; drawn without pictures, it is removed and the slides go out as photos", async () => {
+    // Facebook's read of the post: the cards' pictures missing the first two times, there afterwards.
+    const reads: string[][] = [[], [], ["a", "b"]];
+    const graph = (withPictures: boolean) =>
+      fakeFetch((c) => {
+        if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+        if (c.url === `${G}/` && c.body.scrape === "true")
+          return { json: { id: c.body.id, image: [{ url: "x" }] } };
+        if (c.url === `${G}/PAGE_lc`) {
+          const srcs = withPictures ? ["a", "b"] : (reads.shift() ?? []);
+          return {
+            json: {
+              attachments: {
+                data: [
+                  {
+                    type: "multi_share",
+                    subattachments: {
+                      data: [1, 2].map((n) =>
+                        srcs[n - 1] ? { media: { image: { src: srcs[n - 1] } } } : {},
+                      ),
+                    },
+                  },
+                ],
+              },
+            },
+          };
+        }
+        if (c.url === `${G}/PAGE/feed` && c.body.child_attachments) return { json: { id: "PAGE_lc" } };
+        return { json: { id: "p1" } };
+      });
+    const imgs = [1, 2].map((n) => ({
+      url: `https://t/${n}/image.jpg`,
+      card: { link: `https://t/social/p/${n}`, name: "K", picture: `https://t/${n}/square.jpg` },
+    }));
+    // With pictures: the link carousel stays; before it, each card's page and picture were fetched and scraped.
+    const good = graph(true);
+    expect(await metaProvider(cfg, good.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual({
+      ok: true,
+      id: "PAGE_lc",
+    });
+    const urls = good.calls.map((c) => c.url);
+    const feed = urls.indexOf(`${G}/PAGE/feed`);
+    for (const n of [1, 2]) {
+      expect(urls.indexOf(`https://t/${n}/square.jpg`)).toBeLessThan(feed);
+      expect(urls.indexOf(`https://t/social/p/${n}`)).toBeLessThan(feed);
+      const scraped = good.calls.findIndex(
+        (c) => c.url === `${G}/` && c.body.id === `https://t/social/p/${n}`,
+      );
+      expect(scraped).toBeGreaterThanOrEqual(0);
+      expect(scraped).toBeLessThan(feed);
+    }
+    expect(good.calls.filter((c) => c.method === "DELETE")).toHaveLength(0);
+    // Without pictures after a second read: removed, and the slides posted as photos.
+    const grey = graph(false);
+    expect(await metaProvider(cfg, grey.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual({
+      ok: true,
+      id: "p1",
+    });
+    expect(grey.calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_lc`]);
+    expect(grey.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(2);
+  });
+
+  it("a link post drawn without its picture is removed and reported, so the caller posts a photo", async () => {
+    const { http, calls } = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      if (c.url === `${G}/PAGE_l9`) return { json: { attachments: { data: [{ type: "share" }] } } };
+      return { json: { id: "PAGE_l9" } };
+    });
+    expect(await metaProvider(cfg, http, noWait).publishLink("https://t/x", "T", "https://t/p.jpg")).toEqual({
+      ok: false,
+      error: NO_PICTURE,
+    });
+    expect(calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_l9`]);
+  });
+
   it("when Meta refuses the link carousel the slides still go out as photos; a token error does not retry", async () => {
     const refused = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
@@ -241,8 +316,7 @@ describe("meta provider", () => {
       ok: true,
       id: "PAGE_l1",
     });
-    expect(calls.at(-1)).toMatchObject({
-      url: `${G}/PAGE/feed`,
+    expect(calls.find((c) => c.url === `${G}/PAGE/feed`)).toMatchObject({
       body: { message: "Teksts", link: "https://t/x", access_token: "PT" },
     });
     const bad = fakeFetch(() => ({ status: 400, json: { error: { message: "Bad link", code: 100 } } }));

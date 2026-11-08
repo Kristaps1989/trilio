@@ -415,23 +415,34 @@ function sitePath(post: SocialPost): string {
 
 const clip = (s: string, n: number) => (s.length <= n ? s : `${s.slice(0, n - 1).trimEnd()}…`);
 
-/** One card of a Facebook link carousel: the slide's square picture, a short headline, its own link. */
+/** The share page of one card, /social/{id}/{n}: what Facebook reads for the card (docs/SOCIAL_PLAN.md §12). */
+export const cardPagePath = (id: string, n: number) => `/social/${id}/${n}`;
+
+/**
+ * One card of a Facebook link carousel: the slide's square picture, a short
+ * headline, and its link. The link is the card's own share page, whose Open
+ * Graph tags name this picture, headline and line, and which sends a person
+ * on to `target`, the slide's page on the site with the card's tags. So the
+ * card has its picture whether Facebook takes `picture` as given or reads
+ * the link itself (owner, 8 Nov 2026: the grey carousels).
+ */
 export function carouselCard(
   baseUrl: string,
   post: SocialPost,
   slide: Omit<PostCard, "slides">,
   i: number,
-): { link: string; name: string; description?: string; picture: string } {
+): { link: string; name: string; description?: string; picture: string; target: string } {
   const name =
     slide.layout === "cover" || slide.layout === "closing" || slide.layout === "phone"
       ? [slide.headline, slide.headlineAccent].filter(Boolean).join(" ") || slide.title
       : slide.title;
   const description = slide.stat ? `${slide.stat.label}: ${slide.stat.value}` : slide.sub;
   return {
-    link: utmLink(baseUrl, slide.link ?? sitePath(post), "facebook", post.kind, `${post.id}-${i + 1}`),
+    link: `${baseUrl}${cardPagePath(post.id, i + 1)}`,
     name: clip(name, 60),
     ...(description ? { description: clip(description, 90) } : {}),
     picture: squareUrl(baseUrl, post.id, i + 1),
+    target: utmLink(baseUrl, slide.link ?? sitePath(post), "facebook", post.kind, `${post.id}-${i + 1}`),
   };
 }
 
