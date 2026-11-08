@@ -899,11 +899,15 @@
         },
         {
           "h": "Bērni",
-          "p": ["Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."]
+          "p": [
+            "Pakalpojums nav paredzēts bērniem līdz 13 gadu vecumam."
+          ]
         },
         {
           "h": "Izmaiņas",
-          "p": ["Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."]
+          "p": [
+            "Par būtiskām izmaiņām šajā politikā kontu īpašniekiem paziņosim pa e-pastu."
+          ]
         }
       ],
       "summary": [
@@ -990,7 +994,9 @@
         },
         {
           "h": "Izmaiņas noteikumos",
-          "p": ["Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."]
+          "p": [
+            "Par būtiskām izmaiņām kontu īpašniekiem paziņosim pa e-pastu vismaz 30 dienas iepriekš."
+          ]
         }
       ],
       "summary": [
@@ -1073,7 +1079,9 @@
         },
         {
           "h": "Veikalu lapas",
-          "p": ["Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."]
+          "p": [
+            "Atverot veikala lapu, uz to attiecas veikala sīkdatņu politika."
+          ]
         },
         {
           "h": "Kā pārvaldīt sīkdatnes",
@@ -1096,7 +1104,9 @@
       "sections": [
         {
           "h": "Saziņa",
-          "p": ["Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."]
+          "p": [
+            "Jautājumiem, atteikumiem un datu pieprasījumiem raksti uz {email}. Atbildam darba dienās."
+          ]
         },
         {
           "h": "Veikaliem",
@@ -1196,7 +1206,8 @@
     "text": "Vai atļauj Google Analytics sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas, lai uzlabotu Trilio. Bez atļaujas tās netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
     "accept": "Atļaut",
     "reject": "Neatļaut",
-    "settings": "Sīkdatņu iestatījumi"
+    "settings": "Sīkdatņu iestatījumi",
+    "short": "Google un Meta sīkdatnes statistikai un reklāmām — tikai ar tavu atļauju. Bez tām viss strādā tāpat. <policy>Sīkāk</policy>"
   },
   "errors": {
     "notFoundKicker": "404 · LAPA NAV ATRASTA",
@@ -2585,7 +2596,12 @@
     "done": "Pajautāts. Meklējam zemāku cenu un uzrakstīsim.",
     "donePlain": "Saglabāts. Paziņosim, kad cena samazināsies.",
     "close": "Aizvērt",
-    "back": "Atpakaļ uz rezultātiem"
+    "back": "Atpakaļ uz rezultātiem",
+    "promise": "Pajautāsim izplatītājam zemāku cenu. Atbilde 2 darba dienu laikā · bez maksas · pirkt nav obligāti.",
+    "signer": "Pieprasījumu izskata {name} no Trilio.",
+    "how": "Kā tas strādā?",
+    "sendRequest": "Sūtīt pieprasījumu",
+    "upToShort": "līdz −{amount}"
   },
   "about": {
     "title": "Par Trilio",
@@ -2605,5 +2621,10 @@
     "contacts": "Rekvizīti un kontakti",
     "name": "Trilio (trilio.lv) nav saistīts ar citiem uzņēmumiem ar tādu pašu nosaukumu citās valstīs.",
     "start": "Palīdzi izvēlēties"
+  },
+  "proof": {
+    "one": "Reāls piemērs: {month} {type} pircējam izmaksāja par {amount} mazāk nekā veikalā.",
+    "many": "{count, plural, one {# pircējs ar Trilio jau ietaupīja} other {# pircēji ar Trilio jau ietaupīja}} {total}. Pēdējais: {month} {type} par {amount} lētāk nekā veikalā.",
+    "product": "prece"
   }
 }

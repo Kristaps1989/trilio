@@ -7,6 +7,7 @@ import { countBot } from "@/services/visits/visits";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { searchSessionFor } from "@/services/visits/search-sessions";
+import { savingsProofText } from "@/services/offers/proof";
 import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
 import { subcategoryAttrs } from "@/domain/catalog/attributes";
@@ -204,7 +205,10 @@ export default async function ResultsPage({ searchParams }: Props) {
 
   // Hearts: which of these products, and whether this very search, are in the wishlist.
   const answersParam = encodeState(state);
-  const saved = await savedKeys(db, await currentUserId(), [
+  const userId = await currentUserId();
+  // The anonymous proof that "Iegūt lētāk" has saved money (docs/UX_REVIEW_PLAN.md §6).
+  const proof = await savingsProofText(db);
+  const saved = await savedKeys(db, userId, [
     searchKey(sub.id, answersParam),
     ...products.map((p) => productKey(p.id)),
   ]);
@@ -403,6 +407,8 @@ export default async function ResultsPage({ searchParams }: Props) {
       sessionId,
       saved: saved.has(productKey(pick.product.id)),
       trilioOffer: trilioSources(sub!.id),
+      signedIn: !!userId,
+      proof,
       score: pick.score,
       ...cardMedia(pick.product),
     };

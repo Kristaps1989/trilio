@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("welcome screen renders in Latvian with both entry points", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pastāsti, kas tev vajadzīgs");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Trīs labākās preces tev");
   await expect(page.getByRole("link", { name: "Palīdzi izvēlēties" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Es jau zinu modeli" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "lv");

@@ -10,7 +10,7 @@ import type { UiLocale } from "@/i18n/routing";
 // then the three steps. One component for the question before the shop and for
 // the card's own "Iegūt lētāk" (owner, 4 Nov 2026), so both say the same.
 
-export function OfferPitch({ priceCents }: { priceCents?: number }) {
+export function OfferPitch({ priceCents, steps = true }: { priceCents?: number; steps?: boolean }) {
   const t = useTranslations("ask");
   const locale = useLocale() as UiLocale;
   const saving = priceCents ? maxOfferSavingCents(priceCents) : 0;
@@ -32,6 +32,15 @@ export function OfferPitch({ priceCents }: { priceCents?: number }) {
           </span>
         </div>
       ) : null}
+      {steps ? <Steps /> : null}
+    </>
+  );
+}
+
+function Steps() {
+  const t = useTranslations("ask");
+  return (
+    <>
       <ol className="flex flex-col gap-1.5 text-[15px] leading-snug">
         {(["step1", "step2", "step3"] as const).map((k, i) => (
           <li key={k} className="flex gap-2.5">
@@ -49,6 +58,56 @@ export function OfferPitch({ priceCents }: { priceCents?: number }) {
         ))}
       </ol>
     </>
+  );
+}
+
+/**
+ * What happens and who does it, before the e-mail field (docs/UX_REVIEW_PLAN.md §5):
+ * the response time and that it is free, the person who handles it, and the
+ * anonymous proof that it has worked before.
+ */
+export function AskPromise({ signer, proof }: { signer?: string | null; proof?: string | null }) {
+  const t = useTranslations("ask");
+  return (
+    <div className="flex flex-col gap-1 text-[15px] leading-snug" data-ask-promise>
+      <p className="font-semibold">{t("promise")}</p>
+      {signer && signer !== "Trilio" ? <p className="text-muted">{t("signer", { name: signer })}</p> : null}
+      {proof ? (
+        <p className="flex gap-2 font-semibold text-success" data-ask-proof>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="mt-0.5 shrink-0"
+          >
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+          <span>{proof}</span>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** The three steps and the honest caveat, folded: there for anyone who asks, not between the shopper and the button. */
+export function HowItWorks() {
+  const t = useTranslations("ask");
+  return (
+    <details className="group text-[15px]" data-ask-how>
+      <summary className="flex min-h-11 cursor-pointer items-center font-semibold underline underline-offset-2">
+        {t("how")}
+      </summary>
+      <div className="flex flex-col gap-2 pb-1">
+        <Steps />
+        <OfferFine />
+      </div>
+    </details>
   );
 }
 

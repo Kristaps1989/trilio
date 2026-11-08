@@ -2,7 +2,7 @@
 // A post about a real offer is built only from the allowed fields below;
 // `leaks` is the last check that none of the person's values slipped in.
 
-const MONTHS_LOCATIVE = [
+export const MONTHS_LOCATIVE = [
   "janvārī",
   "februārī",
   "martā",

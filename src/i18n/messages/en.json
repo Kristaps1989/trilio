@@ -29,11 +29,11 @@
     "about": "About Trilio"
   },
   "welcome": {
-    "headline": "Tell us what you need.",
+    "headline": "The three best products for you — and a lower price, if we can get it.",
     "help": "Help me choose",
     "knowModel": "I already know the model",
     "kicker": "Shopping helper · home appliances",
-    "lead": "We'll weigh up the three most suitable products and let you know when the price drops!",
+    "lead": "Answer a few questions. We compare partner shops' prices by barcode and ask the distributor for a lower price. Free.",
     "meta": "Takes about a minute · no sign-up · new and refurbished products are never mixed"
   },
   "flow": {
@@ -848,7 +848,9 @@
         },
         {
           "h": "Who we share data with",
-          "p": ["Data is processed only by these service providers and only as far as their task requires:"],
+          "p": [
+            "Data is processed only by these service providers and only as far as their task requires:"
+          ],
           "items": [
             "Railway: server and database hosting.",
             "Cloudflare: domain name system (DNS).",
@@ -906,11 +908,15 @@
         },
         {
           "h": "Children",
-          "p": ["The service is not intended for children under 13."]
+          "p": [
+            "The service is not intended for children under 13."
+          ]
         },
         {
           "h": "Changes",
-          "p": ["We'll e-mail account holders about significant changes to this policy."]
+          "p": [
+            "We'll e-mail account holders about significant changes to this policy."
+          ]
         }
       ]
     },
@@ -996,7 +1002,9 @@
         },
         {
           "h": "Changes to the terms",
-          "p": ["We'll e-mail account holders about significant changes at least 30 days in advance."]
+          "p": [
+            "We'll e-mail account holders about significant changes at least 30 days in advance."
+          ]
         }
       ]
     },
@@ -1074,7 +1082,9 @@
         },
         {
           "h": "Shop pages",
-          "p": ["When you open a shop's page, the shop's cookie policy applies."]
+          "p": [
+            "When you open a shop's page, the shop's cookie policy applies."
+          ]
         },
         {
           "h": "How to manage cookies",
@@ -1097,7 +1107,9 @@
       "sections": [
         {
           "h": "Contact",
-          "p": ["For questions, withdrawals and data requests write to {email}. We answer on working days."]
+          "p": [
+            "For questions, withdrawals and data requests write to {email}. We answer on working days."
+          ]
         },
         {
           "h": "For shops",
@@ -1193,7 +1205,8 @@
     "text": "Do you allow Google Analytics, Google Ads and Meta measurement cookies? They help us see which sections and buttons are used and which ads bring visitors, so we can improve Trilio. Meta may use them to show Trilio ads on Facebook and Instagram. Without your permission the cookies are not loaded, and the site works the same. More: <policy>cookie policy</policy>.",
     "accept": "Allow",
     "reject": "Don't allow",
-    "settings": "Cookie settings"
+    "settings": "Cookie settings",
+    "short": "Google and Meta cookies for statistics and ads — only with your permission. Everything works without them. <policy>More</policy>"
   },
   "errors": {
     "notFoundKicker": "404 · PAGE NOT FOUND",
@@ -1556,7 +1569,7 @@
     "bodyPlain": "We'll write when this product's price drops in the shops. Only about this product, at most once a day. You can stop at any time.",
     "bodySearch": "We'll write when a cheaper option appears in this search. At most once a day. You can stop at any time.",
     "email": "E-mail",
-    "submit": "Get it cheaper",
+    "submit": "Send request",
     "submitPlain": "Tell me",
     "close": "Close",
     "sent": "We sent a confirmation link to {email}. Open it, and we'll start looking for a lower price.",
@@ -1612,7 +1625,12 @@
     "done": "Requested. We're looking for a lower price and will write.",
     "donePlain": "Saved. We'll write when the price drops.",
     "close": "Close",
-    "back": "Back to the results"
+    "back": "Back to the results",
+    "promise": "We ask the distributor for a lower price. Answer within 2 working days · free · no obligation to buy.",
+    "signer": "Your request is handled by {name} at Trilio.",
+    "how": "How does it work?",
+    "sendRequest": "Send request",
+    "upToShort": "up to −{amount}"
   },
   "about": {
     "title": "About Trilio",
@@ -1632,5 +1650,10 @@
     "contacts": "Company details and contacts",
     "name": "Trilio (trilio.lv) is not affiliated with other companies of the same name in other countries.",
     "start": "Help me choose"
+  },
+  "proof": {
+    "one": "A real example ({type}, {month}): {amount} less than in the shop.",
+    "many": "{count} buyers have saved {total} with Trilio. The latest ({type}, {month}): {amount} less than in the shop.",
+    "product": "product"
   }
 }

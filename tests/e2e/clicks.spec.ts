@@ -36,7 +36,8 @@ test("without JavaScript a card's shop link asks the question first; the answer 
   await expect(page).toHaveURL(/\/pirms-veikala\/[0-9a-f-]{36}\?s=[0-9a-f-]{36}$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pirms pērc — pajautāsim zemāku cenu");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page.getByRole("button", { name: "Iegūt lētāk" })).toBeVisible();
+  // The e-mail field is there at once, also without JavaScript (docs/UX_REVIEW_PLAN.md §5).
+  await expect(page.getByLabel("E-pasts")).toBeVisible();
   const toShop = page.getByRole("link", { name: `Uz ${shop}` });
   await expect(toShop).toHaveAttribute("href", /^\/go\/[0-9a-f-]{36}\?s=[0-9a-f-]{36}&from=ask$/);
   const reached = toShopRequest();
@@ -65,8 +66,8 @@ test("the question page works with JavaScript too: the request, the shop link, a
   await page.goto(`/pirms-veikala/${offer}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pirms pērc — pajautāsim zemāku cenu");
   await expect(page.locator("[data-ask-discount]")).toContainText("līdz −10 %");
-  await page.getByRole("button", { name: "Iegūt lētāk" }).click();
   await expect(page.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sūtīt pieprasījumu" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Atpakaļ uz rezultātiem" })).toBeVisible();
   await noAxe(page);
   expect((await page.goto("/pirms-veikala/00000000-0000-4000-8000-000000000000"))?.status()).toBe(404);

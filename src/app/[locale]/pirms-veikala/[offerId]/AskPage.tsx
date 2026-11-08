@@ -18,6 +18,9 @@ export function AskPage(props: {
   priceCents: number;
   shop: string;
   shopHref: string;
+  signedIn?: boolean;
+  signer?: string | null;
+  proof?: string | null;
 }) {
   const t = useTranslations("ask");
   const router = useRouter();
@@ -31,6 +34,9 @@ export function AskPage(props: {
         priceCents={props.priceCents}
         shop={props.shop}
         shopHref={props.shopHref}
+        signedIn={props.signedIn}
+        signer={props.signer}
+        proof={props.proof}
         onClose={() => {
           rememberAnswer();
           request.closePanel();

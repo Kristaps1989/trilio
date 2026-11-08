@@ -37,6 +37,11 @@ type Props = {
   offers: boolean;
   /** data-ga-* of the shop click; moved to whichever element actually leaves for the shop. */
   analytics: Record<string, string>;
+  /** Signed in: the sheet asks one yes; signed out, it shows the e-mail field at once. */
+  signedIn?: boolean;
+  /** Who handles the request, and the anonymous proof line (docs/UX_REVIEW_PLAN.md §5–6). */
+  signer?: string | null;
+  proof?: string | null;
 };
 
 export function ShopLink({
@@ -50,6 +55,9 @@ export function ShopLink({
   saved: initial,
   offers,
   analytics,
+  signedIn = false,
+  signer,
+  proof,
 }: Props) {
   const t = useTranslations("ask");
   const request = useRequest(target, initial);
@@ -104,7 +112,7 @@ export function ShopLink({
         onContextMenu={newTab}
         {...(direct ? analytics : { "data-ga-ignore": "" })}
         aria-haspopup={direct ? undefined : "dialog"}
-        className={buttonClass({ variant: "dark", block: true })}
+        className={buttonClass({ variant: "card", block: true })}
       >
         {label}
       </a>
@@ -151,6 +159,9 @@ export function ShopLink({
               shopHref={withSource(href, "ask")}
               analytics={analytics}
               onClose={close}
+              signedIn={signedIn}
+              signer={signer}
+              proof={proof}
             />
           </div>
         </dialog>

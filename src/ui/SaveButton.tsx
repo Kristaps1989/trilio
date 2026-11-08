@@ -1,10 +1,14 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useId } from "react";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
-import { OfferFine, OfferPitch } from "./OfferPitch";
+import { maxOfferSavingCents } from "@/domain/offers/discount";
+import { formatEur } from "@/i18n/format";
+import type { UiLocale } from "@/i18n/routing";
+import { AskPromise, HowItWorks, OfferPitch } from "./OfferPitch";
 import { SavedAlertNote } from "./SavedAlertNote";
 import { useRequest } from "./useRequest";
 
@@ -61,6 +65,8 @@ export function SaveButton({
   name,
   offers = false,
   priceCents,
+  signer,
+  proof,
 }: {
   target: SaveTarget;
   saved: boolean;
@@ -72,10 +78,23 @@ export function SaveButton({
   offers?: boolean;
   /** The shop price: the request shows what it can be worth ("līdz −10 %", in euro). */
   priceCents?: number;
+  /** Who handles the request, and the anonymous proof line (docs/UX_REVIEW_PLAN.md §5–6). */
+  signer?: string | null;
+  proof?: string | null;
 }) {
   const t = useTranslations("wishlist");
+  const ta = useTranslations("ask");
+  const locale = useLocale() as UiLocale;
   const { saved, pending, note, panel, run, closePanel } = useRequest(target, initial, variant !== "icon");
   const search = target.kind === "search";
+  const savingId = useId();
+  const showSaving =
+    variant === "card" &&
+    offers &&
+    !search &&
+    !saved &&
+    !!priceCents &&
+    maxOfferSavingCents(priceCents) >= 100;
   // A search is a watch for a cheaper option; only a product is a request to a partner.
   const key = `${saved ? "notifying" : "notify"}${search ? "Search" : offers ? "" : "Drop"}` as const;
   const text = t(key);
@@ -93,6 +112,7 @@ export function SaveButton({
       type="button"
       aria-label={variant === "icon" ? `${text}: ${name}` : undefined}
       aria-expanded={panel ? true : undefined}
+      aria-describedby={showSaving ? savingId : undefined}
       disabled={pending}
       onClick={() => (panel ? closePanel() : run(!saved))}
       className={`${className} ${saved && variant !== "card" ? "text-lime" : ""}`}
@@ -100,6 +120,19 @@ export function SaveButton({
     >
       {offers && !search && variant !== "icon" ? <Tag filled={saved} /> : <Heart filled={saved} />}
       {variant === "icon" ? null : <span>{text}</span>}
+      {/* What the request can be worth, where the decision is made (docs/UX_REVIEW_PLAN.md §4). */}
+      {showSaving ? (
+        <span
+          id={savingId}
+          aria-hidden="true"
+          className="text-sm font-semibold opacity-80"
+          data-notify-saving
+        >
+          {ta("upToShort", {
+            amount: formatEur(Math.floor(maxOfferSavingCents(priceCents!) / 100) * 100, locale),
+          })}
+        </span>
+      ) : null}
     </button>
   );
   if (!panel && !(note && saved)) return button;
@@ -110,7 +143,8 @@ export function SaveButton({
         // Where Trilio sources, the same screen as the question before the shop (owner, 4 Nov 2026): the discount and the steps first.
         offers && !search && variant !== "icon" ? (
           <div className="flex flex-col gap-3 text-night" data-offer-pitch>
-            <OfferPitch priceCents={priceCents} />
+            <OfferPitch priceCents={priceCents} steps={false} />
+            <AskPromise signer={signer} proof={proof} />
             <NotifyPanel
               target={target}
               email={panel.email}
@@ -119,7 +153,7 @@ export function SaveButton({
               onClose={closePanel}
               compact={!panel.email}
             />
-            <OfferFine />
+            <HowItWorks />
           </div>
         ) : (
           <NotifyPanel

@@ -363,3 +363,44 @@ describe("earnsPrice: brand alone does not earn a big premium (docs/TRUST_POLISH
     expect(earnsPrice(cand("A", 54, 50, -4, [48, 30]), cand("B", 79, 58, 8, [47, 40]))).toBe(false);
   });
 });
+
+describe("no budget: the usual price range, three brands where they qualify (docs/UX_REVIEW_PLAN.md §5)", () => {
+  const input = (products: ReturnType<typeof product>[]): RankInput => ({
+    products,
+    sub: fridge,
+    answers: {},
+    budget: null,
+    urgency: "two_weeks",
+    includeRefurbished: false,
+  });
+  // Bigger costs more, so every dearer fridge earns its price; three premium models far above the rest.
+  const lineUp = (brands: string[]) =>
+    [300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 2400, 2700, 3000].map((eur, i) =>
+      combi(`${brands[i % brands.length]} M${i}`, eur, 180, { volume_l: 200 + i * 15 }),
+    );
+
+  it("never picks above the 75th percentile when no upper limit is given", () => {
+    const products = lineUp(["Bosch", "Miele", "Beko", "LG"]);
+    const prices = products.map((p) => p.offers[0]!.priceCents);
+    const ceiling = mainstreamCeilingCents(prices)!;
+    const r = rank(input(products));
+    expect(r.picks.length).toBe(3);
+    for (const p of r.picks) expect(p.price).toBeLessThanOrEqual(ceiling);
+    // Every matching product still counts.
+    expect(r.matchingCount).toBe(products.length);
+  });
+
+  it("an upper limit given by the shopper is kept as it is", () => {
+    const r = rank({ ...input(lineUp(["Bosch", "Miele"])), budget: 300000 });
+    expect(Math.max(...r.picks.map((p) => p.price))).toBeGreaterThan(100000);
+  });
+
+  it("prefers a brand not yet picked, and repeats a brand only when no other qualifies", () => {
+    // A brand not yet picked wins only where it still earns its price (earnsPrice), never by brand alone.
+    const mixed = rank(input(lineUp(["Miele", "Miele", "Bosch", "Beko"])));
+    expect(new Set(mixed.picks.map((p) => p.product.brand)).size).toBeGreaterThanOrEqual(2);
+    const single = rank(input(lineUp(["Miele"])));
+    expect(single.picks.length).toBe(3);
+    expect(new Set(single.picks.map((p) => p.product.brand))).toEqual(new Set(["Miele"]));
+  });
+});

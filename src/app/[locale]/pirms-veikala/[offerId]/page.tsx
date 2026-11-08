@@ -6,7 +6,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { auth, currentUserId } from "@/auth";
-import { isAdminEmail } from "@/config/admin";
+import { isAdminEmail, offerSignature } from "@/config/admin";
+import { savingsProofText } from "@/services/offers/proof";
 import { db, offers, stores } from "@/db";
 import { loadProduct } from "@/db/queries/catalog";
 import { savedKeys } from "@/db/queries/wishlist";
@@ -64,9 +65,9 @@ export default async function BeforeShopPage({ params, searchParams }: Props) {
     .uuid()
     .safeParse((await searchParams).s);
   const shopHref = withSource(`/go/${offer.id}${s.success ? `?s=${s.data}` : ""}`, "ask");
-  const saved = (await savedKeys(db, await currentUserId(), [productKey(product.id)])).has(
-    productKey(product.id),
-  );
+  const userId = await currentUserId();
+  const saved = (await savedKeys(db, userId, [productKey(product.id)])).has(productKey(product.id));
+  const proof = await savingsProofText(db);
   const sourced = trilioSources(product.subcategoryId);
 
   // Shown to a shopper: counted as the question shown, as the sheet counts it. Bots and suspect requests are not.
@@ -104,6 +105,9 @@ export default async function BeforeShopPage({ params, searchParams }: Props) {
           priceCents={offer.priceCents}
           shop={offer.storeName}
           shopHref={shopHref}
+          signedIn={!!userId}
+          signer={offerSignature()}
+          proof={proof}
         />
       </section>
     </Container>

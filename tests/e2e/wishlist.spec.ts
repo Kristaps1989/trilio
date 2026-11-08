@@ -110,6 +110,8 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   // The same screen as the question before the shop: what the e-mail is worth, then the steps.
   const pitch = first.locator("[data-offer-pitch]");
   await expect(pitch.locator("[data-ask-discount]")).toContainText("līdz −10 %");
+  await expect(pitch.locator("[data-ask-promise]")).toContainText("Atbilde 2 darba dienu laikā");
+  await pitch.getByText("Kā tas strādā?").click();
   await expect(pitch.getByRole("listitem")).toHaveCount(3);
   await expect(pitch).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
   const panel = first.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
@@ -118,10 +120,10 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   );
   await expectNoAxeViolations(page);
   await panel.getByLabel("E-pasts").fill("nav-epasts");
-  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
+  await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(panel.getByRole("alert")).toHaveText("Lūdzu, ievadi derīgu e-pasta adresi.");
   await panel.getByLabel("E-pasts").fill(email);
-  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
+  await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(first.getByRole("status")).toHaveText(
     `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
   );
@@ -185,7 +187,7 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   const panel = first.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
   await expect(panel).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
   await expectNoAxeViolations(page);
-  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
+  await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(
     first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
   ).toBeVisible();
@@ -254,29 +256,33 @@ test("the question before the shop: one sheet on the first shop click, two equal
   const shop = ((await buy.textContent()) ?? "").replace(/^Pirkt — /, "").trim();
   await buy.click();
 
-  // One sheet, the page stays; the request and the shop are two buttons of the same size, nothing is shamed.
+  // One sheet on one screen (docs/UX_REVIEW_PLAN.md §5): the saving, what happens and when, the
+  // e-mail field at once, the steps folded, the shop as the second, plainer choice. Nothing is shamed.
   const sheet = page.getByRole("dialog", { name: "Pirms pērc — pajautāsim zemāku cenu" });
   await expect(sheet).toBeVisible();
   await expect(page).toHaveURL(url);
-  // The discount in euro for this product (10 % of its price, rounded down), the three steps and the fine print.
+  // The discount in euro for this product (10 % of its price, rounded down).
   await expect(sheet.locator("[data-ask-discount]")).toContainText("līdz −10 %");
   await expect(sheet.locator("[data-ask-discount]")).toContainText(
     /šai precei tas ir līdz \d+(,\d{2})?\s€ lētāk/,
   );
+  await expect(sheet.locator("[data-ask-promise]")).toContainText("Atbilde 2 darba dienu laikā");
+  // The steps and the honest caveat are one tap away, not between the shopper and the field.
+  await expect(sheet.getByRole("listitem")).toHaveCount(0);
+  await sheet.getByText("Kā tas strādā?").click();
   await expect(sheet.getByRole("listitem")).toHaveCount(3);
   await expect(sheet).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
-  await expect(sheet.getByRole("button", { name: "Iegūt lētāk" })).toBeVisible();
+  const panel = sheet.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
+  await expect(panel.getByLabel("E-pasts")).toBeVisible();
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toHaveAttribute(
     "href",
     /^\/go\/[0-9a-f-]{36}\?.*from=ask/,
   );
   await expectNoAxeViolations(page);
 
-  // The request inside the sheet is the card's own flow: the e-mail field, then the confirmation link.
-  await sheet.getByRole("button", { name: "Iegūt lētāk" }).click();
-  const panel = sheet.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
+  // One field, one button, then the confirmation link.
   await panel.getByLabel("E-pasts").fill(email);
-  await panel.getByRole("button", { name: "Iegūt lētāk" }).click();
+  await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(sheet.getByRole("status")).toHaveText(
     `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
   );
@@ -331,7 +337,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   // The first product tap asks the one yes, with the address already known; it covers Trilio's offers too.
   const ask = product.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
   await expect(ask).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
-  await ask.getByRole("button", { name: "Iegūt lētāk" }).click();
+  await ask.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(
     product.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
   ).toBeVisible();

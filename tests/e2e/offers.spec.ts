@@ -83,7 +83,7 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     // One yes on the card covers price e-mails and Trilio's own offers.
     await first
       .getByRole("group", { name: `Sūtīt piedāvājumu uz ${shopper}?` })
-      .getByRole("button", { name: "Iegūt lētāk" })
+      .getByRole("button", { name: "Sūtīt pieprasījumu" })
       .click();
     await expect(
       first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
