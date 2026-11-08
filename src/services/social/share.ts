@@ -50,17 +50,3 @@ export async function sharePreview(db: Db, search: Search): Promise<SharePreview
     image: { url: linkImagePath(p.id), width: 1200, height: 630, alt: p.alt },
   };
 }
-
-/**
- * Facebook's own copy of the card's picture, passed by the publisher as ?p=: only
- * an https address on Facebook's image servers is taken, anything else is ignored.
- */
-export function hostedPicture(raw: string | null): string | null {
-  if (!raw) return null;
-  try {
-    const u = new URL(raw);
-    return u.protocol === "https:" && /(^|\.)fbcdn\.net$/.test(u.hostname) ? u.href : null;
-  } catch {
-    return null;
-  }
-}

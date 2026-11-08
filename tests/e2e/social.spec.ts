@@ -33,6 +33,9 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   await devLogin(page, ADMIN, "/admin/sociali");
   await expect(page.getByRole("heading", { level: 1, name: "Sociālie tīkli" })).toBeVisible();
   await expect(page.locator("[data-social-connection]")).toContainText("Testa režīms");
+  // Whether Meta lets this Page customise trilio.lv links decides link carousel or photos.
+  await expect(page.locator("[data-social-domain]")).toHaveAttribute("data-social-domain", "owned");
+  await expect(page.locator("[data-social-domain]")).toContainText("karuseļi tiek publicēti ar saitēm");
   await expectNoAxeViolations(page);
 
   // Advice needs no prices, so it can be made on any data.
@@ -104,18 +107,15 @@ test("a post from the knowledge base: draft, image, publish now to both networks
       `href="${base}/[^"]*utm_source=facebook&amp;utm_medium=social&amp;utm_campaign=advice&amp;utm_content=${id}-1"`,
     ),
   );
-  // With Facebook's own copy of the picture (?p=, uploaded by the publisher first) the page names that;
-  // an address off Facebook's image servers is ignored.
-  const cdn = "https://scontent.xx.fbcdn.net/v/t39/1_n.jpg?oe=1";
-  const hostedHtml = await (
-    await crawler.request.get(`${base}/social/${id}/1?p=${encodeURIComponent(cdn)}`)
+  // The og:image is always the card's own square picture on trilio.lv, whatever ?p= says
+  // (Facebook does not take an og:image on its own CDN; docs/FACEBOOK_CAROUSEL_PLAN.md).
+  const withP = await (
+    await crawler.request.get(
+      `${base}/social/${id}/1?p=${encodeURIComponent("https://scontent.xx.fbcdn.net/v/1.jpg")}`,
+    )
   ).text();
-  expect(hostedHtml).toContain(`<meta property="og:image" content="${cdn.replace("&", "&amp;")}">`);
-  const evilHtml = await (
-    await crawler.request.get(`${base}/social/${id}/1?p=${encodeURIComponent("https://evil.example/x.jpg")}`)
-  ).text();
-  expect(evilHtml).toContain(`<meta property="og:image" content="${base}/social/${id}/1/square.jpg">`);
-  expect(evilHtml).not.toContain("evil.example");
+  expect(withP).toContain(`<meta property="og:image" content="${base}/social/${id}/1/square.jpg">`);
+  expect(withP).not.toContain("fbcdn");
   const square = await crawler.request.get(`${base}/social/${id}/1/square.jpg`);
   expect(square.status()).toBe(200);
   expect(square.headers()["content-type"]).toBe("image/jpeg");

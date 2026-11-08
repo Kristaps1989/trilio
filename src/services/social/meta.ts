@@ -26,6 +26,9 @@ type Json = Record<string, unknown>;
 /** A link post Facebook drew without its picture: removed, and posted as a photo instead. */
 export const NO_PICTURE = "Facebook preview without its picture";
 
+/** What Facebook drew for a post: its picture, and for a carousel the cards (1-based) without one. */
+type Preview = { image: boolean; missing?: number[] };
+
 export function metaProvider(
   cfg: MetaConfig,
   http: Fetch = fetch,
@@ -62,22 +65,26 @@ export function metaProvider(
   }
 
   /**
-   * Facebook's own copy of a picture (docs/SOCIAL_PLAN.md §12, 8 Nov 2026): uploaded
-   * to the page unpublished (never shown on the page), then its largest image on
-   * Facebook's servers. A card that names this copy needs nothing from trilio.lv
-   * when the post is made. Null when the upload or the read fails.
+   * Whether this Page may customise a link's preview (picture, name, line):
+   * `ownership_permissions{can_customize_link_posts}` on the URL node, which Meta
+   * says to read before posting new links (docs/FACEBOOK_CAROUSEL_PLAN.md). True
+   * only when trilio.lv is verified and assigned to the Page; false otherwise,
+   * also when the check itself fails.
    */
-  async function hostPicture(url: string, token: string): Promise<string | null> {
+  async function canCustomize(url: string, token: string): Promise<boolean> {
     try {
-      const photo = await call("POST", `${cfg.pageId}/photos`, { url, published: "false" }, token);
-      const r = await call("GET", String(photo.id), { fields: "images" }, token);
-      const images = Array.isArray(r.images) ? (r.images as { source?: string; width?: number }[]) : [];
-      const best = images
-        .filter((i) => typeof i.source === "string")
-        .sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0];
-      return best?.source ?? null;
-    } catch {
-      return null;
+      const r = await call(
+        "GET",
+        "",
+        { id: url, fields: "ownership_permissions{can_customize_link_posts}" },
+        token,
+      );
+      const perms = r.ownership_permissions as { can_customize_link_posts?: boolean } | undefined;
+      return perms?.can_customize_link_posts === true;
+    } catch (err) {
+      // A token or page problem stops the post here; anything else counts as not owned.
+      if (err instanceof Error && /#(190|200|10)\b/.test(err.message)) throw err;
+      return false;
     }
   }
 
@@ -86,12 +93,12 @@ export function metaProvider(
    * carousel). Facebook attaches pictures as it reads them, so a first "no" is
    * read once more after a moment. Null when it cannot be read.
    */
-  async function previewHasPicture(postId: string, read: (id: string) => Promise<{ image: boolean } | null>) {
+  async function previewHasPicture(postId: string, read: (id: string) => Promise<Preview | null>) {
     const first = await read(postId);
-    if (first === null || first.image) return first?.image ?? null;
+    if (first === null || first.image) return first;
     await wait(5_000);
     const second = await read(postId);
-    return second === null ? false : second.image;
+    return second ?? { image: false };
   }
 
   async function call(
@@ -184,7 +191,7 @@ export function metaProvider(
     }
   }
 
-  async function linkPreview(postId: string): Promise<{ image: boolean } | null> {
+  async function linkPreview(postId: string): Promise<Preview | null> {
     try {
       type Media = { media?: { image?: { src?: string } }; type?: string };
       const r = (await call(
@@ -197,7 +204,10 @@ export function metaProvider(
       if (!a) return null;
       // A link carousel: every card must have its picture.
       const cards = a.subattachments?.data ?? [];
-      if (cards.length) return { image: cards.every((c) => !!c.media?.image?.src) };
+      if (cards.length) {
+        const missing = cards.flatMap((c, k) => (c.media?.image?.src ? [] : [k + 1]));
+        return { image: missing.length === 0, ...(missing.length ? { missing } : {}) };
+      }
       return { image: !!a.media?.image?.src };
     } catch {
       return null;
@@ -242,25 +252,16 @@ export function metaProvider(
           return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);
         }
         const token = await page();
-        if (link && images.every((i) => i.card)) {
-          // A link carousel: every card opens its own page (multi-link share, child_attachments).
-          // The order is ours (not "optimized"), and no extra end card is added. Facebook fetches
-          // every card's picture once, when the post is made, and leaves out one that is slow:
-          // all pictures are drawn first.
-          // Every card's picture is uploaded to Facebook first and the card names Facebook's
-          // own copy, as `picture` and as its share page's og:image (?p=), so nothing has to
-          // be fetched from trilio.lv when the post is made (8 Nov 2026: a carousel lost its
-          // first three pictures). A picture that cannot be uploaded keeps its own address.
+        // A link carousel only when this Page owns trilio.lv (domain verified, Page assigned):
+        // without that, Facebook ignores each card's picture and draws it from its own crawl
+        // of the card's link, which Trilio cannot make reliable (docs/FACEBOOK_CAROUSEL_PLAN.md).
+        // Otherwise the slides go out as a multi-photo post below: the pictures always show.
+        if (link && images.every((i) => i.card) && (await canCustomize(images[0]!.card!.link, token))) {
+          // Each card names its own square picture on trilio.lv, drawn and cached first:
+          // Facebook fetches it once, when the post is made. (A copy on Facebook's own
+          // CDN is not taken as a card picture: tried 8 Nov 2026, no pictures at all.)
           await warm(images.map((i) => i.card!.picture));
-          const hosted = await Promise.all(images.map((i) => hostPicture(i.card!.picture, token)));
-          const cards = images.map(({ card }, k) => {
-            const h = hosted[k];
-            if (!h) return card!;
-            const sep = card!.link.includes("?") ? "&" : "?";
-            return { ...card!, picture: h, link: `${card!.link}${sep}p=${encodeURIComponent(h)}` };
-          });
-          await warm(cards.map((c) => c.link));
-          for (const c of cards) await scrape(c.link, token);
+          const cards = images.map(({ card }) => card!);
           let posted: string | null = null;
           try {
             const r = await call(
@@ -289,11 +290,14 @@ export function metaProvider(
             if (err instanceof Error && /\b(190|200|10)\b|#(190|200|10)\b/.test(err.message)) throw err;
           }
           if (posted) {
-            // The post is read back: a carousel Facebook drew without its pictures (the grey
-            // boxes) is removed at once and the slides go out as photos instead, so no grey
-            // post is ever left on the page. A preview that cannot be read is kept.
-            const pictures = await previewHasPicture(posted, linkPreview);
-            if (pictures !== false) return { ok: true, id: posted };
+            // Read back: a carousel drawn without its pictures is removed at once and the
+            // slides go out as photos instead. A preview that cannot be read is kept.
+            const preview = await previewHasPicture(posted, linkPreview);
+            if (preview === null || preview.image) return { ok: true, id: posted };
+            // Which cards Facebook drew without a picture: the next diagnosis starts from data.
+            console.warn(
+              `[social] Facebook carousel ${posted} drawn without pictures (cards ${(preview.missing ?? []).join(", ") || "?"}); posting the slides as photos`,
+            );
             await call("DELETE", posted, {}, token).catch(() => undefined);
           }
         }
@@ -320,6 +324,13 @@ export function metaProvider(
       }
     },
     linkPreview,
+    async linkOwnership(url: string) {
+      try {
+        return await canCustomize(url, await page());
+      } catch {
+        return null;
+      }
+    },
     async publishLink(link: string, caption: string, preview?: string) {
       try {
         const token = await page();
@@ -333,8 +344,8 @@ export function metaProvider(
         const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, link }, token);
         const id = String(r.id);
         // Read back: a preview without its picture is removed, and the caller posts a photo instead.
-        const picture = await previewHasPicture(id, linkPreview);
-        if (picture === false) {
+        const drawn = await previewHasPicture(id, linkPreview);
+        if (drawn !== null && !drawn.image) {
           await call("DELETE", id, {}, token).catch(() => undefined);
           return { ok: false, error: NO_PICTURE };
         }

@@ -8,6 +8,7 @@ import { requireAdmin } from "../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../ui";
 import { Outcome } from "../reklama/shared";
 import { socialProvider } from "@/services/social";
+import { appBaseUrl } from "@/services/payments";
 import { slideUrls, socialSettings } from "@/services/social/posts";
 import {
   approveAction,
@@ -53,6 +54,9 @@ export default async function SocialPage({ searchParams }: Props) {
       : (await provider.tokenOk())
         ? t("connOk")
         : t("connBad");
+  // Whether Facebook lets this Page customise trilio.lv links (docs/FACEBOOK_CAROUSEL_PLAN.md):
+  // carousels go out with links only then, otherwise as photos.
+  const owned = provider ? await provider.linkOwnership(`${appBaseUrl()}/`).catch(() => null) : null;
   const queue = await db
     .select()
     .from(socialPosts)
@@ -108,6 +112,15 @@ export default async function SocialPage({ searchParams }: Props) {
       <p className="text-[15px] text-mist" data-social-connection>
         <span className="font-semibold">{t("connection")}:</span> {conn}
       </p>
+      {provider ? (
+        <p
+          className="text-[15px] text-mist"
+          data-social-domain={owned === null ? "unknown" : owned ? "owned" : "not-owned"}
+        >
+          <span className="font-semibold">{t("domain")}:</span>{" "}
+          {owned === null ? t("domainUnknown") : owned ? t("domainOwned") : t("domainNotOwned")}
+        </p>
+      ) : null}
       <p className="text-sm text-stone">{t("rules")}</p>
 
       <Section title={t("settings")} id="social-settings">

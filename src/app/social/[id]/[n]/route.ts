@@ -6,7 +6,6 @@ import { adminOrNull } from "@/app/[locale]/admin/guard";
 import type { PostCard } from "@/domain/social/captions";
 import { appBaseUrl } from "@/services/payments";
 import { carouselCard } from "@/services/social/posts";
-import { hostedPicture } from "@/services/social/share";
 import { slidesOf } from "@/services/social/render";
 
 // The share page of one carousel card (docs/SOCIAL_PLAN.md §12, 8 Nov 2026):
@@ -16,15 +15,15 @@ import { slidesOf } from "@/services/social/render";
 // link itself. A person is sent on at once to the slide's page on the site,
 // with the card's tags; without a script, the same link is on the page.
 // Never indexed: the site's pages are the content, this is the wrapper.
-// When the publisher uploaded the picture to Facebook first, the link carries
-// Facebook's copy as ?p= and the page names that instead (8 Nov 2026).
+// Its og:image is always the card's own square picture on trilio.lv: Facebook
+// does not take an og:image on its own CDN (8 Nov 2026, docs/FACEBOOK_CAROUSEL_PLAN.md).
 
 export const dynamic = "force-dynamic";
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string; n: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string; n: string }> }) {
   const { id: rawId, n } = await params;
   const id = z.uuid().safeParse(rawId);
   const i = Number(n);
@@ -36,7 +35,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const slide = slidesOf(p.card as unknown as PostCard)[i - 1];
   if (!slide) return new NextResponse(null, { status: 404 });
   const card = carouselCard(appBaseUrl(), p, slide, i - 1);
-  const picture = hostedPicture(new URL(request.url).searchParams.get("p")) ?? card.picture;
+  const picture = card.picture;
   const title = esc(card.name);
   const description = esc(card.description ?? p.alt ?? "");
   const target = esc(card.target);

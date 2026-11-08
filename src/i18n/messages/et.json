@@ -2510,7 +2510,11 @@
       "ok_refreshed": "Facebook nolasīs saiti vēlreiz; attēls parādīsies dažu minūšu laikā.",
       "repost": "Publicēt Facebook vēlreiz",
       "ok_refreshed_missing": "Facebook nolasīs saites vēlreiz. Dažiem ierakstiem attēla joprojām nav (atzīmēti „Facebook bez attēla”): karuselim attēlus Facebook vairs nenolasa, spied „Publicēt Facebook vēlreiz”.",
-      "ok_reposted": "Ieraksts Facebook publicēts vēlreiz ar attēliem; vecais ieraksts dzēsts."
+      "ok_reposted": "Ieraksts Facebook publicēts vēlreiz ar attēliem; vecais ieraksts dzēsts.",
+      "domain": "Domēns trilio.lv Meta",
+      "domainOwned": "apstiprināts un piesaistīts lapai: karuseļi tiek publicēti ar saitēm un saviem attēliem.",
+      "domainNotOwned": "nav apstiprināts šai lapai: karuseļi tiek publicēti kā foto ar saiti tekstā. Meta Business Suite → Iestatījumi → Zīmola drošība → Domēni → pievienot trilio.lv, apstiprināt un pie „Saistītie līdzekļi” pievienot Trilio lapu.",
+      "domainUnknown": "neizdevās nolasīt; karuseļi tiek publicēti kā foto."
     }
   },
   "alertsUnsubscribe": {

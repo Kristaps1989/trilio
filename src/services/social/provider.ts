@@ -27,8 +27,8 @@ export interface SocialProvider {
   /**
    * 2–10 images: a carousel on Instagram (no links: Instagram has none in
    * posts); on the page a link carousel, each card with its own picture,
-   * headline and link, when every image carries `card`; otherwise a
-   * multi-photo post.
+   * headline and link, when every image carries `card` and the Page owns the
+   * links' domain; otherwise a multi-photo post (docs/FACEBOOK_CAROUSEL_PLAN.md).
    */
   publishCarousel(
     network: Network,
@@ -53,7 +53,12 @@ export interface SocialProvider {
    * A published page post's preview: whether its attachment has a picture.
    * Null when it cannot be read (no link attachment, a network error).
    */
-  linkPreview(postId: string): Promise<{ image: boolean } | null>;
+  linkPreview(postId: string): Promise<{ image: boolean; missing?: number[] } | null>;
+  /**
+   * Whether the Page owns a link's domain (Meta: `can_customize_link_posts`), so a
+   * carousel can go out with links and its own pictures. Null when it cannot be read.
+   */
+  linkOwnership(url: string): Promise<boolean | null>;
   /** A video the owner uploaded: a Reel on Instagram, a video post on the page. */
   publishVideo(network: Network, videoUrl: string, caption: string): Promise<PublishResult>;
   insights(network: Network, id: string): Promise<Insight | null>;
