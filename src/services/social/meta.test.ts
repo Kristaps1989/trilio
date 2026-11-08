@@ -159,11 +159,64 @@ describe("meta provider", () => {
     expect(JSON.parse(feed.body["attached_media[1]"]!)).toEqual({ media_fbid: "id6" });
   });
 
-  it("a link carousel on the page: card pictures uploaded to Facebook first, one feed post whose cards each open their own page", async () => {
+  // Meta (Page feed reference): a link's picture, name and line can be customised only when
+  // the Page owns the link, read from ownership_permissions{can_customize_link_posts}.
+  const own = (c: Call, owned: boolean) =>
+    c.url === `${G}/` && c.method === "GET" && c.body.fields?.startsWith("ownership_permissions")
+      ? { json: { id: c.body.id, ownership_permissions: { can_customize_link_posts: owned } } }
+      : null;
+  const cardImgs = [1, 2].map((n) => ({
+    url: `https://t/${n}/image.jpg`,
+    card: {
+      link: `https://t/social/p/${n}`,
+      name: `Karte ${n}`,
+      description: "no 23 €",
+      picture: `https://t/${n}/square.jpg`,
+    },
+  }));
+
+  it("a carousel is a link carousel only when the Page owns the domain; otherwise photos, with no crawl involved", async () => {
+    const notOwned = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      return own(c, false) ?? { json: { id: c.url === `${G}/PAGE/feed` ? "PAGE_ph" : "p1" } };
+    });
+    expect(
+      await metaProvider(cfg, notOwned.http, noWait).publishCarousel(
+        "facebook",
+        cardImgs,
+        "Teksts 👉 L",
+        "L",
+      ),
+    ).toEqual({ ok: true, id: "PAGE_ph" });
+    // The check came first, then the slides as unpublished photos and one feed post with all of them.
+    const check = notOwned.calls.findIndex((c) => c.body.fields?.startsWith("ownership_permissions"));
+    expect(notOwned.calls[check]!.body.id).toBe("https://t/social/p/1");
+    const photos = notOwned.calls.filter((c) => c.url === `${G}/PAGE/photos`);
+    expect(photos.map((c) => [c.body.url, c.body.published])).toEqual([
+      ["https://t/1/image.jpg", "false"],
+      ["https://t/2/image.jpg", "false"],
+    ]);
+    const feed = notOwned.calls.find((c) => c.url === `${G}/PAGE/feed`)!;
+    expect(feed.body.child_attachments).toBeUndefined();
+    expect(feed.body.message).toBe("Teksts 👉 L");
+    expect(Object.keys(feed.body).filter((k) => k.startsWith("attached_media"))).toHaveLength(2);
+    // The check failing counts as not owned.
+    const down = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      if (c.body.fields?.startsWith("ownership_permissions"))
+        return { status: 500, json: { error: { message: "x", code: 2 } } };
+      return { json: { id: "p2" } };
+    });
+    await metaProvider(cfg, down.http, noWait).publishCarousel("facebook", cardImgs, "T", "L");
+    expect(down.calls.some((c) => c.body.child_attachments)).toBe(false);
+  });
+
+  it("owned: card pictures uploaded to Facebook first, one feed post whose cards name Facebook's copy", async () => {
     const cdn = (n: number) => `https://scontent.xx.fbcdn.net/v/${n}.jpg`;
     const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      // Each picture uploaded unpublished, then read back for Facebook's own copy.
+      const o = own(c, true);
+      if (o) return o;
       if (c.url === `${G}/PAGE/photos`)
         return { json: { id: `ph${/\/(\d)\/square/.exec(c.body.url!)![1]}` } };
       const ph = /\/ph(\d)$/.exec(c.url);
@@ -176,24 +229,23 @@ describe("meta provider", () => {
             ],
           },
         };
+      if (c.url === `${G}/PAGE_lc1`)
+        return {
+          json: {
+            attachments: {
+              data: [
+                {
+                  type: "multi_share",
+                  subattachments: { data: [1, 2].map((n) => ({ media: { image: { src: cdn(n) } } })) },
+                },
+              ],
+            },
+          },
+        };
       return { json: { id: "PAGE_lc1" } };
     });
-    const card = (n: number) => ({
-      url: `https://t/${n}/image.jpg`,
-      card: {
-        link: `https://t/social/p/${n}`,
-        name: `Karte ${n}`,
-        description: "no 23 €",
-        picture: `https://t/${n}/square.jpg`,
-      },
-    });
     expect(
-      await metaProvider(cfg, http, noWait).publishCarousel(
-        "facebook",
-        [card(1), card(2)],
-        "Teksts",
-        "https://t/post",
-      ),
+      await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "Teksts", "https://t/post"),
     ).toEqual({ ok: true, id: "PAGE_lc1" });
     const uploads = calls.filter((c) => c.url === `${G}/PAGE/photos`);
     expect(uploads.map((c) => [c.body.url, c.body.published])).toEqual([
@@ -207,115 +259,71 @@ describe("meta provider", () => {
       multi_share_optimized: "false",
       multi_share_end_card: "false",
     });
-    // Each card names Facebook's copy, and its share page carries it as ?p= for its og:image.
+    // Each card keeps its own link (no ?p=) and names Facebook's copy as its picture.
     expect(JSON.parse(feed.body.child_attachments!)).toEqual(
       [1, 2].map((n) => ({
-        link: `https://t/social/p/${n}?p=${encodeURIComponent(cdn(n))}`,
+        link: `https://t/social/p/${n}`,
         name: `Karte ${n}`,
         description: "no 23 €",
         picture: cdn(n),
       })),
     );
-    // All of it before the feed post: uploads, and Facebook reading each card's page.
-    const feedAt = calls.findIndex((c) => c.url === `${G}/PAGE/feed`);
-    for (const n of [1, 2]) {
-      expect(calls.findIndex((c) => c.url === `${G}/ph${n}`)).toBeLessThan(feedAt);
-      const scraped = calls.findIndex(
-        (c) => c.url === `${G}/` && c.body.id?.startsWith(`https://t/social/p/${n}?p=`),
-      );
-      expect(scraped).toBeGreaterThanOrEqual(0);
-      expect(scraped).toBeLessThan(feedAt);
-    }
+    expect(calls.filter((c) => c.method === "DELETE")).toHaveLength(0);
   });
 
-  it("a card picture Facebook could not take keeps its own address", async () => {
+  it("owned: a picture Facebook could not take keeps its own address; a carousel drawn without pictures is replaced by photos", async () => {
+    const reads = [[], []] as string[][];
     const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      if (c.url === `${G}/PAGE/photos`)
+      const o = own(c, true);
+      if (o) return o;
+      if (c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("square.jpg"))
         return { status: 400, json: { error: { message: "bad image", code: 324 } } };
-      return { json: { id: "PAGE_lc2" } };
+      if (c.url === `${G}/PAGE_lc2`) {
+        const srcs = reads.shift() ?? [];
+        return {
+          json: {
+            attachments: {
+              data: [
+                {
+                  type: "multi_share",
+                  subattachments: {
+                    data: [0, 1].map((k) => (srcs[k] ? { media: { image: { src: srcs[k] } } } : {})),
+                  },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (c.url === `${G}/PAGE/feed` && c.body.child_attachments) return { json: { id: "PAGE_lc2" } };
+      return { json: { id: "p9" } };
     });
-    const imgs = [1, 2].map((n) => ({
-      url: `https://t/${n}/image.jpg`,
-      card: { link: `https://t/social/p/${n}`, name: "K", picture: `https://t/${n}/square.jpg` },
-    }));
-    expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual({
+    expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "T", "L")).toEqual({
       ok: true,
-      id: "PAGE_lc2",
+      id: "p9",
     });
     const feed = calls.find((c) => c.url === `${G}/PAGE/feed` && c.body.child_attachments)!;
-    expect(JSON.parse(feed.body.child_attachments!)).toEqual(
-      [1, 2].map((n) => ({
-        link: `https://t/social/p/${n}`,
-        name: "K",
-        picture: `https://t/${n}/square.jpg`,
-      })),
-    );
+    expect(JSON.parse(feed.body.child_attachments!).map((x: { picture: string }) => x.picture)).toEqual([
+      "https://t/1/square.jpg",
+      "https://t/2/square.jpg",
+    ]);
+    // Read twice without pictures: removed, and the slides posted as photos.
+    expect(calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_lc2`]);
+    expect(
+      calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("image.jpg")),
+    ).toHaveLength(2);
   });
 
-  it("a link carousel: every card's page is read by Facebook first; drawn without pictures, it is removed and the slides go out as photos", async () => {
-    // Facebook's read of the post: the cards' pictures missing the first two times, there afterwards.
-    const reads: string[][] = [[], [], ["a", "b"]];
-    const graph = (withPictures: boolean) =>
-      fakeFetch((c) => {
-        if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-        if (c.url === `${G}/` && c.body.scrape === "true")
-          return { json: { id: c.body.id, image: [{ url: "x" }] } };
-        if (c.url === `${G}/PAGE_lc`) {
-          const srcs = withPictures ? ["a", "b"] : (reads.shift() ?? []);
-          return {
-            json: {
-              attachments: {
-                data: [
-                  {
-                    type: "multi_share",
-                    subattachments: {
-                      data: [1, 2].map((n) =>
-                        srcs[n - 1] ? { media: { image: { src: srcs[n - 1] } } } : {},
-                      ),
-                    },
-                  },
-                ],
-              },
-            },
-          };
-        }
-        if (c.url === `${G}/PAGE/feed` && c.body.child_attachments) return { json: { id: "PAGE_lc" } };
-        return { json: { id: "p1" } };
-      });
-    const imgs = [1, 2].map((n) => ({
-      url: `https://t/${n}/image.jpg`,
-      card: { link: `https://t/social/p/${n}`, name: "K", picture: `https://t/${n}/square.jpg` },
-    }));
-    // With pictures: the link carousel stays; before it, each card's page and picture were fetched and scraped.
-    const good = graph(true);
-    expect(await metaProvider(cfg, good.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual({
-      ok: true,
-      id: "PAGE_lc",
-    });
-    const urls = good.calls.map((c) => c.url);
-    const feed = urls.indexOf(`${G}/PAGE/feed`);
-    for (const n of [1, 2]) {
-      expect(urls.indexOf(`https://t/${n}/square.jpg`)).toBeLessThan(feed);
-      expect(urls.indexOf(`https://t/social/p/${n}`)).toBeLessThan(feed);
-      const scraped = good.calls.findIndex(
-        (c) => c.url === `${G}/` && c.body.id === `https://t/social/p/${n}`,
-      );
-      expect(scraped).toBeGreaterThanOrEqual(0);
-      expect(scraped).toBeLessThan(feed);
-    }
-    expect(good.calls.filter((c) => c.method === "DELETE")).toHaveLength(0);
-    // Without pictures after a second read: removed, and the slides posted as photos.
-    const grey = graph(false);
-    expect(await metaProvider(cfg, grey.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual({
-      ok: true,
-      id: "p1",
-    });
-    expect(grey.calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_lc`]);
-    // The fallback uploads the portrait slides (the square card pictures were the hosting step).
-    expect(
-      grey.calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("image.jpg")),
-    ).toHaveLength(2);
+  it("reads whether the Page owns a domain, for the admin", async () => {
+    const yes = fakeFetch((c) =>
+      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : (own(c, true) ?? { json: {} }),
+    );
+    expect(await metaProvider(cfg, yes.http, noWait).linkOwnership("https://t/")).toBe(true);
+    const no = fakeFetch((c) =>
+      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : (own(c, false) ?? { json: {} }),
+    );
+    expect(await metaProvider(cfg, no.http, noWait).linkOwnership("https://t/")).toBe(false);
   });
 
   it("a link post drawn without its picture is removed and reported, so the caller posts a photo", async () => {
@@ -334,6 +342,8 @@ describe("meta provider", () => {
   it("when Meta refuses the link carousel the slides still go out as photos; a token error does not retry", async () => {
     const refused = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      const o = own(c, true);
+      if (o) return o;
       if (c.url === `${G}/PAGE/feed` && c.body.child_attachments)
         return { status: 400, json: { error: { message: "Invalid parameter", code: 100 } } };
       return { json: { id: "p1" } };
@@ -362,10 +372,8 @@ describe("meta provider", () => {
         error: "Meta 401 #190: Session has expired",
       },
     );
-    // No slide posted as a photo after a token error (the card pictures' upload had failed too).
-    expect(
-      expired.calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.startsWith("u")),
-    ).toHaveLength(0);
+    // A token error stops the post at the ownership check: nothing is uploaded.
+    expect(expired.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
   });
 
   it("a link post on the page: message and link, with the page's token", async () => {

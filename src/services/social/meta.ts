@@ -62,6 +62,30 @@ export function metaProvider(
   }
 
   /**
+   * Whether this Page may customise a link's preview (picture, name, line):
+   * `ownership_permissions{can_customize_link_posts}` on the URL node, which Meta
+   * says to read before posting new links (docs/FACEBOOK_CAROUSEL_PLAN.md). True
+   * only when trilio.lv is verified and assigned to the Page; false otherwise,
+   * also when the check itself fails.
+   */
+  async function canCustomize(url: string, token: string): Promise<boolean> {
+    try {
+      const r = await call(
+        "GET",
+        "",
+        { id: url, fields: "ownership_permissions{can_customize_link_posts}" },
+        token,
+      );
+      const perms = r.ownership_permissions as { can_customize_link_posts?: boolean } | undefined;
+      return perms?.can_customize_link_posts === true;
+    } catch (err) {
+      // A token or page problem stops the post here; anything else counts as not owned.
+      if (err instanceof Error && /#(190|200|10)\b/.test(err.message)) throw err;
+      return false;
+    }
+  }
+
+  /**
    * Facebook's own copy of a picture (docs/SOCIAL_PLAN.md §12, 8 Nov 2026): uploaded
    * to the page unpublished (never shown on the page), then its largest image on
    * Facebook's servers. A card that names this copy needs nothing from trilio.lv
@@ -242,25 +266,16 @@ export function metaProvider(
           return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);
         }
         const token = await page();
-        if (link && images.every((i) => i.card)) {
-          // A link carousel: every card opens its own page (multi-link share, child_attachments).
-          // The order is ours (not "optimized"), and no extra end card is added. Facebook fetches
-          // every card's picture once, when the post is made, and leaves out one that is slow:
-          // all pictures are drawn first.
-          // Every card's picture is uploaded to Facebook first and the card names Facebook's
-          // own copy, as `picture` and as its share page's og:image (?p=), so nothing has to
-          // be fetched from trilio.lv when the post is made (8 Nov 2026: a carousel lost its
-          // first three pictures). A picture that cannot be uploaded keeps its own address.
+        // A link carousel only when this Page owns trilio.lv (domain verified, Page assigned):
+        // without that, Facebook ignores each card's picture and draws it from its own crawl
+        // of the card's link, which Trilio cannot make reliable (docs/FACEBOOK_CAROUSEL_PLAN.md).
+        // Otherwise the slides go out as a multi-photo post below: the pictures always show.
+        if (link && images.every((i) => i.card) && (await canCustomize(images[0]!.card!.link, token))) {
+          // Each card names Facebook's own copy of its square picture (uploaded unpublished,
+          // never shown on the page), so nothing is fetched from trilio.lv when the post is made.
           await warm(images.map((i) => i.card!.picture));
           const hosted = await Promise.all(images.map((i) => hostPicture(i.card!.picture, token)));
-          const cards = images.map(({ card }, k) => {
-            const h = hosted[k];
-            if (!h) return card!;
-            const sep = card!.link.includes("?") ? "&" : "?";
-            return { ...card!, picture: h, link: `${card!.link}${sep}p=${encodeURIComponent(h)}` };
-          });
-          await warm(cards.map((c) => c.link));
-          for (const c of cards) await scrape(c.link, token);
+          const cards = images.map(({ card }, k) => ({ ...card!, picture: hosted[k] ?? card!.picture }));
           let posted: string | null = null;
           try {
             const r = await call(
@@ -289,9 +304,8 @@ export function metaProvider(
             if (err instanceof Error && /\b(190|200|10)\b|#(190|200|10)\b/.test(err.message)) throw err;
           }
           if (posted) {
-            // The post is read back: a carousel Facebook drew without its pictures (the grey
-            // boxes) is removed at once and the slides go out as photos instead, so no grey
-            // post is ever left on the page. A preview that cannot be read is kept.
+            // Read back: a carousel drawn without its pictures is removed at once and the
+            // slides go out as photos instead. A preview that cannot be read is kept.
             const pictures = await previewHasPicture(posted, linkPreview);
             if (pictures !== false) return { ok: true, id: posted };
             await call("DELETE", posted, {}, token).catch(() => undefined);
@@ -320,6 +334,13 @@ export function metaProvider(
       }
     },
     linkPreview,
+    async linkOwnership(url: string) {
+      try {
+        return await canCustomize(url, await page());
+      } catch {
+        return null;
+      }
+    },
     async publishLink(link: string, caption: string, preview?: string) {
       try {
         const token = await page();

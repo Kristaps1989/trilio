@@ -56,6 +56,10 @@ export function mockSocialProvider(): SocialProvider {
       // A post id ending in "noimg" stands for a preview Facebook drew without its picture.
       return { image: !id.endsWith("noimg") || mockRefreshed().length > 0 };
     },
+    async linkOwnership() {
+      // The test page owns its domain, so carousels keep their links in dev and e2e.
+      return true;
+    },
     async publishVideo(network, videoUrl, caption) {
       return add(network, videoUrl, caption);
     },
