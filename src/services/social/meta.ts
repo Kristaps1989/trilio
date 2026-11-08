@@ -26,6 +26,9 @@ type Json = Record<string, unknown>;
 /** A link post Facebook drew without its picture: removed, and posted as a photo instead. */
 export const NO_PICTURE = "Facebook preview without its picture";
 
+/** What Facebook drew for a post: its picture, and for a carousel the cards (1-based) without one. */
+type Preview = { image: boolean; missing?: number[] };
+
 export function metaProvider(
   cfg: MetaConfig,
   http: Fetch = fetch,
@@ -86,36 +89,16 @@ export function metaProvider(
   }
 
   /**
-   * Facebook's own copy of a picture (docs/SOCIAL_PLAN.md §12, 8 Nov 2026): uploaded
-   * to the page unpublished (never shown on the page), then its largest image on
-   * Facebook's servers. A card that names this copy needs nothing from trilio.lv
-   * when the post is made. Null when the upload or the read fails.
-   */
-  async function hostPicture(url: string, token: string): Promise<string | null> {
-    try {
-      const photo = await call("POST", `${cfg.pageId}/photos`, { url, published: "false" }, token);
-      const r = await call("GET", String(photo.id), { fields: "images" }, token);
-      const images = Array.isArray(r.images) ? (r.images as { source?: string; width?: number }[]) : [];
-      const best = images
-        .filter((i) => typeof i.source === "string")
-        .sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0];
-      return best?.source ?? null;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
    * Whether a page post just made has its picture (every card's, for a
    * carousel). Facebook attaches pictures as it reads them, so a first "no" is
    * read once more after a moment. Null when it cannot be read.
    */
-  async function previewHasPicture(postId: string, read: (id: string) => Promise<{ image: boolean } | null>) {
+  async function previewHasPicture(postId: string, read: (id: string) => Promise<Preview | null>) {
     const first = await read(postId);
-    if (first === null || first.image) return first?.image ?? null;
+    if (first === null || first.image) return first;
     await wait(5_000);
     const second = await read(postId);
-    return second === null ? false : second.image;
+    return second ?? { image: false };
   }
 
   async function call(
@@ -208,7 +191,7 @@ export function metaProvider(
     }
   }
 
-  async function linkPreview(postId: string): Promise<{ image: boolean } | null> {
+  async function linkPreview(postId: string): Promise<Preview | null> {
     try {
       type Media = { media?: { image?: { src?: string } }; type?: string };
       const r = (await call(
@@ -221,7 +204,10 @@ export function metaProvider(
       if (!a) return null;
       // A link carousel: every card must have its picture.
       const cards = a.subattachments?.data ?? [];
-      if (cards.length) return { image: cards.every((c) => !!c.media?.image?.src) };
+      if (cards.length) {
+        const missing = cards.flatMap((c, k) => (c.media?.image?.src ? [] : [k + 1]));
+        return { image: missing.length === 0, ...(missing.length ? { missing } : {}) };
+      }
       return { image: !!a.media?.image?.src };
     } catch {
       return null;
@@ -271,11 +257,11 @@ export function metaProvider(
         // of the card's link, which Trilio cannot make reliable (docs/FACEBOOK_CAROUSEL_PLAN.md).
         // Otherwise the slides go out as a multi-photo post below: the pictures always show.
         if (link && images.every((i) => i.card) && (await canCustomize(images[0]!.card!.link, token))) {
-          // Each card names Facebook's own copy of its square picture (uploaded unpublished,
-          // never shown on the page), so nothing is fetched from trilio.lv when the post is made.
+          // Each card names its own square picture on trilio.lv, drawn and cached first:
+          // Facebook fetches it once, when the post is made. (A copy on Facebook's own
+          // CDN is not taken as a card picture: tried 8 Nov 2026, no pictures at all.)
           await warm(images.map((i) => i.card!.picture));
-          const hosted = await Promise.all(images.map((i) => hostPicture(i.card!.picture, token)));
-          const cards = images.map(({ card }, k) => ({ ...card!, picture: hosted[k] ?? card!.picture }));
+          const cards = images.map(({ card }) => card!);
           let posted: string | null = null;
           try {
             const r = await call(
@@ -306,8 +292,12 @@ export function metaProvider(
           if (posted) {
             // Read back: a carousel drawn without its pictures is removed at once and the
             // slides go out as photos instead. A preview that cannot be read is kept.
-            const pictures = await previewHasPicture(posted, linkPreview);
-            if (pictures !== false) return { ok: true, id: posted };
+            const preview = await previewHasPicture(posted, linkPreview);
+            if (preview === null || preview.image) return { ok: true, id: posted };
+            // Which cards Facebook drew without a picture: the next diagnosis starts from data.
+            console.warn(
+              `[social] Facebook carousel ${posted} drawn without pictures (cards ${(preview.missing ?? []).join(", ") || "?"}); posting the slides as photos`,
+            );
             await call("DELETE", posted, {}, token).catch(() => undefined);
           }
         }
@@ -354,8 +344,8 @@ export function metaProvider(
         const r = await call("POST", `${cfg.pageId}/feed`, { message: caption, link }, token);
         const id = String(r.id);
         // Read back: a preview without its picture is removed, and the caller posts a photo instead.
-        const picture = await previewHasPicture(id, linkPreview);
-        if (picture === false) {
+        const drawn = await previewHasPicture(id, linkPreview);
+        if (drawn !== null && !drawn.image) {
           await call("DELETE", id, {}, token).catch(() => undefined);
           return { ok: false, error: NO_PICTURE };
         }

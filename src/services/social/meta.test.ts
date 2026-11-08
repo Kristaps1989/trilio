@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { metaConfigFromEnv, metaProvider, NO_PICTURE } from "./meta";
 import { socialProvider } from "./index";
 
@@ -211,24 +211,11 @@ describe("meta provider", () => {
     expect(down.calls.some((c) => c.body.child_attachments)).toBe(false);
   });
 
-  it("owned: card pictures uploaded to Facebook first, one feed post whose cards name Facebook's copy", async () => {
-    const cdn = (n: number) => `https://scontent.xx.fbcdn.net/v/${n}.jpg`;
+  it("owned: one feed post whose cards name their own pictures on the site, drawn first; nothing uploaded", async () => {
     const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
       const o = own(c, true);
       if (o) return o;
-      if (c.url === `${G}/PAGE/photos`)
-        return { json: { id: `ph${/\/(\d)\/square/.exec(c.body.url!)![1]}` } };
-      const ph = /\/ph(\d)$/.exec(c.url);
-      if (ph)
-        return {
-          json: {
-            images: [
-              { source: "small", width: 130 },
-              { source: cdn(Number(ph[1])), width: 1080 },
-            ],
-          },
-        };
       if (c.url === `${G}/PAGE_lc1`)
         return {
           json: {
@@ -236,7 +223,9 @@ describe("meta provider", () => {
               data: [
                 {
                   type: "multi_share",
-                  subattachments: { data: [1, 2].map((n) => ({ media: { image: { src: cdn(n) } } })) },
+                  subattachments: {
+                    data: [1, 2].map((n) => ({ media: { image: { src: `https://t/${n}/square.jpg` } } })),
+                  },
                 },
               ],
             },
@@ -247,11 +236,11 @@ describe("meta provider", () => {
     expect(
       await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "Teksts", "https://t/post"),
     ).toEqual({ ok: true, id: "PAGE_lc1" });
-    const uploads = calls.filter((c) => c.url === `${G}/PAGE/photos`);
-    expect(uploads.map((c) => [c.body.url, c.body.published])).toEqual([
-      ["https://t/1/square.jpg", "false"],
-      ["https://t/2/square.jpg", "false"],
-    ]);
+    // The pictures are drawn (fetched) before the post, and no photo is uploaded to the page.
+    expect(calls.filter((c) => c.url.startsWith("https://t/") && c.url.endsWith("square.jpg"))).toHaveLength(
+      2,
+    );
+    expect(calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
     const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
     expect(feed.body).toMatchObject({
       message: "Teksts",
@@ -259,26 +248,26 @@ describe("meta provider", () => {
       multi_share_optimized: "false",
       multi_share_end_card: "false",
     });
-    // Each card keeps its own link (no ?p=) and names Facebook's copy as its picture.
+    // Each card keeps its own link (no ?p=) and its own picture on the site (never Facebook's CDN).
     expect(JSON.parse(feed.body.child_attachments!)).toEqual(
       [1, 2].map((n) => ({
         link: `https://t/social/p/${n}`,
         name: `Karte ${n}`,
         description: "no 23 €",
-        picture: cdn(n),
+        picture: `https://t/${n}/square.jpg`,
       })),
     );
     expect(calls.filter((c) => c.method === "DELETE")).toHaveLength(0);
   });
 
-  it("owned: a picture Facebook could not take keeps its own address; a carousel drawn without pictures is replaced by photos", async () => {
-    const reads = [[], []] as string[][];
+  it("owned: a carousel drawn without every picture is removed, the missing cards logged, and the slides posted as photos", async () => {
+    const reads = [[], ["https://t/1/square.jpg"]] as string[][];
+    const warned: string[] = [];
+    const warn = vi.spyOn(console, "warn").mockImplementation((m: string) => void warned.push(String(m)));
     const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
       const o = own(c, true);
       if (o) return o;
-      if (c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("square.jpg"))
-        return { status: 400, json: { error: { message: "bad image", code: 324 } } };
       if (c.url === `${G}/PAGE_lc2`) {
         const srcs = reads.shift() ?? [];
         return {
@@ -299,17 +288,17 @@ describe("meta provider", () => {
       if (c.url === `${G}/PAGE/feed` && c.body.child_attachments) return { json: { id: "PAGE_lc2" } };
       return { json: { id: "p9" } };
     });
-    expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "T", "L")).toEqual({
-      ok: true,
-      id: "p9",
-    });
-    const feed = calls.find((c) => c.url === `${G}/PAGE/feed` && c.body.child_attachments)!;
-    expect(JSON.parse(feed.body.child_attachments!).map((x: { picture: string }) => x.picture)).toEqual([
-      "https://t/1/square.jpg",
-      "https://t/2/square.jpg",
-    ]);
-    // Read twice without pictures: removed, and the slides posted as photos.
+    try {
+      expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "T", "L")).toEqual({
+        ok: true,
+        id: "p9",
+      });
+    } finally {
+      warn.mockRestore();
+    }
+    // Read twice, the second card still without its picture: removed, logged, and posted as photos.
     expect(calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_lc2`]);
+    expect(warned).toEqual([expect.stringContaining("PAGE_lc2 drawn without pictures (cards 2)")]);
     expect(
       calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("image.jpg")),
     ).toHaveLength(2);
@@ -439,6 +428,7 @@ describe("meta provider", () => {
     expect(await metaProvider(cfg, cards(["a", "b"]).http, noWait).linkPreview("C")).toEqual({ image: true });
     expect(await metaProvider(cfg, cards(["a", null]).http, noWait).linkPreview("C")).toEqual({
       image: false,
+      missing: [2],
     });
     const down = fakeFetch(() => ({ status: 500, json: { error: { message: "down", code: 2 } } }));
     expect(await metaProvider(cfg, down.http, noWait).refreshLink("https://t/x")).toBe(false);

@@ -34,18 +34,36 @@ From the Graph API reference for `POST /{page-id}/feed`
 | 2–8 Nov (link carousels) | `picture` on trilio.lv | ignored it (domain not owned), scraped each card's link: some scrapes got a picture, some did not |
 | 8 Nov, PR 87 | `picture` and share page `og:image` on fbcdn.net | ignored `picture`; would not take an `og:image` on its own CDN: **no pictures at all** |
 
-`trilio.lv` is not verified for the Trilio page, so every link carousel so far
-depended on Facebook's crawler, which Trilio cannot make reliable.
+**Correction, 8 Nov 2026 (evening).** The owner showed Meta Business Suite:
+`trilio.lv` is **verified** (owned by Sky Solutions SIA) and the Trilio Page is
+in its **Connected assets**, and has been for a long time. So ownership was not
+the cause: Facebook was entitled to use the cards' `picture`, and still drew
+some cards without one. What is known for certain:
+
+- 31 Oct–2 Nov: link carousels with `picture` on trilio.lv (under `/api/`)
+  showed their pictures.
+- 6–8 Nov: the same kind of post showed some or no pictures.
+- 8 Nov (PR 87): `picture` on fbcdn.net showed **no** pictures: Facebook does
+  not take a card picture from its own CDN.
+
+The remaining suspect is the picture fetch itself (Facebook fetches each
+card's `picture` once, when the post is made, and drops a slow or failed one
+for good): a cold render after a deploy, several pictures drawn at once on a
+small instance, or a reply that is not the picture. The code now records
+**which** cards Facebook drew without a picture, so the next failure is
+diagnosed from data, not from a guess.
 
 ## 3. The fix
 
 1. **Ask Facebook first.** Before a carousel, read
    `ownership_permissions{can_customize_link_posts}` for the first card's link.
-2. **Owned (domain verified and the Page assigned):** a link carousel whose
-   cards name Facebook's own copy of each square picture (uploaded to the Page
-   unpublished first). This is the documented way and does not depend on any
-   crawl. The read-back stays; a carousel drawn without pictures is removed and
-   posted as photos.
+2. **Owned (domain verified and the Page assigned, as trilio.lv is):** a link
+   carousel whose cards name their own square picture on trilio.lv, drawn and
+   cached before the post (the arrangement that worked 31 Oct–2 Nov; a copy on
+   Facebook's CDN is not taken, see above). The read-back stays: a carousel
+   drawn without every picture is removed, the missing card numbers are logged
+   (`[social] Facebook carousel … drawn without pictures (cards …)`), and the
+   slides are posted as photos.
 3. **Not owned, or the check fails:** no link carousel. The slides go out as a
    **multi-photo post** (photos uploaded unpublished, then one feed post with
    all of them, the link in the text): the pictures always show. Instagram is
@@ -61,10 +79,12 @@ depended on Facebook's crawler, which Trilio cannot make reliable.
 
 ## 4. For the owner
 
-Meta Business Suite → Settings → Brand safety and suitability → Domains →
-Add `trilio.lv` → verify (meta tag is easiest: send it to Claude to add, or DNS
-TXT at the registrar) → Connected assets → add the Trilio page. Then Admin →
-Sociālie tīkli shows "apstiprināts", and carousels go out with links again.
+Nothing to set in Meta Business Suite: `trilio.lv` is verified and the Trilio
+Page is connected (checked 8 Nov 2026). Admin → Sociālie tīkli shows Meta's own
+answer to the ownership question after this deploy; if it ever says "nav
+apstiprināts", the Page has come off the domain's Connected assets. If a
+carousel still goes out as photos, the Railway log names the cards Facebook
+drew without a picture.
 
 ## 5. Tests
 

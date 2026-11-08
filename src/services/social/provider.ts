@@ -53,7 +53,7 @@ export interface SocialProvider {
    * A published page post's preview: whether its attachment has a picture.
    * Null when it cannot be read (no link attachment, a network error).
    */
-  linkPreview(postId: string): Promise<{ image: boolean } | null>;
+  linkPreview(postId: string): Promise<{ image: boolean; missing?: number[] } | null>;
   /**
    * Whether the Page owns a link's domain (Meta: `can_customize_link_posts`), so a
    * carousel can go out with links and its own pictures. Null when it cannot be read.
