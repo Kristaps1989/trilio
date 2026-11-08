@@ -112,7 +112,9 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   // The same screen as the question before the shop: what the e-mail is worth, then the steps.
   const pitch = first.locator("[data-offer-pitch]");
   await expect(pitch.locator("[data-ask-discount]")).toContainText("līdz −10 %");
-  await expect(pitch.locator("[data-ask-promise]")).toContainText("Atbilde 2 darba dienu laikā");
+  await expect(pitch.locator("[data-ask-promise]")).toContainText(
+    "Piedāvājumu atsūtīsim 2 darba dienu laikā",
+  );
   await pitch.getByText("Kā tas strādā?").click();
   await expect(pitch.getByRole("listitem")).toHaveCount(3);
   await expect(pitch).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
@@ -268,7 +270,9 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await expect(sheet.locator("[data-ask-discount]")).toContainText(
     /šai precei tas ir līdz \d+(,\d{2})?\s€ lētāk/,
   );
-  await expect(sheet.locator("[data-ask-promise]")).toContainText("Atbilde 2 darba dienu laikā");
+  await expect(sheet.locator("[data-ask-promise]")).toContainText(
+    "Piedāvājumu atsūtīsim 2 darba dienu laikā",
+  );
   // The steps and the honest caveat are one tap away, not between the shopper and the field.
   await expect(sheet.getByRole("listitem")).toHaveCount(0);
   await sheet.getByText("Kā tas strādā?").click();

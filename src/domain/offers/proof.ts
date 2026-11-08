@@ -9,7 +9,7 @@ export type Saving = { subcategoryId: string; savedCents: number; paidAt: Date }
 export type SavingsProof = {
   /** Paid offers that saved at least 1 €. */
   count: number;
-  /** Their savings together, in whole euros (cents rounded down per offer). */
+  /** Their savings together, in whole euros (each offer rounded to the nearest euro). */
   totalCents: number;
   /** The most recent one. */
   latest: Saving;
@@ -31,7 +31,8 @@ export function savedCents(o: {
 export function savingsProof(rows: Saving[]): SavingsProof | null {
   const shown = rows
     .filter((r) => r.savedCents >= MIN_SAVING_CENTS)
-    .map((r) => ({ ...r, savedCents: Math.floor(r.savedCents / 100) * 100 }))
+    // To the nearest euro: 49,99 € reads as 50 €, never more than 50 cents off either way.
+    .map((r) => ({ ...r, savedCents: Math.round(r.savedCents / 100) * 100 }))
     .sort((a, b) => b.paidAt.getTime() - a.paidAt.getTime());
   if (!shown.length) return null;
   return {

@@ -9,9 +9,9 @@ describe("savings proof", () => {
     expect(savedCents({ referencePriceCents: null, priceCents: 9900, quantity: 1 })).toBeNull();
   });
 
-  it("counts savings of at least 1 €, in whole euros, the latest first", () => {
+  it("counts savings of at least 1 €, to the nearest euro, the latest first", () => {
     const p = savingsProof([
-      { subcategoryId: "fridge", savedCents: 5099, paidAt: new Date("2026-11-02T10:00:00Z") },
+      { subcategoryId: "fridge", savedCents: 4999, paidAt: new Date("2026-11-02T10:00:00Z") },
       { subcategoryId: "kettle", savedCents: 99, paidAt: new Date("2026-11-05T10:00:00Z") },
       { subcategoryId: "washer", savedCents: 3000, paidAt: new Date("2026-10-20T10:00:00Z") },
     ])!;

@@ -35,7 +35,9 @@ as a plain link, and the proof line (§6) when there is one.
 
 ### 3. One-screen „Iegūt lētāk”
 The question before the shop (sheet, and /pirms-veikala) and the card's own panel now show, in order:
-the saving in euro, a promise line („Atbilde 2 darba dienu laikā · bez maksas · pirkt nav obligāti.”),
+the saving in euro, a promise line („Piedāvājumu atsūtīsim 2 darba dienu laikā. Ja zemāku cenu nepanāksim,
+turpināsim sekot cenai un paziņosim, kad tā samazināsies. Bez maksas · pirkt nav obligāti.”; owner, 8 Nov 2026:
+the offer within 2 working days, and without one the price watch goes on),
 who handles it (`OFFERS_SENDER_NAME`), the proof (§6), then the e-mail field **at once** (signed out) or
 one button (signed in), the three steps and the caveat folded under „Kā tas strādā?”, and the shop as
 a second, outlined button. The e-mail button says what it does: „Sūtīt pieprasījumu”.
@@ -57,6 +59,8 @@ after, a Bosch and two Mieles under 850 €.
 `loadSavingsProof` takes paid Trilio offers (paid, packed, shipped, delivered) and their saving against
 the shop price frozen in the offer (`referencePriceCents − priceCents`, times the quantity), plus savings
 the owner records by hand in `data/savings.json` (category, euros, month) for cases outside the offer flow.
+Each saving is rounded to the nearest euro (49,99 € shows as 50 €). The first recorded case (owner, 8 Nov 2026):
+a fridge at 719,99 € in the shop, offered by Trilio for 670 € with free delivery, in `data/savings.json`.
 Shown only as category, amount and month, e.g. „Reāls piemērs: novembrī ledusskapis pircējam izmaksāja
 par 50 € mazāk nekā veikalā.”; with more than one, the count and total. Never a name, product, shop,
 date or place. Nothing is shown until there is a saving of at least 1 €.

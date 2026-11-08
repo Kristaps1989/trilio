@@ -2,6 +2,7 @@ import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import data from "../../../data/savings.json";
 import type { Db } from "@/db/client";
+import { isAdminEmail } from "@/config/admin";
 import { offerOrders, specialOffers } from "@/db/schema";
 import { savedCents, savingsProof, type Saving, type SavingsProof } from "@/domain/offers/proof";
 import { MONTHS_LOCATIVE } from "@/domain/social/anonymise";
@@ -16,10 +17,10 @@ const PAID = ["paid", "packed", "shipped", "delivered"] as const;
 
 type Manual = { subcategoryId: string; savedEur: number; month: string };
 
-/** The hand-kept savings: a month "YYYY-MM" counts as its 15th. */
+/** The hand-kept savings: a month "YYYY-MM" counts as its 1st, so it is never in the future. */
 export function manualSavings(list: Manual[] = (data as { savings: Manual[] }).savings): Saving[] {
   return list.flatMap((m) => {
-    const at = /^\d{4}-\d{2}$/.test(m.month) ? new Date(`${m.month}-15T12:00:00Z`) : null;
+    const at = /^\d{4}-\d{2}$/.test(m.month) ? new Date(`${m.month}-01T12:00:00Z`) : null;
     return at && Number.isFinite(m.savedEur) && m.savedEur > 0
       ? [{ subcategoryId: m.subcategoryId, savedCents: Math.round(m.savedEur * 100), paidAt: at }]
       : [];
@@ -34,11 +35,14 @@ export async function loadSavingsProof(db: Db): Promise<SavingsProof | null> {
       priceCents: specialOffers.priceCents,
       quantity: specialOffers.quantity,
       paidAt: offerOrders.paidAt,
+      email: offerOrders.email,
     })
     .from(offerOrders)
     .innerJoin(specialOffers, eq(specialOffers.id, offerOrders.offerId))
     .where(and(inArray(offerOrders.status, [...PAID]), isNotNull(offerOrders.paidAt)));
+  // The owner's own test purchases (an admin e-mail as the buyer) are not savings.
   const fromOffers = rows.flatMap((r) => {
+    if (isAdminEmail(r.email)) return [];
     const saved = savedCents(r);
     return saved === null ? [] : [{ subcategoryId: r.subcategoryId, savedCents: saved, paidAt: r.paidAt! }];
   });
