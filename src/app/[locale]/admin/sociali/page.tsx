@@ -301,7 +301,8 @@ export default async function SocialPage({ searchParams }: Props) {
               s.clicks,
               p.status === "published" || (p.status === "failed" && p.fbPostId) ? (
                 <div key="r" className="flex flex-wrap gap-2">
-                  {p.fbPostId && p.previewMissing ? (
+                  {/* Always offered (owner, 8 Nov 2026): the owner sees the page; the mark may lag a day. */}
+                  {p.fbPostId && !p.videoUrl ? (
                     <form action={repostAction} data-repost={p.id}>
                       <input type="hidden" name="id" value={p.id} />
                       <Button type="submit" size="sm">
