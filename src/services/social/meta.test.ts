@@ -159,14 +159,29 @@ describe("meta provider", () => {
     expect(JSON.parse(feed.body["attached_media[1]"]!)).toEqual({ media_fbid: "id6" });
   });
 
-  it("a link carousel on the page: one feed post whose cards each open their own page", async () => {
-    const { http, calls } = fakeFetch((c) =>
-      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : { json: { id: "PAGE_lc1" } },
-    );
+  it("a link carousel on the page: card pictures uploaded to Facebook first, one feed post whose cards each open their own page", async () => {
+    const cdn = (n: number) => `https://scontent.xx.fbcdn.net/v/${n}.jpg`;
+    const { http, calls } = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      // Each picture uploaded unpublished, then read back for Facebook's own copy.
+      if (c.url === `${G}/PAGE/photos`)
+        return { json: { id: `ph${/\/(\d)\/square/.exec(c.body.url!)![1]}` } };
+      const ph = /\/ph(\d)$/.exec(c.url);
+      if (ph)
+        return {
+          json: {
+            images: [
+              { source: "small", width: 130 },
+              { source: cdn(Number(ph[1])), width: 1080 },
+            ],
+          },
+        };
+      return { json: { id: "PAGE_lc1" } };
+    });
     const card = (n: number) => ({
       url: `https://t/${n}/image.jpg`,
       card: {
-        link: `https://t/l${n}`,
+        link: `https://t/social/p/${n}`,
         name: `Karte ${n}`,
         description: "no 23 €",
         picture: `https://t/${n}/square.jpg`,
@@ -180,6 +195,11 @@ describe("meta provider", () => {
         "https://t/post",
       ),
     ).toEqual({ ok: true, id: "PAGE_lc1" });
+    const uploads = calls.filter((c) => c.url === `${G}/PAGE/photos`);
+    expect(uploads.map((c) => [c.body.url, c.body.published])).toEqual([
+      ["https://t/1/square.jpg", "false"],
+      ["https://t/2/square.jpg", "false"],
+    ]);
     const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
     expect(feed.body).toMatchObject({
       message: "Teksts",
@@ -187,18 +207,50 @@ describe("meta provider", () => {
       multi_share_optimized: "false",
       multi_share_end_card: "false",
     });
-    expect(JSON.parse(feed.body.child_attachments!)).toEqual([
-      { link: "https://t/l1", name: "Karte 1", description: "no 23 €", picture: "https://t/1/square.jpg" },
-      { link: "https://t/l2", name: "Karte 2", description: "no 23 €", picture: "https://t/2/square.jpg" },
-    ]);
-    // No photos uploaded: the cards carry their own pictures, each drawn before the post is made.
-    expect(calls.some((c) => c.url === `${G}/PAGE/photos`)).toBe(false);
+    // Each card names Facebook's copy, and its share page carries it as ?p= for its og:image.
+    expect(JSON.parse(feed.body.child_attachments!)).toEqual(
+      [1, 2].map((n) => ({
+        link: `https://t/social/p/${n}?p=${encodeURIComponent(cdn(n))}`,
+        name: `Karte ${n}`,
+        description: "no 23 €",
+        picture: cdn(n),
+      })),
+    );
+    // All of it before the feed post: uploads, and Facebook reading each card's page.
     const feedAt = calls.findIndex((c) => c.url === `${G}/PAGE/feed`);
     for (const n of [1, 2]) {
-      const at = calls.findIndex((c) => c.url === `https://t/${n}/square.jpg`);
-      expect(at).toBeGreaterThanOrEqual(0);
-      expect(at).toBeLessThan(feedAt);
+      expect(calls.findIndex((c) => c.url === `${G}/ph${n}`)).toBeLessThan(feedAt);
+      const scraped = calls.findIndex(
+        (c) => c.url === `${G}/` && c.body.id?.startsWith(`https://t/social/p/${n}?p=`),
+      );
+      expect(scraped).toBeGreaterThanOrEqual(0);
+      expect(scraped).toBeLessThan(feedAt);
     }
+  });
+
+  it("a card picture Facebook could not take keeps its own address", async () => {
+    const { http, calls } = fakeFetch((c) => {
+      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
+      if (c.url === `${G}/PAGE/photos`)
+        return { status: 400, json: { error: { message: "bad image", code: 324 } } };
+      return { json: { id: "PAGE_lc2" } };
+    });
+    const imgs = [1, 2].map((n) => ({
+      url: `https://t/${n}/image.jpg`,
+      card: { link: `https://t/social/p/${n}`, name: "K", picture: `https://t/${n}/square.jpg` },
+    }));
+    expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual({
+      ok: true,
+      id: "PAGE_lc2",
+    });
+    const feed = calls.find((c) => c.url === `${G}/PAGE/feed` && c.body.child_attachments)!;
+    expect(JSON.parse(feed.body.child_attachments!)).toEqual(
+      [1, 2].map((n) => ({
+        link: `https://t/social/p/${n}`,
+        name: "K",
+        picture: `https://t/${n}/square.jpg`,
+      })),
+    );
   });
 
   it("a link carousel: every card's page is read by Facebook first; drawn without pictures, it is removed and the slides go out as photos", async () => {
@@ -260,7 +312,10 @@ describe("meta provider", () => {
       id: "p1",
     });
     expect(grey.calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_lc`]);
-    expect(grey.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(2);
+    // The fallback uploads the portrait slides (the square card pictures were the hosting step).
+    expect(
+      grey.calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("image.jpg")),
+    ).toHaveLength(2);
   });
 
   it("a link post drawn without its picture is removed and reported, so the caller posts a photo", async () => {
@@ -293,7 +348,9 @@ describe("meta provider", () => {
         id: "p1",
       },
     );
-    expect(refused.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(2);
+    expect(
+      refused.calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.startsWith("u")),
+    ).toHaveLength(2);
     const expired = fakeFetch((c) =>
       c.url === `${G}/PAGE`
         ? { json: { access_token: "PT" } }
@@ -305,7 +362,10 @@ describe("meta provider", () => {
         error: "Meta 401 #190: Session has expired",
       },
     );
-    expect(expired.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
+    // No slide posted as a photo after a token error (the card pictures' upload had failed too).
+    expect(
+      expired.calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.startsWith("u")),
+    ).toHaveLength(0);
   });
 
   it("a link post on the page: message and link, with the page's token", async () => {
