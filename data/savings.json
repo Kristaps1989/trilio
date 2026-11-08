@@ -1,4 +1,10 @@
 {
   "_doc": "Savings made outside Trilio's offer flow (docs/UX_REVIEW_PLAN.md §6). Category id, euros saved, the month (YYYY-MM). Never a name, product, shop or date: the site shows only the category, the amount and the month.",
-  "savings": []
+  "savings": [
+    {
+      "subcategoryId": "fridge",
+      "savedEur": 49.99,
+      "month": "2026-11"
+    }
+  ]
 }
