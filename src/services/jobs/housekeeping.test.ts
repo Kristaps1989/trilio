@@ -24,10 +24,13 @@ describe("admin configuration", () => {
       adLandingsPurged: 0,
       tvViewersPurged: 0,
       tvUpliftDays: 0,
+      tvHouseholdsPurged: 0,
+      socialImagesPurged: 0,
       notifyRequestsPurged: 0,
       uiEventsPurged: 0,
     };
     expect(eventful(quiet)).toBe(false);
+    expect(eventful({ ...quiet, tvHouseholdsPurged: 3 })).toBe(true);
     expect(eventful({ ...quiet, offers: { ...quiet.offers, reminded: 1 } })).toBe(true);
     expect(eventful({ ...quiet, visits: { days: 0, purged: 3 } })).toBe(true);
     expect(eventful({ ...quiet, adLandingsPurged: 1 })).toBe(true);

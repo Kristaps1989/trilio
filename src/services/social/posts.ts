@@ -45,6 +45,8 @@ export type SocialDeps = {
   provider: SocialProvider | null;
   baseUrl: string;
   caller?: StructuredCaller | null;
+  /** Draws and stores the post's pictures before it is sent (stored-images.ts); none in unit tests. */
+  prepareImages?: (post: SocialPost) => Promise<unknown>;
 };
 
 export type SocialMode = "approve" | "auto";
@@ -457,6 +459,9 @@ export async function publishPost(
 ): Promise<SocialPost> {
   const provider = deps.provider;
   if (!provider) return post;
+  // Every picture the networks will fetch is drawn and stored first, so each answers at once
+  // from any instance (docs/FACEBOOK_CAROUSEL_PLAN.md §6). Best effort: the post goes out either way.
+  await deps.prepareImages?.(post).catch((err) => console.error("social images:", (err as Error).message));
   const card = post.card as unknown as PostCard;
   const slides = card.slides?.length ?? 0;
   const alts = card.slides?.map(slideAlt) ?? [];

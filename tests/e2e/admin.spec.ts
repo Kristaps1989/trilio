@@ -84,13 +84,21 @@ test("own visit counts: a page view shows in Statistika, bots are not counted, C
   const path = `/kategorija/e2e-visit-${Date.now()}`;
   // Its own address, so the suite's other page views do not share its rate-limit window.
   const ip = `203.0.113.${Math.floor(Math.random() * 250) + 1}`;
-  const send = (ua: string) =>
+  // A browser's beacon carries fetch metadata; one without it is a script with a browser's name
+  // (docs/CLICK_QUALITY_PLAN.md §6): stored, marked, and its visitor's day left out.
+  const send = (ua: string, browser = true, from = ip) =>
     page.request.post("/api/visit", {
       data: { path },
-      headers: { "user-agent": ua, "content-type": "application/json", "x-forwarded-for": ip },
+      headers: {
+        "user-agent": ua,
+        "content-type": "application/json",
+        "x-forwarded-for": from,
+        ...(browser ? { "sec-fetch-site": "same-origin", "sec-fetch-mode": "no-cors" } : {}),
+      },
     });
   expect((await send(BROWSER_UA)).status()).toBe(204);
   expect((await send(BROWSER_UA)).status()).toBe(204);
+  expect((await send(BROWSER_UA, false, `198.18.${Math.floor(Math.random() * 250)}.9`)).status()).toBe(204);
   expect((await send("Googlebot/2.1 (+http://www.google.com/bot.html)")).status()).toBe(204);
   expect((await page.request.post("/api/visit", { data: "nonsense" })).status()).toBe(204);
 

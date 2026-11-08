@@ -21,6 +21,13 @@ import { daysBetween, paidRatio, quartiles, topAnswers } from "@/domain/admin/st
 import { isLate } from "@/domain/offers/offers";
 import { currentOffer } from "@/domain/wishlist/wishlist";
 import { visitRows } from "@/services/visits/visits";
+import { cleanVisitor } from "@/services/visits/suspects";
+
+/** A search by a person: not marked, and the visitor's day not left out (docs/CLICK_QUALITY_PLAN.md §6). */
+const personSearch = sql`${searchSessions.suspect} is null and (${searchSessions.visitorHash} is null or ${cleanVisitor(
+  sql`(${searchSessions.createdAt} at time zone 'Europe/Riga')::date`,
+  searchSessions.visitorHash,
+)})`;
 
 // Read-only queries for /admin (docs/ADMIN_AND_OFFERS_PLAN.md §4). Day
 // boundaries are Riga days, like the visit counts.
@@ -131,7 +138,7 @@ export async function headline(db: Db, now = new Date()): Promise<Headline> {
   const [s] = await db
     .select({ n: count() })
     .from(searchSessions)
-    .where(sql`${searchSessions.createdAt} >= ${rigaStart(today)}`);
+    .where(sql`${searchSessions.createdAt} >= ${rigaStart(today)} and ${personSearch}`);
   const monthStart = sql`date_trunc('month', now() at time zone 'Europe/Riga') at time zone 'Europe/Riga'`;
   const [sent] = await db
     .select({ n: count() })
@@ -202,7 +209,7 @@ export async function searchStats(db: Db, from: string, to: string) {
     })
     .from(searchSessions)
     .where(
-      sql`${searchSessions.createdAt} >= ${rigaStart(from)} and ${searchSessions.createdAt} < ${rigaEnd(to)}`,
+      sql`${searchSessions.createdAt} >= ${rigaStart(from)} and ${searchSessions.createdAt} < ${rigaEnd(to)} and ${personSearch}`,
     );
   const bySub = new Map<string, typeof rows>();
   for (const r of rows) bySub.set(r.subcategoryId, [...(bySub.get(r.subcategoryId) ?? []), r]);
@@ -457,13 +464,13 @@ export async function confidenceStats(db: Db, from: string, to: string) {
   const [views] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(searchSessions)
-    .where(inRange(searchSessions.createdAt));
+    .where(sql`${inRange(searchSessions.createdAt)} and ${personSearch}`);
   const [clicked] = await db
     .select({ n: sql<number>`count(distinct ${affiliateClicks.searchSessionId})::int` })
     .from(affiliateClicks)
     .innerJoin(searchSessions, eq(searchSessions.id, affiliateClicks.searchSessionId))
     .where(
-      sql`${inRange(searchSessions.createdAt)} and not ${affiliateClicks.internal} and ${affiliateClicks.suspect} is null`,
+      sql`${inRange(searchSessions.createdAt)} and ${personSearch} and not ${affiliateClicks.internal} and ${affiliateClicks.suspect} is null`,
     );
   const answers = await db
     .select({ confident: confidenceAnswers.confident, n: sql<number>`count(*)::int` })
@@ -493,4 +500,73 @@ export async function confidenceStats(db: Db, from: string, to: string) {
     yesShare: yes + no ? yes / (yes + no) : null,
     notes,
   };
+}
+
+/**
+ * Who the suspect clicks are (owner, 8 Nov 2026: "who are clicking on Stores?"):
+ * per reason, browser family, link and shop, the clicks, the distinct visitors
+ * (the day's anonymous hash, so one script on rotating addresses shows as many),
+ * the category and the first and last time (Riga). Nothing identifies anyone.
+ */
+export async function suspectClickDetail(db: Db, from: string, to: string) {
+  const rows = await db
+    .select({
+      reason: affiliateClicks.suspect,
+      client: sql<string>`coalesce(${affiliateClicks.client}, '—')`,
+      source: sql<string>`coalesce(${affiliateClicks.source}, '—')`,
+      store: stores.displayName,
+      subcategoryId: sql<string>`min(p.subcategory_id)`,
+      clicks: sql<number>`count(*)::int`,
+      visitors: sql<number>`count(distinct ${affiliateClicks.visitorHash})::int`,
+      first: sql<string>`to_char(min(${affiliateClicks.clickedAt}) at time zone 'Europe/Riga', 'MM-DD HH24:MI')`,
+      last: sql<string>`to_char(max(${affiliateClicks.clickedAt}) at time zone 'Europe/Riga', 'MM-DD HH24:MI')`,
+      referrer: sql<string | null>`min(${affiliateClicks.signals} ->> 'referrerHost')`,
+      lang: sql<string | null>`min(${affiliateClicks.signals} ->> 'lang')`,
+    })
+    .from(affiliateClicks)
+    .innerJoin(offers, eq(offers.id, affiliateClicks.offerId))
+    .innerJoin(stores, eq(stores.id, offers.storeId))
+    .innerJoin(sql`products p`, sql`p.id = ${offers.productId}`)
+    .where(
+      sql`${affiliateClicks.clickedAt} >= ${rigaStart(from)} and ${affiliateClicks.clickedAt} < ${rigaEnd(to)} and ${affiliateClicks.suspect} is not null and not ${affiliateClicks.internal}`,
+    )
+    .groupBy(
+      affiliateClicks.suspect,
+      sql`coalesce(${affiliateClicks.client}, '—')`,
+      sql`coalesce(${affiliateClicks.source}, '—')`,
+      stores.displayName,
+    )
+    .orderBy(desc(sql`count(*)`))
+    .limit(20);
+  return rows.map((r) => ({ ...r, clicks: Number(r.clicks), visitors: Number(r.visitors) }));
+}
+
+/**
+ * Visitor days left out of every figure in the period (docs/CLICK_QUALITY_PLAN.md §6):
+ * by a request that is not a person's browser, and the admins' own.
+ */
+export async function leftOutVisitors(db: Db, from: string, to: string) {
+  const result = (await db.execute(sql`
+    with marked as (
+      select (clicked_at at time zone 'Europe/Riga')::date as day, visitor_hash,
+             case when internal then 'internal' else 'suspect' end as why
+        from affiliate_clicks
+        where visitor_hash is not null and (suspect = 'no_fetch_meta' or internal)
+      union select day, visitor_hash, case when suspect = 'internal' then 'internal' else 'suspect' end
+        from visits where suspect is not null
+      union select (created_at at time zone 'Europe/Riga')::date, visitor_hash,
+             case when suspect = 'internal' then 'internal' else 'suspect' end
+        from search_sessions where suspect is not null and visitor_hash is not null
+      union select day, visitor_hash, case when suspect = 'internal' then 'internal' else 'suspect' end
+        from ui_events where suspect is not null
+    )
+    select
+      count(distinct (day, visitor_hash)) filter (where why = 'suspect' and (day, visitor_hash) not in
+        (select day, visitor_hash from marked where why = 'internal'))::int as suspect,
+      count(distinct (day, visitor_hash)) filter (where why = 'internal')::int as internal
+    from marked where day between ${from}::date and ${to}::date`)) as unknown as {
+    suspect: number;
+    internal: number;
+  }[];
+  return { suspect: Number(result[0]?.suspect ?? 0), internal: Number(result[0]?.internal ?? 0) };
 }

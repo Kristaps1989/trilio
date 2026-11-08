@@ -21,6 +21,7 @@ import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer } from "@/domain/wishlist/wishlist";
 import { isUiLocale } from "@/i18n/routing";
 import { recordUiEvent, visitorOf } from "@/services/notify/events";
+import { judgeRequest } from "@/services/visits/judge";
 import { requestNotify, type NotifyTarget } from "@/services/notify/requests";
 import { offerMailDeps } from "@/services/offers/deps";
 import { metaPixelId } from "@/config/analytics";
@@ -90,7 +91,7 @@ async function metaLead(
 async function who() {
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-  return { ip, userAgent: h.get("user-agent") };
+  return { ip, userAgent: h.get("user-agent"), suspect: await judgeRequest(h).catch(() => null) };
 }
 
 /** The subcategory a target belongs to (a product's own, or the search's). */

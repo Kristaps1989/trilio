@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { db } from "@/db";
 import { PIXEL_GIF } from "@/domain/growth/tv";
+import { DIAGNOSTIC_HEADERS, pixelParams } from "@/domain/growth/tv-pixel";
 import { recordTvImpression } from "@/services/growth/tv";
 import { clientKey } from "@/services/rate-limit";
 
@@ -31,6 +32,12 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
     vid: url.searchParams.get("vid"),
     ip: clientKey(request) === "unknown" ? null : clientKey(request),
     userAgent: request.headers.get("user-agent"),
+    // Optional macros (?ip=, ts, cr, ch, pos, grp) and the headers an ad server may add for
+    // trackers, counted for the diagnostic and the household view-through (docs/TV_PIXEL_BEST_PRACTICE.md).
+    pixel: {
+      params: pixelParams(url.searchParams),
+      headers: Object.fromEntries(DIAGNOSTIC_HEADERS.map((h) => [h, request.headers.get(h)])),
+    },
   };
   after(() =>
     recordTvImpression(db, input).catch((err) => console.error("tv pixel:", (err as Error).message)),

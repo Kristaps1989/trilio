@@ -824,7 +824,7 @@
             "Lietošanas statistika: tikai ja to atļauj sīkdatņu logā, Google Analytics reģistrē apmeklētās lapas, sadaļas un nospiestās pogas, kā arī ierīces un pārlūka veidu un aptuveno atrašanās vietu (valsts, pilsēta). Tava ievadītā teksta, atbilžu un e-pasta tur nav. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti „Sīkdatņu iestatījumi” lapas apakšā.",
             "Apmeklējumu statistika bez sīkdatnēm: Trilio pats saskaita lapu skatījumus. No IP adreses, pārlūka un katru dienu jaunas nejaušas vērtības veidojam anonīmu kodu, ko nevar sasaistīt ar tevi vai ar citām dienām; pašu IP adresi neglabājam. Pamats: leģitīmās intereses.",
             "Atnākšana no reklāmas: ja atnāc, uzklikšķinot uz reklāmas, reģistrējam reklāmas klikšķa identifikatoru (gclid) un kampaņas nosaukumu kopā ar tās dienas apmeklējuma kodu (bez sīkdatnēm, kā apmeklējumu statistikai), lai saskaitītu, cik klikšķu uz veikaliem un saglabājumu atveda katra reklāma. Pamats: leģitīmās intereses.",
-            "TV reklāmas mērījumi: kad adresējamā TV platforma (Go3) parāda Trilio reklāmu, tās reklāmas serveris izsauc Trilio parādījumu skaitītāju un nodod ierīces identifikatoru. Mēs to uzreiz pārvēršam neatgriezeniskā kodā (hash) ar katrai kampaņai atsevišķu sāli un glabājam tikai šo kodu, lai saskaitītu, cik dažādas ierīces reklāmu redzējušas. Pašu identifikatoru, IP adresi un pārlūka nosaukumu neglabājam, un kodu nevar sasaistīt ar tavu Trilio apmeklējumu. Pamats: leģitīmās intereses izmērīt reklāmas sasniedzamību.",
+            "TV reklāmas mērījumi: kad adresējamā TV platforma (Go3) parāda Trilio reklāmu, tās reklāmas serveris izsauc Trilio parādījumu skaitītāju un nodod ierīces identifikatoru un, ja platforma to nodod, mājsaimniecības IP adresi. Abus mēs uzreiz pārvēršam neatgriezeniskā kodā (hash) ar katrai kampaņai atsevišķu sāli un glabājam tikai šos kodus: ierīces kodu, lai saskaitītu, cik dažādas ierīces reklāmu redzējušas; adreses kodu, lai uzzinātu, vai no tās pašas interneta adreses (IPv6 gadījumā – tīkla daļas) kampaņas laikā kāds atvēra Trilio. Lai to salīdzinātu, kampaņas laikā tādā pašā kodā pārvēršam arī Trilio apmeklētāja IP adresi. Pašu identifikatoru, IP adresi un pārlūka nosaukumu neglabājam, adrešu kodus dzēšam pēc 21 dienas, un tie netiek sasaistīti ar tavu e-pastu, kontu vai citu informāciju par tevi; rezultāts ir tikai kopskaitļi (cik mājsaimniecību atnāca pēc reklāmas). Pamats: leģitīmās intereses izmērīt reklāmas sasniedzamību un iedarbību.",
             "Personīgi piedāvājumi: ja to atļauj, e-pastā sūtām piedāvājumus par precēm, ko saglabāji. Glabājam piekrišanu, nosūtītos piedāvājumus un to, vai piedāvājuma lapa atvērta (e-pastos izsekošanas nav). Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī ar saiti e-pastā vai vēlmju sarakstā.",
             "Pirkumi no Trilio: vārds, telefons, piegādes adrese vai pakomāts, uzņēmuma rekvizīti (ja pērc uzņēmumam), maksājuma statuss, sūtījuma numurs un rēķini. Pamats: līguma izpilde un juridisks pienākums (grāmatvedība).",
             "Trilio ieraksti Facebook un Instagram: izmantojam tikai faktus par precēm un cenām un kopsummas (piemēram, kuras kategorijas šonedēļ meklēja visvairāk). Ierakstā par izdevušos piedāvājumu minam tikai preci, cenas, piegādes laiku un mēnesi; pircēja vārdu, e-pastu, adresi, pasūtījuma numuru un citus personas datus nekad nepublicējam."
@@ -1640,7 +1640,7 @@
       "confidenceNote": "Piezīme",
       "bots": "Filtrēti roboti",
       "botsHint": "apmeklējumi {visits} · meklējumi {searches} · klikšķi {clicks}",
-      "botsMethod": "Robotus (Google, Bing, SEO rīki, skripti) atpazīstam pēc pārlūka nosaukuma un neskaitām; lapa skaitās tikai, ja tā vismaz sekundi bijusi redzama; viena apmeklētāja atkārtots klikšķis uz to pašu preci 30 minūšu laikā skaitās vienreiz.",
+      "botsMethod": "Robotus (Google, Bing, SEO rīki, skripti) atpazīstam pēc pārlūka nosaukuma un neskaitām; lapa skaitās tikai, ja tā vismaz sekundi bijusi redzama; viena apmeklētāja atkārtots klikšķis uz to pašu preci 30 minūšu laikā skaitās vienreiz. Ja kāds apmeklētāja pieprasījums (lapa, meklējums, poga vai klikšķis) nāk bez pārlūka navigācijas galvenēm, tas ir skripts ar pārlūka nosaukumu: šī apmeklētāja diena netiek ieskaitīta nevienā skaitlī (apmeklētāji, meklējumi, ceļš līdz paziņojumam, TV). Tāpat netiek ieskaitīta administratoru pašu pārlūkošana.",
       "clients": "Pārlūki",
       "client": "Pārlūks un sistēma",
       "clientsMethod": "Tikai pārlūka saime un sistēma, nekad pilns pārlūka nosaukums vai adrese. Pieejams pēdējām 35 dienām.",
@@ -1674,7 +1674,16 @@
         "not_from_page": "Aizdomīgi: saite atvērta ārpus Trilio lapas",
         "no_page_view": "Aizdomīgi: šis apmeklētājs tajā dienā nevienu lapu nav redzējis"
       },
-      "clickQualityMethod": "Katram klikšķim pārbaudām, vai tas izskatās pēc cilvēka, kas spiež saiti Trilio lapā: pārlūka navigācijas galvenes (Sec-Fetch), vai saite atvērta no Trilio lapas un vai tas pats apmeklētājs tajā dienā redzējis kādu lapu. Aizdomīgie klikšķi tiek saglabāti, bet nav ieskaitīti nevienā skaitlī. Klikšķi pirms 7. novembra nav pārbaudīti ({unchecked})."
+      "clickQualityMethod": "Katram klikšķim pārbaudām, vai tas izskatās pēc cilvēka, kas spiež saiti Trilio lapā: pārlūka navigācijas galvenes (Sec-Fetch), vai saite atvērta no Trilio lapas un vai tas pats apmeklētājs tajā dienā redzējis kādu lapu. Aizdomīgie klikšķi tiek saglabāti, bet nav ieskaitīti nevienā skaitlī. Klikšķi pirms 7. novembra nav pārbaudīti ({unchecked}).",
+      "leftOutHint": "neieskaitīti: skripti {suspect} · administratori {internal}",
+      "suspectWho": "Kas ir aizdomīgie klikšķi",
+      "suspectClient": "Pārlūks",
+      "suspectLink": "Saite",
+      "suspectShop": "Veikals un kategorija",
+      "suspectVisitors": "Apmeklētāji",
+      "suspectWhen": "Pirmais – pēdējais",
+      "suspectSignals": "Atsauce · valoda",
+      "suspectWhoMethod": "Apmeklētājs ir dienas anonīmais identifikators (adrese un pārlūks), tāpēc viens skripts no daudzām adresēm parādās kā daudzi apmeklētāji. „Atsauce” ir lapas, no kuras atvērta saite, domēns; skriptam tās parasti nav. Pārlūka nosaukumu skripts var uzdot jebkuru; pārlūka saime pirms 9. novembra nav saglabāta (—)."
     },
     "users": {
       "title": "Lietotāji",
@@ -2196,7 +2205,9 @@
           "name": "Ievadi nosaukumu.",
           "slug": "Īsajā nosaukumā drīkst būt mazie burti, cipari un domuzīmes (2–48).",
           "taken": "Šāds īsais nosaukums jau ir.",
-          "landing": "Lapai jāsākas ar /, piemēram /izvelies."
+          "landing": "Lapai jāsākas ar /, piemēram /izvelies.",
+          "baseline_none": "Kampaņai vēl nav parādījumu, bāzi nav no kā rēķināt.",
+          "baseline_expired": "Bāzes dienu neapstrādātie apmeklējumi vairs netiek glabāti (35 dienas), tāpēc bāze paliek iepriekšējā."
         },
         "effect": "Ietekme uz apmeklējumiem",
         "sessionsAfter": "Apmeklējumi pēc TV",
@@ -2231,7 +2242,72 @@
           "7": "7 dienas",
           "30": "30 dienas"
         },
-        "noDataPeriod": "Šajā periodā parādījumu nav."
+        "noDataPeriod": "Šajā periodā parādījumu nav.",
+        "baselineRecompute": "Pārrēķināt bāzi",
+        "baselineRecomputeHint": "Bāze un pieaugums tiek aprēķināti no jauna bez skriptiem un administratoru pašu apmeklējumiem.",
+        "baselineDone": "Bāze pārrēķināta.",
+        "pixelMore": "Papildu lauki Go3 (mājsaimniecības, radošie, kanāli, kontrolgrupa)",
+        "pixelMoreHow": "Palūdz Go3 aizstāt kvadrātiekavās rakstītos vārdus ar viņu reklāmas servera makrosiem: skatītāja IP adrese, notikuma laiks, radošā materiāla ID, kanāls un vieta pārtraukumā. Neaizpildītu lauku Trilio ignorē. Ja Go3 var turēt kontrolgrupu (10–15 % ierīču, kurām klipu apzināti nerāda), tām jāizsauc otrā adrese.",
+        "pixelExtended": "Pikselis ar papildu laukiem",
+        "pixelControl": "Pikselis kontrolgrupai (klips netiek rādīts)",
+        "offDays": {
+          "title": "Dienas bez TV kampaņas laikā",
+          "none": "Kampaņas laikā vēl nav vismaz divu dienu bez parādījumiem. Kad tādas būs, šeit būs salīdzinājums ar tām pašām nedēļām, kas ir godīgāks par bāzi pirms kampaņas.",
+          "expected": "Gaidāmie (dienas bez TV)",
+          "uplift": "Pieaugums pret dienām bez TV",
+          "days": "{n} dienas",
+          "method": "Tie paši 10 minūšu posmi dienās bez neviena parādījuma tās pašas kampaņas laikā ({days}). Tas novērš to, kas mainījies kopš bāzes nedēļām (sezona, citi kanāli, Facebook ieraksti)."
+        },
+        "household": {
+          "title": "Mājsaimniecības pēc TV",
+          "exposed": "Mājsaimniecības ar parādījumu",
+          "direct": "Atnāca 0–20 min",
+          "week": "Atnāca 7 dienās",
+          "control": "Kontrolgrupa",
+          "controlRates": "Kontrolgrupa: 0–20 min · 7 d",
+          "liftDirect": "Pieaugums pret kontrolgrupu, 0–20 min",
+          "liftWeek": "Pieaugums pret kontrolgrupu, 7 d",
+          "perDay": "Mājsaimniecības pa dienām",
+          "method": "Mājsaimniecība ir adrese, no kuras skatījās TV (IPv4 vai IPv6 /64), glabāta tikai kā sāļota jaukšana 21 dienu. Apmeklējums skaitās, ja no tās pašas adreses kāds atvēra Trilio 0–20 minūtes pēc parādījuma vai 7 dienu laikā. Adrešu sakritība ir aptuvena (kopīgas adreses daudzdzīvokļu mājās, mobilie operatori), tāpēc tas ir virziens, nevis precīzs skaitlis; pierādījums ir salīdzinājums ar kontrolgrupu.",
+          "reason": {
+            "none": "Pikselis vēl nesaņem mājsaimniecības adresi: Go3 reklāmas serveris pieprasa pikseli no savas adreses. Skat. „Papildu lauki Go3”: ar skatītāja IP makrosu šeit būs mājsaimniecības, kas atnāca pēc klipa.",
+            "few": "Pikselis saņem pārsūtītas adreses, bet to ir pārāk maz, lai tās būtu mājsaimniecības (visticamāk Go3 serveri). Vajag skatītāja IP makrosu, skat. „Papildu lauki Go3”.",
+            "macro": "Adrese no makrosa.",
+            "header": "Adrese no X-Device-IP galvenes.",
+            "forwarded": "Adrese no X-Forwarded-For."
+          },
+          "verdict": {
+            "none": "nav adreses",
+            "few": "Go3 serveri",
+            "macro": "ir (makross)",
+            "header": "ir (galvene)",
+            "forwarded": "ir (pārsūtīta)"
+          }
+        },
+        "px": {
+          "title": "Ko pikselis saņem",
+          "caption": "Pikseļa pieprasījumi pa dienām",
+          "requests": "Pieprasījumi",
+          "controlShort": "kontrolgrupa",
+          "hops": "X-Forwarded-For posmi 0 / 1 / 2 / 3+",
+          "macros": "Makrosi",
+          "distinct": "Dažādas adreses: XFF / ierīce / makross",
+          "verdict": "Mājsaimniecības adrese",
+          "empty": "Šajā periodā pikselis vēl nav saņēmis pieprasījumus ar diagnostiku (to skaita kopš 9. novembra).",
+          "method": "Skaitām tikai to, kādas galvenes un lauki pienāca, un cik dažādu adrešu bija (kā dienas jaukšanas, bez pašām adresēm). Ja dažādu XFF adrešu ir daudz (tuvu ierīču skaitam), tās ir mājsaimniecības; ja dažas, tie ir Go3 serveri.",
+          "frequency": "Biežums: ierīces pēc parādījumu skaita periodā",
+          "band": "Parādījumi",
+          "bandLabel": "{band}",
+          "devices": "Ierīces",
+          "frequencyMethod": "Parādījumi uz ierīci tiek skaitīti kopš 9. novembra; agrākās dienas skaitās kā viens.",
+          "dim": {
+            "cr": "Radošais materiāls",
+            "ch": "Kanāls",
+            "pos": "Vieta pārtraukumā",
+            "ua": "Pieprasītājs",
+            "dua": "Ierīce (X-Device-User-Agent)"
+          }
+        }
       },
       "tvReport": {
         "title": "{name}: TV kampaņas pārskats",

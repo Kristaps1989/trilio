@@ -94,11 +94,14 @@ export function metaProvider(
    * read once more after a moment. Null when it cannot be read.
    */
   async function previewHasPicture(postId: string, read: (id: string) => Promise<Preview | null>) {
+    // Facebook attaches pictures as it fetches them: read again after 5 and 20 seconds.
     const first = await read(postId);
     if (first === null || first.image) return first;
     await wait(5_000);
     const second = await read(postId);
-    return second ?? { image: false };
+    if (second === null || second.image) return second ?? { image: false };
+    await wait(15_000);
+    return (await read(postId)) ?? second;
   }
 
   async function call(
@@ -191,9 +194,30 @@ export function metaProvider(
     }
   }
 
+  /**
+   * Whether the picture behind a card's address really loads: Facebook gives every
+   * card an address on its own servers even when the picture behind it never came
+   * (8 Nov 2026: three of five cards grey while every card had a `src`). A picture
+   * that answers with an error, not an image, or a few bytes is missing; one that
+   * cannot be reached at all is not judged (null).
+   */
+  async function pictureLoads(src: string): Promise<boolean | null> {
+    try {
+      const res = await http(src, { signal: AbortSignal.timeout(8_000) });
+      if (!res.ok) return false;
+      if (!(res.headers.get("content-type") ?? "").startsWith("image/")) return false;
+      return (await res.arrayBuffer()).byteLength >= 1500;
+    } catch {
+      return null;
+    }
+  }
+
   async function linkPreview(postId: string): Promise<Preview | null> {
     try {
-      type Media = { media?: { image?: { src?: string } }; type?: string };
+      type Media = {
+        media?: { image?: { src?: string; width?: number; height?: number } };
+        type?: string;
+      };
       const r = (await call(
         "GET",
         postId,
@@ -204,11 +228,19 @@ export function metaProvider(
       if (!a) return null;
       // A link carousel: every card must have its picture.
       const cards = a.subattachments?.data ?? [];
+      // A picture counts when Facebook names it, it is not a tiny placeholder, and it loads.
+      const has = async (m: Media) => {
+        const img = m.media?.image;
+        if (!img?.src) return false;
+        if (typeof img.width === "number" && img.width < 100) return false;
+        return (await pictureLoads(img.src)) !== false;
+      };
       if (cards.length) {
-        const missing = cards.flatMap((c, k) => (c.media?.image?.src ? [] : [k + 1]));
+        const ok = await Promise.all(cards.map(has));
+        const missing = ok.flatMap((v, k) => (v ? [] : [k + 1]));
         return { image: missing.length === 0, ...(missing.length ? { missing } : {}) };
       }
-      return { image: !!a.media?.image?.src };
+      return { image: await has(a) };
     } catch {
       return null;
     }

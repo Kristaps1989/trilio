@@ -140,6 +140,40 @@ Steps 1–2 are the "leverage the pixel" part and need one thing from Go3: the
 list of macros their ad server can fill, above all the viewer's IP and the
 creative id. Without the IP macro, the pixel can only ever count.
 
+## 3a. Built (9 Nov 2026)
+
+- **Step 0:** see `docs/CLICK_QUALITY_PLAN.md` §6, plus "Pārrēķināt bāzi" on the TV tab.
+- **Diagnostic:** every pixel request counts which headers came (X-Forwarded-For
+  and its hops, X-Device-IP, X-Device-User-Agent and the like), which macros
+  were filled, the requester's and the device's family (Samsung Tizen, LG webOS,
+  "server: okhttp"…), and the number of distinct addresses per source as
+  day-keyed hashes (`tv_pixel_counts`, `tv_pixel_addresses`). The TV tab's
+  "Ko pikselis saņem" table answers the owner's question of 8 Nov (does the SSAI
+  enrich the headers?) from the first evening of data: many distinct
+  first-hop or device addresses mean households; a handful mean Go3's servers.
+- **Step 1:** the pixel takes `ip`, `ts`, `cr`, `ch`, `pos` and `grp`; the TV tab
+  shows the extended pixel address for Go3 (placeholders for Go3 to replace with
+  its macros) and the holdout's address (`grp=control`), impressions per
+  creative, channel and position, and the frequency bands (devices by
+  impressions over the period, counted from 9 Nov).
+- **Step 2:** household exposures (`tv_exposures`) and the household side of
+  people's page views (`tv_household_visits`), both salted hashes per campaign,
+  kept 21 days; per day the households exposed, those that came 0–20 minutes
+  after an exposure and within 7 days. The address source is chosen per day:
+  the macro, the device header, or forwarded addresses only when they are many
+  (at least a third of the devices reached). Stored in `tv_uplift.households`
+  nightly for the last 8 days, so the case study keeps them.
+- **Step 3:** holdout calls are counted apart (never as impressions), and the
+  exposed-vs-holdout lift is shown with a 95 % interval.
+- **Step 3b:** "Dienas bez TV kampaņas laikā": with two or more days without
+  impressions inside the flight, the same buckets on those days are the
+  expected sessions, beside the pre-campaign baseline.
+- **For the owner's assistant:** `GET /api/stats/tv` and `/api/stats/site`
+  (`?periods=today|7|30|90`) return the same figures as JSON with
+  `Authorization: Bearer $STATS_API_TOKEN` (404 without it).
+- **Privacy notice** updated: the household address is hashed per campaign,
+  matched to visitors' addresses hashed alike, kept 21 days, totals only.
+
 ## 4. Sources
 
 - [DV360 / CM360 supported macros](https://support.google.com/displayvideo/answer/2789508)

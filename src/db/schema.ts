@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
+  customType,
   date,
   index,
   integer,
@@ -184,9 +185,16 @@ export const searchSessions = pgTable(
     budgetCents: integer("budget_cents"),
     /** The day's anonymous visitor hash: one session per visitor and search for 30 minutes (docs/CLICK_QUALITY_PLAN.md §3). */
     visitorHash: text("visitor_hash"),
+    /** Why the request does not look like a person's browser (SUSPECT_REASONS); such a visitor's day is left out (docs/CLICK_QUALITY_PLAN.md §6). */
+    suspect: text("suspect"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("search_sessions_visitor_idx").on(t.visitorHash, t.createdAt)],
+  (t) => [
+    index("search_sessions_visitor_idx").on(t.visitorHash, t.createdAt),
+    index("search_sessions_suspect_idx")
+      .on(t.createdAt)
+      .where(sql`${t.suspect} is not null`),
+  ],
 );
 
 export const waitlistLeads = pgTable("waitlist_leads", {
@@ -236,6 +244,8 @@ export const affiliateClicks = pgTable(
     signals: jsonb("signals").$type<ClickSignals>(),
     /** Why the click does not look like a person on a Trilio page (SUSPECT_REASONS); left out of the statistics. */
     suspect: text("suspect"),
+    /** Browser family and system ("Chrome Windows"), as on visits: who the suspect clicks are. */
+    client: text("client"),
     clickedAt: timestamp("clicked_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -590,9 +600,17 @@ export const visits = pgTable(
     visitorHash: text("visitor_hash").notNull(),
     /** Browser family and system ("Chrome Android"), never the full user agent. */
     client: text("client"),
+    /** Why the beacon does not look like a person's browser (SUSPECT_REASONS); such a visitor's day is left out. */
+    suspect: text("suspect"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("visits_day_idx").on(t.day)],
+  (t) => [
+    index("visits_day_idx").on(t.day),
+    index("visits_visitor_idx").on(t.visitorHash, t.day),
+    index("visits_suspect_idx")
+      .on(t.day)
+      .where(sql`${t.suspect} is not null`),
+  ],
 );
 
 /** Requests recognised as bots and left out of the statistics, per day and kind. */
@@ -874,6 +892,16 @@ export const tvCampaigns = pgTable("tv_campaigns", {
 
 export type TvBaseline = { from: string; to: string; days: number; sessions: number[] };
 
+export type TvHouseholdFigures = {
+  source: string;
+  exposed: number;
+  direct: number;
+  week: number;
+  control: number;
+  controlDirect: number;
+  controlWeek: number;
+};
+
 /** Daily counts per campaign: "impression" (pixel hits) and "link" (short-link opens). */
 export const tvDaily = pgTable(
   "tv_daily",
@@ -901,8 +929,87 @@ export const tvViewers = pgTable(
       .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
     day: date("day").notNull(),
     viewerHash: text("viewer_hash").notNull(),
+    /** Impressions of this device that day: the frequency distribution (docs/TV_PIXEL_BEST_PRACTICE.md §2.4). */
+    impressions: integer("impressions").notNull().default(1),
   },
   (t) => [primaryKey({ columns: [t.slug, t.day, t.viewerHash] })],
+);
+
+/**
+ * What the pixel requests carried, per campaign and day (docs/TV_PIXEL_BEST_PRACTICE.md §3):
+ * counters keyed "total", "xff:<hops>", "hdr:<header>", "param:<name>", "ts:<used|off>",
+ * "cr:<creative>", "ch:<channel>", "pos:<position>", "ua:<family>", "dua:<family>". No addresses.
+ */
+export const tvPixelCounts = pgTable(
+  "tv_pixel_counts",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    key: text("key").notNull(),
+    hits: integer("hits").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.slug, t.day, t.key] })],
+);
+
+/**
+ * Distinct addresses per source and day, as salted hashes only, to tell an ad
+ * server's few addresses from many households' (xff0: first X-Forwarded-For
+ * hop, xffn: last hop, device: X-Device-IP, macro: the ?ip= macro). Kept 21 days.
+ */
+export const tvPixelAddresses = pgTable(
+  "tv_pixel_addresses",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    source: text("source").notNull(),
+    addressHash: text("address_hash").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.slug, t.day, t.source, t.addressHash] })],
+);
+
+/**
+ * Households exposed to the spot, per minute (docs/TV_PIXEL_BEST_PRACTICE.md §2.2):
+ * a salted hash of the household address (IPv4, or an IPv6 /64), the address
+ * source, and the group ("ad", or "control" for a holdout). Kept 21 days.
+ */
+export const tvExposures = pgTable(
+  "tv_exposures",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    household: text("household").notNull(),
+    minute: timestamp("minute", { withTimezone: true }).notNull(),
+    grp: text("grp").notNull().default("ad"),
+    source: text("source").notNull(),
+    hits: integer("hits").notNull().default(1),
+  },
+  (t) => [
+    primaryKey({ columns: [t.slug, t.household, t.minute, t.grp] }),
+    index("tv_exposures_minute_idx").on(t.slug, t.minute),
+  ],
+);
+
+/** Site page views of households, hashed alike, for campaigns with impressions in the last 8 days. Kept 21 days. */
+export const tvHouseholdVisits = pgTable(
+  "tv_household_visits",
+  {
+    slug: text("slug")
+      .notNull()
+      .references(() => tvCampaigns.slug, { onDelete: "cascade" }),
+    household: text("household").notNull(),
+    minute: timestamp("minute", { withTimezone: true }).notNull(),
+    day: date("day").notNull(),
+    visitorHash: text("visitor_hash").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.slug, t.household, t.minute, t.visitorHash] }),
+    index("tv_household_visits_minute_idx").on(t.slug, t.minute),
+  ],
 );
 
 /** Impressions per campaign and minute, for the 24-hour profile and the uplift (docs/TV_ANALYTICS_PLAN.md). */
@@ -942,6 +1049,13 @@ export const tvUplift = pgTable(
     phoneAfter: integer("phone_after").notNull().default(0),
     correlation: real("correlation"),
     buckets: jsonb("buckets").$type<[number, number][]>().notNull().default([]),
+    /**
+     * Household view-through (docs/TV_PIXEL_BEST_PRACTICE.md §2.2–2.3): households exposed
+     * that day, of them those with a site visit 0–20 minutes after an exposure and within
+     * 7 days, the same for the holdout ("control"), and the address source used. Null
+     * while the pixel brings no household address.
+     */
+    households: jsonb("households").$type<TvHouseholdFigures>(),
     computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.slug, t.day] })],
@@ -1240,9 +1354,16 @@ export const uiEvents = pgTable(
     event: text("event").notNull(),
     subcategoryId: text("subcategory_id"),
     adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    /** Why the request does not look like a person's browser; such a visitor's day is left out. */
+    suspect: text("suspect"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("ui_events_day_idx").on(t.day, t.event)],
+  (t) => [
+    index("ui_events_day_idx").on(t.day, t.event),
+    index("ui_events_suspect_idx")
+      .on(t.day)
+      .where(sql`${t.suspect} is not null`),
+  ],
 );
 
 export type NotifyRequest = typeof notifyRequests.$inferSelect;
@@ -1317,6 +1438,30 @@ export type SocialKind =
  * published to both networks. `card` holds the facts the image is drawn
  * from, already anonymised; nothing about a shopper is ever stored here.
  */
+const bytea = customType<{ data: Buffer<ArrayBufferLike>; driverData: Buffer<ArrayBufferLike> }>({
+  dataType: () => "bytea",
+});
+
+/**
+ * A post's slide pictures, drawn once and stored (docs/FACEBOOK_CAROUSEL_PLAN.md §6):
+ * every instance serves the same bytes at once, so Facebook's one fetch never
+ * waits for a render. `cardHash` changes when the card is edited.
+ */
+export const socialImages = pgTable(
+  "social_images",
+  {
+    postId: uuid("post_id")
+      .notNull()
+      .references((): AnyPgColumn => socialPosts.id, { onDelete: "cascade" }),
+    n: integer("n").notNull(),
+    shape: text("shape").notNull(),
+    cardHash: text("card_hash").notNull(),
+    jpeg: bytea("jpeg").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.n, t.shape] })],
+);
+
 export const socialPosts = pgTable(
   "social_posts",
   {

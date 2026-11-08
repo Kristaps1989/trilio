@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { after, NextResponse } from "next/server";
 import { ASK_COOKIE, askAnswered, ASK_TTL_MS, cookieValue } from "@/domain/analytics/ask-cookie";
-import { signalsOf } from "@/domain/analytics/click-quality";
+import { requestSuspicion, signalsOf } from "@/domain/analytics/click-quality";
 import { appBaseUrl } from "@/services/payments";
 import { z } from "zod";
 import { db, offers, products, stores } from "@/db";
@@ -96,8 +96,13 @@ export async function GET(request: Request, ctx: { params: Promise<{ offerId: st
       internal,
       signals: signalsOf(request.headers),
     }).catch(() => undefined);
-    if (fromAsk && !internal)
-      after(() => recordUiEvent(db, { ip, userAgent }, "ask_shop", row.subcategoryId).catch(() => undefined));
+    // Recorded for a script too, marked, so that visitor's day leaves every figure (docs/CLICK_QUALITY_PLAN.md §6).
+    if (fromAsk && !internal) {
+      const suspect = requestSuspicion(userAgent, signalsOf(request.headers));
+      after(() =>
+        recordUiEvent(db, { ip, userAgent, suspect }, "ask_shop", row.subcategoryId).catch(() => undefined),
+      );
+    }
   }
 
   const target = buildAffiliateUrl(row.template, row.url, row.ean);

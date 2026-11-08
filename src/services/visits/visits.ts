@@ -3,6 +3,8 @@ import { and, eq, gte, lt, lte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { affiliateClicks, botHits, visitSalts, visits } from "@/db/schema";
 import { clickSuspicion, type ClickSignals } from "@/domain/analytics/click-quality";
+import { cleanVisitor } from "./suspects";
+import { recordHouseholdVisit } from "@/services/growth/tv";
 import type { ClickSource } from "@/domain/analytics/click-source";
 import { clientFamily, RAW_RETENTION_DAYS, rigaDay, visitOf, visitorHash } from "@/domain/analytics/visits";
 
@@ -22,20 +24,35 @@ export async function saltFor(db: Db, day: string): Promise<string> {
 
 export async function recordVisit(
   db: Db,
-  input: { path: string; ip: string; userAgent: string | null; now?: Date },
+  input: {
+    path: string;
+    ip: string;
+    userAgent: string | null;
+    now?: Date;
+    /** Why the beacon does not look like a person's (requestSuspicion), or "internal" for an admin's own browsing. */
+    suspect?: string | null;
+  },
 ): Promise<boolean> {
   const info = visitOf(input.path, input.userAgent);
   if (!info) return false;
-  const day = rigaDay(input.now ?? new Date());
+  const now = input.now ?? new Date();
+  const day = rigaDay(now);
   const salt = await saltFor(db, day);
+  const hash = visitorHash(salt, input.ip, input.userAgent ?? "");
   await db.insert(visits).values({
     day,
     path: info.path,
     section: info.section,
     subcategory: info.subcategory ?? null,
-    visitorHash: visitorHash(salt, input.ip, input.userAgent ?? ""),
+    visitorHash: hash,
     client: clientFamily(input.userAgent),
+    suspect: input.suspect ?? null,
   });
+  // A person's view, as a household for a running TV campaign (docs/TV_PIXEL_BEST_PRACTICE.md §2.2).
+  if (!input.suspect)
+    await recordHouseholdVisit(db, { ip: input.ip, visitorHash: hash, day, now }).catch((err) =>
+      console.error("tv household visit:", (err as Error).message),
+    );
   return true;
 }
 
@@ -70,7 +87,7 @@ export async function clientStats(db: Db, from: string, to: string) {
       views: sql<number>`count(*)::int`,
     })
     .from(visits)
-    .where(and(gte(visits.day, from), lte(visits.day, to)))
+    .where(and(gte(visits.day, from), lte(visits.day, to), cleanVisitor(visits.day, visits.visitorHash)))
     .groupBy(sql`coalesce(${visits.client}, '—')`);
   return rows
     .map((r) => ({ client: r.client, visitors: Number(r.visitors), views: Number(r.views) }))
@@ -153,6 +170,7 @@ export async function recordShopClick(
     visitorHash: hash,
     source: input.source ?? null,
     internal: input.internal ?? false,
+    client: clientFamily(input.userAgent),
     clickedAt: now,
   });
   return true;
@@ -165,11 +183,16 @@ export async function recordShopClick(
 export async function rollupVisits(db: Db, now = new Date()): Promise<{ days: number; purged: number }> {
   const today = rigaDay(now);
   const yesterday = rigaDay(new Date(now.getTime() - 24 * 3600 * 1000));
+  // A day still in the raw visits is rebuilt in full: a path whose every view turned out
+  // to be a left-out visitor's must lose its old row, not keep it.
+  await db.execute(
+    sql`delete from visit_daily where day in (select distinct day from visits where day < ${today})`,
+  );
   const rolled = await db.execute(sql`
     insert into visit_daily (day, path, section, subcategory, views, visitors)
-    select day, path, min(section), min(subcategory), count(*)::int, count(distinct visitor_hash)::int
-    from visits where day < ${today}
-    group by day, path
+    select v.day, v.path, min(v.section), min(v.subcategory), count(*)::int, count(distinct v.visitor_hash)::int
+    from visits v where v.day < ${today} and ${cleanVisitor(sql`v.day`, sql`v.visitor_hash`)}
+    group by v.day, v.path
     on conflict (day, path) do update set views = excluded.views, visitors = excluded.visitors,
       section = excluded.section, subcategory = excluded.subcategory
     returning day`);
@@ -196,10 +219,11 @@ export async function visitRows(db: Db, from: string, to: string, now = new Date
     select to_char(day, 'YYYY-MM-DD') as day, path, section, subcategory, views, visitors
       from visit_daily where day between ${from} and ${to} and day < ${today}
     union all
-    select to_char(day, 'YYYY-MM-DD'), path, min(section), min(subcategory), count(*)::int,
-           count(distinct visitor_hash)::int
-      from visits where day = ${today} and day between ${from} and ${to}
-      group by day, path`);
+    select to_char(v.day, 'YYYY-MM-DD'), v.path, min(v.section), min(v.subcategory), count(*)::int,
+           count(distinct v.visitor_hash)::int
+      from visits v where v.day = ${today} and v.day between ${from} and ${to}
+        and ${cleanVisitor(sql`v.day`, sql`v.visitor_hash`)}
+      group by v.day, v.path`);
   const rows = [...(result as unknown as VisitRow[])];
   return rows.map((r) => ({ ...r, views: Number(r.views), visitors: Number(r.visitors) }));
 }

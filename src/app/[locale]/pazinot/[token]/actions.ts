@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
 import { db, savedItems } from "@/db";
 import { recordUiEvent } from "@/services/notify/events";
+import { judgeRequest } from "@/services/visits/judge";
 import { confirmNotify } from "@/services/notify/requests";
 import { localPath } from "@/i18n/path";
 import { keyOf, saveTarget, type SaveTarget } from "../../velmju-saraksts/save";
@@ -46,7 +47,7 @@ export async function confirmNotifyAction(formData: FormData): Promise<void> {
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
   await recordUiEvent(
     db,
-    { ip, userAgent: h.get("user-agent") },
+    { ip, userAgent: h.get("user-agent"), suspect: await judgeRequest(h).catch(() => null) },
     "notify_confirmed",
     result.request.subcategoryId,
   ).catch(() => undefined);

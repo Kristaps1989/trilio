@@ -109,6 +109,76 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   await expect(effect.locator("[data-tv-profile] svg")).toBeVisible();
   await expect(page.locator(`[data-tv-campaign="${SLUG}"]`).getByText("aprēķināts tagad")).toBeVisible();
 
+  // The pixel with Go3's optional fields (docs/TV_PIXEL_BEST_PRACTICE.md): the viewer's address by
+  // macro, a device header, the creative and channel, and a holdout device that is not an impression.
+  const extended = await page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-extended]`).inputValue();
+  expect(extended).toContain("&ip=[VIEWER_IP]&ts=[EVENT_TIME]&cr=[CREATIVE_ID]");
+  expect(await page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-control]`).inputValue()).toMatch(
+    /&grp=control$/,
+  );
+  const go3 = await playwright.request.newContext({
+    baseURL,
+    userAgent: FREEWHEEL,
+    extraHTTPHeaders: {
+      "x-device-ip": "81.198.9.10",
+      "x-device-user-agent": "Mozilla/5.0 (SMART-TV; Tizen 6.5)",
+    },
+  });
+  expect((await go3.get(`/px/${SLUG}?ord=1&vid=dev-c&ip=81.198.9.9&cr=Spots20&ch=TV3&pos=1`)).status()).toBe(
+    200,
+  );
+  expect((await go3.get(`/px/${SLUG}?ord=2&vid=dev-d&ip=81.198.9.8&grp=control`)).status()).toBe(200);
+  await go3.dispose();
+  // A person in the first household opens the site on a phone (their browser sends fetch metadata).
+  const home = await playwright.request.newContext({
+    baseURL,
+    userAgent: `Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1 e2e-hh/${Date.now()}`,
+    extraHTTPHeaders: {
+      "x-forwarded-for": "81.198.9.9",
+      "sec-fetch-site": "same-origin",
+      "sec-fetch-mode": "no-cors",
+    },
+  });
+  expect((await home.post("/api/visit", { data: { path: "/izvelies" } })).status()).toBe(204);
+  await home.dispose();
+  await expect
+    .poll(async () => {
+      await page.reload();
+      const c = page.locator(`[data-tv-campaign="${SLUG}"]`);
+      return [
+        await c.getAttribute("data-tv-impressions"),
+        await c.locator("[data-tv-households]").getAttribute("data-tv-households"),
+        await c.locator("[data-tv-pixel-days]").getAttribute("data-tv-pixel-days"),
+      ];
+    })
+    .toEqual(["5", "1", "1"]);
+  const pixelTable = page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-days]`);
+  await expect(pixelTable.getByText("ir (makross)")).toBeVisible();
+  await expect(pixelTable.getByText("Spots20")).toBeVisible();
+  await expect(pixelTable.getByText("Samsung Tizen")).toBeVisible();
+  await expect(page.locator(`[data-tv-campaign="${SLUG}"]`).getByText("Pārrēķināt bāzi")).toBeVisible();
+
+  // The owner's assistant reads the same figures through the statistics API, with its token only.
+  expect((await page.request.get("/api/stats/tv?periods=7")).status()).toBe(404);
+  expect(
+    (
+      await page.request.get("/api/stats/tv", {
+        headers: { authorization: "Bearer wrong-token-wrong-token-xx" },
+      })
+    ).status(),
+  ).toBe(404);
+  const auth = { authorization: "Bearer e2e-stats-token-0123456789abcdef" };
+  const tvJson = await (await page.request.get("/api/stats/tv?periods=7", { headers: auth })).json();
+  const mine = tvJson.campaigns.find((c: { slug: string }) => c.slug === SLUG);
+  expect(mine.totals.impressions).toBe(5);
+  expect(mine.effect.householdSummary.exposed).toBe(1);
+  expect(mine.effect.householdSummary.direct).toBe(1);
+  expect(mine.pixel.days[0].control).toBe(1);
+  const site = await (await page.request.get("/api/stats/site?periods=today", { headers: auth })).json();
+  expect(typeof site.visitors).toBe("number");
+  expect(site.quality.leftOutVisitorDays).toHaveProperty("suspect");
+  expect(JSON.stringify(site)).not.toContain("@");
+
   // The printable report for Go3.
   await page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-report-link]`).click();
   await page.waitForURL((u) => u.pathname === `/admin/reklama/tv/${SLUG}/parskats`);

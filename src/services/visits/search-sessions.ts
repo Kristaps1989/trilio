@@ -20,6 +20,8 @@ export async function searchSessionFor(
     answers: Record<string, unknown>;
     budgetCents: number | null;
     now?: Date;
+    /** judgeRequest's verdict: a suspect or admin search is kept, marked, and left out. */
+    suspect?: string | null;
   },
 ): Promise<string | null> {
   const now = input.now ?? new Date();
@@ -45,6 +47,7 @@ export async function searchSessionFor(
       answers: input.answers,
       budgetCents: input.budgetCents,
       visitorHash: hash,
+      suspect: input.suspect ?? null,
       createdAt: now,
     })
     .returning({ id: searchSessions.id });

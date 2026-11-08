@@ -7,7 +7,12 @@ import { socialProvider } from "./index";
 
 type Call = { method: string; url: string; body: Record<string, string> };
 
-function fakeFetch(answers: (c: Call) => { status?: number; json: unknown }) {
+/** A picture address in these tests: fetched pictures answer with 2 KB of JPEG unless a test says otherwise. */
+const isPicture = (url: string) => /\.jpg$|^https:\/\/img\//.test(url);
+
+function fakeFetch(
+  answers: (c: Call) => { status?: number; json: unknown; picture?: "tiny" | "missing" } | null,
+) {
   const calls: Call[] = [];
   const http = (async (url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
@@ -17,7 +22,12 @@ function fakeFetch(answers: (c: Call) => { status?: number; json: unknown }) {
     const c = { method, url: url.split("?")[0]!, body };
     calls.push(c);
     const a = answers(c);
-    return new Response(JSON.stringify(a.json), { status: a.status ?? 200 });
+    if (isPicture(c.url)) {
+      if (a?.picture === "missing") return new Response("Not found", { status: 404 });
+      const size = a?.picture === "tiny" ? 43 : 2048;
+      return new Response(new Uint8Array(size), { status: 200, headers: { "content-type": "image/jpeg" } });
+    }
+    return new Response(JSON.stringify(a?.json ?? {}), { status: a?.status ?? 200 });
   }) as typeof fetch;
   return { http, calls };
 }
@@ -237,9 +247,8 @@ describe("meta provider", () => {
       await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "Teksts", "https://t/post"),
     ).toEqual({ ok: true, id: "PAGE_lc1" });
     // The pictures are drawn (fetched) before the post, and no photo is uploaded to the page.
-    expect(calls.filter((c) => c.url.startsWith("https://t/") && c.url.endsWith("square.jpg"))).toHaveLength(
-      2,
-    );
+    const posted = calls.findIndex((c) => c.url === `${G}/PAGE/feed`);
+    expect(calls.slice(0, posted).filter((c) => c.url.endsWith("square.jpg"))).toHaveLength(2);
     expect(calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
     const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
     expect(feed.body).toMatchObject({
@@ -261,7 +270,7 @@ describe("meta provider", () => {
   });
 
   it("owned: a carousel drawn without every picture is removed, the missing cards logged, and the slides posted as photos", async () => {
-    const reads = [[], ["https://t/1/square.jpg"]] as string[][];
+    const reads = [[], ["https://t/1/square.jpg"], ["https://t/1/square.jpg"]] as string[][];
     const warned: string[] = [];
     const warn = vi.spyOn(console, "warn").mockImplementation((m: string) => void warned.push(String(m)));
     const { http, calls } = fakeFetch((c) => {
@@ -425,8 +434,39 @@ describe("meta provider", () => {
               },
             },
       );
-    expect(await metaProvider(cfg, cards(["a", "b"]).http, noWait).linkPreview("C")).toEqual({ image: true });
-    expect(await metaProvider(cfg, cards(["a", null]).http, noWait).linkPreview("C")).toEqual({
+    expect(
+      await metaProvider(cfg, cards(["https://img/a", "https://img/b"]).http, noWait).linkPreview("C"),
+    ).toEqual({ image: true });
+    // Facebook names an address for every card, but the picture behind the first never loaded.
+    const grey = fakeFetch((c) =>
+      c.url === `${G}/PAGE`
+        ? { json: { access_token: "PT" } }
+        : c.url === "https://img/grey"
+          ? { json: null, picture: "missing" }
+          : c.url === "https://img/tiny"
+            ? { json: null, picture: "tiny" }
+            : {
+                json: {
+                  attachments: {
+                    data: [
+                      {
+                        type: "multi_share",
+                        subattachments: {
+                          data: ["https://img/grey", "https://img/tiny", "https://img/ok"].map((src) => ({
+                            media: { image: { src } },
+                          })),
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+    );
+    expect(await metaProvider(cfg, grey.http, noWait).linkPreview("C")).toEqual({
+      image: false,
+      missing: [1, 2],
+    });
+    expect(await metaProvider(cfg, cards(["https://img/a", null]).http, noWait).linkPreview("C")).toEqual({
       image: false,
       missing: [2],
     });

@@ -2,6 +2,7 @@ import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { isBot } from "@/domain/analytics/visits";
+import { judgeRequest } from "@/services/visits/judge";
 import { countBot, recordVisit } from "@/services/visits/visits";
 import { adParams } from "@/domain/growth/attribution";
 import { recordAdLanding } from "@/services/growth/landings";
@@ -31,8 +32,12 @@ export async function POST(request: Request) {
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success) return new NextResponse(null, { status: 204 });
   const ad = body.data.ad ? adParams(body.data.ad) : null;
+  // A beacon without a browser's fetch metadata, or from another site, is not a person's page
+  // (docs/CLICK_QUALITY_PLAN.md §6); an admin's own browsing is kept apart too. Either way the
+  // view is stored, marked, and that visitor's day is left out of every figure.
+  const suspect = await judgeRequest(request.headers, "beacon");
   after(async () => {
-    await recordVisit(db, { path: body.data.path, ip, userAgent }).catch((err) =>
+    await recordVisit(db, { path: body.data.path, ip, userAgent, suspect }).catch((err) =>
       console.error("visit: not recorded", err),
     );
     // A landing from an ad (docs/GROWTH_PLAN.md, Phase 0).

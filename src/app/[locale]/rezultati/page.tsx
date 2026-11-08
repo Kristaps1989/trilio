@@ -7,6 +7,7 @@ import { countBot } from "@/services/visits/visits";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { searchSessionFor } from "@/services/visits/search-sessions";
+import { judgeRequest } from "@/services/visits/judge";
 import { savingsProofText } from "@/services/offers/proof";
 import { dailyLowest, loadCandidates } from "@/db/queries/catalog";
 import { adviceNotes, DEFAULT_COSTS, type AdviceNote } from "@/domain/advice/advice";
@@ -201,6 +202,7 @@ export default async function ResultsPage({ searchParams }: Props) {
         subcategoryId: sub.id,
         answers: { ...state.answers, $trailing: state.trailing },
         budgetCents: budgetCents(state),
+        suspect: await judgeRequest(h).catch(() => null),
       }).catch(() => null);
 
   // Hearts: which of these products, and whether this very search, are in the wishlist.

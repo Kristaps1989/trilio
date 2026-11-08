@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { askAnswered, ASK_TTL_MS, cookieValue } from "./ask-cookie";
-import { clickSuspicion, sendsFetchMetadata, signalsOf, type ClickSignals } from "./click-quality";
+import {
+  clickSuspicion,
+  sendsFetchMetadata,
+  signalsOf,
+  type ClickSignals,
+  requestSuspicion,
+} from "./click-quality";
 
 const CHROME_WIN =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
@@ -99,6 +105,23 @@ describe("a suspect click", () => {
     expect(
       clickSuspicion({ userAgent: SAFARI_IOS_17, signals: page, source: "ask", pageViewed: true }),
     ).toBeNull();
+  });
+});
+
+describe("a suspect request", () => {
+  const chrome =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
+  it("is a modern browser's user agent without fetch metadata, on any request", () => {
+    expect(requestSuspicion(chrome, { site: null })).toBe("no_fetch_meta");
+    expect(requestSuspicion(chrome, { site: null }, "beacon")).toBe("no_fetch_meta");
+    // An old or unknown agent gets the benefit of the doubt.
+    expect(requestSuspicion("Mozilla/5.0 (compatible; MSIE 9.0)", { site: null })).toBeNull();
+  });
+  it("is a page beacon sent from another site; a page itself may be opened from anywhere", () => {
+    expect(requestSuspicion(chrome, { site: "cross-site" }, "beacon")).toBe("not_from_page");
+    expect(requestSuspicion(chrome, { site: "same-origin" }, "beacon")).toBeNull();
+    expect(requestSuspicion(chrome, { site: "cross-site" }, "page")).toBeNull();
+    expect(requestSuspicion(chrome, { site: "none" }, "page")).toBeNull();
   });
 });
 
