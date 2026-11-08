@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { clickLabel, eventFromDataset, pageInfo } from "@/domain/analytics/page";
 import { adsConversionFor, type AdsTag } from "@/config/analytics";
-import { Button } from "@/ui/Button";
 import {
   CONSENT_CHANGED,
   CONSENT_OPEN,
@@ -196,33 +195,41 @@ export function Analytics({
 
   if (consent === "pending" || (consent !== "unset" && !reopened)) return null;
 
+  // A compact bar (docs/UX_REVIEW_PLAN.md §1): two lines on a phone, never over the page's own
+  // content for more than ~90 px. It still names who sets the cookies and what for, links the policy,
+  // and offers both answers as equal buttons (CLAUDE.md rule 4).
   return (
     <section
       aria-label={t("title")}
       data-ga-ignore=""
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-line-25 bg-night px-gutter pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_rgb(0_0_0/0.35)]"
+      data-consent-bar
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-line-25 bg-night/95 px-gutter pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(0_0_0/0.3)] backdrop-blur"
     >
-      <div className="mx-auto flex w-full max-w-[1160px] flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex max-w-[720px] flex-col gap-1">
-          <h2 className="font-heading text-lg font-semibold text-mist">{t("title")}</h2>
-          <p className="text-[15px] leading-normal text-stone">
-            {t.rich("text", {
-              policy: (chunks) => (
-                <Link href="/sikdatnes" className="text-mist underline">
-                  {chunks}
-                </Link>
-              ),
-            })}
-          </p>
-        </div>
-        {/* Equal buttons: refusing is as easy as accepting (CLAUDE.md rule 4). */}
-        <div className="grid shrink-0 grid-cols-2 gap-3 md:flex">
-          <Button variant="outline" onClick={() => choose("denied")}>
+      <div className="mx-auto flex w-full max-w-[1160px] items-center gap-3">
+        <p className="min-w-0 flex-1 text-[13px] leading-snug text-stone sm:text-sm">
+          {t.rich("short", {
+            policy: (chunks) => (
+              <Link href="/sikdatnes" className="text-mist underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => choose("denied")}
+            className="min-h-11 rounded-full border-[1.5px] border-line-25 px-3.5 text-sm font-semibold text-mist"
+          >
             {t("reject")}
-          </Button>
-          <Button variant="outline" onClick={() => choose("granted")}>
+          </button>
+          <button
+            type="button"
+            onClick={() => choose("granted")}
+            className="min-h-11 rounded-full border-[1.5px] border-line-25 px-3.5 text-sm font-semibold text-mist"
+          >
             {t("accept")}
-          </Button>
+          </button>
         </div>
       </div>
     </section>

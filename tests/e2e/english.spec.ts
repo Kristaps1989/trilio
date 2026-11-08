@@ -16,9 +16,11 @@ async function expectNoAxeViolations(page: Page) {
 test("the English home page: lang, hreflang, canonical and the switch to Latvian", async ({ page }) => {
   await page.goto("/en");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(h1(page)).toHaveText("Tell us what you need.");
+  await expect(h1(page)).toHaveText("The three best products for you — and a lower price, if we can get it.");
   await expect(
-    page.getByText("We'll weigh up the three most suitable products and let you know when the price drops!"),
+    page.getByText(
+      "Answer a few questions. We compare partner shops' prices by barcode and ask the distributor for a lower price. Free.",
+    ),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Help me choose" })).toHaveAttribute("href", "/en/izvelies");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/en$/);

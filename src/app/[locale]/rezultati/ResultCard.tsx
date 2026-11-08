@@ -6,6 +6,7 @@ import { EnergyBadge } from "@/ui/EnergyBadge";
 import { ProductImage } from "@/ui/ProductImage";
 import { SaveButton } from "@/ui/SaveButton";
 import { ShopLink } from "@/ui/ShopLink";
+import { offerSignature } from "@/config/admin";
 import { withSource } from "@/domain/analytics/click-source";
 import type { CardImage } from "./card-media";
 
@@ -77,6 +78,10 @@ export type CardModel = {
   saved: boolean;
   /** Trilio sources this category (data/offers.json): the notify sentence covers its offers. */
   trilioOffer?: boolean;
+  /** A signed-in shopper: the question before the shop asks one yes instead of the e-mail. */
+  signedIn?: boolean;
+  /** The anonymous proof that requests have saved money (docs/UX_REVIEW_PLAN.md §6). */
+  proof?: string | null;
   /** The shop's photo, or the subcategory drawing (card-media.ts). */
   image: CardImage;
   /** EPREL's class, label and sheet when the product was matched in EPREL. */
@@ -178,9 +183,6 @@ export async function ResultCard({ card }: { card: CardModel }) {
         <h3 className="font-body text-xl leading-tight font-bold tracking-normal" lang="lv">
           {card.name}
         </h3>
-        <p className="mt-1 font-heading text-sm font-semibold tracking-[0.01em]">
-          {t("model", { code: card.modelCode, ean: card.ean ?? "—" })}
-        </p>
         {card.specs ? <p className="mt-1 text-sm text-muted">{card.specs}</p> : null}
       </div>
 
@@ -206,7 +208,8 @@ export async function ResultCard({ card }: { card: CardModel }) {
             {card.priceNote}
           </p>
         ) : null}
-        {card.priceLine.kind === "no_history" && card.historyNote === false ? null : (
+        {/* "Cenu vēsture vēl krājas" says nothing a shopper can act on (docs/UX_REVIEW_PLAN.md §4). */}
+        {card.priceLine.kind === "no_history" ? null : (
           <p className="text-sm text-muted">
             {card.priceLine.kind === "lowest_now"
               ? t("lowest30Now")
@@ -331,14 +334,22 @@ export async function ResultCard({ card }: { card: CardModel }) {
         </div>
       ) : null}
 
+      {/* The model code and EAN are how the same product is matched across shops (CLAUDE.md rule 3):
+          kept on the card, small, under the facts rather than under the name (docs/UX_REVIEW_PLAN.md §4). */}
+      <p className="text-xs text-muted" data-card-ean>
+        {t("model", { code: card.modelCode, ean: card.ean ?? "—" })}
+      </p>
+
       <div className="mt-auto flex flex-col gap-2 pt-1">
-        {/* The request first, the shop second (owner, 4 Nov 2026): both full width, same size, nothing hidden. */}
+        {/* The request first and lime, the shop second and outlined (docs/UX_REVIEW_PLAN.md §4). */}
         <SaveButton
           target={{ kind: "product", productId: card.productId }}
           saved={card.saved}
           name={card.name}
           offers={card.trilioOffer}
           priceCents={card.best.priceCents}
+          signer={offerSignature()}
+          proof={card.proof}
         />
         <ShopLink
           href={goHref(card)}
@@ -351,6 +362,9 @@ export async function ResultCard({ card }: { card: CardModel }) {
           saved={card.saved}
           offers={!!card.trilioOffer}
           analytics={offerAnalytics(card)}
+          signedIn={card.signedIn}
+          signer={offerSignature()}
+          proof={card.proof}
         />
       </div>
     </article>

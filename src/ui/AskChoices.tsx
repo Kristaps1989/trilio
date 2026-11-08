@@ -5,14 +5,15 @@ import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { rememberAnswer } from "./askAnswer";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
-import { OfferFine, OfferPitch } from "./OfferPitch";
+import { AskPromise, HowItWorks, OfferPitch } from "./OfferPitch";
 import { SavedAlertNote } from "./SavedAlertNote";
 import type { useRequest } from "./useRequest";
 
-// The two equal choices of the question before the shop (docs/PRICE_NOTIFY_PLAN.md
-// §8.4): request a lower price from Trilio, or go to the shop. Shared by the
-// sheet on a card (ShopLink) and the question page /pirms-veikala/<offer>
-// that /go/ opens when the page's script has not run (docs/CLICK_QUALITY_PLAN.md §2).
+// The question before the shop on one screen (docs/UX_REVIEW_PLAN.md §5): the
+// saving in euro, what happens and who does it, then the e-mail field at once
+// (signed out) or one button (signed in), the steps and the caveat folded under
+// "Kā tas strādā?", and the shop as the second, plainer choice. Shared by the
+// card's sheet (ShopLink) and the page /pirms-veikala/<offer>.
 
 type Props = {
   request: ReturnType<typeof useRequest>;
@@ -26,6 +27,11 @@ type Props = {
   /** data-ga-* of the shop click. */
   analytics?: Record<string, string>;
   onClose: () => void;
+  /** Signed in: one button; signed out: the e-mail field straight away. */
+  signedIn?: boolean;
+  /** Who handles the request ("Kristaps"), and the anonymous proof line. */
+  signer?: string | null;
+  proof?: string | null;
 };
 
 export function AskChoices({
@@ -37,42 +43,26 @@ export function AskChoices({
   shopHref,
   analytics,
   onClose,
+  signedIn = false,
+  signer,
+  proof,
 }: Props) {
   const t = useTranslations("ask");
   const { saved, pending, note, panel, run } = request;
+  // The second choice, plainer than the request but a full, visible button (CLAUDE.md rule 4).
   const toShop = (
     <a
       href={shopHref}
       rel="sponsored noopener"
       onClick={rememberAnswer}
       {...analytics}
-      className={buttonClass({ variant: "dark", block: true })}
+      className={buttonClass({ variant: "card", block: true })}
       data-ask-shop
     >
       {t("toShop", { shop })}
     </a>
   );
-  // Where Trilio sources (owner, 3 Nov 2026, variant C2): the discount first, in euro for this product, then the three steps.
-  const pitch = offers ? <OfferPitch priceCents={priceCents} /> : null;
-  const fine = offers ? <OfferFine /> : null;
 
-  if (panel)
-    return (
-      <>
-        {panel.email ? null : pitch}
-        <NotifyPanel
-          target={target}
-          email={panel.email}
-          offers={offers}
-          onConsent={() => run(true, true)}
-          onClose={onClose}
-          onGoogle={rememberAnswer}
-          compact={offers && !panel.email}
-        />
-        {panel.email ? null : fine}
-        {toShop}
-      </>
-    );
   if (saved)
     return (
       <>
@@ -86,22 +76,45 @@ export function AskChoices({
         {toShop}
       </>
     );
+
+  // Signed in where Trilio sources, the one yes with the known address; signed out, the field at once.
+  const form =
+    panel || !signedIn ? (
+      <NotifyPanel
+        target={target}
+        email={panel?.email ?? null}
+        offers={offers}
+        onConsent={() => run(true, true)}
+        onClose={onClose}
+        onGoogle={rememberAnswer}
+        compact
+        hideClose
+      />
+    ) : (
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => run(true)}
+        className={buttonClass({ variant: "primary", block: true })}
+        data-ga-event="ask_request"
+      >
+        {t(offers ? "sendRequest" : "requestPlain")}
+      </button>
+    );
+
   return (
     <>
-      {offers ? pitch : <p className="text-[15px] leading-snug">{t("bodyPlain")}</p>}
-      <div className="flex flex-col gap-2 pt-1">
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => run(true)}
-          className={buttonClass({ variant: "primary", block: true })}
-          data-ga-event="ask_request"
-        >
-          {t(offers ? "request" : "requestPlain")}
-        </button>
-        {toShop}
-      </div>
-      {fine}
+      {offers ? (
+        <>
+          <OfferPitch priceCents={priceCents} steps={false} />
+          <AskPromise signer={signer} proof={proof} />
+        </>
+      ) : (
+        <p className="text-[15px] leading-snug">{t("bodyPlain")}</p>
+      )}
+      {form}
+      {offers ? <HowItWorks /> : null}
+      {toShop}
     </>
   );
 }

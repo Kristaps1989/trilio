@@ -29,11 +29,11 @@
     "about": "Par Trilio"
   },
   "welcome": {
-    "headline": "Pastāsti, kas tev vajadzīgs.",
+    "headline": "Trīs labākās preces tev — un zemāka cena, ja to varam panākt.",
     "help": "Palīdzi izvēlēties",
     "knowModel": "Es jau zinu modeli",
     "kicker": "Pirkumu palīgs · sadzīves tehnika",
-    "lead": "Atlasīsim trīs piemērotākās preces. Ja vēlies, paziņosim, kad cena samazināsies.",
+    "lead": "Atbildi uz dažiem jautājumiem. Salīdzinām cenas partneru veikalos pēc svītrkoda un pajautājam izplatītājam zemāku cenu. Bez maksas.",
     "meta": "Aizņem apmēram minūti · bez reģistrācijas · jaunas un atjaunotas preces nekad nejaucam kopā"
   },
   "flow": {
@@ -1195,7 +1195,8 @@
     "text": "Vai atļauj Google Analytics, Google Ads un Meta mērījumu sīkdatnes? Tās palīdz saprast, kuras sadaļas un pogas tiek lietotas un kuras reklāmas atved apmeklētājus, lai uzlabotu Trilio. Meta tās var izmantot, lai rādītu Trilio reklāmas Facebook un Instagram. Bez atļaujas sīkdatnes netiek ielādētas, un vietne darbojas tāpat. Sīkāk: <policy>sīkdatņu politika</policy>.",
     "accept": "Atļaut",
     "reject": "Neatļaut",
-    "settings": "Sīkdatņu iestatījumi"
+    "settings": "Sīkdatņu iestatījumi",
+    "short": "Google un Meta sīkdatnes statistikai un reklāmām — tikai ar tavu atļauju. Bez tām viss strādā tāpat. <policy>Sīkāk</policy>"
   },
   "errors": {
     "notFoundKicker": "404 · LAPA NAV ATRASTA",
@@ -2528,7 +2529,7 @@
     "bodyPlain": "Uzrakstīsim, kad šīs preces cena veikalos samazināsies. Tikai par šo preci, ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
     "bodySearch": "Uzrakstīsim, kad šajā meklējumā parādīsies lētāks variants. Ne biežāk kā reizi dienā. Atteikties var jebkurā brīdī.",
     "email": "E-pasts",
-    "submit": "Iegūt lētāk",
+    "submit": "Sūtīt pieprasījumu",
     "submitPlain": "Paziņot man",
     "close": "Aizvērt",
     "sent": "Nosūtījām apstiprinājuma saiti uz {email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.",
@@ -2584,7 +2585,12 @@
     "done": "Pajautāts. Meklējam zemāku cenu un uzrakstīsim.",
     "donePlain": "Saglabāts. Paziņosim, kad cena samazināsies.",
     "close": "Aizvērt",
-    "back": "Atpakaļ uz rezultātiem"
+    "back": "Atpakaļ uz rezultātiem",
+    "promise": "Pajautāsim izplatītājam zemāku cenu. Atbilde 2 darba dienu laikā · bez maksas · pirkt nav obligāti.",
+    "signer": "Pieprasījumu izskata {name} no Trilio.",
+    "how": "Kā tas strādā?",
+    "sendRequest": "Sūtīt pieprasījumu",
+    "upToShort": "līdz −{amount}"
   },
   "about": {
     "title": "Par Trilio",
@@ -2604,5 +2610,10 @@
     "contacts": "Rekvizīti un kontakti",
     "name": "Trilio (trilio.lv) nav saistīts ar citiem uzņēmumiem ar tādu pašu nosaukumu citās valstīs.",
     "start": "Palīdzi izvēlēties"
+  },
+  "proof": {
+    "one": "Reāls piemērs: {month} {type} pircējam izmaksāja par {amount} mazāk nekā veikalā.",
+    "many": "{count, plural, one {# pircējs ar Trilio jau ietaupīja} other {# pircēji ar Trilio jau ietaupīja}} {total}. Pēdējais: {month} {type} par {amount} lētāk nekā veikalā.",
+    "product": "prece"
   }
 }

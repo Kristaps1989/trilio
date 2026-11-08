@@ -198,8 +198,14 @@ export function pickThree(candidates: Candidate[]): Candidate[] {
       (p) =>
         !dominates(p, c) && !dominates(c, p) && (c.price > p.price ? earnsPrice(p, c) : earnsPrice(c, p)),
     );
+  // Three brands say more than one brand three times (docs/UX_REVIEW_PLAN.md §5): within the same
+  // price third, a brand not yet picked wins; the same brand again only when no other qualifies.
+  const brandOf = (c: Candidate) => c.product.brand.trim().toLowerCase();
   const take = (pred: (c: Candidate) => boolean) => {
-    const c = sorted.find((x) => fits(x) && pred(x));
+    const used = new Set(picks.map(brandOf));
+    const c =
+      sorted.find((x) => fits(x) && pred(x) && !used.has(brandOf(x))) ??
+      sorted.find((x) => fits(x) && pred(x));
     if (c) picks.push(c);
     return !!c;
   };
@@ -288,7 +294,11 @@ export function rank(input: RankInput): RankResult {
   const hiddenUnknownCount = input.showUnknown
     ? 0
     : pool.candidates.filter((c) => c.fitUnknown && withinBudget(c.price, range)).length;
-  const { picks, meaningful } = assignTiers(pickThree(inBudget), input.sub);
+  // Without an upper limit, pick within the usual price range (the 75th percentile, as the category
+  // pages do), so a shopper who skipped the budget does not see only the premium end (docs/UX_REVIEW_PLAN.md §5).
+  const ceiling = range?.max === undefined ? mainstreamCeilingCents(inBudget.map((c) => c.price)) : null;
+  const usual = ceiling === null ? inBudget : inBudget.filter((c) => c.price <= ceiling);
+  const { picks, meaningful } = assignTiers(pickThree(usual.length >= 3 ? usual : inBudget), input.sub);
 
   // Spec §3.1 step 5: fewer than 3 in budget → at most 2 extras up to +25 % over the upper limit.
   let extras: Pick[] = [];

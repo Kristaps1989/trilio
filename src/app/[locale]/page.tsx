@@ -7,6 +7,8 @@ import { Container, Kicker, Lead, PageTitle, SectionTitle } from "@/ui/layout";
 import { TileIcon } from "@/ui/Tile";
 import { pageMetadata, withSharePreview } from "./seo";
 import { activeLocale } from "@/i18n/active";
+import { db } from "@/db";
+import { savingsProofText } from "@/services/offers/proof";
 
 // Welcome screen (spec §1, prototype "welcome") plus crawlable entry points
 // below the fold: search engines and AI assistants need real links to the
@@ -31,6 +33,7 @@ export default async function WelcomePage() {
   const t = await getTranslations();
   const groups = catalogIn(activeLocale()).groups.filter((g) => g.id !== "other");
   const steps = [t("home.how1"), t("home.how2"), t("home.how3")];
+  const proof = await savingsProofText(db);
   return (
     <>
       <section className="flex min-h-[calc(100dvh-200px)] items-center justify-center pt-2 pb-10">
@@ -38,15 +41,24 @@ export default async function WelcomePage() {
           <Kicker>{t("welcome.kicker")}</Kicker>
           <PageTitle scale="hero">{t("welcome.headline")}</PageTitle>
           <Lead className="max-w-[600px]">{t("welcome.lead")}</Lead>
-          <div className="mt-2 flex flex-wrap gap-3">
+          {/* One primary action (docs/UX_REVIEW_PLAN.md §2); the model check stays one tap away as a link. */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-3">
             <ButtonLink href="/izvelies" size="lg">
               {t("welcome.help")}
             </ButtonLink>
-            <ButtonLink href="/modelis" size="lg" variant="outline">
+            <Link
+              href="/modelis"
+              className="inline-flex min-h-11 items-center text-base text-mist underline underline-offset-4"
+            >
               {t("welcome.knowModel")}
-            </ButtonLink>
+            </Link>
           </div>
           <p className="text-sm text-stone">{t("welcome.meta")}</p>
+          {proof ? (
+            <p className="max-w-[600px] text-[15px] font-semibold text-lime" data-home-proof>
+              {proof}
+            </p>
+          ) : null}
         </Container>
       </section>
 

@@ -25,9 +25,20 @@ type Props = {
   onGoogle?: () => void;
   /** The sheet above already explains the request (steps and fine print): keep the title for screen readers only. */
   compact?: boolean;
+  /** The surrounding sheet has its own close: no second one here. */
+  hideClose?: boolean;
 };
 
-export function NotifyPanel({ target, email, offers, onConsent, onClose, onGoogle, compact = false }: Props) {
+export function NotifyPanel({
+  target,
+  email,
+  offers,
+  onConsent,
+  onClose,
+  onGoogle,
+  compact = false,
+  hideClose = false,
+}: Props) {
   const t = useTranslations("notify");
   const id = useId();
   const [value, setValue] = useState("");
@@ -160,13 +171,15 @@ export function NotifyPanel({ target, email, offers, onConsent, onClose, onGoogl
               >
                 {t(offers ? "submit" : "submitPlain")}
               </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className={buttonClass({ variant: "card", size: "sm" })}
-              >
-                {t("close")}
-              </button>
+              {hideClose ? null : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={buttonClass({ variant: "card", size: "sm" })}
+                >
+                  {t("close")}
+                </button>
+              )}
             </div>
           </form>
         </>

@@ -194,7 +194,7 @@ test.describe("Meta Pixel", () => {
     await page.waitForURL((u) => !u.pathname.startsWith("/ienakt"));
     const first = page.locator('main article[id^="p-"]').first();
     await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
-    await first.locator("[data-notify-panel]").getByRole("button", { name: "Iegūt lētāk" }).click();
+    await first.locator("[data-notify-panel]").getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
     await expect(
       first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
     ).toBeEnabled();
