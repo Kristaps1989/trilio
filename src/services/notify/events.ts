@@ -4,6 +4,7 @@ import { uiEvents } from "@/db/schema";
 import { isBot, rigaDay, visitorHash } from "@/domain/analytics/visits";
 import { adLandingFor } from "@/services/growth/landings";
 import { saltFor } from "@/services/visits/visits";
+import { cleanVisitor } from "@/services/visits/suspects";
 
 // The notify funnel without cookies (docs/PRICE_NOTIFY_PLAN.md §5 PR 3): each
 // step is a row with the day's anonymous visitor hash, the same hash the
@@ -19,7 +20,13 @@ export const NOTIFY_EVENTS = [
 ] as const;
 export type NotifyEvent = (typeof NOTIFY_EVENTS)[number];
 
-export type Who = { ip: string; userAgent: string | null; now?: Date };
+export type Who = {
+  ip: string;
+  userAgent: string | null;
+  now?: Date;
+  /** judgeRequest's verdict: the event is kept, marked, and that visitor's day left out (docs/CLICK_QUALITY_PLAN.md §6). */
+  suspect?: string | null;
+};
 
 /** Today's visitor hash and ad visit for this request, or null for a bot. */
 export async function visitorOf(
@@ -47,6 +54,7 @@ export async function recordUiEvent(
     event,
     subcategoryId,
     adLandingId: visitor.adLandingId,
+    suspect: who.suspect ?? null,
   });
 }
 
@@ -72,12 +80,14 @@ export async function notifyFunnel(db: Db, from: string, to: string): Promise<Fu
   // Raw visits are kept 35 days (RAW_RETENTION_DAYS), enough for this panel's 7- and 30-day views.
   const results = (await db.execute(sql`
     select subcategory as sub, count(distinct visitor_hash || day)::int as n
-      from visits where section = 'results' and subcategory is not null and day between ${from} and ${to}
+      from visits v where section = 'results' and subcategory is not null and day between ${from} and ${to}
+        and ${cleanVisitor(sql`v.day`, sql`v.visitor_hash`)}
       group by subcategory`)) as unknown as { sub: string; n: number }[];
   const ads = (await db.execute(sql`
     select v.subcategory as sub, count(distinct v.visitor_hash || v.day)::int as n
       from visits v join ad_landings a on a.day = v.day and a.visitor_hash = v.visitor_hash
       where v.section = 'results' and v.subcategory is not null and v.day between ${from} and ${to}
+        and ${cleanVisitor(sql`v.day`, sql`v.visitor_hash`)}
       group by v.subcategory`)) as unknown as { sub: string; n: number }[];
   const events = await db
     .select({
@@ -86,7 +96,9 @@ export async function notifyFunnel(db: Db, from: string, to: string): Promise<Fu
       n: sql<number>`count(distinct ${uiEvents.visitorHash} || ${uiEvents.day})::int`,
     })
     .from(uiEvents)
-    .where(and(gte(uiEvents.day, from), lte(uiEvents.day, to)))
+    .where(
+      and(gte(uiEvents.day, from), lte(uiEvents.day, to), cleanVisitor(uiEvents.day, uiEvents.visitorHash)),
+    )
     .groupBy(uiEvents.subcategoryId, uiEvents.event);
   const rows = new Map<string, FunnelRow>();
   const row = (sub: string) => {

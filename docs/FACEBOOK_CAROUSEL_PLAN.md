@@ -77,6 +77,28 @@ diagnosed from data, not from a guess.
    text-only carousels are replaced by photo posts now, and by link carousels
    once the domain is verified.
 
+## 3a. Still three of five (8 Nov 2026, evening) and what changed
+
+The re-posted carousel again showed its first three cards grey and its last two
+with pictures, and the read-back did not catch it: Facebook gives every card a
+`media.image.src` on its own servers even when the picture behind it never came.
+Two changes remove the remaining causes instead of guessing at one:
+
+1. **Pictures drawn once and stored** (`social_images`, `services/social/stored-images.ts`):
+   before a post is sent every picture it will be fetched for (each slide
+   upright, each card square, a single post's link preview) is drawn one at a
+   time and stored in the database. The picture addresses serve the stored
+   bytes from memory or the database, the same on every instance and after a
+   restart, so Facebook's one fetch per card is answered at once. Before, the
+   in-memory copy of one instance was all there was, and five cards drawn at
+   once on a small instance (product photos fetched from the shops first) were
+   slow enough to be left out. Stored pictures are deleted after 120 days.
+2. **The read-back loads each card's picture:** a card counts only when its
+   picture address answers with an image of more than a few bytes (and is not a
+   placeholder under 100 px wide); it is read three times over 20 seconds. A
+   carousel with any card missing is removed, the card numbers logged, and the
+   slides posted as photos.
+
 ## 4. For the owner
 
 Nothing to set in Meta Business Suite: `trilio.lv` is verified and the Trilio

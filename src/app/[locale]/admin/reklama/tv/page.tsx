@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { pixelUrl, shortLinkUrl } from "@/domain/growth/tv";
+import { controlPixelUrl, extendedPixelUrl, pixelUrl, shortLinkUrl } from "@/domain/growth/tv";
 import { parseTvRange, rangeDays, TV_RANGES } from "@/domain/admin/stats";
 import { formatInt } from "@/i18n/format";
-import { tvReport, tvStats } from "@/services/growth/tv";
+import { tvPixelReport, tvReport, tvStats } from "@/services/growth/tv";
 import { appBaseUrl } from "@/services/payments";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, FilterLinks, inputClass, labelClass, Section, Stat, Stats, Table } from "../../ui";
-import { createTvCampaignAction, deleteTvCampaignAction } from "../actions";
+import { createTvCampaignAction, deleteTvCampaignAction, recomputeTvBaselineAction } from "../actions";
 import { AdsNav, Outcome } from "../shared";
 import { EffectDays, EffectSummary, ReportLink } from "./Effect";
+import { Households, OffDays, PixelDetail } from "./Pixel";
 
 // Reklāma → TV (docs/GROWTH_PLAN.md, TV): addressable TV campaigns (Go3) with
 // Trilio's own impression tracker and short link, and each campaign's effect
@@ -38,6 +39,11 @@ export default async function AdsTv({ searchParams }: Props) {
       ),
     ),
   );
+  const pixels = new Map(
+    await Promise.all(
+      campaigns.map(async (c) => [c.campaign.slug, await tvPixelReport(db, c.campaign.slug, range)] as const),
+    ),
+  );
   const err = sp.err ? (t.has(`err.${sp.err}`) ? t(`err.${sp.err}`) : sp.err) : null;
   return (
     <>
@@ -54,7 +60,14 @@ export default async function AdsTv({ searchParams }: Props) {
         />
         <span className="text-sm text-stone">{t("periodDays", { from: r.from, to: r.to })}</span>
       </div>
-      <Outcome ok={sp.ok ? t(sp.ok === "deleted" ? "deleted" : "created") : null} err={err} />
+      <Outcome
+        ok={
+          sp.ok
+            ? t(sp.ok === "deleted" ? "deleted" : sp.ok === "baseline" ? "baselineDone" : "created")
+            : null
+        }
+        err={err}
+      />
 
       <Section title={t("new")} id="tv-new">
         <form action={createTvCampaignAction} className="grid max-w-2xl gap-3 sm:grid-cols-2" data-tv-new>
@@ -122,6 +135,30 @@ export default async function AdsTv({ searchParams }: Props) {
               />
             </label>
             <p className="text-sm text-stone">{t("leadsTo", { path: c.campaign.landingPath })}</p>
+            <details className="max-w-3xl text-sm">
+              <summary className="cursor-pointer py-2 font-semibold">{t("pixelMore")}</summary>
+              <div className="flex flex-col gap-3 pt-2">
+                <p className="text-stone">{t("pixelMoreHow")}</p>
+                <label className={labelClass}>
+                  {t("pixelExtended")}
+                  <input
+                    readOnly
+                    value={extendedPixelUrl(base, c.campaign.slug)}
+                    className={`${inputClass} font-mono text-sm`}
+                    data-tv-pixel-extended
+                  />
+                </label>
+                <label className={labelClass}>
+                  {t("pixelControl")}
+                  <input
+                    readOnly
+                    value={controlPixelUrl(base, c.campaign.slug)}
+                    className={`${inputClass} font-mono text-sm`}
+                    data-tv-pixel-control
+                  />
+                </label>
+              </div>
+            </details>
             {reports.get(c.campaign.slug) ? (
               <Section
                 title={t("effect")}
@@ -131,8 +168,28 @@ export default async function AdsTv({ searchParams }: Props) {
                 <EffectSummary report={reports.get(c.campaign.slug)!} tone="dark" />
                 <EffectDays report={reports.get(c.campaign.slug)!} />
                 <p className="max-w-3xl text-sm text-stone">{t("method")}</p>
+                <form action={recomputeTvBaselineAction} className="flex flex-wrap items-center gap-3">
+                  <input type="hidden" name="slug" value={c.campaign.slug} />
+                  <Button type="submit" variant="outline" size="sm">
+                    {t("baselineRecompute")}
+                  </Button>
+                  <span className="text-sm text-stone">{t("baselineRecomputeHint")}</span>
+                </form>
               </Section>
             ) : null}
+            {reports.get(c.campaign.slug) ? (
+              <>
+                <Section title={t("offDays.title")} id={`tv-off-${c.campaign.slug}`}>
+                  <OffDays report={reports.get(c.campaign.slug)!} />
+                </Section>
+                <Section title={t("household.title")} id={`tv-households-${c.campaign.slug}`}>
+                  <Households report={reports.get(c.campaign.slug)!} pixel={pixels.get(c.campaign.slug)!} />
+                </Section>
+              </>
+            ) : null}
+            <Section title={t("px.title")} id={`tv-pixel-${c.campaign.slug}`}>
+              <PixelDetail pixel={pixels.get(c.campaign.slug)!} />
+            </Section>
             <Table
               caption={t("perDay")}
               head={[t("day"), t("impressions"), t("reachDay"), t("linkOpens")]}

@@ -4,7 +4,8 @@ import { runOffersJob, type OffersJobResult } from "@/services/offers/job";
 import { trackersFromEnv } from "@/services/offers/tracking";
 import { rollupVisits } from "@/services/visits/visits";
 import { purgeAdLandings } from "@/services/growth/landings";
-import { purgeTvViewers, rollupTvUplift } from "@/services/growth/tv";
+import { purgeTvHouseholds, purgeTvViewers, rollupTvUplift } from "@/services/growth/tv";
+import { purgeSocialImages } from "@/services/social/stored-images";
 import { purgeUiEvents } from "@/services/notify/events";
 import { purgeNotifyRequests } from "@/services/notify/requests";
 
@@ -19,6 +20,10 @@ export type HousekeepingResult = {
   tvViewersPurged: number;
   /** TV uplift day rows written (docs/TV_ANALYTICS_PLAN.md). */
   tvUpliftDays: number;
+  /** Household exposures, visits and address hashes past 21 days (docs/TV_PIXEL_BEST_PRACTICE.md). */
+  tvHouseholdsPurged: number;
+  /** Stored social post pictures older than 120 days. */
+  socialImagesPurged: number;
   notifyRequestsPurged: number;
   uiEventsPurged: number;
 };
@@ -29,6 +34,8 @@ export async function runHousekeeping(db: Db, now = new Date()): Promise<Houseke
   const adLandingsPurged = await purgeAdLandings(db, now);
   const tvViewersPurged = await purgeTvViewers(db, now);
   const tvUpliftDays = await rollupTvUplift(db, now);
+  const tvHouseholdsPurged = await purgeTvHouseholds(db, now);
+  const socialImagesPurged = await purgeSocialImages(db, now);
   const notifyRequestsPurged = await purgeNotifyRequests(db, now);
   const uiEventsPurged = await purgeUiEvents(db, now);
   return {
@@ -37,6 +44,8 @@ export async function runHousekeeping(db: Db, now = new Date()): Promise<Houseke
     adLandingsPurged,
     tvViewersPurged,
     tvUpliftDays,
+    tvHouseholdsPurged,
+    socialImagesPurged,
     notifyRequestsPurged,
     uiEventsPurged,
   };
@@ -48,6 +57,8 @@ export function eventful(r: HousekeepingResult): boolean {
     r.adLandingsPurged > 0 ||
     r.tvViewersPurged > 0 ||
     r.tvUpliftDays > 0 ||
+    r.tvHouseholdsPurged > 0 ||
+    r.socialImagesPurged > 0 ||
     r.notifyRequestsPurged > 0 ||
     r.uiEventsPurged > 0 ||
     Object.values(r.offers).some((n) => n > 0)

@@ -7,7 +7,9 @@ import { formatEur, formatInt } from "@/i18n/format";
 import {
   clickSourceStats,
   confidenceStats,
+  leftOutVisitors,
   searchStats,
+  suspectClickDetail,
   shopStats,
   visitStats,
 } from "@/services/admin/stats";
@@ -31,19 +33,33 @@ export default async function AdminStats({ searchParams }: Props) {
   const t = await getTranslations("admin.stats");
   const range = parseRange((await searchParams).periods);
   const r = rangeDays(range, new Date());
-  const [visits, prevVisits, searches, prevSearches, shops, confidence, bots, clients, funnel, sources] =
-    await Promise.all([
-      visitStats(db, r.from, r.to),
-      visitStats(db, r.prevFrom, r.prevTo),
-      searchStats(db, r.from, r.to),
-      searchStats(db, r.prevFrom, r.prevTo),
-      shopStats(db, r.from, r.to),
-      confidenceStats(db, r.from, r.to),
-      botStats(db, r.from, r.to),
-      clientStats(db, r.from, r.to),
-      notifyFunnel(db, r.from, r.to),
-      clickSourceStats(db, r.from, r.to),
-    ]);
+  const [
+    visits,
+    prevVisits,
+    searches,
+    prevSearches,
+    shops,
+    confidence,
+    bots,
+    clients,
+    funnel,
+    sources,
+    suspects,
+    leftOut,
+  ] = await Promise.all([
+    visitStats(db, r.from, r.to),
+    visitStats(db, r.prevFrom, r.prevTo),
+    searchStats(db, r.from, r.to),
+    searchStats(db, r.prevFrom, r.prevTo),
+    shopStats(db, r.from, r.to),
+    confidenceStats(db, r.from, r.to),
+    botStats(db, r.from, r.to),
+    clientStats(db, r.from, r.to),
+    notifyFunnel(db, r.from, r.to),
+    clickSourceStats(db, r.from, r.to),
+    suspectClickDetail(db, r.from, r.to),
+    leftOutVisitors(db, r.from, r.to),
+  ]);
   const funnelTotal = funnel.reduce(
     (a, f) => ({
       results: a.results + f.resultsVisitors,
@@ -100,7 +116,10 @@ export default async function AdminStats({ searchParams }: Props) {
         <Stat
           label={t("bots")}
           value={formatInt(botTotal)}
-          hint={t("botsHint", { visits: bots.visit, searches: bots.search, clicks: bots.click })}
+          hint={`${t("botsHint", { visits: bots.visit, searches: bots.search, clicks: bots.click })} · ${t(
+            "leftOutHint",
+            { suspect: leftOut.suspect, internal: leftOut.internal },
+          )}`}
         />
       </Stats>
       <p
@@ -108,6 +127,7 @@ export default async function AdminStats({ searchParams }: Props) {
         data-bot-hits={`${bots.visit}/${bots.search}/${bots.click}`}
         data-shop-clicks={clicks}
         data-searches={searches.total}
+        data-left-out={`${leftOut.suspect}/${leftOut.internal}`}
       >
         {t("method")} {t("botsMethod")}
       </p>
@@ -287,6 +307,35 @@ export default async function AdminStats({ searchParams }: Props) {
           />
         </div>
         <p className="text-sm text-stone">{t("clickQualityMethod", { unchecked: sources.unchecked })}</p>
+        {suspects.length ? (
+          <div data-suspect-detail={suspects.length}>
+            <Table
+              caption={t("suspectWho")}
+              head={[
+                t("clickQualityKind"),
+                t("suspectClient"),
+                t("suspectLink"),
+                t("suspectShop"),
+                t("clicks"),
+                t("suspectVisitors"),
+                t("suspectWhen"),
+                t("suspectSignals"),
+              ]}
+              empty={t("empty")}
+              rows={suspects.map((x) => [
+                t(`suspectReason.${x.reason}` as "suspectReason.no_fetch_meta"),
+                x.client,
+                x.source === "—" ? "—" : t(`clickSourceName.${x.source}` as "clickSourceName.unknown"),
+                `${x.store} · ${label(x.subcategoryId)}`,
+                formatInt(x.clicks),
+                formatInt(x.visitors),
+                x.first === x.last ? x.first : `${x.first} – ${x.last}`,
+                [x.referrer, x.lang].filter(Boolean).join(" · ") || "—",
+              ])}
+            />
+            <p className="text-sm text-stone">{t("suspectWhoMethod")}</p>
+          </div>
+        ) : null}
       </Section>
     </>
   );

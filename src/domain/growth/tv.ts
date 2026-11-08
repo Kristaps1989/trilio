@@ -27,6 +27,21 @@ export function pixelUrl(base: string, slug: string): string {
   return `${base}/px/${slug}?ord=[timestamp]&vid=${GO3_VIEWER_MACRO}`;
 }
 
+/**
+ * The tracker with the optional fields of docs/TV_PIXEL_BEST_PRACTICE.md §2.1, for Go3 to
+ * fill with its ad server's own macros: the viewer's IP, the ad event's time, the
+ * creative, the channel and the position in the break. The bracketed names are
+ * placeholders for Go3 to replace; an unfilled one is ignored.
+ */
+export function extendedPixelUrl(base: string, slug: string): string {
+  return `${pixelUrl(base, slug)}&ip=[VIEWER_IP]&ts=[EVENT_TIME]&cr=[CREATIVE_ID]&ch=[CHANNEL]&pos=[POSITION]`;
+}
+
+/** The same tracker for a holdout's ghost impressions (devices kept from the spot on purpose). */
+export function controlPixelUrl(base: string, slug: string): string {
+  return `${extendedPixelUrl(base, slug)}&grp=control`;
+}
+
 /** The address to show on screen or in a QR code. */
 export function shortLinkUrl(base: string, slug: string): string {
   return `${base}/tv/${slug}`;

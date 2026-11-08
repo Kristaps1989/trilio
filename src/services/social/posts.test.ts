@@ -1,4 +1,4 @@
-import { and, eq, gte, like } from "drizzle-orm";
+import { and, desc, eq, gte, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import {
@@ -9,11 +9,13 @@ import {
   specialOffers,
   visitDaily,
   type SocialPost,
+  socialImages,
 } from "@/db/schema";
 import { leaks } from "@/domain/social/anonymise";
 import { FIRST_CATEGORIES, rigaTime } from "@/domain/social/schedule";
 import { mockPosts, mockRefreshed, mockSocialProvider } from "./mock";
 import { sharePreview } from "./share";
+import { slideJpeg } from "./stored-images";
 import {
   approvePost,
   carouselCard,
@@ -414,6 +416,29 @@ run("social posts", () => {
     expect(mockPosts().find((m) => m.id === reposted.fbPostId)?.links).toEqual(fb.links);
   });
 
+  it(
+    "draws a slide once and stores it, so every instance serves the same picture at once",
+    { timeout: 60_000 },
+    async () => {
+      const [post] = await db
+        .select()
+        .from(socialPosts)
+        .where(eq(socialPosts.createdBy, "social-test"))
+        .orderBy(desc(socialPosts.createdAt))
+        .limit(1);
+      expect(post).toBeTruthy();
+      const jpeg = await slideJpeg(db, post!, 2, "square");
+      expect(jpeg!.byteLength).toBeGreaterThan(1000);
+      const [stored] = await db
+        .select()
+        .from(socialImages)
+        .where(
+          and(eq(socialImages.postId, post!.id), eq(socialImages.n, 2), eq(socialImages.shape, "square")),
+        );
+      expect(Buffer.from(stored!.jpeg).equals(jpeg!)).toBe(true);
+      expect(await slideJpeg(db, post!, 9, "square")).toBeNull();
+    },
+  );
   it("a link post's caption drops the line with the bare link: the preview is the link", () => {
     expect(withoutLink("Fakts.\n\nJautājums?\n\nCTA:\n👉 https://t/x?a=1", "https://t/x?a=1")).toBe(
       "Fakts.\n\nJautājums?\n\nCTA:",

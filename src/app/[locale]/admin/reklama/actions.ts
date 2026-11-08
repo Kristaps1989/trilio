@@ -22,7 +22,7 @@ import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { decideProposal } from "@/services/ads/optimiser";
 import { createCaller } from "@/services/llm/client";
 import { markSeoDone } from "@/services/seo/search-console";
-import { createTvCampaign, deleteTvCampaign } from "@/services/growth/tv";
+import { createTvCampaign, deleteTvCampaign, getTvCampaign, recomputeTvBaseline } from "@/services/growth/tv";
 import { adminOrNull, type Admin } from "../guard";
 
 // Every write in Reklāma (docs/GROWTH_PLAN.md §6): admin-gated, logged in
@@ -294,4 +294,16 @@ export async function deleteTvCampaignAction(formData: FormData): Promise<void> 
   await deleteTvCampaign(db, slug);
   await log(a, "ads.tv_delete", slug);
   back("/admin/reklama/tv", { ok: "deleted" });
+}
+
+/** Reklāma → TV: the baseline drawn again without the visitor days left out since (docs/CLICK_QUALITY_PLAN.md §6). */
+export async function recomputeTvBaselineAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const slug = z.string().min(1).max(48).parse(formData.get("slug"));
+  const campaign = await getTvCampaign(db, slug);
+  if (!campaign) back("/admin/reklama/tv", { err: "baseline_none" });
+  const r = await recomputeTvBaseline(db, campaign!);
+  if (!r.ok) back("/admin/reklama/tv", { err: `baseline_${r.error}` });
+  await log(a, "ads.tv_baseline", slug, r.ok ? { days: r.baseline.days, from: r.baseline.from } : {});
+  back("/admin/reklama/tv", { ok: "baseline" });
 }

@@ -81,6 +81,8 @@ export default defineConfig({
         // Facebook and Instagram posts against a fake Meta (tests/e2e/social.spec.ts).
         FEATURE_SOCIAL: "1",
         SOCIAL_PROVIDER: "mock",
+        // The read-only statistics API (tests/e2e/tv.spec.ts).
+        STATS_API_TOKEN: "e2e-stats-token-0123456789abcdef",
       },
     },
   ],

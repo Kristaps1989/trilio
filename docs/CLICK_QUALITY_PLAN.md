@@ -98,7 +98,43 @@ For the owner after the deploy:
 6. Ask Go3 to link trilio.lv from the published case study.
 7. Measure in Search Console: query contains "trilio", country Latvia, position.
 
-## 6. Tests
+## 6. A script's whole day is left out, not only its clicks (owner, 8 Nov 2026)
+
+The owner saw 19 shop clicks in a day, all flagged, with 19 kettle searches all
+answered "steel" and 19 „Izvēlējās veikalu” with no question ever shown: a
+link-following script with a browser's name. Its clicks were left out, but its
+searches and funnel steps were not. Now every request a visitor makes is judged
+the same way (`requestSuspicion` in `domain/analytics/click-quality.ts`,
+`judgeRequest` in `services/visits/judge.ts`):
+
+- **Marked where it is stored:** the page view beacon (`visits.suspect`, also
+  "not_from_page" when a beacon comes from another site), the results page
+  (`search_sessions.suspect`), the funnel's server calls and the `from=ask`
+  shop link (`ui_events.suspect`), besides the click itself. An admin's own
+  page views, searches and steps are marked "internal".
+- **Left out by visitor day:** a visitor (the day's anonymous hash) with any
+  request without fetch metadata, or an admin's own, is left out of that day's
+  visitors, views, searches, the funnel, the browser table and the TV sessions,
+  baseline and household visits (`services/visits/suspects.ts`). A click judged
+  only "not from a page" or "no page view" does not taint the day: a person can
+  open a saved link from an e-mail. Rolled-up days still in the raw visits
+  (35 days) are rebuilt in full every night, so the last five weeks clean up by
+  themselves.
+- **Who it is:** Statistika → Klikšķu kvalitāte lists the suspect clicks by
+  reason, browser family (stored per click from 9 Nov), link, shop and category,
+  with the number of distinct visitors, the first and last time and the
+  referrer host and language; the bots tile shows the left-out visitor days
+  (scripts, admins).
+- **TV:** "Pārrēķināt bāzi" draws the campaign's baseline again without the
+  left-out days while their raw visits are still kept, and recomputes the
+  stored uplift days with it.
+
+What the script did not touch: visitors and the TV sessions count a page only
+when its JavaScript ran and the page was visible for a second, and a client
+without fetch metadata does not run JavaScript; so 8 Nov's 85 visitors were
+not this script. The new marks make sure of it for any script that does.
+
+## 7. Tests
 
 - Unit: `click-quality.test.ts` (signals, modern browsers, each reason, the
   cookie), `site-jsonld.test.ts` (profiles, structured data).

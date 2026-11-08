@@ -92,3 +92,20 @@ export function clickSuspicion(input: {
   if (!input.pageViewed) return "no_page_view";
   return null;
 }
+
+/**
+ * Whether any request (a page view beacon, a results page, a button's server
+ * call) does not look like a person's browser (docs/CLICK_QUALITY_PLAN.md §6):
+ * a browser that always sends fetch metadata sent none ("no_fetch_meta"), or a
+ * page's own beacon came from another site ("not_from_page"). Null when it
+ * does. A visitor with such a request is left out of that day's figures.
+ */
+export function requestSuspicion(
+  userAgent: string | null | undefined,
+  signals: Pick<ClickSignals, "site">,
+  kind: "page" | "beacon" = "page",
+): SuspectReason | null {
+  if (!signals.site && sendsFetchMetadata(userAgent)) return "no_fetch_meta";
+  if (kind === "beacon" && signals.site && signals.site !== "same-origin") return "not_from_page";
+  return null;
+}

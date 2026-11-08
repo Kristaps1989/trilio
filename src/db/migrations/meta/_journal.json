@@ -183,6 +183,13 @@
       "when": 1794066864084,
       "tag": "0025_click_quality",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794174234365,
+      "tag": "0026_bots_images_pixel",
+      "breakpoints": true
     }
   ]
 }

@@ -87,7 +87,8 @@ test("a script with a browser's name is sent to the shop but counted apart, in n
     await page.goto("/admin/statistika?periods=today");
     const raw = await page.locator("[data-click-quality]").getAttribute("data-click-quality");
     const [people, suspect] = raw!.split("/").map(Number) as [number, number];
-    return { people, suspect };
+    const left = await page.locator("[data-left-out]").getAttribute("data-left-out");
+    return { people, suspect, leftOut: Number(left!.split("/")[0]) };
   };
   const before = await quality();
 
@@ -96,6 +97,8 @@ test("a script with a browser's name is sent to the shop but counted apart, in n
   // No Sec-Fetch headers, a Chrome user agent: what a scraper or a link checker sends.
   // A user agent of its own per run: the same visitor's repeat click on an offer within 30 minutes counts once.
   const script = await playwright.request.newContext({ baseURL, userAgent: `${CHROME} e2e/${Date.now()}` });
+  // Its own results page first: a search without fetch metadata, kept apart like the click.
+  expect((await script.get("/rezultati?sub=kettle")).status()).toBe(200);
   const res = await script.get(go.replace(/from=\w+/, "from=ask"), { maxRedirects: 0 });
   expect(res.status()).toBe(302);
   expect(res.headers().location).toMatch(/^https:\/\/example\.invalid\//);
@@ -103,7 +106,14 @@ test("a script with a browser's name is sent to the shop but counted apart, in n
 
   await expect.poll(async () => (await quality()).suspect).toBeGreaterThan(before.suspect);
   await expect(page.getByRole("heading", { name: "Klikšķu kvalitāte" })).toBeVisible();
-  await expect(page.getByText(/Aizdomīgi: pārlūks bez navigācijas galvenēm/)).toBeVisible();
+  await expect(page.getByText(/Aizdomīgi: pārlūks bez navigācijas galvenēm/).first()).toBeVisible();
+  // Who it is: browser family, link, shop and category, without anyone's address
+  // (docs/CLICK_QUALITY_PLAN.md §6); its whole day is left out, its search with it.
+  const who = page.locator("[data-suspect-detail]");
+  await expect(who.getByText("Chrome Windows").first()).toBeVisible();
+  await expect(who.getByText("Jautājums pirms veikala → „Uz veikalu”").first()).toBeVisible();
+  const after = await quality();
+  expect(after.leftOut).toBeGreaterThan(before.leftOut);
 });
 
 test("Par Trilio says what Trilio is; the site's structured data names it with its domain", async ({

@@ -2,6 +2,7 @@ import type { Db } from "@/db/client";
 import { siteUrl } from "@/services/ads/account";
 import { createCaller } from "@/services/llm/client";
 import { socialProvider } from "./index";
+import { preparePostImages } from "./stored-images";
 import { draftUpcoming, publishDue, syncInsights, type SocialDeps } from "./posts";
 
 // The scheduler's hook (docs/SOCIAL_PLAN.md §7): every tick drafts the coming
@@ -11,7 +12,12 @@ import { draftUpcoming, publishDue, syncInsights, type SocialDeps } from "./post
 export function socialDeps(db: Db): SocialDeps | null {
   const provider = socialProvider();
   if (!provider) return null;
-  return { provider, baseUrl: siteUrl(), caller: process.env.ANTHROPIC_API_KEY ? createCaller(db) : null };
+  return {
+    provider,
+    baseUrl: siteUrl(),
+    caller: process.env.ANTHROPIC_API_KEY ? createCaller(db) : null,
+    prepareImages: (post) => preparePostImages(db, post),
+  };
 }
 
 export async function runSocialJob(db: Db, now = new Date()) {

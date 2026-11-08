@@ -1,4 +1,5 @@
 import { BUCKETS, bucketLabel } from "@/domain/growth/uplift";
+import { formatInt, formatNumber } from "@/i18n/format";
 
 // The 24-hour profile of a TV campaign (docs/TV_ANALYTICS_PLAN.md §1):
 // impressions as bars on their own scale, sessions as a line and the baseline
@@ -77,7 +78,7 @@ export function Profile({
           </text>
         ))}
         <text x={width - pad.right} y={pad.top - 4} textAnchor="end" className={`${text} text-[11px]`}>
-          {`${labels.impressions} ≤ ${maxImp} · ${labels.sessions} ≤ ${maxSess}`}
+          {`${labels.impressions} ≤ ${formatInt(Math.round(maxImp))} · ${labels.sessions} ≤ ${formatNumber(maxSess, 1)}`}
         </text>
       </svg>
       <p className={`flex flex-wrap gap-4 text-xs ${dark ? "text-stone" : "text-muted"}`}>
