@@ -2,6 +2,11 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  // The image engine's first picture takes seconds (it loads its fonts and wasm): draw one
+  // now, so a crawler fetching a post picture after a deploy is not the one who waits.
+  void import("./services/social/render")
+    .then(({ renderPostJpeg }) => renderPostJpeg({ chip: "", title: "Trilio", lines: [] }, 0, 1, "square"))
+    .catch(() => undefined);
   const { schedulerEnabled, startIngestScheduler } = await import("./services/jobs/scheduler");
   if (!schedulerEnabled()) return;
   // On a redeploy Railway sends SIGTERM: a running scrape saves what it has

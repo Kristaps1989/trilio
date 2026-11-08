@@ -6,6 +6,7 @@ import { adminOrNull } from "@/app/[locale]/admin/guard";
 import type { PostCard } from "@/domain/social/captions";
 import { appBaseUrl } from "@/services/payments";
 import { carouselCard } from "@/services/social/posts";
+import { hostedPicture } from "@/services/social/share";
 import { slidesOf } from "@/services/social/render";
 
 // The share page of one carousel card (docs/SOCIAL_PLAN.md §12, 8 Nov 2026):
@@ -15,13 +16,15 @@ import { slidesOf } from "@/services/social/render";
 // link itself. A person is sent on at once to the slide's page on the site,
 // with the card's tags; without a script, the same link is on the page.
 // Never indexed: the site's pages are the content, this is the wrapper.
+// When the publisher uploaded the picture to Facebook first, the link carries
+// Facebook's copy as ?p= and the page names that instead (8 Nov 2026).
 
 export const dynamic = "force-dynamic";
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string; n: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string; n: string }> }) {
   const { id: rawId, n } = await params;
   const id = z.uuid().safeParse(rawId);
   const i = Number(n);
@@ -33,6 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const slide = slidesOf(p.card as unknown as PostCard)[i - 1];
   if (!slide) return new NextResponse(null, { status: 404 });
   const card = carouselCard(appBaseUrl(), p, slide, i - 1);
+  const picture = hostedPicture(new URL(request.url).searchParams.get("p")) ?? card.picture;
   const title = esc(card.name);
   const description = esc(card.description ?? p.alt ?? "");
   const target = esc(card.target);
@@ -47,8 +51,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 <meta property="og:site_name" content="Trilio">
 <meta property="og:title" content="${title}">
 ${description ? `<meta property="og:description" content="${description}">` : ""}
-<meta property="og:image" content="${esc(card.picture)}">
-<meta property="og:image:secure_url" content="${esc(card.picture)}">
+<meta property="og:image" content="${esc(picture)}">
+<meta property="og:image:secure_url" content="${esc(picture)}">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1080">
 <meta property="og:image:height" content="1080">

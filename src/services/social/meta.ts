@@ -62,6 +62,26 @@ export function metaProvider(
   }
 
   /**
+   * Facebook's own copy of a picture (docs/SOCIAL_PLAN.md §12, 8 Nov 2026): uploaded
+   * to the page unpublished (never shown on the page), then its largest image on
+   * Facebook's servers. A card that names this copy needs nothing from trilio.lv
+   * when the post is made. Null when the upload or the read fails.
+   */
+  async function hostPicture(url: string, token: string): Promise<string | null> {
+    try {
+      const photo = await call("POST", `${cfg.pageId}/photos`, { url, published: "false" }, token);
+      const r = await call("GET", String(photo.id), { fields: "images" }, token);
+      const images = Array.isArray(r.images) ? (r.images as { source?: string; width?: number }[]) : [];
+      const best = images
+        .filter((i) => typeof i.source === "string")
+        .sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0];
+      return best?.source ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Whether a page post just made has its picture (every card's, for a
    * carousel). Facebook attaches pictures as it reads them, so a first "no" is
    * read once more after a moment. Null when it cannot be read.
@@ -227,11 +247,20 @@ export function metaProvider(
           // The order is ours (not "optimized"), and no extra end card is added. Facebook fetches
           // every card's picture once, when the post is made, and leaves out one that is slow:
           // all pictures are drawn first.
-          // Every card's picture and share page are drawn first, then Facebook reads each
-          // card's link (its Open Graph names the picture), so its cache holds the pictures
-          // before the post is made (docs/SOCIAL_PLAN.md §12, 8 Nov 2026).
-          await warm(images.flatMap((i) => [i.card!.picture, i.card!.link]));
-          for (const { card } of images) await scrape(card!.link, token);
+          // Every card's picture is uploaded to Facebook first and the card names Facebook's
+          // own copy, as `picture` and as its share page's og:image (?p=), so nothing has to
+          // be fetched from trilio.lv when the post is made (8 Nov 2026: a carousel lost its
+          // first three pictures). A picture that cannot be uploaded keeps its own address.
+          await warm(images.map((i) => i.card!.picture));
+          const hosted = await Promise.all(images.map((i) => hostPicture(i.card!.picture, token)));
+          const cards = images.map(({ card }, k) => {
+            const h = hosted[k];
+            if (!h) return card!;
+            const sep = card!.link.includes("?") ? "&" : "?";
+            return { ...card!, picture: h, link: `${card!.link}${sep}p=${encodeURIComponent(h)}` };
+          });
+          await warm(cards.map((c) => c.link));
+          for (const c of cards) await scrape(c.link, token);
           let posted: string | null = null;
           try {
             const r = await call(
@@ -241,11 +270,11 @@ export function metaProvider(
                 message: caption,
                 link,
                 child_attachments: JSON.stringify(
-                  images.map(({ card }) => ({
-                    link: card!.link,
-                    name: card!.name,
-                    ...(card!.description ? { description: card!.description } : {}),
-                    picture: card!.picture,
+                  cards.map((card) => ({
+                    link: card.link,
+                    name: card.name,
+                    ...(card.description ? { description: card.description } : {}),
+                    picture: card.picture,
                   })),
                 ),
                 multi_share_optimized: "false",

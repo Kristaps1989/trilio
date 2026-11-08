@@ -104,6 +104,18 @@ test("a post from the knowledge base: draft, image, publish now to both networks
       `href="${base}/[^"]*utm_source=facebook&amp;utm_medium=social&amp;utm_campaign=advice&amp;utm_content=${id}-1"`,
     ),
   );
+  // With Facebook's own copy of the picture (?p=, uploaded by the publisher first) the page names that;
+  // an address off Facebook's image servers is ignored.
+  const cdn = "https://scontent.xx.fbcdn.net/v/t39/1_n.jpg?oe=1";
+  const hostedHtml = await (
+    await crawler.request.get(`${base}/social/${id}/1?p=${encodeURIComponent(cdn)}`)
+  ).text();
+  expect(hostedHtml).toContain(`<meta property="og:image" content="${cdn.replace("&", "&amp;")}">`);
+  const evilHtml = await (
+    await crawler.request.get(`${base}/social/${id}/1?p=${encodeURIComponent("https://evil.example/x.jpg")}`)
+  ).text();
+  expect(evilHtml).toContain(`<meta property="og:image" content="${base}/social/${id}/1/square.jpg">`);
+  expect(evilHtml).not.toContain("evil.example");
   const square = await crawler.request.get(`${base}/social/${id}/1/square.jpg`);
   expect(square.status()).toBe(200);
   expect(square.headers()["content-type"]).toBe("image/jpeg");
