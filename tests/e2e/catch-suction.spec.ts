@@ -85,7 +85,12 @@ test("the upgrade box says what you get and what you lose, in Latvian cases", as
   expect(downsides.length).toBeGreaterThan(0);
   // Each item agrees with its attribute's noun ("par 97 L mazāks tilpums"), never a bare "−97 L tilpums".
   for (const line of downsides) expect(line).not.toMatch(/Mīnusi: .*(−|\+)\d/);
-  expect(downsides.some((x) => /Mīnusi: .*par \d+ L mazāks tilpums/.test(x))).toBe(true);
+  // Every item says the difference in words with a comparative ("par 97 L mazāks tilpums",
+  // "~320 € vairāk par elektrību"), whichever attribute the current picks differ in.
+  for (const line of downsides)
+    expect(line).toMatch(
+      /Mīnusi: .*(\d+\S* \S+ (mazāks|mazāka|lielāks|lielāka|augstāks|zemāks|skaļāks|vājāks)|vairāk|mazāk)/,
+    );
 });
 
 test("a robot vacuum: the carpet question and strong suction in pascals", async ({ page }) => {

@@ -55,12 +55,16 @@ export async function savingsProofText(db: Db): Promise<string | null> {
   const id = proof.latest.subcategoryId;
   const type = tp.has(id as "fridge") ? tp(id as "fridge") : t("product");
   const monthIndex = Number(
-    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Riga", month: "numeric" }).format(proof.latest.paidAt),
+    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Riga", month: "numeric" }).format(
+      proof.latest.paidAt,
+    ),
   );
   const month =
     locale === "lv"
       ? MONTHS_LOCATIVE[monthIndex - 1]!
-      : new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Riga", month: "long" }).format(proof.latest.paidAt);
+      : new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Riga", month: "long" }).format(
+          proof.latest.paidAt,
+        );
   const amount = formatEur(proof.latest.savedCents);
   return proof.count === 1
     ? t("one", { month, type, amount })

@@ -17,7 +17,11 @@ describe("savings proof", () => {
     ])!;
     expect(p.count).toBe(2);
     expect(p.totalCents).toBe(8000);
-    expect(p.latest).toEqual({ subcategoryId: "fridge", savedCents: 5000, paidAt: new Date("2026-11-02T10:00:00Z") });
+    expect(p.latest).toEqual({
+      subcategoryId: "fridge",
+      savedCents: 5000,
+      paidAt: new Date("2026-11-02T10:00:00Z"),
+    });
   });
 
   it("is nothing without a saving", () => {

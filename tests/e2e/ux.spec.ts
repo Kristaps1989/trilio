@@ -14,21 +14,25 @@ async function noAxe(page: Page) {
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
 }
 
-test("the cookie bar is two short lines with equal answers, not half the screen", async ({ page }) => {
-  await page.goto("/");
-  const bar = page.locator("[data-consent-bar]");
-  await expect(bar).toBeVisible();
-  // It still names who sets the cookies and links the policy.
-  await expect(bar).toContainText("Google un Meta sīkdatnes");
-  await expect(bar.getByRole("link", { name: "Sīkāk" })).toHaveAttribute("href", "/sikdatnes");
-  const box = (await bar.boundingBox())!;
-  const viewport = page.viewportSize()!;
-  expect(box.height).toBeLessThanOrEqual(Math.max(130, viewport.height * 0.18));
-  // Refusing is as easy as accepting: same size, same style.
-  const no = (await bar.getByRole("button", { name: "Neatļaut", exact: true }).boundingBox())!;
-  const yes = (await bar.getByRole("button", { name: "Atļaut", exact: true }).boundingBox())!;
-  expect(Math.abs(no.height - yes.height)).toBeLessThan(1);
-  await noAxe(page);
+test.describe("before any consent choice", () => {
+  // Every other spec starts with consent declined (playwright.config.ts); this one starts fresh.
+  test.use({ storageState: { cookies: [], origins: [] } });
+  test("the cookie bar is two short lines with equal answers, not half the screen", async ({ page }) => {
+    await page.goto("/");
+    const bar = page.locator("[data-consent-bar]");
+    await expect(bar).toBeVisible();
+    // It still names who sets the cookies and links the policy.
+    await expect(bar).toContainText("Google un Meta sīkdatnes");
+    await expect(bar.getByRole("link", { name: "Sīkāk" })).toHaveAttribute("href", "/sikdatnes");
+    const box = (await bar.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(box.height).toBeLessThanOrEqual(Math.max(130, viewport.height * 0.18));
+    // Refusing is as easy as accepting: same size, same style.
+    const no = (await bar.getByRole("button", { name: "Neatļaut", exact: true }).boundingBox())!;
+    const yes = (await bar.getByRole("button", { name: "Atļaut", exact: true }).boundingBox())!;
+    expect(Math.abs(no.height - yes.height)).toBeLessThan(1);
+    await noAxe(page);
+  });
 });
 
 test("the home page says what Trilio does and offers one primary action", async ({ page }) => {

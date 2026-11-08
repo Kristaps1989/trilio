@@ -91,7 +91,9 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   // The home page says both promises.
   await page.goto("/");
   await expect(
-    page.getByText("Atlasīsim trīs piemērotākās preces. Ja vēlies, paziņosim, kad cena samazināsies."),
+    page.getByText(
+      "Atbildi uz dažiem jautājumiem. Salīdzinām cenas partneru veikalos pēc svītrkoda un pajautājam izplatītājam zemāku cenu. Bez maksas.",
+    ),
   ).toBeVisible();
 
   await kettleResults(page);

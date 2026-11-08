@@ -204,7 +204,8 @@ export function pickThree(candidates: Candidate[]): Candidate[] {
   const take = (pred: (c: Candidate) => boolean) => {
     const used = new Set(picks.map(brandOf));
     const c =
-      sorted.find((x) => fits(x) && pred(x) && !used.has(brandOf(x))) ?? sorted.find((x) => fits(x) && pred(x));
+      sorted.find((x) => fits(x) && pred(x) && !used.has(brandOf(x))) ??
+      sorted.find((x) => fits(x) && pred(x));
     if (c) picks.push(c);
     return !!c;
   };
