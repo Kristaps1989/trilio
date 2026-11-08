@@ -243,7 +243,9 @@ run("social posts", () => {
       status: "paid",
       amountCents: 59900,
       ...personal,
-      paidAt: new Date(),
+      // The newest paid order is the one told; other test files pay orders at the same time
+      // (offers/flow.test.ts), so this one is dated a few minutes ahead to stay the newest.
+      paidAt: new Date(Date.now() + 10 * 60_000),
       feedbackToken: `social-test-${Date.now()}`,
     });
     const f = await factsFor(db, "offer", new Date());
