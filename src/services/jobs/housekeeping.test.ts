@@ -28,8 +28,10 @@ describe("admin configuration", () => {
       socialImagesPurged: 0,
       notifyRequestsPurged: 0,
       uiEventsPurged: 0,
+      alertRenewals: { asked: 0, deleted: 0, usersDeleted: 0 },
     };
     expect(eventful(quiet)).toBe(false);
+    expect(eventful({ ...quiet, alertRenewals: { asked: 1, deleted: 0, usersDeleted: 0 } })).toBe(true);
     expect(eventful({ ...quiet, tvHouseholdsPurged: 3 })).toBe(true);
     expect(eventful({ ...quiet, offers: { ...quiet.offers, reminded: 1 } })).toBe(true);
     expect(eventful({ ...quiet, visits: { days: 0, purged: 3 } })).toBe(true);

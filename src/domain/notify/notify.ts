@@ -3,7 +3,7 @@
 // where the text shown said so, and that text is stored with its version.
 
 /** Bump when the wording in notify.body* changes, so every stored consent names the text it saw. */
-export const CONSENT_VERSION = "2026-11-09";
+export const CONSENT_VERSION = "2026-11-09.2";
 
 /**
  * From this consent version on, the text shown says that one proposal for the product
@@ -11,6 +11,41 @@ export const CONSENT_VERSION = "2026-11-09";
  * Requests that saw an older text were told nothing would come before confirming.
  */
 export const OFFER_WITHOUT_CONFIRM_FROM = "2026-11-09";
+
+/**
+ * From this consent version on, entering the e-mail is the consent (lawyer and owner,
+ * 9 Nov 2026; docs/ALERTS_WITHOUT_CONFIRM_PLAN.md): the price e-mails start at once,
+ * for 90 days, and every e-mail can be unsubscribed. Older requests keep the promise
+ * they were made under (nothing ongoing before the click).
+ */
+export const ACTIVE_ON_REQUEST_FROM = "2026-11-09.2";
+
+/** Price e-mails run this long from the request (or the last renewal). */
+export const ALERT_DAYS = 90;
+/** The e-mail that asks whether to continue goes this many days before the end. */
+export const RENEW_NOTICE_DAYS = 7;
+const DAY_MS = 24 * 3600 * 1000;
+
+/** When the price e-mails for an item saved or renewed now end. */
+export function alertsUntilFrom(now: Date): Date {
+  return new Date(now.getTime() + ALERT_DAYS * DAY_MS);
+}
+
+export type AlertPhase = "active" | "notice" | "expired";
+
+/** Running, due for the "turpināt?" e-mail (once), or ended. */
+export function alertPhase(item: { alertsUntil: Date; renewalSentAt: Date | null }, now: Date): AlertPhase {
+  const left = item.alertsUntil.getTime() - now.getTime();
+  if (left <= 0) return "expired";
+  if (left <= RENEW_NOTICE_DAYS * DAY_MS && !item.renewalSentAt) return "notice";
+  return "active";
+}
+
+/** Whether a request made with this consent text starts the price e-mails without a click. */
+export function activeOnRequest(consent: string): boolean {
+  const v = consentVersion(consent);
+  return !!v && v >= ACTIVE_ON_REQUEST_FROM;
+}
 
 export const REQUEST_TTL_MS = 7 * 24 * 3600 * 1000;
 /** After confirming, the same link signs the person in once, for this long. */
@@ -66,9 +101,9 @@ export function requestState(
   return { confirmable, canSignIn };
 }
 
-/** The version part of a stored consent key ("notify.body@2026-11-09" → "2026-11-09"). */
+/** The version part of a stored consent key ("notify.body@2026-11-09.2" → "2026-11-09.2"). */
 export function consentVersion(key: string): string | null {
-  const m = /@(\d{4}-\d{2}-\d{2})$/.exec(key);
+  const m = /@(\d{4}-\d{2}-\d{2}(?:\.\d+)?)$/.exec(key);
   return m ? m[1]! : null;
 }
 

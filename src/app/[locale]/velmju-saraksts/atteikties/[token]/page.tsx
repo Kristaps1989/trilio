@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/db";
-import { unsubscribeAlertsByToken } from "@/services/wishlist/alerts";
+import { alertsUnsubscribeKind, unsubscribeAlerts } from "@/services/wishlist/alerts";
 import { Button } from "@/ui/Button";
 import { Kicker, PageTitle, Screen } from "@/ui/layout";
 import { localPath } from "@/i18n/path";
@@ -22,11 +22,15 @@ export default async function AlertsUnsubscribe({ params, searchParams }: Props)
   const { token } = await params;
   const t = await getTranslations("alertsUnsubscribe");
   const { done } = await searchParams;
+  const request = !done && (await alertsUnsubscribeKind(db, token)) === "request";
 
   async function confirm() {
     "use server";
-    await unsubscribeAlertsByToken(db, token);
-    redirect(await localPath(`/velmju-saraksts/atteikties/${token}?done=1`));
+    // An address never proven (a typed request) is deleted outright, as the receipt promises.
+    const what = await unsubscribeAlerts(db, token);
+    redirect(
+      await localPath(`/velmju-saraksts/atteikties/${token}?done=${what === "request" ? "request" : "1"}`),
+    );
   }
 
   return (
@@ -36,13 +40,13 @@ export default async function AlertsUnsubscribe({ params, searchParams }: Props)
         <>
           <PageTitle>{t("doneTitle")}</PageTitle>
           <p className="text-[17px] text-stone" role="status">
-            {t("doneBody")}
+            {done === "request" ? t("doneRequest") : t("doneBody")}
           </p>
         </>
       ) : (
         <>
           <PageTitle>{t("title")}</PageTitle>
-          <p className="text-[17px] text-stone">{t("body")}</p>
+          <p className="text-[17px] text-stone">{t(request ? "requestBody" : "body")}</p>
           <form action={confirm}>
             <Button type="submit" size="lg">
               {t("confirm")}

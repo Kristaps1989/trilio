@@ -1,6 +1,7 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { notifySettings, offers, priceSnapshots, savedItems, stores, type SavedItem } from "@/db/schema";
+import { alertsUntilFrom } from "@/domain/notify/notify";
 import { productKey, searchKey } from "@/domain/wishlist/wishlist";
 
 // Wishlist persistence. Every read and write is scoped to the user id.
@@ -20,7 +21,11 @@ export async function saveProduct(
       subcategoryId: input.subcategoryId,
       baselinePriceCents: input.baselinePriceCents,
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      // Asking again is a fresh 90 days of price e-mails.
+      target: [savedItems.userId, savedItems.key],
+      set: { alertsUntil: alertsUntilFrom(new Date()), renewalSentAt: null },
+    });
 }
 
 export async function saveSearch(
@@ -39,7 +44,11 @@ export async function saveSearch(
       label: input.label.slice(0, 300),
       baselinePriceCents: input.baselinePriceCents,
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      // Asking again is a fresh 90 days of price e-mails.
+      target: [savedItems.userId, savedItems.key],
+      set: { alertsUntil: alertsUntilFrom(new Date()), renewalSentAt: null },
+    });
 }
 
 export async function removeSaved(db: Db, userId: string, key: string): Promise<boolean> {
@@ -97,11 +106,15 @@ export async function priceHistory(
 }
 
 /** Every saved item with its owner's threshold, for the daily digest. */
-export async function itemsForEvaluation(db: Db) {
-  return db
-    .select({ item: savedItems, threshold: notifySettings.threshold })
-    .from(savedItems)
-    .leftJoin(notifySettings, eq(notifySettings.userId, savedItems.userId));
+export async function itemsForEvaluation(db: Db, now = new Date()) {
+  return (
+    db
+      .select({ item: savedItems, threshold: notifySettings.threshold })
+      .from(savedItems)
+      .leftJoin(notifySettings, eq(notifySettings.userId, savedItems.userId))
+      // Ended (90 days, not renewed): no more price e-mails for it.
+      .where(gt(savedItems.alertsUntil, now))
+  );
 }
 
 export async function markNotified(db: Db, itemId: string, newBaselineCents: number, now: Date) {

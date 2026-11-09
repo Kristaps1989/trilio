@@ -540,10 +540,17 @@ export const savedItems = pgTable(
     lastNotifiedAt: timestamp("last_notified_at", { withTimezone: true }),
     /** The ad visit that brought the saver today, if any (docs/GROWTH_PLAN.md, Phase 0). */
     adLandingId: uuid("ad_landing_id").references((): AnyPgColumn => adLandings.id, { onDelete: "set null" }),
+    /** Price e-mails for this item stop here unless renewed (90 days; docs/ALERTS_WITHOUT_CONFIRM_PLAN.md). */
+    alertsUntil: timestamp("alerts_until", { withTimezone: true })
+      .notNull()
+      .default(sql`now() + interval '90 days'`),
+    /** When the "turpināt?" e-mail went for the current period; cleared on renewal. */
+    renewalSentAt: timestamp("renewal_sent_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex("saved_items_user_key_idx").on(t.userId, t.key),
+    index("saved_items_alerts_until_idx").on(t.alertsUntil),
     index("saved_items_user_idx").on(t.userId),
   ],
 );
@@ -1345,6 +1352,12 @@ export const notifyRequests = pgTable(
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    /**
+     * Since consent 2026-11-09.2 the request itself starts the price e-mails: the item is
+     * saved to an account for this address (made if needed, its address not yet proven)
+     * at once. confirmedAt stays for the click on the e-mailed link, which proves it.
+     */
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
     /** The confirmation also signs the person in, once. */
     signedInAt: timestamp("signed_in_at", { withTimezone: true }),
   },

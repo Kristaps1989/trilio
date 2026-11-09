@@ -1,8 +1,9 @@
-import { and, count, eq, gte, isNull, lt } from "drizzle-orm";
+import { and, count, eq, gte, isNull, lt, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { notifyRequests, specialOffers, users, type NotifyRequest } from "@/db/schema";
 import {
   REQUEST_TTL_MS,
+  activeOnRequest,
   consentFor,
   normaliseEmail,
   rateLimit,
@@ -13,13 +14,17 @@ import {
 import { trilioSources, type Sourcing } from "@/domain/offers/sourcing";
 import type { EmailSender } from "@/services/notify/email";
 import { token } from "@/services/offers/offers";
+import { ensureAlertsToken } from "@/services/wishlist/alerts";
+import { localizedPath } from "@/i18n/routing";
 import type { UiLocale } from "@/i18n/routing";
 import { composeNotifyConfirmEmail } from "./confirm-email";
 
-// Double opt-in for price e-mails without an account (docs/PRICE_NOTIFY_PLAN.md
-// §2, §5 PR 2). The request holds what was asked and the consent text shown;
-// the e-mailed link confirms it, creates the account if needed, saves the
-// item and turns the e-mails on. Nothing is sent to the address before that.
+// "Iegūt lētāk" without an account. The request holds what was asked and the consent
+// text shown. Since consent 2026-11-09.2 entering the e-mail is the consent (lawyer and
+// owner, 9 Nov 2026; docs/ALERTS_WITHOUT_CONFIRM_PLAN.md): the item is saved to an account
+// for that address at once and the price e-mails start, for 90 days, each with an
+// unsubscribe. The e-mail sent now is a receipt; its link opens the wishlist, signs the
+// person in once and proves the address. Older requests still wait for that click.
 
 export type NotifyTarget =
   | {
@@ -49,6 +54,8 @@ export type RequestDeps = {
   inbox?: string;
   /** Where Trilio sources; data/offers.json (every category) unless a test narrows it. */
   sourcing?: Sourcing;
+  /** Saves the asked item to the account (the wishlist's own save, with today's price as the baseline). */
+  save: (userId: string, request: NotifyRequest) => Promise<boolean>;
 };
 
 export type RequestResult =
@@ -96,6 +103,14 @@ export async function requestNotify(db: Db, input: RequestInput, deps: RequestDe
       createdAt: now,
     })
     .returning({ id: notifyRequests.id });
+  const [request] = await db.select().from(notifyRequests).where(eq(notifyRequests.id, row!.id));
+  // Every request now shows a text under which entering the e-mail is the consent.
+  const active = activeOnRequest(consent.key) ? await activateRequest(db, request!, deps.save, now) : null;
+  if (!active) {
+    await db.delete(notifyRequests).where(eq(notifyRequests.id, row!.id));
+    return { ok: false, reason: "invalid" };
+  }
+  const unsubscribeToken = await ensureAlertsToken(db, active.userId);
   const sent = await deps.email.send(
     composeNotifyConfirmEmail({
       to: email,
@@ -105,13 +120,53 @@ export async function requestNotify(db: Db, input: RequestInput, deps: RequestDe
       token: value,
       target: t,
       offers: consent.offers,
+      alertsOff: active.alertsOff,
+      unsubscribeUrl: `${deps.baseUrl}${localizedPath(`/velmju-saraksts/atteikties/${unsubscribeToken}`, input.locale)}`,
+      oneClickUrl: `${deps.baseUrl}/api/wishlist/unsubscribe/${unsubscribeToken}`,
     }),
   );
-  if (!sent.ok && sent.reason === "error") {
-    await db.delete(notifyRequests).where(eq(notifyRequests.id, row!.id));
-    return { ok: false, reason: "email_failed" };
-  }
+  // Already saved and running (its e-mails carry the unsubscribe); the person sees the failure.
+  if (!sent.ok && sent.reason === "error") return { ok: false, reason: "email_failed" };
   return { ok: true, email, id: row!.id };
+}
+
+/**
+ * The request starts what it asked for at once: the account for this address (made
+ * if needed, its address not yet proven, so no sign-in), the item saved, and Trilio's
+ * offers on where the text covered them and the person never answered that question.
+ * A switch the person turned off before stays off: the receipt says how to turn it on.
+ */
+export async function activateRequest(
+  db: Db,
+  request: NotifyRequest,
+  save: (userId: string, request: NotifyRequest) => Promise<boolean>,
+  now = new Date(),
+): Promise<{ userId: string; alertsOff: boolean } | null> {
+  const offers = request.offers ? { offersOptIn: true, offersOptInAt: now, offersAskedAt: now } : {};
+  let [user] = await db
+    .select({ id: users.id, priceAlerts: users.priceAlerts, offersAskedAt: users.offersAskedAt })
+    .from(users)
+    .where(eq(users.email, request.email));
+  if (!user) {
+    [user] = await db
+      .insert(users)
+      .values({ email: request.email, locale: request.locale, ...offers })
+      .onConflictDoNothing()
+      .returning({ id: users.id, priceAlerts: users.priceAlerts, offersAskedAt: users.offersAskedAt });
+    if (!user)
+      [user] = await db
+        .select({ id: users.id, priceAlerts: users.priceAlerts, offersAskedAt: users.offersAskedAt })
+        .from(users)
+        .where(eq(users.email, request.email));
+  } else if (request.offers && !user.offersAskedAt) {
+    await db.update(users).set(offers).where(eq(users.id, user.id));
+  }
+  if (!user || !(await save(user.id, request))) return null;
+  await db
+    .update(notifyRequests)
+    .set({ userId: user.id, activatedAt: now })
+    .where(eq(notifyRequests.id, request.id));
+  return { userId: user.id, alertsOff: !user.priceAlerts };
 }
 
 export async function requestByToken(db: Db, value: string): Promise<NotifyRequest | null> {
@@ -149,6 +204,8 @@ export async function confirmNotify(
     .update(users)
     .set({
       priceAlerts: true,
+      // The click on the e-mailed link proves the address.
+      emailVerified: sql`coalesce(${users.emailVerified}, ${now.toISOString()}::timestamptz)`,
       ...(request.offers ? { offersOptIn: true, offersOptInAt: now, offersAskedAt: now } : {}),
     })
     .where(eq(users.id, userId));
@@ -186,12 +243,22 @@ export async function notifySignIn(
   return user ?? null;
 }
 
-/** Housekeeping: unconfirmed requests go after 7 days (the privacy policy says so). */
+/**
+ * Housekeeping: requests that started nothing (an older text, never confirmed) go after
+ * 7 days, as the privacy policy says. A request that started the price e-mails is the
+ * record of that consent: it goes with its account (docs/ALERTS_WITHOUT_CONFIRM_PLAN.md).
+ */
 export async function purgeNotifyRequests(db: Db, now = new Date()): Promise<number> {
   const cutoff = new Date(now.getTime() - REQUEST_TTL_MS);
   const rows = await db
     .delete(notifyRequests)
-    .where(and(isNull(notifyRequests.confirmedAt), lt(notifyRequests.createdAt, cutoff)))
+    .where(
+      and(
+        isNull(notifyRequests.confirmedAt),
+        isNull(notifyRequests.activatedAt),
+        lt(notifyRequests.createdAt, cutoff),
+      ),
+    )
     .returning({ id: notifyRequests.id });
   return rows.length;
 }

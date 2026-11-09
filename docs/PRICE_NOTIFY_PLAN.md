@@ -8,6 +8,7 @@ Why nobody saves: the site tells one promise (three best picks) and keeps the se
 2. **Price notifications are free, with no subscription** (owner, 30 Oct 2026). The paid plan retired on 24 Oct (docs/TRUST_POLISH_PLAN.md §1) stays retired, and what remains of it in code, copy and data is removed (§4).
 3. **Honesty rules hold** (CLAUDE.md rule 4). Trilio promises to tell, never promises a drop: "paziņosim, kad" names what the e-mail does; no line may say the price will fall. No countdowns, no pre-ticked boxes, no pop-ups on exit.
 4. **One proposal without confirming** (owner, 9 Nov 2026): an „Iegūt lētāk” request made with the text of 9 Nov 2026 or later gets one proposal for that product even if the address is never confirmed. Price-drop e-mails still wait for the confirmation. See docs/REQUEST_OFFER_PLAN.md.
+5. **No confirmation at all, 90 days** (owner and lawyer, 9 Nov 2026): entering the e-mail is the consent, so the price e-mails start at once, for 90 days, with an unsubscribe in every e-mail; 7 days before the end one e-mail asks whether to continue, else the request is deleted. See docs/ALERTS_WITHOUT_CONFIRM_PLAN.md; it replaces the double opt-in below.
 
 ## 1. What the shopper sees today (360 px, signed out)
 
@@ -133,7 +134,7 @@ Steps: cancel any active subscription at period end and e-mail those users that 
 ## 6. Law and honesty
 
 - Price-drop e-mails about a product the person asked about are a service message; Trilio's own offers are a commercial communication (Information Society Services Law art. 9, GDPR). One yes covers both only because the sentence above the button names both plainly and the button "Paziņot man" itself is the affirmative act. The exact text and its version are stored with the request. The lawyer confirms the wording once before PR 2 ships.
-- Double opt-in: nothing ongoing goes to an address until its owner clicks the confirmation link. This protects strangers whose address someone typed, and it is what the magic link already does. The one exception (since 9 Nov 2026, docs/REQUEST_OFFER_PLAN.md) is a single proposal answering the request itself: it says why it came, carries an unsubscribe link (the lawyer, 9 Nov 2026), and gets no reminder.
+- ~~Double opt-in~~ (replaced 9 Nov 2026, docs/ALERTS_WITHOUT_CONFIRM_PLAN.md): entering the e-mail is the consent (the lawyer's answer); what protects a stranger whose address someone typed is the receipt's „Ja to neprasīji tu, atsakies" link, which deletes everything for an address never signed in, and the 90-day limit.
 - Every e-mail keeps one-click unsubscribe (RFC 8058) and the "Nesūtīt" link in the wishlist.
 - No "cena kritīs", no "tikai šodien", no pre-ticked boxes, no pop-up on leaving the page, no interstitial on the way to the shop. The shop button stays unchanged (since 4 Nov 2026 it comes second, under "Iegūt lētāk": §8.10).
 

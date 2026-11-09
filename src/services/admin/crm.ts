@@ -114,6 +114,8 @@ export async function leadItems(
         eq(notifyRequests.kind, "product"),
         isNotNull(notifyRequests.productId),
         isNull(notifyRequests.confirmedAt),
+        // A request that started the price e-mails is a save already (docs/ALERTS_WITHOUT_CONFIRM_PLAN.md).
+        isNull(notifyRequests.activatedAt),
         gte(notifyRequests.createdAt, since),
       ),
     )
@@ -476,6 +478,7 @@ export async function requestsOf(db: Db, productId: string, now = new Date()) {
         eq(notifyRequests.kind, "product"),
         eq(notifyRequests.productId, productId),
         isNull(notifyRequests.confirmedAt),
+        isNull(notifyRequests.activatedAt),
         gte(notifyRequests.createdAt, new Date(now.getTime() - REQUEST_TTL_MS)),
       ),
     )

@@ -43,7 +43,7 @@ export async function runWishlistJob(
   const email = opts.email ?? createEmailSender();
   const result: WishlistJobResult = { evaluated: 0, emailed: 0, skippedAlertsOff: 0 };
 
-  const rows = await itemsForEvaluation(db);
+  const rows = await itemsForEvaluation(db, now);
   if (rows.length === 0) return result;
   const productIds = [...new Set(rows.flatMap((r) => (r.item.productId ? [r.item.productId] : [])))];
   const byId = new Map((await loadProducts(db, productIds)).map((p) => [p.id, p]));

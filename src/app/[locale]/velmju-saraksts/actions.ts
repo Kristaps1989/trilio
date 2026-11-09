@@ -1,5 +1,6 @@
 "use server";
 
+import { saveRequestItem } from "../pazinot/save-request";
 import { and, eq, isNull } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import { after } from "next/server";
@@ -206,7 +207,7 @@ export async function requestNotifyAction(
       visitorHash: visitor?.hash ?? null,
       adLandingId: visitor?.adLandingId ?? null,
     },
-    { email: deps.email, baseUrl: deps.baseUrl, company: deps.company },
+    { email: deps.email, baseUrl: deps.baseUrl, company: deps.company, save: saveRequestItem },
   );
   if (!r.ok) return r;
   await recordUiEvent(db, w, "notify_sent", target.subcategoryId).catch(() => undefined);

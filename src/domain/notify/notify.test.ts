@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { trilioSources } from "@/domain/offers/sourcing";
 import {
+  ALERT_DAYS,
   CONSENT_VERSION,
+  activeOnRequest,
+  alertPhase,
+  alertsUntilFrom,
   MAX_PER_EMAIL_PER_DAY,
   MAX_PER_VISITOR_PER_DAY,
   REQUEST_TTL_MS,
@@ -113,5 +117,24 @@ describe("a proposal without a confirmed address (docs/REQUEST_OFFER_PLAN.md)", 
     );
     expect(requestOfferable({ ...base, confirmedAt: now }, now)).toBe("confirmed");
     expect(requestOfferable(base, new Date("2026-11-17T12:00:01Z"))).toBe("expired");
+  });
+});
+
+describe("price e-mails run 90 days (docs/ALERTS_WITHOUT_CONFIRM_PLAN.md)", () => {
+  const t0 = new Date("2026-11-09T12:00:00Z");
+  const day = (n: number) => new Date(t0.getTime() + n * 24 * 3600 * 1000);
+  it("starts at once from today's text, not from an older one", () => {
+    expect(activeOnRequest(`notify.body@${CONSENT_VERSION}`)).toBe(true);
+    expect(activeOnRequest("notify.body@2026-11-09")).toBe(false);
+    expect(activeOnRequest("notify.bodySearch@2026-10-31")).toBe(false);
+    expect(consentVersion("notify.body@2026-11-09.2")).toBe("2026-11-09.2");
+  });
+  it("is active, then asks once in the last 7 days, then ends", () => {
+    const item = { alertsUntil: alertsUntilFrom(t0), renewalSentAt: null };
+    expect(ALERT_DAYS).toBe(90);
+    expect(alertPhase(item, day(82))).toBe("active");
+    expect(alertPhase(item, day(84))).toBe("notice");
+    expect(alertPhase({ ...item, renewalSentAt: day(84) }, day(85))).toBe("active");
+    expect(alertPhase(item, day(90))).toBe("expired");
   });
 });

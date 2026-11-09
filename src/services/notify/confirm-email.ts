@@ -8,8 +8,10 @@ import { button, centred, emailShell, hero, paragraph, productHero } from "@/ser
 import { fill } from "@/services/offers/texts";
 import type { NotifyTarget } from "./requests";
 
-// The one e-mail before any other (double opt-in): what was asked, one button,
-// and that nothing follows without the click. Same shell as the offer e-mails.
+// The receipt for an "Iegūt lētāk" request (docs/ALERTS_WITHOUT_CONFIRM_PLAN.md): what
+// was asked, that it has started (a proposal where Trilio sources, price e-mails for
+// 90 days), a button that opens the wishlist (and proves the address), and an unsubscribe.
+// Same shell as the offer e-mails.
 
 export function composeNotifyConfirmEmail(input: {
   to: string;
@@ -18,23 +20,18 @@ export function composeNotifyConfirmEmail(input: {
   company?: string;
   token: string;
   target: NotifyTarget;
-  /** The consent covered Trilio's offers: the e-mail promises a lower price, not only the price e-mail. */
+  /** The consent covered Trilio's offers: the e-mail promises a proposal, not only the price e-mails. */
   offers: boolean;
+  /** The address had turned price e-mails off before: say so, and that the button turns them on. */
+  alertsOff: boolean;
+  unsubscribeUrl: string;
+  /** RFC 8058 one-click address for List-Unsubscribe. */
+  oneClickUrl: string;
 }): EmailMessage {
   const m = input.lang === "en" ? en.notifyEmail : lv.notifyEmail;
   const c = input.offers
     ? m
-    : {
-        ...m,
-        title: m.titlePlain,
-        subject: m.subjectPlain,
-        product: m.productPlain,
-        // Without Trilio's offers nothing at all is sent before the click.
-        cta: m.ctaPlain,
-        button: m.buttonPlain,
-        link: m.linkPlain,
-        notYou: m.notYouPlain,
-      };
+    : { ...m, title: m.titlePlain, subject: m.subjectPlain, product: m.productPlain };
   const t = input.target;
   const url = `${input.baseUrl}${localizedPath(`/pazinot/${input.token}`, input.lang)}`;
   const name = t.kind === "product" ? offerProductName(t.name) : t.label;
@@ -42,13 +39,16 @@ export function composeNotifyConfirmEmail(input: {
   const price =
     t.kind === "product" && t.priceCents ? fill(c.now, { price: formatEur(t.priceCents, input.lang) }) : null;
   const subject = fill(c.subject, { product: t.kind === "product" ? subjectProductName(t.name) : t.label });
+  const off = input.alertsOff ? c.alertsOff : null;
   const text = [
     lead,
     [name, price].filter(Boolean).join("\n"),
+    c.period,
+    off,
     c.cta,
     fill(c.link, { url }),
     c.valid,
-    c.notYou,
+    `${c.notYou}\n${fill(c.unsubscribeLine, { url: input.unsubscribeUrl })}`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -57,6 +57,8 @@ export function composeNotifyConfirmEmail(input: {
     centred(lead),
     productHero(name, t.kind === "product" ? emailImageUrl(input.baseUrl, t.imageUrl) : null),
     price ? centred(price, "font-weight:600") : "",
+    centred(c.period),
+    off ? paragraph(off, "font-size:15px") : "",
     centred(c.cta),
     button(c.button, url),
     centred(c.valid, "font-size:14px"),
@@ -73,6 +75,11 @@ export function composeNotifyConfirmEmail(input: {
       tagline: (input.lang === "en" ? en : lv).offerEmail.tagline,
       body,
       footer: [input.company ?? ""],
+      unsubscribe: { label: c.unsubscribe, url: input.unsubscribeUrl },
     }),
+    headers: {
+      "List-Unsubscribe": `<${input.oneClickUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   };
 }
