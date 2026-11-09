@@ -1,5 +1,9 @@
 # One proposal without confirming the e-mail (plan, 9 Nov 2026)
 
+> **Superseded the same day** by docs/ALERTS_WITHOUT_CONFIRM_PLAN.md: entering the e-mail now starts the
+> proposal and the price e-mails, with no confirmation at all. What follows still describes requests made
+> under consent version `2026-11-09`, and the „Neapstiprināti pieprasījumi" list that shows them.
+
 Owner's ask (9 Nov 2026): "Some people have left an e-mail but have not approved it.
 Maybe by entering the e-mail the user agrees to receive a proposal, to simplify the
 process while Trilio is a new brand. Perfect if I could see the products and still

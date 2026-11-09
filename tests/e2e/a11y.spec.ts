@@ -19,6 +19,7 @@ const PUBLIC = [
   "/ienakt",
   "/velmju-saraksts",
   "/velmju-saraksts/atteikties/e2e-not-a-real-token-000000",
+  "/velmju-saraksts/turpinat/e2e-not-a-real-token-000000",
   "/noteikumi",
   "/pirkuma-noteikumi",
   "/privatums",

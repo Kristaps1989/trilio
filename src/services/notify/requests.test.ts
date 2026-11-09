@@ -1,7 +1,7 @@
 import { eq, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { notifyRequests, savedItems, uiEvents, users, products } from "@/db/schema";
+import { notifyRequests, uiEvents, users, products } from "@/db/schema";
 import { memoryEmailSender } from "@/services/notify/email";
 import { CONSENT_VERSION } from "@/domain/notify/notify";
 import { notifyFunnel, purgeUiEvents } from "./events";
@@ -14,9 +14,10 @@ import {
   type NotifyTarget,
 } from "./requests";
 
-// Double opt-in without an account (docs/PRICE_NOTIFY_PLAN.md §5 PR 2): one
-// e-mail to the typed address, nothing else until its link is clicked; the
-// click makes the account, saves the item, turns the e-mails on and signs in once.
+// "Iegūt lētāk" without an account (docs/ALERTS_WITHOUT_CONFIRM_PLAN.md): entering the
+// e-mail is the consent, so the request makes the account (address not proven), saves the
+// item and starts the e-mails at once; the receipt carries an unsubscribe; its link
+// proves the address, turns price e-mails back on and signs in once.
 
 const url = process.env.DATABASE_URL;
 const run = url ? describe : describe.skip;
@@ -27,7 +28,12 @@ run("notify requests", () => {
   let db: Db;
   let end: () => Promise<void>;
   const mail = memoryEmailSender();
-  const deps = { email: mail, baseUrl: BASE, company: "SIA Trilio" };
+  const saves: string[] = [];
+  const save = async (userId: string) => {
+    saves.push(userId);
+    return true;
+  };
+  const deps = { email: mail, baseUrl: BASE, company: "SIA Trilio", save };
   // A file that narrows sourcing to fridges, to keep the price-e-mails-only path covered.
   const fridgesOnly = { ...deps, sourcing: { sourcing: ["fridge"] } };
   const fridge: NotifyTarget = {
@@ -57,12 +63,6 @@ run("notify requests", () => {
       imageUrl: null,
     };
   }
-  const saves: string[] = [];
-  const save = async (userId: string) => {
-    saves.push(userId);
-    return true;
-  };
-
   async function cleanup() {
     await db.delete(notifyRequests).where(like(notifyRequests.email, `%@${DOMAIN}`));
     await db.delete(users).where(like(users.email, `%@${DOMAIN}`));
@@ -86,7 +86,7 @@ run("notify requests", () => {
     return m![1]!;
   };
 
-  it("sends one branded confirmation and stores the consent text shown", async () => {
+  it("starts at once: the account for the address, the item saved, one receipt with an unsubscribe", async () => {
     const r = await requestNotify(
       db,
       {
@@ -103,9 +103,11 @@ run("notify requests", () => {
     const m = mail.sent.at(-1)!;
     expect(m.to).toBe(`anna@${DOMAIN}`);
     // A search is a watch, so its e-mail promises the price e-mail only.
-    expect(m.subject).toBe("Apstiprini cenu paziņojumus: Ledusskapji · 181–205 cm");
+    expect(m.subject).toBe("Sekosim cenai: Ledusskapji · 181–205 cm");
     expect(m.text).toContain(`${BASE}/pazinot/`);
-    expect(m.text).toContain("bez apstiprinājuma neko nesūtīsim");
+    expect(m.text).toContain("Cenai sekosim 90 dienas");
+    expect(m.text).toMatch(new RegExp(`Atteikties: ${BASE}/velmju-saraksts/atteikties/[A-Za-z0-9_-]+`));
+    expect(m.headers?.["List-Unsubscribe"]).toMatch(new RegExp(`^<${BASE}/api/wishlist/unsubscribe/`));
     expect(m.html).toContain(`${BASE}/email/logo.png`);
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
@@ -113,13 +115,15 @@ run("notify requests", () => {
       offers: false,
       confirmedAt: null,
     });
-    // Nothing exists for that address yet: no account, nothing saved.
-    expect(
-      await db
-        .select()
-        .from(users)
-        .where(eq(users.email, `anna@${DOMAIN}`)),
-    ).toHaveLength(0);
+    expect(stored.activatedAt).not.toBeNull();
+    // The account exists, its address not proven, the item saved, e-mails on.
+    const [u] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, `anna@${DOMAIN}`));
+    expect(u).toMatchObject({ priceAlerts: true, offersOptIn: false, emailVerified: null });
+    expect(stored.userId).toBe(u!.id);
+    expect(saves).toContain(u!.id);
   });
 
   it("every category is a sourcing one by default: a product's consent covers Trilio's offers too", async () => {
@@ -139,9 +143,14 @@ run("notify requests", () => {
       offers: true,
       consent: `notify.body@${CONSENT_VERSION}`,
     });
-    // The request is received: the proposal comes either way; the button follows the price too.
+    // The request is received and running: a proposal, and the price followed.
     expect(mail.sent.at(-1)!.subject).toMatch(/^Pieprasījums saņemts: /);
-    expect(mail.sent.at(-1)!.text).toContain("bez apstiprinājuma sūtīsim tikai vienu pieprasīto piedāvājumu");
+    expect(mail.sent.at(-1)!.text).toContain("Sekosim arī cenai");
+    const [u] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, `jon@${DOMAIN}`));
+    expect(u).toMatchObject({ priceAlerts: true, offersOptIn: true });
   });
 
   it("where the file leaves a category out, the consent covers price e-mails only", async () => {
@@ -164,7 +173,7 @@ run("notify requests", () => {
       returnPath: null,
       locale: "en",
     });
-    expect(mail.sent.at(-1)!.subject).toBe("Confirm price e-mails: Tējkannas");
+    expect(mail.sent.at(-1)!.subject).toBe("We'll follow the price: Tējkannas");
   });
 
   it("refuses a bad address and limits repeats", async () => {
@@ -181,7 +190,7 @@ run("notify requests", () => {
     expect(await ask(`d9@${DOMAIN}`, "notify-test-v2")).toEqual({ ok: false, reason: "too_many" });
   });
 
-  it("an e-mail service error leaves no request behind", async () => {
+  it("an e-mail service error is reported; what started keeps its unsubscribe", async () => {
     const failing = {
       ...deps,
       email: { send: async () => ({ ok: false as const, reason: "error" as const }) },
@@ -199,15 +208,9 @@ run("notify requests", () => {
       failing,
     );
     expect(r).toEqual({ ok: false, reason: "email_failed" });
-    expect(
-      await db
-        .select()
-        .from(notifyRequests)
-        .where(eq(notifyRequests.email, `eve@${DOMAIN}`)),
-    ).toHaveLength(0);
   });
 
-  it("the click makes the account, saves, turns both e-mails on, and signs in once", async () => {
+  it("the click proves the address, turns both e-mails on, and signs in once", async () => {
     await requestNotify(
       db,
       {
@@ -230,7 +233,7 @@ run("notify requests", () => {
     expect(u).toMatchObject({ email: `fia@${DOMAIN}`, priceAlerts: true, offersOptIn: true });
     expect(u!.emailVerified).not.toBeNull();
     expect(u!.offersOptInAt).not.toBeNull();
-    // Confirming again is harmless and does not save twice.
+    // Confirming again is harmless and does not save again.
     const before = saves.length;
     expect((await confirmNotify(db, value, save)).ok).toBe(true);
     expect(saves.length).toBe(before);
@@ -275,10 +278,10 @@ run("notify requests", () => {
     expect((await confirmNotify(db, tokenOf(), save, late)).ok).toBe(false);
   });
 
-  it("an address that already has an account confirms into it", async () => {
+  it("an address that already has an account goes into it, and a switch it turned off stays off", async () => {
     const [existing] = await db
       .insert(users)
-      .values({ email: `ida@${DOMAIN}` })
+      .values({ email: `ida@${DOMAIN}`, priceAlerts: false, offersAskedAt: new Date(), offersOptIn: false })
       .returning();
     await requestNotify(
       db,
@@ -292,8 +295,15 @@ run("notify requests", () => {
       },
       deps,
     );
+    expect((await requestByToken(db, tokenOf()))!.userId).toBe(existing!.id);
+    expect(mail.sent.at(-1)!.text).toContain("Cenu e-pastus šai adresei iepriekš izslēdzi");
+    const [before] = await db.select().from(users).where(eq(users.id, existing!.id));
+    expect(before).toMatchObject({ priceAlerts: false, offersOptIn: false });
+    // The button turns them back on: that click is the person's own.
     const c = await confirmNotify(db, tokenOf(), save);
     expect((c as { userId: string }).userId).toBe(existing!.id);
+    const [after] = await db.select().from(users).where(eq(users.id, existing!.id));
+    expect(after!.priceAlerts).toBe(true);
   });
 
   it("counts the funnel per category from first-party events", async () => {
@@ -318,25 +328,27 @@ run("notify requests", () => {
     expect(f.askShop).toBeGreaterThanOrEqual(1);
   });
 
-  it("unconfirmed saves never happen: nothing is saved for a request nobody clicked", async () => {
-    const pending = await db
-      .select()
-      .from(notifyRequests)
-      .where(eq(notifyRequests.email, `anna@${DOMAIN}`));
-    expect(pending[0]!.confirmedAt).toBeNull();
-    expect(await db.select().from(savedItems).where(eq(savedItems.userId, pending[0]!.id))).toHaveLength(0);
-  });
-
-  it("housekeeping deletes unconfirmed requests after 7 days and old button events after 90", async () => {
+  it("housekeeping deletes requests that started nothing after 7 days, and old button events after 90", async () => {
+    // A request under an older text, never confirmed: it promised nothing before the click.
+    await db.insert(notifyRequests).values({
+      token: `notify-old-text-${Date.now()}-abcdefghijk`,
+      email: `old@${DOMAIN}`,
+      kind: "search",
+      subcategoryId: "kettle",
+      label: "Tējkannas",
+      locale: "lv",
+      consent: "notify.bodySearch@2026-10-31",
+      offers: false,
+    });
     const later = new Date(Date.now() + 8 * 24 * 3600 * 1000);
     expect(await purgeNotifyRequests(db, later)).toBeGreaterThan(0);
-    // The confirmed ones stay with their accounts.
+    // The ones that started something stay as the record of that consent.
     const left = await db
       .select()
       .from(notifyRequests)
       .where(like(notifyRequests.email, `%@${DOMAIN}`));
     expect(left.length).toBeGreaterThan(0);
-    expect(left.every((r) => r.confirmedAt !== null)).toBe(true);
+    expect(left.every((r) => r.confirmedAt !== null || r.activatedAt !== null)).toBe(true);
     await db
       .insert(uiEvents)
       .values({ day: "2026-01-01", visitorHash: "notify-test-old", event: "notify_tap" });

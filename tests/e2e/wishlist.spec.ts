@@ -84,7 +84,7 @@ test("wishlist: signed out shows sign-in only; old radar links land on it; endpo
   expect((await request.get("/api/account/export")).status()).toBe(401);
 });
 
-test("signed out: one e-mail field on the card, one confirmation link, back on the same card", async ({
+test("signed out: one e-mail field on the card starts it; the receipt can unsubscribe, its link opens the wishlist", async ({
   page,
 }) => {
   const email = `e2e-notify-${Date.now()}@example.invalid`;
@@ -129,17 +129,28 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await expect(panel.getByRole("alert")).toHaveText("Lūdzu, ievadi derīgu e-pasta adresi.");
   await panel.getByLabel("E-pasts").fill(email);
   await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
+  // Entering the e-mail is the consent (lawyer and owner, 9 Nov 2026): it has started.
   await expect(first.getByRole("status")).toHaveText(
-    `Paldies! Piedāvājumu atsūtīsim uz ${email} 2 darba dienu laikā. Lai pēc tam sekotu arī cenai, apstiprini adresi saitē, ko tikko nosūtījām.`,
+    `Paldies! Piedāvājumu atsūtīsim uz ${email} 2 darba dienu laikā, un sekosim arī cenai.`,
   );
+  // The receipt says so, for how long, and how to stop.
+  const receipt = (
+    (await (await page.request.get(`/api/test/outbox?to=${encodeURIComponent(email)}`)).json()) as {
+      subject: string;
+      text: string;
+    }[]
+  ).at(-1)!;
+  expect(receipt.subject).toMatch(/^Pieprasījums saņemts: /);
+  expect(receipt.text).toContain("Cenai sekosim 90 dienas");
+  expect(receipt.text).toMatch(/Atteikties: \S+\/velmju-saraksts\/atteikties\//);
 
-  // A mail scanner that only fetches the link confirms nothing: the page is the one-button form.
+  // A mail scanner that only fetches the link signs nobody in: the page is the one-button form.
   const link = await confirmationLink(page, email);
   const scanned = await page.request.get(link);
   const html = await scanned.text();
-  expect(html).toContain("Piedāvājumu atsūtīsim 2 darba dienu laikā");
-  expect(html).toContain("Tu pajautāji cenu:");
-  // In a browser the e-mail's "Apstiprināt" is the only click (owner, 4 Nov 2026): the page confirms by itself.
+  expect(html).toContain("Atveram tavu vēlmju sarakstu");
+  expect(html).toContain("Sekojam cenai:");
+  // In a browser the e-mail's button is the only click (owner, 4 Nov 2026): the page presses itself.
   await page.goto(link);
 
   // Back on the same results, at the same card, signed in, and the card says what will happen.
@@ -162,7 +173,7 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   // The link has done its job: a second visit cannot confirm or sign in again.
   await deleteAccount(page);
   await page.goto(link);
-  await expect(page.getByRole("status")).toHaveText(/Šī saite vairs nav derīga|Pajautāts/);
+  await expect(page.getByRole("status")).toHaveText(/vairs nav derīga|Pajautāts/);
 });
 
 test("fridges: Trilio's own offer is promised, and one yes on the card covers both e-mails", async ({
@@ -289,11 +300,11 @@ test("the question before the shop: one sheet on the first shop click, two equal
   );
   await expectNoAxeViolations(page);
 
-  // One field, one button, then the confirmation link.
+  // One field, one button, and it has started.
   await panel.getByLabel("E-pasts").fill(email);
   await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(sheet.getByRole("status")).toHaveText(
-    `Paldies! Piedāvājumu atsūtīsim uz ${email} 2 darba dienu laikā. Lai pēc tam sekotu arī cenai, apstiprini adresi saitē, ko tikko nosūtījām.`,
+    `Paldies! Piedāvājumu atsūtīsim uz ${email} 2 darba dienu laikā, un sekosim arī cenai.`,
   );
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toBeVisible();
   await sheet.getByRole("button", { name: "Aizvērt" }).click();

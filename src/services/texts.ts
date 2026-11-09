@@ -1,6 +1,7 @@
 import en from "@/i18n/messages/en.json";
 import lv from "@/i18n/messages/lv.json";
 import type { UiLocale } from "@/i18n/routing";
+import type { RenewalTexts } from "@/services/wishlist/alerts";
 import type { WishlistTexts } from "@/services/wishlist/job";
 
 // Copy for background jobs in the recipient's language (users.locale), read
@@ -23,5 +24,21 @@ export function wishlistTexts(lang: UiLocale = "lv"): WishlistTexts {
     searchLine: (v) => fill(email.wishlistSearchLine, v),
     view: email.wishlistView,
     unsubscribe: email.wishlistUnsubscribe,
+  };
+}
+
+export function renewalTexts(lang: UiLocale = "lv"): RenewalTexts {
+  const { renewEmail: r } = MESSAGES[lang];
+  return {
+    subject: r.subject,
+    title: r.title,
+    intro: r.intro,
+    ends: (v) => fill(r.ends, v),
+    button: r.button,
+    link: (v) => fill(r.link, v),
+    thenDeleted: (v) => fill(r.thenDeleted, v),
+    thenStopped: (v) => fill(r.thenStopped, v),
+    unsubscribe: r.unsubscribe,
+    unsubscribeLine: (v) => fill(r.unsubscribeLine, v),
   };
 }

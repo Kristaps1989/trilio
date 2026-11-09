@@ -232,7 +232,7 @@ async function recipientOf(
       .from(notifyRequests)
       .where(eq(notifyRequests.id, offer.notifyRequestId));
     if (!request) return { ok: false, reason: "expired" };
-    if (request.confirmedAt && request.userId) {
+    if (request.userId) {
       userId = request.userId;
       await db.update(specialOffers).set({ userId }).where(eq(specialOffers.id, offer.id));
     } else {

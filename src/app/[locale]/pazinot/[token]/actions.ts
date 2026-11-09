@@ -1,47 +1,21 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
-import { db, savedItems } from "@/db";
+import { db } from "@/db";
 import { recordUiEvent } from "@/services/notify/events";
 import { judgeRequest } from "@/services/visits/judge";
 import { confirmNotify } from "@/services/notify/requests";
 import { localPath } from "@/i18n/path";
-import { keyOf, saveTarget, type SaveTarget } from "../../velmju-saraksts/save";
+import { saveRequestItem } from "../save-request";
 
 // "Apstiprināt": the account (made if needed), the item saved, price e-mails
 // on, and the person signed in once, back on the page they asked from.
 
 export async function confirmNotifyAction(formData: FormData): Promise<void> {
   const token = String(formData.get("token") ?? "");
-  let saved: SaveTarget | null = null;
-  const result = await confirmNotify(db, token, async (userId, request) => {
-    saved =
-      request.kind === "product" && request.productId
-        ? { kind: "product", productId: request.productId }
-        : {
-            kind: "search",
-            subcategoryId: request.subcategoryId,
-            answersParam: request.answersParam ?? "",
-            label: request.label ?? request.subcategoryId,
-          };
-    const ok = await saveTarget(userId, saved);
-    // A save that started from an ad counts for that ad, as a heart tap does.
-    if (ok && request.adLandingId)
-      await db
-        .update(savedItems)
-        .set({ adLandingId: request.adLandingId })
-        .where(
-          and(
-            eq(savedItems.userId, userId),
-            eq(savedItems.key, keyOf(saved)),
-            isNull(savedItems.adLandingId),
-          ),
-        );
-    return ok;
-  });
+  const result = await confirmNotify(db, token, saveRequestItem);
   if (!result.ok) redirect(await localPath(`/pazinot/${encodeURIComponent(token)}`));
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
