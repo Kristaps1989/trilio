@@ -21,6 +21,7 @@ import {
 import { RAW_RETENTION_DAYS, rigaDay } from "@/domain/analytics/visits";
 import { cleanVisitor } from "@/services/visits/suspects";
 import { SLUG, slugify, viewerHash, viewerId } from "@/domain/growth/tv";
+import { deviceLabel, parseSection } from "@/domain/growth/go3-section";
 import {
   addressHash,
   DIAGNOSTIC_HEADERS,
@@ -146,11 +147,14 @@ export async function recordTvImpression(
         target: [tvImpressions.slug, tvImpressions.minute],
         set: { hits: sql`${tvImpressions.hits} + 1` },
       });
-    const hash = viewerHash(campaign.salt, {
-      vid: viewerId(input.vid),
-      ip: input.ip,
-      userAgent: input.userAgent,
-    });
+    // A device that opted out of ad tracking is counted, never followed: no viewer hash.
+    const hash = p?.optOut
+      ? null
+      : viewerHash(campaign.salt, {
+          vid: viewerId(input.vid),
+          ip: input.ip,
+          userAgent: input.userAgent,
+        });
     if (hash)
       await db
         .insert(tvViewers)
@@ -180,14 +184,43 @@ async function recordPixelDetail(
   const chain = forwardedChain(h["x-forwarded-for"]);
   const keys = new Set<string>(["total", `grp:${p.grp}`, `xff:${Math.min(chain.length, 3)}`]);
   for (const name of DIAGNOSTIC_HEADERS) if (h[name]) keys.add(`hdr:${name}`);
-  for (const [k, v] of Object.entries({ vid: input.vid, ip: p.ip, ts: p.ts, cr: p.cr, ch: p.ch, pos: p.pos }))
+  for (const [k, v] of Object.entries({
+    vid: input.vid,
+    ip: p.ip,
+    ts: p.ts,
+    cr: p.cr,
+    ch: p.ch,
+    pos: p.pos,
+    csid: p.csid,
+    dt: p.dt,
+    ua: p.ua,
+    co: p.country,
+    dur: p.dur,
+    pg: p.program,
+    gn: p.genre,
+    dp: p.daypart,
+    pl: p.placement,
+    idt: p.idType,
+  }))
     if (v) keys.add(`param:${k}`);
   if (p.ts) keys.add(eventTime(p.ts, received) ? "ts:used" : "ts:off");
   if (p.cr) keys.add(`cr:${p.cr}`);
   if (p.ch) keys.add(`ch:${p.ch}`);
   if (p.pos) keys.add(`pos:${p.pos}`);
+  if (p.csid) keys.add(`cs:${p.csid}`);
+  if (p.country) keys.add(`co:${p.country}`);
+  if (p.dur) keys.add(`du:${p.dur}`);
+  if (p.program) keys.add(`pg:${p.program}`);
+  if (p.genre) keys.add(`gn:${p.genre}`);
+  if (p.daypart) keys.add(`dp:${p.daypart}`);
+  if (p.placement) keys.add(`pl:${p.placement}`);
+  if (p.idType) keys.add(`it:${p.idType}`);
+  if (p.optOut) keys.add("lat:1");
+  if (p.dt) keys.add(`dt:${p.dt}`);
   keys.add(`ua:${tvClientFamily(input.userAgent)}`);
-  if (h["x-device-user-agent"]) keys.add(`dua:${tvClientFamily(h["x-device-user-agent"])}`);
+  // The device's own user agent: the ?ua= macro, else a header the ad server added.
+  const deviceUa = p.ua ?? h["x-device-user-agent"];
+  if (deviceUa) keys.add(`dua:${tvClientFamily(deviceUa)}`);
   await db
     .insert(tvPixelCounts)
     .values([...keys].map((key) => ({ slug: campaign.slug, day, key: key.slice(0, 80), hits: 1 })))
@@ -201,6 +234,8 @@ async function recordPixelDetail(
     ["device", h["x-device-ip"]],
     ["macro", p.ip],
   ];
+  // An opted-out device leaves no address hash and no household exposure.
+  if (p.optOut) return;
   const rows = addresses
     .filter((a): a is [string, string] => !!a[1])
     .map(([source, address]) => ({
@@ -789,6 +824,8 @@ export type TvPixelReport = {
     day: string;
     total: number;
     control: number;
+    /** Requests from devices that opted out of ad tracking (counted, never followed). */
+    optOut: number;
     hops: [number, number, number, number];
     headers: Record<string, number>;
     params: Record<string, number>;
@@ -797,7 +834,15 @@ export type TvPixelReport = {
     household: ReturnType<typeof usableSource>;
   }[];
   /** Over the period: impressions per creative, channel, position, request and device family. */
-  dims: Record<"cr" | "ch" | "pos" | "ua" | "dua", { value: string; hits: number }[]>;
+  dims: Record<
+    "cr" | "ch" | "cs" | "dt" | "pos" | "ua" | "dua" | "co" | "du" | "pg" | "gn" | "dp" | "pl" | "it",
+    { value: string; hits: number }[]
+  >;
+  /**
+   * Go3's site sections decoded (go3-section.ts): impressions per screen, device,
+   * content type (live, catch-up, on-demand) and live channel.
+   */
+  sections: Record<"screen" | "device" | "type" | "channel", { value: string; hits: number }[]>;
   /** Devices by impressions over the period: 1, 2, 3–4, 5 and more. */
   frequency: { band: "1" | "2" | "3-4" | "5+"; devices: number }[];
 };
@@ -825,6 +870,7 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       day,
       total: d.counts.get("total") ?? 0,
       control: d.counts.get("grp:control") ?? 0,
+      optOut: d.counts.get("lat:1") ?? 0,
       hops: [0, 1, 2, 3].map((n) => d.counts.get(`xff:${n}`) ?? 0) as [number, number, number, number],
       headers: pick("hdr:"),
       params: pick("param:"),
@@ -838,10 +884,22 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       }),
     });
   }
-  const dims = { cr: new Map(), ch: new Map(), pos: new Map(), ua: new Map(), dua: new Map() } as Record<
-    keyof TvPixelReport["dims"],
-    Map<string, number>
-  >;
+  const dims = {
+    cr: new Map(),
+    ch: new Map(),
+    cs: new Map(),
+    dt: new Map(),
+    pos: new Map(),
+    ua: new Map(),
+    dua: new Map(),
+    co: new Map(),
+    du: new Map(),
+    pg: new Map(),
+    gn: new Map(),
+    dp: new Map(),
+    pl: new Map(),
+    it: new Map(),
+  } as Record<keyof TvPixelReport["dims"], Map<string, number>>;
   for (const r of rows) {
     const i = r.key.indexOf(":");
     const k = r.key.slice(0, i) as keyof TvPixelReport["dims"];
@@ -854,6 +912,19 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       .map(([value, hits]) => ({ value, hits }))
       .sort((a, b) => b.hits - a.hits)
       .slice(0, 15);
+  const decoded = { screen: new Map(), device: new Map(), type: new Map(), channel: new Map() } as Record<
+    keyof TvPixelReport["sections"],
+    Map<string, number>
+  >;
+  for (const [raw, hits] of dims.cs) {
+    const s = parseSection(raw);
+    const add = (k: keyof TvPixelReport["sections"], v: string) =>
+      decoded[k].set(v, (decoded[k].get(v) ?? 0) + hits);
+    add("screen", s.screen);
+    add("device", deviceLabel(s.device));
+    add("type", s.type);
+    if (s.channel) add("channel", s.channel);
+  }
   const freq = (await db.execute(sql`
     select case when n = 1 then '1' when n = 2 then '2' when n <= 4 then '3-4' else '5+' end as band,
            count(*)::int as devices
@@ -867,9 +938,24 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
     dims: {
       cr: list(dims.cr),
       ch: list(dims.ch),
+      cs: list(dims.cs),
+      dt: list(dims.dt),
       pos: list(dims.pos),
       ua: list(dims.ua),
       dua: list(dims.dua),
+      co: list(dims.co),
+      du: list(dims.du),
+      pg: list(dims.pg),
+      gn: list(dims.gn),
+      dp: list(dims.dp),
+      pl: list(dims.pl),
+      it: list(dims.it),
+    },
+    sections: {
+      screen: list(decoded.screen),
+      device: list(decoded.device),
+      type: list(decoded.type),
+      channel: list(decoded.channel),
     },
     frequency: (["1", "2", "3-4", "5+"] as const).map((band) => ({ band, devices: bands.get(band) ?? 0 })),
   };

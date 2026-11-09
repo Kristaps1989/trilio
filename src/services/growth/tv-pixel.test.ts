@@ -8,6 +8,7 @@ import {
   tvExposures,
   tvHouseholdVisits,
   tvPixelAddresses,
+  tvViewers,
   visits,
 } from "@/db/schema";
 import { pixelParams, type DIAGNOSTIC_HEADERS } from "@/domain/growth/tv-pixel";
@@ -29,7 +30,8 @@ import {
 
 const url = process.env.DATABASE_URL;
 const run = url ? describe : describe.skip;
-const SLUG = "unit-pixel-test";
+// Not "unit-…": tv.test.ts wipes every campaign with that prefix while this file runs.
+const SLUG = "pixeltest-go3";
 const T0 = new Date("2032-03-10T18:00:00Z");
 const DAY = rigaDay(T0);
 const PHONE =
@@ -137,6 +139,33 @@ run("TV pixel", { timeout: 60_000 }, () => {
     expect(r.days[0]!.household.reason).toBe("macro");
   });
 
+  it("counts an opted-out device but never follows it: no viewer, address or household hash", async () => {
+    const before = await db
+      .select()
+      .from(tvExposures)
+      .where(sql`${tvExposures.slug} = ${SLUG}`);
+    const viewersBefore = await db
+      .select()
+      .from(tvViewers)
+      .where(sql`${tvViewers.slug} = ${SLUG}`);
+    await hit("ip=81.198.7.7&lat=1&co=LV", { "x-forwarded-for": "5.5.5.5" }, min(30), "optout-device");
+    expect(
+      await db
+        .select()
+        .from(tvExposures)
+        .where(sql`${tvExposures.slug} = ${SLUG}`),
+    ).toHaveLength(before.length);
+    expect(
+      await db
+        .select()
+        .from(tvViewers)
+        .where(sql`${tvViewers.slug} = ${SLUG}`),
+    ).toHaveLength(viewersBefore.length);
+    const r = await tvPixelReport(db, SLUG, { from: DAY, to: DAY });
+    expect(r.days[0]!.optOut).toBe(1);
+    expect(r.dims.co).toEqual([{ value: "LV", hits: 1 }]);
+  });
+
   it("forgets household rows after 21 days", async () => {
     expect(await purgeTvHouseholds(db, new Date(T0.getTime() + 30 * 86_400_000))).toBeGreaterThan(0);
     expect(
@@ -150,7 +179,7 @@ run("TV pixel", { timeout: 60_000 }, () => {
   it("leaves a visitor's day out of the visit figures once one of their clicks was a script", async () => {
     const [offer] = await db.select({ id: offers.id }).from(offers).limit(1);
     if (!offer) return;
-    const { visitRows, recordShopClick, rollupVisits } = await import("@/services/visits/visits");
+    const { visitRows, recordShopClick } = await import("@/services/visits/visits");
     const day = rigaDay(min(0));
     const at = min(120);
     await recordVisit(db, { path: "/unit-left-out", ip: "198.51.100.90", userAgent: PHONE, now: at });
@@ -165,10 +194,8 @@ run("TV pixel", { timeout: 60_000 }, () => {
       signals: { site: null, mode: null, user: null, referrerHost: null, lang: null },
       now: at,
     });
-    await rollupVisits(db, new Date(at.getTime() + 2 * 86_400_000));
-    const rows = (await visitRows(db, day, day, new Date(at.getTime() + 2 * 86_400_000))).filter(
-      (r) => r.path === "/unit-left-out",
-    );
+    // Read live (the day as "today"): a rollup with a far-future clock would purge other tests' raw visits.
+    const rows = (await visitRows(db, day, day, at)).filter((r) => r.path === "/unit-left-out");
     expect(rows.map((r) => r.visitors)).toEqual([1]);
   });
 });

@@ -28,13 +28,41 @@ export function pixelUrl(base: string, slug: string): string {
 }
 
 /**
- * The tracker with the optional fields of docs/TV_PIXEL_BEST_PRACTICE.md §2.1, for Go3 to
- * fill with its ad server's own macros: the viewer's IP, the ad event's time, the
- * creative, the channel and the position in the break. The bracketed names are
- * placeholders for Go3 to replace; an unfilled one is ignored.
+ * The tracker with FreeWheel's own macros (FreeWheel Macros Guide, Streaming Hub;
+ * docs/TV_PIXEL_BEST_PRACTICE.md §2.1), for Go3 to traffic as the impression tracker:
+ * the device id as today, the client address (`request.clientAddress`: the viewer's
+ * when Go3's SSAI passes it as VIP in the ad request, else the SSAI server's), the
+ * ad server's time, the creative's id and name, the site section's custom id
+ * (CSID: channel and device platform at Go3), the channel and device type standard
+ * attributes, the slot's position class, the device user agent and the GDPR flag.
+ * Values that need it are URL-encoded (`#e{…}`); a macro left unexpanded is ignored.
  */
 export function extendedPixelUrl(base: string, slug: string): string {
-  return `${pixelUrl(base, slug)}&ip=[VIEWER_IP]&ts=[EVENT_TIME]&cr=[CREATIVE_ID]&ch=[CHANNEL]&pos=[POSITION]`;
+  const q = [
+    "ord=#{timestamp}",
+    `vid=${GO3_VIEWER_MACRO}`,
+    "ip=#{request.clientAddress}",
+    "ts=#{timestamp}",
+    "cr=#{ad.creative.id}",
+    "crn=#e{ad.creative.name}",
+    "ss=#e{section.title}",
+    "csid=#e{section.customId}",
+    "ch=#e{sa.channel}",
+    "dt=#e{sa.platform.deviceType}",
+    "pos=#{slot.timePositionClass}",
+    "ua=#e{request.userAgent}",
+    "co=#{request.country}",
+    "lat=#{request.deviceOptOut}",
+    'idt=#{request.deviceIdType("iab")}',
+    "dur=#{ad.creative.rendition.duration}",
+    "pg=#e{series.title}",
+    "ast=#e{asset.title}",
+    "gn=#e{sa.genre}",
+    "dp=#e{sa.contentdaypart}",
+    "pl=#e{ad.placement.name}",
+    "gdpr=#{GDPR}",
+  ];
+  return `${base}/px/${slug}?${q.join("&")}`;
 }
 
 /** The same tracker for a holdout's ghost impressions (devices kept from the spot on purpose). */

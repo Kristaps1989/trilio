@@ -95,7 +95,7 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         key={key}
         caption={t(`px.dim.${key}` as "px.dim.cr")}
         head={[t(`px.dim.${key}` as "px.dim.cr"), t("impressions")]}
-        rows={pixel.dims[key].map((d) => [d.value, formatInt(d.hits)])}
+        rows={pixel.dims[key].map((d) => [key === "du" ? `${d.value} s` : d.value, formatInt(d.hits)])}
       />
     ) : null;
   const yes = (n: number | undefined, of: number) => (n ? rate(n, of) : "—");
@@ -117,13 +117,17 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         empty={t("px.empty")}
         rows={pixel.days.map((d) => [
           d.day,
-          d.control
-            ? `${formatInt(d.total)} (${t("px.controlShort")} ${formatInt(d.control)})`
-            : formatInt(d.total),
+          [
+            formatInt(d.total),
+            d.control ? `${t("px.controlShort")} ${formatInt(d.control)}` : null,
+            d.optOut ? t("px.optOut", { n: d.optOut }) : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
           d.hops.map((n) => formatInt(n)).join(" / "),
           yes(d.headers["x-device-ip"], d.total),
           yes(d.headers["x-device-user-agent"], d.total),
-          ["ip", "ts", "cr", "ch", "pos"].filter((k) => d.params[k]).join(", ") || "—",
+          ["ip", "ts", "cr", "csid", "co", "pg", "pos", "ua"].filter((k) => d.params[k]).join(", ") || "—",
           `${formatInt(d.distinct.xff0 ?? 0)} / ${formatInt(d.distinct.device ?? 0)} / ${formatInt(d.distinct.macro ?? 0)}`,
           formatInt(d.reach),
           t(`household.verdict.${d.household.reason}` as "household.verdict.none"),
@@ -136,12 +140,40 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         rows={pixel.frequency.map((f) => [t("px.bandLabel", { band: f.band }), formatInt(f.devices)])}
       />
       <p className="max-w-3xl text-sm text-stone">{t("px.frequencyMethod")}</p>
+      {pixel.sections.type.length ? (
+        <div className="grid gap-3 md:grid-cols-2" data-tv-sections={pixel.sections.type.length}>
+          {(["screen", "type", "device", "channel"] as const).map((k) =>
+            pixel.sections[k].length ? (
+              <Table
+                key={k}
+                caption={t(`px.section.${k}` as "px.section.screen")}
+                head={[t(`px.section.${k}` as "px.section.screen"), t("impressions")]}
+                rows={pixel.sections[k].map((d) => [
+                  k === "screen" || k === "type"
+                    ? t(`px.section.value.${d.value}` as "px.section.value.tv")
+                    : d.value,
+                  formatInt(d.hits),
+                ])}
+              />
+            ) : null,
+          )}
+        </div>
+      ) : null}
       <div className="grid gap-3 md:grid-cols-2">
+        {dim("co")}
+        {dim("pg")}
+        {dim("gn")}
+        {dim("dp")}
+        {dim("pl")}
         {dim("cr")}
+        {dim("du")}
         {dim("ch")}
+        {dim("cs")}
+        {dim("dt")}
         {dim("pos")}
         {dim("ua")}
         {dim("dua")}
+        {dim("it")}
       </div>
     </div>
   );
