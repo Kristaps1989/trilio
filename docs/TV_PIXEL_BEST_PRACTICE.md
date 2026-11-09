@@ -71,9 +71,22 @@ FreeWheel's own macros:
 | `csid` site section | `#e{section.customId}` | the CSID: at Go3 it carries the channel and the device platform; stored as is and shown per value |
 | `ch` channel | `#e{sa.channel}` | standard attribute; may be empty where the CSID already says it |
 | `dt` device type | `#e{sa.platform.deviceType}` | |
-| `pos` | `#{slot.timePositionClass}` | preroll, midroll, postroll |
+| `pos` | `#{slot.timePositionClass}` | preroll, midroll, postroll: where in the programme the break was, shown as it comes |
+| `co` viewer country | `#{request.country}` | the viewer's country; the CSID's `_LV/_EE/_LT` is the channel's feed, not this |
+| `lat` opted out | `#{request.deviceOptOut}` | 1 when the device opted out of ad tracking (LAT, ATT, `_fw_opt_out`): the impression is counted, but no device, address or household hash is kept |
+| `idt` device id type | `#{request.deviceIdType("iab")}` | tifa, rida, aaid, idfa…: which kind of id `vid` is |
+| `dur` spot length | `#{ad.creative.rendition.duration}` | seconds; tells a 20 s spot from a cut-down |
+| `pg` / `ast` programme | `#e{series.title}`, `#e{asset.title}` | the series, else the asset: which programmes bring visits |
+| `gn` genre, `dp` daypart | `#e{sa.genre}`, `#e{sa.contentdaypart}` | |
+| `pl` placement | `#e{ad.placement.name}` | several placements under one campaign address |
 | `ua` device user agent | `#e{request.userAgent}` | like the address: the device's only if the SSAI forwards it |
 | `gdpr` | `#{GDPR}` | the TCF flag; only its presence is counted, the consent string is not asked for |
+
+Considered and left out: `#{request.zipcode}` (finer than the measurement
+needs), `#{GDPR_CONSENT_285}` (the consent string itself), `#{slot.position}`,
+`#{request.videoRandom}` and the programmatic and click macros (no use for an
+impression tracker), `#{sa.platform.os}` and `#{sa.platform.environment}` (the
+CSID already says them).
 
 `#e{…}` URL-encodes a value. A macro FreeWheel leaves unexpanded (`#{…}`,
 `#e{…}`, `#s{…}`, `#2{…}`) is ignored. `#{ad.random}` and `#{ad.ref.random}` are
@@ -95,10 +108,9 @@ Go dashboards:
 - **channel** (live only): `PR_` and `_HVC` removed, every `_HD` removed, the feed
   suffix `_LV`, `_EE` or `_LT` removed, `3plus` written as `3+`.
 
-The feed suffix names the channel's feed, not where the viewer is. Slot
-positions are normalised: preroll is Go3 Go, midroll is Go3 Go+. The TV tab shows
-impressions per screen, content type, device and live channel; the raw
-sections stay in the table below them.
+The feed suffix names the channel's feed, not where the viewer is: the viewer's
+country comes from `#{request.country}`. The TV tab shows impressions per screen,
+content type, device and live channel; the raw sections stay in the table below them.
 
 ### 2.2 View-through attribution by household
 

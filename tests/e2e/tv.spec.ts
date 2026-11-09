@@ -134,7 +134,7 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   expect(
     (
       await go3.get(
-        `/px/${SLUG}?ord=1&vid=dev-c&ip=81.198.9.9&cr=Spots20&ch=TV3&csid=DAI_smarttv_other_PR_TV3_Life_LV_HD_HVC&dt=Smart%20TV&pos=midroll&crn=%23e%7Bad.creative.name%7D`,
+        `/px/${SLUG}?ord=1&vid=dev-c&ip=81.198.9.9&cr=Spots20&ch=TV3&csid=DAI_smarttv_other_PR_TV3_Life_LV_HD_HVC&dt=Smart%20TV&pos=midroll&co=LV&crn=%23e%7Bad.creative.name%7D`,
       )
     ).status(),
   ).toBe(200);
@@ -166,13 +166,11 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   const pixelTable = page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-days]`);
   await expect(pixelTable.getByText("ir (makross)")).toBeVisible();
   await expect(pixelTable.getByText("Spots20")).toBeVisible();
-  // Go3's site section decoded: the screen, live, the channel without its feed, the position.
+  // Go3's site section decoded: the screen, live, the channel without its feed; the viewer's country.
   await expect(pixelTable.getByRole("cell", { name: "Televizora ekrāns", exact: true })).toBeVisible();
   await expect(pixelTable.getByRole("cell", { name: "Tiešraide", exact: true })).toBeVisible();
   await expect(pixelTable.getByRole("cell", { name: "TV3 Life", exact: true })).toBeVisible();
-  await expect(
-    pixelTable.getByRole("cell", { name: "Raidījuma laikā (Go3 Go+)", exact: true }),
-  ).toBeVisible();
+  await expect(pixelTable.getByRole("cell", { name: "LV", exact: true })).toBeVisible();
   await expect(pixelTable.getByText("Samsung Tizen")).toBeVisible();
   await expect(page.locator(`[data-tv-campaign="${SLUG}"]`).getByText("Pārrēķināt bāzi")).toBeVisible();
 

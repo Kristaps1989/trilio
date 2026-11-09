@@ -78,14 +78,3 @@ export function parseSection(raw: string | null | undefined): Go3Section {
 
 /** Whether a value looks like a Go3 site section (DAI_…), to choose it over another field. */
 export const isGo3Section = (v: string | null | undefined): boolean => !!v && /^DAI_/i.test(v.trim());
-
-/** A slot position: preroll (Go3 Go), midroll (Go3 Go+), postroll; anything else lower-cased letters. */
-export function normPos(v: string | null | undefined): string {
-  const s = String(v ?? "")
-    .toLowerCase()
-    .replace(/[^a-z]/g, "");
-  if (s.startsWith("pre")) return "preroll";
-  if (s.startsWith("mid")) return "midroll";
-  if (s.startsWith("post")) return "postroll";
-  return s;
-}

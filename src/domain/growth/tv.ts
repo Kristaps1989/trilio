@@ -51,6 +51,15 @@ export function extendedPixelUrl(base: string, slug: string): string {
     "dt=#e{sa.platform.deviceType}",
     "pos=#{slot.timePositionClass}",
     "ua=#e{request.userAgent}",
+    "co=#{request.country}",
+    "lat=#{request.deviceOptOut}",
+    'idt=#{request.deviceIdType("iab")}',
+    "dur=#{ad.creative.rendition.duration}",
+    "pg=#e{series.title}",
+    "ast=#e{asset.title}",
+    "gn=#e{sa.genre}",
+    "dp=#e{sa.contentdaypart}",
+    "pl=#e{ad.placement.name}",
     "gdpr=#{GDPR}",
   ];
   return `${base}/px/${slug}?${q.join("&")}`;

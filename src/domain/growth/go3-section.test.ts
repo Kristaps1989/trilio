@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deviceLabel, isGo3Section, normPos, parseSection, prettyChannel } from "./go3-section";
+import { deviceLabel, isGo3Section, parseSection, prettyChannel } from "./go3-section";
 
 // The owner's examples from real Go3 Go exports (9 Nov 2026).
 
@@ -39,12 +39,5 @@ describe("Go3 site section", () => {
     expect(deviceLabel("vidaa")).toBe("Vidaa");
     expect(isGo3Section("DAI_ios_mobile_Go3_VOD")).toBe(true);
     expect(isGo3Section("1234")).toBe(false);
-  });
-
-  it("normalises the slot position: preroll is Go3 Go, midroll Go3 Go+", () => {
-    expect(normPos("Pre-roll")).toBe("preroll");
-    expect(normPos("MIDROLL")).toBe("midroll");
-    expect(normPos("post_roll")).toBe("postroll");
-    expect(normPos("overlay")).toBe("overlay");
   });
 });

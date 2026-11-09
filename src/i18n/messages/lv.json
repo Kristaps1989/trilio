@@ -2246,7 +2246,7 @@
         "baselineRecomputeHint": "Bāze un pieaugums tiek aprēķināti no jauna bez skriptiem un administratoru pašu apmeklējumiem.",
         "baselineDone": "Bāze pārrēķināta.",
         "pixelMore": "Papildu lauki Go3 (mājsaimniecības, radošie, kanāli, kontrolgrupa)",
-        "pixelMoreHow": "Šī adrese izmanto FreeWheel makrosus (FreeWheel Macros Guide): ierīces ID, klienta adresi (#{request.clientAddress} – skatītāja adrese, ja Go3 SSAI to nodod reklāmas pieprasījumā kā VIP, citādi SSAI servera adrese), laiku, radošā materiāla ID un nosaukumu, CSID (#{section.customId}: kanāls un ierīce), kanālu, ierīces tipu, vietu pārtraukumā, ierīces User-Agent un GDPR karogu. Neizvērstu makrosu Trilio ignorē. Ja Go3 var turēt kontrolgrupu (10–15 % ierīču, kurām klipu apzināti nerāda), tām jāizsauc otrā adrese.",
+        "pixelMoreHow": "Šī adrese izmanto FreeWheel makrosus (FreeWheel Macros Guide): ierīces ID un tā tipu, klienta adresi (#{request.clientAddress} – skatītāja adrese, ja Go3 SSAI to nodod reklāmas pieprasījumā kā VIP, citādi SSAI servera adrese), skatītāja valsti, atteikšanos no izsekošanas, laiku, radošo materiālu un tā garumu, site section (CSID: ierīce, vide, tiešraide / atliktā skatīšanās / VOD un kanāls), raidījumu, žanru, diennakts daļu, izvietojumu, vietu pārtraukumā, ierīces User-Agent un GDPR karogu. Neizvērstu makrosu Trilio ignorē; ierīci, kas atteikusies no izsekošanas, tikai saskaita. Ja Go3 var turēt kontrolgrupu (10–15 % ierīču, kurām klipu apzināti nerāda), tām jāizsauc otrā adrese.",
         "pixelExtended": "Pikselis ar papildu laukiem",
         "pixelControl": "Pikselis kontrolgrupai (klips netiek rādīts)",
         "offDays": {
@@ -2302,11 +2302,18 @@
           "dim": {
             "cr": "Radošais materiāls",
             "ch": "Kanāls",
-            "pos": "Vieta pārtraukumā",
+            "pos": "Vieta (pirms / raidījuma laikā / pēc)",
             "ua": "Pieprasītājs (pikseļa pieprasījuma pārlūks)",
             "dua": "Ierīce (ua makross vai X-Device-User-Agent)",
             "cs": "Site section (neapstrādāts)",
-            "dt": "Ierīces tips"
+            "dt": "Ierīces tips",
+            "co": "Skatītāja valsts",
+            "du": "Klipa garums",
+            "pg": "Raidījums",
+            "gn": "Žanrs",
+            "dp": "Diennakts daļa",
+            "pl": "Izvietojums (placement)",
+            "it": "Ierīces ID tips"
           },
           "section": {
             "screen": "Ekrāns",
@@ -2323,11 +2330,7 @@
               "VOD": "Pēc pieprasījuma (VOD)"
             }
           },
-          "posLabel": {
-            "preroll": "Pirms raidījuma (Go3 Go)",
-            "midroll": "Raidījuma laikā (Go3 Go+)",
-            "postroll": "Pēc raidījuma"
-          }
+          "optOut": "Atteikušās no izsekošanas: {n}"
         }
       },
       "tvReport": {

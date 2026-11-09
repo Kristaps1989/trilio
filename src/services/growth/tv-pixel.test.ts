@@ -8,6 +8,7 @@ import {
   tvExposures,
   tvHouseholdVisits,
   tvPixelAddresses,
+  tvViewers,
   visits,
 } from "@/db/schema";
 import { pixelParams, type DIAGNOSTIC_HEADERS } from "@/domain/growth/tv-pixel";
@@ -136,6 +137,33 @@ run("TV pixel", { timeout: 60_000 }, () => {
     const r = await tvPixelReport(db, SLUG, { from: DAY, to: DAY });
     expect(r.days[0]!.control).toBe(1);
     expect(r.days[0]!.household.reason).toBe("macro");
+  });
+
+  it("counts an opted-out device but never follows it: no viewer, address or household hash", async () => {
+    const before = await db
+      .select()
+      .from(tvExposures)
+      .where(sql`${tvExposures.slug} = ${SLUG}`);
+    const viewersBefore = await db
+      .select()
+      .from(tvViewers)
+      .where(sql`${tvViewers.slug} = ${SLUG}`);
+    await hit("ip=81.198.7.7&lat=1&co=LV", { "x-forwarded-for": "5.5.5.5" }, min(30), "optout-device");
+    expect(
+      await db
+        .select()
+        .from(tvExposures)
+        .where(sql`${tvExposures.slug} = ${SLUG}`),
+    ).toHaveLength(before.length);
+    expect(
+      await db
+        .select()
+        .from(tvViewers)
+        .where(sql`${tvViewers.slug} = ${SLUG}`),
+    ).toHaveLength(viewersBefore.length);
+    const r = await tvPixelReport(db, SLUG, { from: DAY, to: DAY });
+    expect(r.days[0]!.optOut).toBe(1);
+    expect(r.dims.co).toEqual([{ value: "LV", hits: 1 }]);
   });
 
   it("forgets household rows after 21 days", async () => {

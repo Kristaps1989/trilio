@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { isGo3Section, normPos } from "./go3-section";
+import { isGo3Section } from "./go3-section";
 
 // What a TV pixel request carries, read without keeping an address
 // (docs/TV_PIXEL_BEST_PRACTICE.md). With server-side ad insertion the pixel is
@@ -22,6 +22,21 @@ export type PixelParams = {
   dt: string | null;
   /** The viewer's device user agent (`ua`), when the ad server passes it. */
   ua: string | null;
+  /** The viewer's country (`co`, FreeWheel's #{request.country}): the CSID's feed suffix is not it. */
+  country: string | null;
+  /** The device opted out of ad tracking (`lat=1`, #{request.deviceOptOut}): counted, never followed. */
+  optOut: boolean;
+  /** The spot's length in seconds (`dur`, #{ad.creative.rendition.duration}). */
+  dur: string | null;
+  /** The programme the spot ran in: the series (`pg`), else the asset title (`ast`). */
+  program: string | null;
+  /** Genre (`gn`, #{sa.genre}) and daypart (`dp`, #{sa.contentdaypart}). */
+  genre: string | null;
+  daypart: string | null;
+  /** The placement (`pl`, #{ad.placement.name}): several placements under one campaign address. */
+  placement: string | null;
+  /** The device id's type (`idt`, #{request.deviceIdType("iab")}): tifa, rida, aaid, idfa… */
+  idType: string | null;
   grp: "ad" | "control";
 };
 
@@ -53,9 +68,6 @@ function section(csid: string | null, ss: string | null): string | null {
   return csid ?? ss;
 }
 
-/** preroll, midroll, postroll (normPos); a value of another kind, such as a number, as it came. */
-const position = (v: string | null) => (v ? normPos(v) || v : null);
-
 export function pixelParams(params: URLSearchParams): PixelParams {
   const raw = (k: string) => {
     const v = params.get(k)?.trim() ?? "";
@@ -68,10 +80,18 @@ export function pixelParams(params: URLSearchParams): PixelParams {
     ts: raw("ts"),
     cr: cleanValue(params.get("crn")) ?? cleanValue(params.get("cr")),
     ch: cleanValue(params.get("ch")),
-    pos: position(cleanValue(params.get("pos"), 20)),
+    pos: cleanValue(params.get("pos"), 20)?.toLowerCase() ?? null,
     csid: section(cleanValue(params.get("csid"), 80), cleanValue(params.get("ss"), 80)),
     dt: cleanValue(params.get("dt"), 40),
     ua: raw("ua")?.slice(0, 400) ?? null,
+    country: cleanValue(params.get("co"), 3)?.toUpperCase() ?? null,
+    optOut: raw("lat") === "1",
+    dur: /^\d{1,4}(\.\d+)?$/.test(raw("dur") ?? "") ? String(Math.round(Number(raw("dur")))) : null,
+    program: cleanValue(params.get("pg"), 80) ?? cleanValue(params.get("ast"), 80),
+    genre: cleanValue(params.get("gn"), 60),
+    daypart: cleanValue(params.get("dp"), 40),
+    placement: cleanValue(params.get("pl"), 80),
+    idType: cleanValue(params.get("idt"), 20)?.toLowerCase() ?? null,
     grp: grp === "control" || grp === "holdout" || grp === "psa" ? "control" : "ad",
   };
 }

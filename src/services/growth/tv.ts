@@ -147,11 +147,14 @@ export async function recordTvImpression(
         target: [tvImpressions.slug, tvImpressions.minute],
         set: { hits: sql`${tvImpressions.hits} + 1` },
       });
-    const hash = viewerHash(campaign.salt, {
-      vid: viewerId(input.vid),
-      ip: input.ip,
-      userAgent: input.userAgent,
-    });
+    // A device that opted out of ad tracking is counted, never followed: no viewer hash.
+    const hash = p?.optOut
+      ? null
+      : viewerHash(campaign.salt, {
+          vid: viewerId(input.vid),
+          ip: input.ip,
+          userAgent: input.userAgent,
+        });
     if (hash)
       await db
         .insert(tvViewers)
@@ -191,6 +194,13 @@ async function recordPixelDetail(
     csid: p.csid,
     dt: p.dt,
     ua: p.ua,
+    co: p.country,
+    dur: p.dur,
+    pg: p.program,
+    gn: p.genre,
+    dp: p.daypart,
+    pl: p.placement,
+    idt: p.idType,
   }))
     if (v) keys.add(`param:${k}`);
   if (p.ts) keys.add(eventTime(p.ts, received) ? "ts:used" : "ts:off");
@@ -198,6 +208,14 @@ async function recordPixelDetail(
   if (p.ch) keys.add(`ch:${p.ch}`);
   if (p.pos) keys.add(`pos:${p.pos}`);
   if (p.csid) keys.add(`cs:${p.csid}`);
+  if (p.country) keys.add(`co:${p.country}`);
+  if (p.dur) keys.add(`du:${p.dur}`);
+  if (p.program) keys.add(`pg:${p.program}`);
+  if (p.genre) keys.add(`gn:${p.genre}`);
+  if (p.daypart) keys.add(`dp:${p.daypart}`);
+  if (p.placement) keys.add(`pl:${p.placement}`);
+  if (p.idType) keys.add(`it:${p.idType}`);
+  if (p.optOut) keys.add("lat:1");
   if (p.dt) keys.add(`dt:${p.dt}`);
   keys.add(`ua:${tvClientFamily(input.userAgent)}`);
   // The device's own user agent: the ?ua= macro, else a header the ad server added.
@@ -216,6 +234,8 @@ async function recordPixelDetail(
     ["device", h["x-device-ip"]],
     ["macro", p.ip],
   ];
+  // An opted-out device leaves no address hash and no household exposure.
+  if (p.optOut) return;
   const rows = addresses
     .filter((a): a is [string, string] => !!a[1])
     .map(([source, address]) => ({
@@ -804,6 +824,8 @@ export type TvPixelReport = {
     day: string;
     total: number;
     control: number;
+    /** Requests from devices that opted out of ad tracking (counted, never followed). */
+    optOut: number;
     hops: [number, number, number, number];
     headers: Record<string, number>;
     params: Record<string, number>;
@@ -812,7 +834,10 @@ export type TvPixelReport = {
     household: ReturnType<typeof usableSource>;
   }[];
   /** Over the period: impressions per creative, channel, position, request and device family. */
-  dims: Record<"cr" | "ch" | "cs" | "dt" | "pos" | "ua" | "dua", { value: string; hits: number }[]>;
+  dims: Record<
+    "cr" | "ch" | "cs" | "dt" | "pos" | "ua" | "dua" | "co" | "du" | "pg" | "gn" | "dp" | "pl" | "it",
+    { value: string; hits: number }[]
+  >;
   /**
    * Go3's site sections decoded (go3-section.ts): impressions per screen, device,
    * content type (live, catch-up, on-demand) and live channel.
@@ -845,6 +870,7 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       day,
       total: d.counts.get("total") ?? 0,
       control: d.counts.get("grp:control") ?? 0,
+      optOut: d.counts.get("lat:1") ?? 0,
       hops: [0, 1, 2, 3].map((n) => d.counts.get(`xff:${n}`) ?? 0) as [number, number, number, number],
       headers: pick("hdr:"),
       params: pick("param:"),
@@ -866,6 +892,13 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
     pos: new Map(),
     ua: new Map(),
     dua: new Map(),
+    co: new Map(),
+    du: new Map(),
+    pg: new Map(),
+    gn: new Map(),
+    dp: new Map(),
+    pl: new Map(),
+    it: new Map(),
   } as Record<keyof TvPixelReport["dims"], Map<string, number>>;
   for (const r of rows) {
     const i = r.key.indexOf(":");
@@ -910,6 +943,13 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       pos: list(dims.pos),
       ua: list(dims.ua),
       dua: list(dims.dua),
+      co: list(dims.co),
+      du: list(dims.du),
+      pg: list(dims.pg),
+      gn: list(dims.gn),
+      dp: list(dims.dp),
+      pl: list(dims.pl),
+      it: list(dims.it),
     },
     sections: {
       screen: list(decoded.screen),

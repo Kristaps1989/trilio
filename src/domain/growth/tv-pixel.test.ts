@@ -56,8 +56,31 @@ describe("pixel parameters", () => {
     expect(left).toMatchObject({ ip: null, cr: null, csid: null, dt: null, ua: null, pos: null });
     // Go3's site section by its name when the custom id is not the DAI_… form; positions normalised.
     expect(
-      pixelParams(new URLSearchParams("csid=48213&ss=DAI_smarttv_other_PR_TV3_LV_HD_HVC&pos=Mid-roll")),
+      pixelParams(new URLSearchParams("csid=48213&ss=DAI_smarttv_other_PR_TV3_LV_HD_HVC&pos=Midroll")),
     ).toMatchObject({ csid: "DAI_smarttv_other_PR_TV3_LV_HD_HVC", pos: "midroll" });
+    // Country, opt-out, spot length, programme, genre, daypart, placement and id type.
+    expect(
+      pixelParams(
+        new URLSearchParams(
+          "co=lv&lat=1&dur=20.0&pg=&ast=Degpunkt%C4%81&gn=News&dp=Prime&pl=Trilio%20Go3%20LV&idt=TIFA",
+        ),
+      ),
+    ).toMatchObject({
+      country: "LV",
+      optOut: true,
+      dur: "20",
+      program: "Degpunktā",
+      genre: "News",
+      daypart: "Prime",
+      placement: "Trilio Go3 LV",
+      idType: "tifa",
+    });
+    const none = pixelParams(
+      new URLSearchParams(
+        'co=#{request.country}&lat=#{request.deviceOptOut}&dur=#{ad.creative.rendition.duration}&pg=#e{series.title}&idt=#{request.deviceIdType("iab")}',
+      ),
+    );
+    expect(none).toMatchObject({ country: null, optOut: false, dur: null, program: null, idType: null });
     // The creative's id stands in when its name is not given.
     expect(pixelParams(new URLSearchParams("cr=812345")).cr).toBe("812345");
   });
