@@ -2787,5 +2787,13 @@
     "doneTitle": "Gatavs",
     "doneBody": "Sekosim cenai vēl 90 dienas. Pirms tās beigsies, atkal pajautāsim.",
     "gone": "Šī saite vairs nav derīga."
+  },
+  "signInEmail": {
+    "subject": "Ienākt Trilio",
+    "title": "Ienākt Trilio",
+    "intro": "Spied pogu, lai ienāktu Trilio ar šo e-pastu. Parole nav vajadzīga.",
+    "button": "Ienākt",
+    "valid": "Poga derīga 15 minūtes un darbojas vienu reizi.",
+    "notYou": "Ja tu nelūdzi ienākt, neko nedari: bez pogas nospiešanas nekas nenotiks."
   }
 }
