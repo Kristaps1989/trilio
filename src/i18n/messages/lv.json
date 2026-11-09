@@ -1732,7 +1732,22 @@
       "notes": "Piezīmes",
       "notesLabel": "Privātas piezīmes (redz tikai admins un lietotājs savā datu eksportā)",
       "saveNotes": "Saglabāt piezīmes",
-      "notesSaved": "Saglabāts"
+      "notesSaved": "Saglabāts",
+      "joined": {
+        "google": "Pievienojās ar Google.",
+        "email": "Pievienojās ar e-pasta saiti (ienāca vai apstiprināja pieprasījumu).",
+        "request": "Pievienojās ar pieprasījumu „Iegūt lētāk”: adresi ievadīja, bet vēl nav ienācis."
+      },
+      "nothingYet": "Šis cilvēks tikai ienāca: nav saglabājis preci vai meklējumu un nav neko pieprasījis. Ko sūtīt, nav zināms, tāpēc uzdevumos viņš neparādās. Var uzrakstīt pats vai gaidīt, kad kaut ko saglabās.",
+      "requests": "Pieprasījumi „Iegūt lētāk”",
+      "requestWhat": "Ko prasīja",
+      "requestAt": "Kad",
+      "noRequests": "Pieprasījumu nav.",
+      "requestState": {
+        "active": "Sākts",
+        "confirmed": "Apstiprināts",
+        "pending": "Neapstiprināts"
+      }
     },
     "demand": {
       "title": "Pieprasījums",

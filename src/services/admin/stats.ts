@@ -1,10 +1,12 @@
 import { and, count, desc, eq, gte, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import {
+  accounts,
   affiliateClicks,
   confidenceAnswers,
   eprelLookups,
   ingestionRuns,
+  notifyRequests,
   offerEvents,
   offerOrders,
   offers,
@@ -375,8 +377,35 @@ export async function userDetail(db: Db, userId: string) {
     .leftJoin(offerOrders, eq(offerOrders.offerId, specialOffers.id))
     .where(eq(specialOffers.userId, userId))
     .orderBy(desc(specialOffers.createdAt));
+  // How they came, and what they asked under "Iegūt lētāk" (the request keeps the address it was typed with).
+  const providers = (
+    await db.select({ provider: accounts.provider }).from(accounts).where(eq(accounts.userId, userId))
+  ).map((a) => a.provider);
+  const requests = await db
+    .select()
+    .from(notifyRequests)
+    .where(eq(notifyRequests.email, user.email))
+    .orderBy(desc(notifyRequests.createdAt));
+  const requestProducts = new Map(
+    (
+      await loadProducts(
+        db,
+        requests.flatMap((r) => (r.productId ? [r.productId] : [])),
+      )
+    ).map((p) => [p.id, p]),
+  );
+  const joined: "google" | "request" | "email" = providers.includes("google")
+    ? "google"
+    : !user.emailVerified && requests.some((r) => r.activatedAt)
+      ? "request"
+      : "email";
   return {
     user,
+    joined,
+    requests: requests.map((r) => ({
+      request: r,
+      productName: r.productId ? (requestProducts.get(r.productId)?.name ?? r.label) : r.label,
+    })),
     subscription: sub ?? null,
     savedProducts: saved
       .filter((s) => s.kind === "product" && s.productId && products.has(s.productId))
