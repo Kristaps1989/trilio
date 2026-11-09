@@ -200,6 +200,73 @@ run("social posts", () => {
     });
   });
 
+  it("Meta's rate limit holds a post back for an hour, and a post that went out anyway is found, not sent twice", async () => {
+    const at = rigaTime("2031-02-23", 19);
+    const f = await factsFor(db, "advice", at);
+    const made = await createPost(db, deps, { ...f!, slotAt: at, createdBy: "social-test", mode: "approve" });
+    const id = made.ok ? made.post.id : "";
+    await db.update(socialPosts).set({ status: "approved" }).where(eq(socialPosts.id, id));
+    // Instagram answers #4 on publishing, but the post went out on Meta's side.
+    const base = mockSocialProvider();
+    let igSends = 0;
+    let wentOut = false;
+    const limited: SocialDeps = {
+      ...deps,
+      provider: {
+        ...base,
+        async publishImage(network, url, caption, alt) {
+          if (network !== "instagram") return base.publishImage(network, url, caption, alt);
+          igSends++;
+          return { ok: false, error: "Meta 403 #4: Application request limit reached" };
+        },
+        async findInstagram(caption, since) {
+          return wentOut ? { id: "mock_instagram_found" } : base.findInstagram(caption, since);
+        },
+      },
+    };
+    const t1 = new Date(at.getTime() + 60_000);
+    await publishDue(db, limited, t1);
+    let [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+    // Facebook went out; Instagram waits (approved, not failed), its try time noted.
+    expect(p).toMatchObject({ status: "approved", igMediaId: null });
+    expect(p!.fbPostId).toBeTruthy();
+    expect(p!.error).toMatch(/#4/);
+    expect(p!.attemptedAt?.getTime()).toBe(t1.getTime());
+    expect(igSends).toBe(1);
+    // 15 minutes later: not tried again (it waits an hour).
+    await publishDue(db, limited, new Date(t1.getTime() + 15 * 60_000));
+    expect(igSends).toBe(1);
+    // An hour later it is looked for first, found, and not sent again.
+    wentOut = true;
+    await publishDue(db, limited, new Date(t1.getTime() + 61 * 60_000));
+    [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+    expect(p).toMatchObject({ status: "published", igMediaId: "mock_instagram_found", error: null });
+    expect(igSends).toBe(1);
+  });
+
+  it("an older post marked failed by a rate limit is picked up again and found when it did go out", async () => {
+    const at = rigaTime("2031-03-02", 19);
+    const f = await factsFor(db, "advice", at);
+    const made = await createPost(db, deps, { ...f!, slotAt: at, createdBy: "social-test", mode: "approve" });
+    const id = made.ok ? made.post.id : "";
+    await db
+      .update(socialPosts)
+      .set({
+        status: "failed",
+        fbPostId: "mock_facebook_earlier",
+        error: "Instagram: Meta 403 #4: Application request limit reached",
+      })
+      .where(eq(socialPosts.id, id));
+    const base = mockSocialProvider();
+    const found: SocialDeps = {
+      ...deps,
+      provider: { ...base, findInstagram: async () => ({ id: "mock_instagram_was_there" }) },
+    };
+    await publishDue(db, found, new Date(at.getTime() + 4 * 3600_000));
+    const [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+    expect(p).toMatchObject({ status: "published", igMediaId: "mock_instagram_was_there", error: null });
+  });
+
   it("an approved post more than 6 hours late is not sent", async () => {
     const mon = rigaTime("2031-01-13", 19);
     const f = await factsFor(db, "advice", mon);
@@ -380,40 +447,22 @@ run("social posts", () => {
         `${BASE}/api/social/${id}/3/image.jpg`,
         `${BASE}/api/social/${id}/4/image.jpg`,
       ]);
-    // Facebook: a link carousel, every card tagged with its own position; Instagram has no links.
+    // Photos on both networks (owner, 9 Nov 2026): no link cards, the page's caption has the link.
     const fb = media.find((m) => m.network === "facebook")!;
-    // Each card links its own share page, whose Open Graph names the card's picture; the page
-    // sends a person on to the slide's page with the card's tags.
-    expect(fb.links).toEqual([1, 2, 3, 4].map((n) => `${BASE}/social/${id}/${n}`));
-    expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
+    expect(fb.links).toBeUndefined();
+    expect(fb.caption).toContain(`${BASE}/`);
 
-    // Its cards: a refresh asks Facebook to read each card's link with its square picture
-    // (outside /api/); a card picture left out is marked, and re-posting replaces the page post only.
-    // Published "now" (Publicēt tūlīt), so checked against today.
+    // Nothing for Facebook to fetch, so nothing to check or refresh: no Meta calls for it.
     const day = new Date();
     mockRefreshed().length = 0;
-    expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 1, ok: 1 });
-    expect(mockRefreshed()).toEqual(fb.links);
-    mockRefreshed().length = 0;
-    await db
-      .update(socialPosts)
-      .set({ fbPostId: `${sent!.fbPostId}noimg` })
-      .where(eq(socialPosts.id, id));
-    expect(await checkPreviews(db, deps, day)).toBe(1);
-    expect(mockRefreshed()).toEqual([]); // a carousel's cards do not follow a refresh
-    const marked = (await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!;
-    expect(marked.previewMissing).toBe(true);
-    await db.update(socialPosts).set({ fbPostId: sent!.fbPostId }).where(eq(socialPosts.id, id));
+    expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 0, ok: 0 });
+    expect(await checkPreviews(db, deps, day)).toBe(0);
+    // Re-posting still replaces the page post only.
     expect(await repostFacebook(db, deps, id)).toBe(true);
     const reposted = (await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!;
-    expect(reposted).toMatchObject({
-      status: "published",
-      previewMissing: false,
-      igMediaId: sent!.igMediaId,
-    });
+    expect(reposted).toMatchObject({ status: "published", igMediaId: sent!.igMediaId });
     expect(reposted.fbPostId).not.toBe(sent!.fbPostId);
     expect(mockPosts().find((m) => m.id === sent!.fbPostId)?.removed).toBe(true);
-    expect(mockPosts().find((m) => m.id === reposted.fbPostId)?.links).toEqual(fb.links);
   });
 
   it(

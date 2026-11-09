@@ -25,10 +25,9 @@ export interface SocialProvider {
   /** A photo post: Meta fetches the image from a public URL (JPEG for Instagram). */
   publishImage(network: Network, imageUrl: string, caption: string, alt?: string): Promise<PublishResult>;
   /**
-   * 2–10 images: a carousel on Instagram (no links: Instagram has none in
-   * posts); on the page a link carousel, each card with its own picture,
-   * headline and link, when every image carries `card` and the Page owns the
-   * links' domain; otherwise a multi-photo post (docs/FACEBOOK_CAROUSEL_PLAN.md).
+   * 2–10 images: a carousel on Instagram; on the page a multi-photo post, the
+   * slides uploaded (owner, 9 Nov 2026: link-carousel cards came out blank).
+   * `card` and `link` are no longer used for the page.
    */
   publishCarousel(
     network: Network,
@@ -63,6 +62,12 @@ export interface SocialProvider {
   publishVideo(network: Network, videoUrl: string, caption: string): Promise<PublishResult>;
   insights(network: Network, id: string): Promise<Insight | null>;
   remove(network: Network, id: string): Promise<boolean>;
+  /**
+   * Instagram: a post with exactly this caption made since `since`, if any. A publish
+   * that failed on our side (a rate limit, a timeout) may still have gone out; this
+   * is read before sending again, so nothing is posted twice. Null when it cannot be read.
+   */
+  findInstagram(caption: string, since: Date): Promise<{ id: string | null } | null>;
   /** False when the token no longer works (revoked, expired), for the admin's alert. */
   tokenOk(): Promise<boolean>;
 }

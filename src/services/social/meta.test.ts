@@ -108,11 +108,11 @@ describe("meta provider", () => {
     expect(calls[4]!.body).toMatchObject({ media_type: "REELS", video_url: "https://t/v.mp4" });
   });
 
-  it("tries publishing again when Meta says the media id is not available yet, and gives up after five", async () => {
+  it("tries publishing again when Meta says the media id is not available yet, and gives up after three", async () => {
     let publishes = 0;
     const { http } = fakeFetch((c) => {
       if (c.url === `${G}/IG/media_publish`)
-        return ++publishes < 3
+        return ++publishes < 2
           ? { status: 400, json: { error: { message: "Media ID is not available", code: 9007 } } }
           : { json: { id: "m2" } };
       return { json: { id: "c", status_code: "FINISHED" } };
@@ -121,7 +121,7 @@ describe("meta provider", () => {
       ok: true,
       id: "m2",
     });
-    expect(publishes).toBe(3);
+    expect(publishes).toBe(2);
     const never = fakeFetch((c) =>
       c.url === `${G}/IG/media_publish`
         ? { status: 400, json: { error: { message: "Media ID is not available", code: 9007 } } }
@@ -131,7 +131,7 @@ describe("meta provider", () => {
       ok: false,
       error: "Meta 400 #9007: Media ID is not available",
     });
-    expect(never.calls.filter((c) => c.url === `${G}/IG/media_publish`)).toHaveLength(5);
+    expect(never.calls.filter((c) => c.url === `${G}/IG/media_publish`)).toHaveLength(3);
   });
 
   it("a carousel: items then one container on Instagram, unpublished photos then one feed post on the page", async () => {
@@ -169,159 +169,80 @@ describe("meta provider", () => {
     expect(JSON.parse(feed.body["attached_media[1]"]!)).toEqual({ media_fbid: "id6" });
   });
 
-  // Meta (Page feed reference): a link's picture, name and line can be customised only when
-  // the Page owns the link, read from ownership_permissions{can_customize_link_posts}.
-  const own = (c: Call, owned: boolean) =>
-    c.url === `${G}/` && c.method === "GET" && c.body.fields?.startsWith("ownership_permissions")
-      ? { json: { id: c.body.id, ownership_permissions: { can_customize_link_posts: owned } } }
-      : null;
-  const cardImgs = [1, 2].map((n) => ({
-    url: `https://t/${n}/image.jpg`,
-    card: {
-      link: `https://t/social/p/${n}`,
-      name: `Karte ${n}`,
-      description: "no 23 €",
-      picture: `https://t/${n}/square.jpg`,
-    },
-  }));
-
-  it("a carousel is a link carousel only when the Page owns the domain; otherwise photos, with no crawl involved", async () => {
-    const notOwned = fakeFetch((c) => {
+  it("the page always gets a carousel as uploaded photos, whoever owns the domain: no ownership check, no crawl", async () => {
+    const { http, calls } = fakeFetch((c) => {
       if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      return own(c, false) ?? { json: { id: c.url === `${G}/PAGE/feed` ? "PAGE_ph" : "p1" } };
+      return { json: { id: c.url === `${G}/PAGE/feed` ? "PAGE_ph" : "p1" } };
     });
-    expect(
-      await metaProvider(cfg, notOwned.http, noWait).publishCarousel(
-        "facebook",
-        cardImgs,
-        "Teksts 👉 L",
-        "L",
-      ),
-    ).toEqual({ ok: true, id: "PAGE_ph" });
-    // The check came first, then the slides as unpublished photos and one feed post with all of them.
-    const check = notOwned.calls.findIndex((c) => c.body.fields?.startsWith("ownership_permissions"));
-    expect(notOwned.calls[check]!.body.id).toBe("https://t/social/p/1");
-    const photos = notOwned.calls.filter((c) => c.url === `${G}/PAGE/photos`);
+    const imgs = [1, 2].map((n) => ({ url: `https://t/${n}/image.jpg` }));
+    expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", imgs, "Teksts 👉 L")).toEqual({
+      ok: true,
+      id: "PAGE_ph",
+    });
+    expect(calls.some((c) => c.body.fields?.startsWith("ownership_permissions"))).toBe(false);
+    expect(calls.some((c) => c.body.child_attachments)).toBe(false);
+    expect(calls.some((c) => c.url.endsWith("square.jpg"))).toBe(false);
+    const photos = calls.filter((c) => c.url === `${G}/PAGE/photos`);
     expect(photos.map((c) => [c.body.url, c.body.published])).toEqual([
       ["https://t/1/image.jpg", "false"],
       ["https://t/2/image.jpg", "false"],
     ]);
-    const feed = notOwned.calls.find((c) => c.url === `${G}/PAGE/feed`)!;
-    expect(feed.body.child_attachments).toBeUndefined();
-    expect(feed.body.message).toBe("Teksts 👉 L");
-    expect(Object.keys(feed.body).filter((k) => k.startsWith("attached_media"))).toHaveLength(2);
-    // The check failing counts as not owned.
-    const down = fakeFetch((c) => {
-      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      if (c.body.fields?.startsWith("ownership_permissions"))
-        return { status: 500, json: { error: { message: "x", code: 2 } } };
-      return { json: { id: "p2" } };
-    });
-    await metaProvider(cfg, down.http, noWait).publishCarousel("facebook", cardImgs, "T", "L");
-    expect(down.calls.some((c) => c.body.child_attachments)).toBe(false);
-  });
-
-  it("owned: one feed post whose cards name their own pictures on the site, drawn first; nothing uploaded", async () => {
-    const { http, calls } = fakeFetch((c) => {
-      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      const o = own(c, true);
-      if (o) return o;
-      if (c.url === `${G}/PAGE_lc1`)
-        return {
-          json: {
-            attachments: {
-              data: [
-                {
-                  type: "multi_share",
-                  subattachments: {
-                    data: [1, 2].map((n) => ({ media: { image: { src: `https://t/${n}/square.jpg` } } })),
-                  },
-                },
-              ],
-            },
-          },
-        };
-      return { json: { id: "PAGE_lc1" } };
-    });
-    expect(
-      await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "Teksts", "https://t/post"),
-    ).toEqual({ ok: true, id: "PAGE_lc1" });
-    // The pictures are drawn (fetched) before the post, and no photo is uploaded to the page.
-    const posted = calls.findIndex((c) => c.url === `${G}/PAGE/feed`);
-    expect(calls.slice(0, posted).filter((c) => c.url.endsWith("square.jpg"))).toHaveLength(2);
-    expect(calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
-    const feed = calls.find((c) => c.url === `${G}/PAGE/feed`)!;
-    expect(feed.body).toMatchObject({
-      message: "Teksts",
-      link: "https://t/post",
-      multi_share_optimized: "false",
-      multi_share_end_card: "false",
-    });
-    // Each card keeps its own link (no ?p=) and its own picture on the site (never Facebook's CDN).
-    expect(JSON.parse(feed.body.child_attachments!)).toEqual(
-      [1, 2].map((n) => ({
-        link: `https://t/social/p/${n}`,
-        name: `Karte ${n}`,
-        description: "no 23 €",
-        picture: `https://t/${n}/square.jpg`,
-      })),
+    expect(calls.find((c) => c.url === `${G}/PAGE/feed`)!.body.message).toBe("Teksts 👉 L");
+    const expired = fakeFetch((c) =>
+      c.url === `${G}/PAGE`
+        ? { json: { access_token: "PT" } }
+        : { status: 401, json: { error: { message: "Session has expired", code: 190 } } },
     );
-    expect(calls.filter((c) => c.method === "DELETE")).toHaveLength(0);
+    expect(await metaProvider(cfg, expired.http, noWait).publishCarousel("facebook", imgs, "T")).toEqual({
+      ok: false,
+      error: "Meta 401 #190: Session has expired",
+    });
   });
 
-  it("owned: a carousel drawn without every picture is removed, the missing cards logged, and the slides posted as photos", async () => {
-    const reads = [[], ["https://t/1/square.jpg"], ["https://t/1/square.jpg"]] as string[][];
-    const warned: string[] = [];
-    const warn = vi.spyOn(console, "warn").mockImplementation((m: string) => void warned.push(String(m)));
+  it("an Instagram carousel reads each item's status a few times at most, not every five seconds", async () => {
+    let reads = 0;
     const { http, calls } = fakeFetch((c) => {
-      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      const o = own(c, true);
-      if (o) return o;
-      if (c.url === `${G}/PAGE_lc2`) {
-        const srcs = reads.shift() ?? [];
-        return {
-          json: {
-            attachments: {
-              data: [
-                {
-                  type: "multi_share",
-                  subattachments: {
-                    data: [0, 1].map((k) => (srcs[k] ? { media: { image: { src: srcs[k] } } } : {})),
-                  },
-                },
-              ],
-            },
-          },
-        };
+      if (c.method === "GET" && c.url.startsWith(`${G}/item`)) {
+        reads++;
+        // Not ready on the first read, ready after.
+        return { json: { status_code: reads === 1 ? "IN_PROGRESS" : "FINISHED" } };
       }
-      if (c.url === `${G}/PAGE/feed` && c.body.child_attachments) return { json: { id: "PAGE_lc2" } };
-      return { json: { id: "p9" } };
+      if (c.method === "GET") return { json: { status_code: "FINISHED" } };
+      if (c.url === `${G}/IG/media` && c.body.is_carousel_item)
+        return { json: { id: `item${calls.length}` } };
+      return { json: { id: "x" } };
     });
-    try {
-      expect(await metaProvider(cfg, http, noWait).publishCarousel("facebook", cardImgs, "T", "L")).toEqual({
-        ok: true,
-        id: "p9",
-      });
-    } finally {
-      warn.mockRestore();
-    }
-    // Read twice, the second card still without its picture: removed, logged, and posted as photos.
-    expect(calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_lc2`]);
-    expect(warned).toEqual([expect.stringContaining("PAGE_lc2 drawn without pictures (cards 2)")]);
-    expect(
-      calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.endsWith("image.jpg")),
-    ).toHaveLength(2);
+    const imgs = [1, 2, 3, 4, 5].map((n) => ({ url: `https://t/${n}/image.jpg` }));
+    expect(await metaProvider(cfg, http, noWait).publishCarousel("instagram", imgs, "T")).toMatchObject({
+      ok: true,
+    });
+    // Five items made first, then read: once each (one of them twice), not twelve times each.
+    expect(reads).toBeLessThanOrEqual(6);
+    const posts = calls
+      .filter((c) => c.method === "POST")
+      .map((c) => c.body.is_carousel_item ?? c.body.media_type ?? "publish");
+    expect(posts).toEqual(["true", "true", "true", "true", "true", "CAROUSEL", "publish"]);
   });
 
-  it("reads whether the Page owns a domain, for the admin", async () => {
-    const yes = fakeFetch((c) =>
-      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : (own(c, true) ?? { json: {} }),
+  it("finds an Instagram post by its caption, for a publish that failed on our side", async () => {
+    const since = new Date("2026-11-09T16:00:00Z");
+    const { http } = fakeFetch((c) =>
+      c.url === `${G}/IG/media`
+        ? {
+            json: {
+              data: [
+                { id: "old", caption: "Teksts", timestamp: "2026-11-08T10:00:00+0000" },
+                { id: "m7", caption: "Teksts\n", timestamp: "2026-11-09T17:30:00+0000" },
+              ],
+            },
+          }
+        : null,
     );
-    expect(await metaProvider(cfg, yes.http, noWait).linkOwnership("https://t/")).toBe(true);
-    const no = fakeFetch((c) =>
-      c.url === `${G}/PAGE` ? { json: { access_token: "PT" } } : (own(c, false) ?? { json: {} }),
-    );
-    expect(await metaProvider(cfg, no.http, noWait).linkOwnership("https://t/")).toBe(false);
+    const p = metaProvider(cfg, http, noWait);
+    expect(await p.findInstagram("Teksts", since)).toEqual({ id: "m7" });
+    expect(await p.findInstagram("Cits", since)).toEqual({ id: null });
+    const down = fakeFetch(() => ({ status: 403, json: { error: { message: "limit", code: 4 } } }));
+    expect(await metaProvider(cfg, down.http, noWait).findInstagram("Teksts", since)).toBeNull();
   });
 
   it("a link post drawn without its picture is removed and reported, so the caller posts a photo", async () => {
@@ -335,43 +256,6 @@ describe("meta provider", () => {
       error: NO_PICTURE,
     });
     expect(calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([`${G}/PAGE_l9`]);
-  });
-
-  it("when Meta refuses the link carousel the slides still go out as photos; a token error does not retry", async () => {
-    const refused = fakeFetch((c) => {
-      if (c.url === `${G}/PAGE`) return { json: { access_token: "PT" } };
-      const o = own(c, true);
-      if (o) return o;
-      if (c.url === `${G}/PAGE/feed` && c.body.child_attachments)
-        return { status: 400, json: { error: { message: "Invalid parameter", code: 100 } } };
-      return { json: { id: "p1" } };
-    });
-    const imgs = [1, 2].map((n) => ({
-      url: `u${n}`,
-      card: { link: `l${n}`, name: "K", picture: `s${n}` },
-    }));
-    expect(await metaProvider(cfg, refused.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual(
-      {
-        ok: true,
-        id: "p1",
-      },
-    );
-    expect(
-      refused.calls.filter((c) => c.url === `${G}/PAGE/photos` && c.body.url?.startsWith("u")),
-    ).toHaveLength(2);
-    const expired = fakeFetch((c) =>
-      c.url === `${G}/PAGE`
-        ? { json: { access_token: "PT" } }
-        : { status: 401, json: { error: { message: "Session has expired", code: 190 } } },
-    );
-    expect(await metaProvider(cfg, expired.http, noWait).publishCarousel("facebook", imgs, "T", "L")).toEqual(
-      {
-        ok: false,
-        error: "Meta 401 #190: Session has expired",
-      },
-    );
-    // A token error stops the post at the ownership check: nothing is uploaded.
-    expect(expired.calls.filter((c) => c.url === `${G}/PAGE/photos`)).toHaveLength(0);
   });
 
   it("a link post on the page: message and link, with the page's token", async () => {

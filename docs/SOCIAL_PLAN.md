@@ -173,3 +173,30 @@ To switch it on: the Meta set-up in §8, then in Railway `FEATURE_SOCIAL=1`, `ME
 
 A Facebook link post showed its title but no picture while the same post on Instagram had it: Instagram gets the image uploaded, Facebook draws the preview from the page's `og:image`, which was rendered on every request (1–6 s, plus the shop photo) and Facebook's crawler gave up. Now the rendered images are kept in memory per card (`src/services/social/image.ts`), and before a link post the provider fetches its picture once and asks Facebook to read the link (`POST /?id={link}&scrape=true`), so the post is created with the picture. For a post that already went out without it: Sharing Debugger → paste the link → "Scrape Again".
 - **Stored pictures and a read-back that loads them (owner, 8 Nov 2026, evening: "still 3 images out of 5 missing"):** see `docs/FACEBOOK_CAROUSEL_PLAN.md` §3a. Every picture a post will be fetched for is drawn before it is sent and stored in `social_images`, served the same from every instance; the read-back counts a card only when its picture loads, reads three times over 20 seconds, and logs the missing card numbers before posting the slides as photos.
+
+
+## Meta's rate limit and retries (9 Nov 2026)
+
+A 5-slide Instagram carousel failed with `Meta 403 #4: Application request limit reached`
+(Meta's per-app hourly call limit). The post had gone out anyway, but the queue showed
+„Neizdevās". Four changes:
+
+- **Fewer calls.**
+  - Instagram status reads back off: about six per image, instead of one every 5 seconds
+    up to 12.
+  - Carousel items are all made first, then read: usually once each.
+  - Publishing retries #9007 at most 3 times.
+  - No Meta call on admin page loads beyond the token check.
+  - No daily read-back of carousels.
+- **Look before sending again.** A publish that failed on our side may still have gone out.
+  So after a failure, and before any retry, `findInstagram` reads the account's last 10 posts
+  and matches the caption. A match counts as published, and nothing is posted twice.
+- **Limits are waited out, not failed.**
+  - Errors matching #4, #17, #32, #613, timeouts or connection errors keep the post
+    approved.
+  - The next try comes an hour after the last (`social_posts.attempted_at`), within the
+    6-hour window.
+  - A post already marked failed for such an error is picked up the same way.
+  - A late post with one network missing is looked for on Instagram before it is called
+    unpublished.
+- **A half-published post keeps its text.** A retry does not refresh prices or captions.

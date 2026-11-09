@@ -1,0 +1,1 @@
+ALTER TABLE "social_posts" ADD COLUMN "attempted_at" timestamp with time zone;

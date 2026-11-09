@@ -36,14 +36,17 @@ export function mockSocialProvider(): SocialProvider {
       return add(network, imageUrl, caption, alt ? [alt] : undefined);
     },
     async publishCarousel(network, images, caption) {
-      const cards = network === "facebook" && images.every((i) => i.card);
+      // Photos on both networks (the page no longer gets link carousels).
       return add(
         network,
         images.map((i) => i.url).join(" "),
         caption,
         images.map((i) => i.alt ?? ""),
-        cards ? images.map((i) => i.card!.link) : undefined,
       );
+    },
+    async findInstagram(caption) {
+      const hit = mockPosts().find((m) => m.network === "instagram" && !m.removed && m.caption === caption);
+      return { id: hit?.id ?? null };
     },
     async publishLink(link, caption) {
       return add("facebook", link, caption, undefined, [link]);

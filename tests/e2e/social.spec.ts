@@ -33,9 +33,8 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   await devLogin(page, ADMIN, "/admin/sociali");
   await expect(page.getByRole("heading", { level: 1, name: "Sociālie tīkli" })).toBeVisible();
   await expect(page.locator("[data-social-connection]")).toContainText("Testa režīms");
-  // Whether Meta lets this Page customise trilio.lv links decides link carousel or photos.
-  await expect(page.locator("[data-social-domain]")).toHaveAttribute("data-social-domain", "owned");
-  await expect(page.locator("[data-social-domain]")).toContainText("karuseļi tiek publicēti ar saitēm");
+  // No Meta call per page load for the domain any more: carousels always go out as photos.
+  await expect(page.locator("[data-social-domain]")).toHaveCount(0);
   await expectNoAxeViolations(page);
 
   // Advice needs no prices, so it can be made on any data.

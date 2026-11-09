@@ -1,5 +1,18 @@
 # Facebook carousel: what Meta's documentation requires, and the fix
 
+> **Decision, 9 Nov 2026 (owner: "It is too much, do deep analyze and finally fix the issue").**
+> The link carousel is retired. A post made on 9 Nov with the domain verified and owned still
+> showed blank cards, and the read-back below did not catch it: Facebook serves its own
+> placeholder picture for a card it could not fetch, and the placeholder loads. This was the
+> third fix that relied on Facebook fetching each card's picture from trilio.lv by itself,
+> which Trilio cannot control. The page now always gets the slides as **uploaded photos**
+> (`/{page}/photos` unpublished, then one `/{page}/feed` with `attached_media`). The pictures
+> always show; the cards are not clickable, and the caption carries the trilio.lv link.
+> Removed with it: the ownership check (it also cost two Meta calls on every admin page
+> load), the card pictures' warm-up and read-back, and the daily check of carousels.
+> Single-image link posts keep their preview check. The card share pages stay, because
+> earlier posts link to them. What follows is the history.
+
 Owner's ask (8 Nov 2026), after the third attempt showed a carousel with no
 pictures at all: "Review Meta documentation and implement based on that.
 Write a plan for the carousel fix. Implement."
