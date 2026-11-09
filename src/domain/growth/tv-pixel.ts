@@ -16,7 +16,11 @@ export type PixelParams = {
   cr: string | null;
   ch: string | null;
   pos: string | null;
-  /** FreeWheel's custom site section id (`csid`): at Go3 it names the channel and the device platform. */
+  /**
+   * The site section name (`ss`, FreeWheel's #{section.title}), the "Site Section Name" of
+   * Go3's reports: DAI_<device>_<environment>_<placement>. The custom id (`csid`,
+   * #{section.customId}) is the fallback when the name does not come.
+   */
   csid: string | null;
   /** Device type (`dt`, FreeWheel's standard attribute). */
   dt: string | null;
@@ -59,13 +63,14 @@ export function cleanValue(raw: string | null | undefined, max = 60): string | n
 }
 
 /**
- * The site section: the custom id (`csid`) or the name (`ss`), whichever is Go3's
- * DAI_<device>_<environment>_<placement> form (go3-section.ts), else whichever came.
+ * The site section: the name (`ss`, #{section.title}) first, as Go3's reports use it;
+ * the custom id (`csid`, #{section.customId}) only when it, not the name, has the
+ * DAI_<device>_<environment>_<placement> form (go3-section.ts), or when no name came.
  */
-function section(csid: string | null, ss: string | null): string | null {
-  if (isGo3Section(csid)) return csid;
+function section(ss: string | null, csid: string | null): string | null {
   if (isGo3Section(ss)) return ss;
-  return csid ?? ss;
+  if (isGo3Section(csid)) return csid;
+  return ss ?? csid;
 }
 
 export function pixelParams(params: URLSearchParams): PixelParams {
@@ -81,7 +86,7 @@ export function pixelParams(params: URLSearchParams): PixelParams {
     cr: cleanValue(params.get("crn")) ?? cleanValue(params.get("cr")),
     ch: cleanValue(params.get("ch")),
     pos: cleanValue(params.get("pos"), 20)?.toLowerCase() ?? null,
-    csid: section(cleanValue(params.get("csid"), 80), cleanValue(params.get("ss"), 80)),
+    csid: section(cleanValue(params.get("ss"), 80), cleanValue(params.get("csid"), 80)),
     dt: cleanValue(params.get("dt"), 40),
     ua: raw("ua")?.slice(0, 400) ?? null,
     country: cleanValue(params.get("co"), 3)?.toUpperCase() ?? null,

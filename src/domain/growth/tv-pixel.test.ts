@@ -54,7 +54,16 @@ describe("pixel parameters", () => {
       ),
     );
     expect(left).toMatchObject({ ip: null, cr: null, csid: null, dt: null, ua: null, pos: null });
-    // Go3's site section by its name when the custom id is not the DAI_… form; positions normalised.
+    // The site section's name first, the custom id only as a fallback.
+    expect(
+      pixelParams(new URLSearchParams("ss=DAI_ios_mobile_Go3_VOD&csid=DAI_smarttv_other_PR_TV3_LV_HD_HVC"))
+        .csid,
+    ).toBe("DAI_ios_mobile_Go3_VOD");
+    expect(pixelParams(new URLSearchParams("csid=DAI_browser_other_Go3_CATCHUP")).csid).toBe(
+      "DAI_browser_other_Go3_CATCHUP",
+    );
+    expect(pixelParams(new URLSearchParams("ss=Go3%20LV&csid=4821")).csid).toBe("Go3 LV");
+    // Go3's site section by its name when the custom id is not the DAI_… form.
     expect(
       pixelParams(new URLSearchParams("csid=48213&ss=DAI_smarttv_other_PR_TV3_LV_HD_HVC&pos=Midroll")),
     ).toMatchObject({ csid: "DAI_smarttv_other_PR_TV3_LV_HD_HVC", pos: "midroll" });

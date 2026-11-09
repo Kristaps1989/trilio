@@ -68,7 +68,8 @@ FreeWheel's own macros:
 | `ip` client address | `#{request.clientAddress}` | the viewer's address only when the SSAI passes it in the ad request as the VIP parameter; otherwise the SSAI server's. The diagnostic shows which. |
 | `ts` time | `#{timestamp}` | Unix seconds when the ad server answered, close to the play time for stitched ads |
 | `cr` / `crn` creative | `#{ad.creative.id}`, `#e{ad.creative.name}` | |
-| `csid` site section | `#e{section.customId}` | the CSID: at Go3 it carries the channel and the device platform; stored as is and shown per value |
+| `ss` site section name | `#e{section.title}` | "Site Section Name" in Go3's reports (`DAI_…`): device, environment, live/catch-up/VOD and channel; the primary field |
+| `csid` site section custom id | `#e{section.customId}` | fallback only: not verified to hold the same `DAI_…` string at Go3 |
 | `ch` channel | `#e{sa.channel}` | standard attribute; may be empty where the CSID already says it |
 | `dt` device type | `#e{sa.platform.deviceType}` | |
 | `pos` | `#{slot.timePositionClass}` | preroll, midroll, postroll: where in the programme the break was, shown as it comes |
@@ -96,9 +97,11 @@ not supported for partner tags and are not used. The tracker Go3 already runs
 #### Go3's site section, decoded (owner, 9 Nov 2026)
 
 Go3's FreeWheel site section has the form `DAI_<device>_<environment>_<placement>`
-(`DAI_smarttv_other_PR_TV3_Life_LV_HD_HVC`). The pixel asks for both the custom id
-(`csid=#e{section.customId}`) and the name (`ss=#e{section.title}`) and keeps the
-one in that form. `src/domain/growth/go3-section.ts` follows the rules of the Go3
+(`DAI_smarttv_other_PR_TV3_Life_LV_HD_HVC`), the "Site Section Name" of its
+reports, which FreeWheel's guide names `#{section.title}`. The pixel takes the
+name (`ss=#e{section.title}`) first; the custom id (`csid=#e{section.customId}`,
+a "custom site section tag") is used only when it, not the name, has that form,
+or when no name came. `src/domain/growth/go3-section.ts` follows the rules of the Go3
 Go dashboards:
 
 - **device:** `smarttv`, `browser`, `android` or `ios`;
