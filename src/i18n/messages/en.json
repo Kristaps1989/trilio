@@ -1685,5 +1685,13 @@
     "button": "Sign in",
     "valid": "The button works for 15 minutes, once.",
     "notYou": "If you didn't ask to sign in, do nothing: nothing happens unless the button is pressed."
+  },
+  "offersAsk": {
+    "label": "Personal offers",
+    "question": "Shall we write if we can offer one of your saved products for less than the shops?",
+    "fine": "Only about your products, no advertising. You can stop at any time.",
+    "yes": "Yes, write to me",
+    "no": "No, thanks",
+    "thanks": "Thank you! We'll write if we can offer it for less."
   }
 }

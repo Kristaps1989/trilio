@@ -2795,5 +2795,13 @@
     "button": "Ienākt",
     "valid": "Poga derīga 15 minūtes un darbojas vienu reizi.",
     "notYou": "Ja tu nelūdzi ienākt, neko nedari: bez pogas nospiešanas nekas nenotiks."
+  },
+  "offersAsk": {
+    "label": "Personīgie piedāvājumi",
+    "question": "Gribi, lai uzrakstām, ja kādu no tavām saglabātajām precēm varam piedāvāt lētāk nekā veikali?",
+    "fine": "Tikai par tavām precēm, bez reklāmām. Atteikties var jebkurā brīdī.",
+    "yes": "Jā, rakstiet man",
+    "no": "Nē, paldies",
+    "thanks": "Paldies! Uzrakstīsim, ja varēsim piedāvāt lētāk."
   }
 }
