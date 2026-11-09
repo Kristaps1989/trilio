@@ -112,7 +112,14 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   // The pixel with Go3's optional fields (docs/TV_PIXEL_BEST_PRACTICE.md): the viewer's address by
   // macro, a device header, the creative and channel, and a holdout device that is not an impression.
   const extended = await page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-extended]`).inputValue();
-  expect(extended).toContain("&ip=[VIEWER_IP]&ts=[EVENT_TIME]&cr=[CREATIVE_ID]");
+  // FreeWheel's own macros (FreeWheel Macros Guide): the client address, the creative, the CSID.
+  for (const macro of [
+    "ip=#{request.clientAddress}",
+    "cr=#{ad.creative.id}",
+    "csid=#e{section.customId}",
+    "ts=#{timestamp}",
+  ])
+    expect(extended).toContain(macro);
   expect(await page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-control]`).inputValue()).toMatch(
     /&grp=control$/,
   );
@@ -124,9 +131,13 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
       "x-device-user-agent": "Mozilla/5.0 (SMART-TV; Tizen 6.5)",
     },
   });
-  expect((await go3.get(`/px/${SLUG}?ord=1&vid=dev-c&ip=81.198.9.9&cr=Spots20&ch=TV3&pos=1`)).status()).toBe(
-    200,
-  );
+  expect(
+    (
+      await go3.get(
+        `/px/${SLUG}?ord=1&vid=dev-c&ip=81.198.9.9&cr=Spots20&ch=TV3&csid=DAI_smarttv_other_PR_TV3_Life_LV_HD_HVC&dt=Smart%20TV&pos=midroll&crn=%23e%7Bad.creative.name%7D`,
+      )
+    ).status(),
+  ).toBe(200);
   expect((await go3.get(`/px/${SLUG}?ord=2&vid=dev-d&ip=81.198.9.8&grp=control`)).status()).toBe(200);
   await go3.dispose();
   // A person in the first household opens the site on a phone (their browser sends fetch metadata).
@@ -155,6 +166,13 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   const pixelTable = page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-pixel-days]`);
   await expect(pixelTable.getByText("ir (makross)")).toBeVisible();
   await expect(pixelTable.getByText("Spots20")).toBeVisible();
+  // Go3's site section decoded: the screen, live, the channel without its feed, the position.
+  await expect(pixelTable.getByRole("cell", { name: "Televizora ekrāns", exact: true })).toBeVisible();
+  await expect(pixelTable.getByRole("cell", { name: "Tiešraide", exact: true })).toBeVisible();
+  await expect(pixelTable.getByRole("cell", { name: "TV3 Life", exact: true })).toBeVisible();
+  await expect(
+    pixelTable.getByRole("cell", { name: "Raidījuma laikā (Go3 Go+)", exact: true }),
+  ).toBeVisible();
   await expect(pixelTable.getByText("Samsung Tizen")).toBeVisible();
   await expect(page.locator(`[data-tv-campaign="${SLUG}"]`).getByText("Pārrēķināt bāzi")).toBeVisible();
 

@@ -95,7 +95,12 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         key={key}
         caption={t(`px.dim.${key}` as "px.dim.cr")}
         head={[t(`px.dim.${key}` as "px.dim.cr"), t("impressions")]}
-        rows={pixel.dims[key].map((d) => [d.value, formatInt(d.hits)])}
+        rows={pixel.dims[key].map((d) => [
+          key === "pos" && t.has(`px.posLabel.${d.value}`)
+            ? t(`px.posLabel.${d.value}` as "px.posLabel.preroll")
+            : d.value,
+          formatInt(d.hits),
+        ])}
       />
     ) : null;
   const yes = (n: number | undefined, of: number) => (n ? rate(n, of) : "—");
@@ -136,9 +141,30 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         rows={pixel.frequency.map((f) => [t("px.bandLabel", { band: f.band }), formatInt(f.devices)])}
       />
       <p className="max-w-3xl text-sm text-stone">{t("px.frequencyMethod")}</p>
+      {pixel.sections.type.length ? (
+        <div className="grid gap-3 md:grid-cols-2" data-tv-sections={pixel.sections.type.length}>
+          {(["screen", "type", "device", "channel"] as const).map((k) =>
+            pixel.sections[k].length ? (
+              <Table
+                key={k}
+                caption={t(`px.section.${k}` as "px.section.screen")}
+                head={[t(`px.section.${k}` as "px.section.screen"), t("impressions")]}
+                rows={pixel.sections[k].map((d) => [
+                  k === "screen" || k === "type"
+                    ? t(`px.section.value.${d.value}` as "px.section.value.tv")
+                    : d.value,
+                  formatInt(d.hits),
+                ])}
+              />
+            ) : null,
+          )}
+        </div>
+      ) : null}
       <div className="grid gap-3 md:grid-cols-2">
         {dim("cr")}
         {dim("ch")}
+        {dim("cs")}
+        {dim("dt")}
         {dim("pos")}
         {dim("ua")}
         {dim("dua")}

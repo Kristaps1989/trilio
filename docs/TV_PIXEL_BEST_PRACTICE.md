@@ -56,6 +56,50 @@ and a pixel of the form
 `/px/<campaign>?vid=[DEVICE]&ip=[IP]&ts=[TIMESTAMP]&cr=[CREATIVE]&ch=[CHANNEL]&pos=[POSITION]&ord=[CACHEBUSTER]`.
 Every field Go3 cannot fill is simply absent; the code treats each as optional.
 
+#### Go3 runs FreeWheel: the macros that exist (checked 9 Nov 2026)
+
+The first version of this note gave placeholders (`[VIEWER_IP]`…). The owner
+supplied the FreeWheel Macros Guide (Streaming Hub); the extended pixel now uses
+FreeWheel's own macros:
+
+| Field | FreeWheel macro | Caveat |
+| --- | --- | --- |
+| `vid` device id | `#{request.keyValue("_fw_vcid2")}` | as today |
+| `ip` client address | `#{request.clientAddress}` | the viewer's address only when the SSAI passes it in the ad request as the VIP parameter; otherwise the SSAI server's. The diagnostic shows which. |
+| `ts` time | `#{timestamp}` | Unix seconds when the ad server answered, close to the play time for stitched ads |
+| `cr` / `crn` creative | `#{ad.creative.id}`, `#e{ad.creative.name}` | |
+| `csid` site section | `#e{section.customId}` | the CSID: at Go3 it carries the channel and the device platform; stored as is and shown per value |
+| `ch` channel | `#e{sa.channel}` | standard attribute; may be empty where the CSID already says it |
+| `dt` device type | `#e{sa.platform.deviceType}` | |
+| `pos` | `#{slot.timePositionClass}` | preroll, midroll, postroll |
+| `ua` device user agent | `#e{request.userAgent}` | like the address: the device's only if the SSAI forwards it |
+| `gdpr` | `#{GDPR}` | the TCF flag; only its presence is counted, the consent string is not asked for |
+
+`#e{…}` URL-encodes a value. A macro FreeWheel leaves unexpanded (`#{…}`,
+`#e{…}`, `#s{…}`, `#2{…}`) is ignored. `#{ad.random}` and `#{ad.ref.random}` are
+not supported for partner tags and are not used. The tracker Go3 already runs
+(`ord=[timestamp]`) keeps working; `ord` is only a cache-buster.
+
+#### Go3's site section, decoded (owner, 9 Nov 2026)
+
+Go3's FreeWheel site section has the form `DAI_<device>_<environment>_<placement>`
+(`DAI_smarttv_other_PR_TV3_Life_LV_HD_HVC`). The pixel asks for both the custom id
+(`csid=#e{section.customId}`) and the name (`ss=#e{section.title}`) and keeps the
+one in that form. `src/domain/growth/go3-section.ts` follows the rules of the Go3
+Go dashboards:
+
+- **device:** `smarttv`, `browser`, `android` or `ios`;
+- **screen:** television, desktop web or mobile app;
+- **content type:** catch-up if the placement contains `catchup`, on-demand if it
+  contains `vod`, otherwise live;
+- **channel** (live only): `PR_` and `_HVC` removed, every `_HD` removed, the feed
+  suffix `_LV`, `_EE` or `_LT` removed, `3plus` written as `3+`.
+
+The feed suffix names the channel's feed, not where the viewer is. Slot
+positions are normalised: preroll is Go3 Go, midroll is Go3 Go+. The TV tab shows
+impressions per screen, content type, device and live channel; the raw
+sections stay in the table below them.
+
 ### 2.2 View-through attribution by household
 
 This is what "post-impression" (Gemius), "view-through conversion" (Google) and

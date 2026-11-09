@@ -2246,7 +2246,7 @@
         "baselineRecomputeHint": "Bāze un pieaugums tiek aprēķināti no jauna bez skriptiem un administratoru pašu apmeklējumiem.",
         "baselineDone": "Bāze pārrēķināta.",
         "pixelMore": "Papildu lauki Go3 (mājsaimniecības, radošie, kanāli, kontrolgrupa)",
-        "pixelMoreHow": "Palūdz Go3 aizstāt kvadrātiekavās rakstītos vārdus ar viņu reklāmas servera makrosiem: skatītāja IP adrese, notikuma laiks, radošā materiāla ID, kanāls un vieta pārtraukumā. Neaizpildītu lauku Trilio ignorē. Ja Go3 var turēt kontrolgrupu (10–15 % ierīču, kurām klipu apzināti nerāda), tām jāizsauc otrā adrese.",
+        "pixelMoreHow": "Šī adrese izmanto FreeWheel makrosus (FreeWheel Macros Guide): ierīces ID, klienta adresi (#{request.clientAddress} – skatītāja adrese, ja Go3 SSAI to nodod reklāmas pieprasījumā kā VIP, citādi SSAI servera adrese), laiku, radošā materiāla ID un nosaukumu, CSID (#{section.customId}: kanāls un ierīce), kanālu, ierīces tipu, vietu pārtraukumā, ierīces User-Agent un GDPR karogu. Neizvērstu makrosu Trilio ignorē. Ja Go3 var turēt kontrolgrupu (10–15 % ierīču, kurām klipu apzināti nerāda), tām jāizsauc otrā adrese.",
         "pixelExtended": "Pikselis ar papildu laukiem",
         "pixelControl": "Pikselis kontrolgrupai (klips netiek rādīts)",
         "offDays": {
@@ -2303,8 +2303,30 @@
             "cr": "Radošais materiāls",
             "ch": "Kanāls",
             "pos": "Vieta pārtraukumā",
-            "ua": "Pieprasītājs",
-            "dua": "Ierīce (X-Device-User-Agent)"
+            "ua": "Pieprasītājs (pikseļa pieprasījuma pārlūks)",
+            "dua": "Ierīce (ua makross vai X-Device-User-Agent)",
+            "cs": "Site section (neapstrādāts)",
+            "dt": "Ierīces tips"
+          },
+          "section": {
+            "screen": "Ekrāns",
+            "type": "Satura veids",
+            "device": "Ierīce",
+            "channel": "Kanāls (tiešraide)",
+            "value": {
+              "tv": "Televizora ekrāns",
+              "desktop": "Dators (pārlūks)",
+              "mobile": "Mobilā lietotne",
+              "other": "Cits",
+              "LIVE": "Tiešraide",
+              "CATCHUP": "Atliktā skatīšanās (catch-up)",
+              "VOD": "Pēc pieprasījuma (VOD)"
+            }
+          },
+          "posLabel": {
+            "preroll": "Pirms raidījuma (Go3 Go)",
+            "midroll": "Raidījuma laikā (Go3 Go+)",
+            "postroll": "Pēc raidījuma"
           }
         }
       },

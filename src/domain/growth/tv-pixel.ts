@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isGo3Section, normPos } from "./go3-section";
 
 // What a TV pixel request carries, read without keeping an address
 // (docs/TV_PIXEL_BEST_PRACTICE.md). With server-side ad insertion the pixel is
@@ -11,14 +12,24 @@ export type PixelParams = {
   vid: string | null;
   ip: string | null;
   ts: string | null;
+  /** Creative: its name when given (`crn`), else its id (`cr`). */
   cr: string | null;
   ch: string | null;
   pos: string | null;
+  /** FreeWheel's custom site section id (`csid`): at Go3 it names the channel and the device platform. */
+  csid: string | null;
+  /** Device type (`dt`, FreeWheel's standard attribute). */
+  dt: string | null;
+  /** The viewer's device user agent (`ua`), when the ad server passes it. */
+  ua: string | null;
   grp: "ad" | "control";
 };
 
-/** An unfilled macro ("#{…}", "${…}", "[…]", "%%…%%", "{…}") counts as absent. */
-const UNFILLED = /#\{|\$\{|^\[.*\]$|%%|^\{.*\}$/;
+/**
+ * An unfilled macro counts as absent: FreeWheel's "#{…}" and its encoded forms
+ * "#e{…}", "#s{…}", "#2{…}", and other servers' "${…}", "[…]", "%%…%%", "{…}".
+ */
+const UNFILLED = /#[es2]?\{|\$\{|^\[.*\]$|%%|^\{.*\}$/;
 
 /** A short label for a creative, channel or position: letters, digits and a little punctuation, at most 60 characters. */
 export function cleanValue(raw: string | null | undefined, max = 60): string | null {
@@ -32,6 +43,19 @@ export function cleanValue(raw: string | null | undefined, max = 60): string | n
   return clean || null;
 }
 
+/**
+ * The site section: the custom id (`csid`) or the name (`ss`), whichever is Go3's
+ * DAI_<device>_<environment>_<placement> form (go3-section.ts), else whichever came.
+ */
+function section(csid: string | null, ss: string | null): string | null {
+  if (isGo3Section(csid)) return csid;
+  if (isGo3Section(ss)) return ss;
+  return csid ?? ss;
+}
+
+/** preroll, midroll, postroll (normPos); a value of another kind, such as a number, as it came. */
+const position = (v: string | null) => (v ? normPos(v) || v : null);
+
 export function pixelParams(params: URLSearchParams): PixelParams {
   const raw = (k: string) => {
     const v = params.get(k)?.trim() ?? "";
@@ -42,9 +66,12 @@ export function pixelParams(params: URLSearchParams): PixelParams {
     vid: raw("vid"),
     ip: raw("ip"),
     ts: raw("ts"),
-    cr: cleanValue(params.get("cr")),
+    cr: cleanValue(params.get("crn")) ?? cleanValue(params.get("cr")),
     ch: cleanValue(params.get("ch")),
-    pos: cleanValue(params.get("pos"), 20),
+    pos: position(cleanValue(params.get("pos"), 20)),
+    csid: section(cleanValue(params.get("csid"), 80), cleanValue(params.get("ss"), 80)),
+    dt: cleanValue(params.get("dt"), 40),
+    ua: raw("ua")?.slice(0, 400) ?? null,
     grp: grp === "control" || grp === "holdout" || grp === "psa" ? "control" : "ad",
   };
 }

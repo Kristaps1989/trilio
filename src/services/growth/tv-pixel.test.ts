@@ -29,7 +29,8 @@ import {
 
 const url = process.env.DATABASE_URL;
 const run = url ? describe : describe.skip;
-const SLUG = "unit-pixel-test";
+// Not "unit-…": tv.test.ts wipes every campaign with that prefix while this file runs.
+const SLUG = "pixeltest-go3";
 const T0 = new Date("2032-03-10T18:00:00Z");
 const DAY = rigaDay(T0);
 const PHONE =
@@ -150,7 +151,7 @@ run("TV pixel", { timeout: 60_000 }, () => {
   it("leaves a visitor's day out of the visit figures once one of their clicks was a script", async () => {
     const [offer] = await db.select({ id: offers.id }).from(offers).limit(1);
     if (!offer) return;
-    const { visitRows, recordShopClick, rollupVisits } = await import("@/services/visits/visits");
+    const { visitRows, recordShopClick } = await import("@/services/visits/visits");
     const day = rigaDay(min(0));
     const at = min(120);
     await recordVisit(db, { path: "/unit-left-out", ip: "198.51.100.90", userAgent: PHONE, now: at });
@@ -165,10 +166,8 @@ run("TV pixel", { timeout: 60_000 }, () => {
       signals: { site: null, mode: null, user: null, referrerHost: null, lang: null },
       now: at,
     });
-    await rollupVisits(db, new Date(at.getTime() + 2 * 86_400_000));
-    const rows = (await visitRows(db, day, day, new Date(at.getTime() + 2 * 86_400_000))).filter(
-      (r) => r.path === "/unit-left-out",
-    );
+    // Read live (the day as "today"): a rollup with a far-future clock would purge other tests' raw visits.
+    const rows = (await visitRows(db, day, day, at)).filter((r) => r.path === "/unit-left-out");
     expect(rows.map((r) => r.visitors)).toEqual([1]);
   });
 });
