@@ -1519,6 +1519,8 @@ export const socialPosts = pgTable(
     createdBy: text("created_by").notNull(),
     approvedBy: text("approved_by"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    /** The last try at sending; a retry after Meta's rate limit waits an hour from it. */
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("social_posts_slot_idx").on(t.slotAt), index("social_posts_status_idx").on(t.status)],

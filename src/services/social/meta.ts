@@ -145,12 +145,16 @@ export function metaProvider(
    * a #9007 on publishing is the same wait, tried again.
    */
   async function ready(container: string, video: boolean): Promise<void> {
-    for (let i = 0; i < (video ? 30 : 12); i++) {
+    // Polls with growing gaps: every status read counts against Meta's hourly app limit
+    // (#4 "Application request limit reached", 9 Nov 2026), so an image is read about
+    // six times at most, not every five seconds.
+    const gaps = video ? [10, 10, 15, 20, 30, 30, 30, 45, 60, 60, 60, 60] : [2, 3, 5, 8, 12, 20];
+    for (const gap of gaps) {
+      await wait(gap * 1000);
       const s = await call("GET", container, { fields: "status_code" }, cfg.token);
       if (s.status_code === "FINISHED") return;
       if (s.status_code === "ERROR" || s.status_code === "EXPIRED")
         throw new Error(`Instagram ${video ? "video" : "media"} ${String(s.status_code)}`);
-      await wait(5_000);
     }
   }
 
@@ -168,8 +172,8 @@ export function metaProvider(
         );
         return { ok: true, id: String(published.id) };
       } catch (err) {
-        if (attempt >= 4 || !(err instanceof Error && /#9007\b/.test(err.message))) throw err;
-        await wait(5_000);
+        if (attempt >= 2 || !(err instanceof Error && /#9007\b/.test(err.message))) throw err;
+        await wait(10_000);
       }
     }
   }
@@ -263,7 +267,7 @@ export function metaProvider(
         return fail(err);
       }
     },
-    async publishCarousel(network: Network, images: CarouselImage[], caption: string, link?: string) {
+    async publishCarousel(network: Network, images: CarouselImage[], caption: string) {
       try {
         if (network === "instagram") {
           // Each image is a carousel item first, then one container holds them all.
@@ -277,62 +281,18 @@ export function metaProvider(
                 cfg.token,
               ),
             );
-            // Each item must be fetched before the carousel container is made from them.
-            await ready(String(item.id), false);
             children.push(String(item.id));
           }
+          // Meta fetches the items side by side: once the first is ready the rest usually are,
+          // so each is read about once. Every item must be ready before the container is made.
+          for (const id of children) await ready(id, false);
           return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);
         }
         const token = await page();
-        // A link carousel only when this Page owns trilio.lv (domain verified, Page assigned):
-        // without that, Facebook ignores each card's picture and draws it from its own crawl
-        // of the card's link, which Trilio cannot make reliable (docs/FACEBOOK_CAROUSEL_PLAN.md).
-        // Otherwise the slides go out as a multi-photo post below: the pictures always show.
-        if (link && images.every((i) => i.card) && (await canCustomize(images[0]!.card!.link, token))) {
-          // Each card names its own square picture on trilio.lv, drawn and cached first:
-          // Facebook fetches it once, when the post is made. (A copy on Facebook's own
-          // CDN is not taken as a card picture: tried 8 Nov 2026, no pictures at all.)
-          await warm(images.map((i) => i.card!.picture));
-          const cards = images.map(({ card }) => card!);
-          let posted: string | null = null;
-          try {
-            const r = await call(
-              "POST",
-              `${cfg.pageId}/feed`,
-              {
-                message: caption,
-                link,
-                child_attachments: JSON.stringify(
-                  cards.map((card) => ({
-                    link: card.link,
-                    name: card.name,
-                    ...(card.description ? { description: card.description } : {}),
-                    picture: card.picture,
-                  })),
-                ),
-                multi_share_optimized: "false",
-                multi_share_end_card: "false",
-              },
-              token,
-            );
-            posted = String(r.id);
-          } catch (err) {
-            // A token or page problem fails the same way below; anything else
-            // (the format refused) still posts the slides, without links.
-            if (err instanceof Error && /\b(190|200|10)\b|#(190|200|10)\b/.test(err.message)) throw err;
-          }
-          if (posted) {
-            // Read back: a carousel drawn without its pictures is removed at once and the
-            // slides go out as photos instead. A preview that cannot be read is kept.
-            const preview = await previewHasPicture(posted, linkPreview);
-            if (preview === null || preview.image) return { ok: true, id: posted };
-            // Which cards Facebook drew without a picture: the next diagnosis starts from data.
-            console.warn(
-              `[social] Facebook carousel ${posted} drawn without pictures (cards ${(preview.missing ?? []).join(", ") || "?"}); posting the slides as photos`,
-            );
-            await call("DELETE", posted, {}, token).catch(() => undefined);
-          }
-        }
+        // The page always gets the slides as photos (owner, 9 Nov 2026). A link carousel's
+        // cards are pictures Facebook fetches on its own, and three tries to make that
+        // reliable still left cards blank; uploaded photos always show. The caption carries
+        // the link to the site.
         // The page: each photo uploaded unpublished, then one feed post with all of them.
         const media: Record<string, string> = {};
         for (const [i, { url }] of images.entries()) {
@@ -461,6 +421,26 @@ export function metaProvider(
         return true;
       } catch {
         return false;
+      }
+    },
+    async findInstagram(caption: string, since: Date) {
+      try {
+        const r = await call(
+          "GET",
+          `${cfg.igUserId}/media`,
+          { fields: "id,caption,timestamp", limit: "10" },
+          cfg.token,
+        );
+        const norm = (t: string) => t.replace(/\s+/g, " ").trim();
+        const want = norm(caption);
+        const hit = ((r.data as { id: string; caption?: string; timestamp?: string }[]) ?? []).find(
+          (m) =>
+            norm(m.caption ?? "") === want &&
+            (!m.timestamp || new Date(m.timestamp).getTime() >= since.getTime()),
+        );
+        return hit ? { id: String(hit.id) } : { id: null };
+      } catch {
+        return null;
       }
     },
     async tokenOk() {

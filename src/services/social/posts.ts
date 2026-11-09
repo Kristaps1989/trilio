@@ -377,6 +377,12 @@ export const slideUrls = (baseUrl: string, id: string, n: number) =>
   );
 
 /** Meta's token, permission and rate errors: another format would fail the same way. */
+const RETRY_AFTER_MS = 3600_000;
+
+/** Meta's rate limits (#4, #17, #32, #613) and network trouble: worth trying again later. */
+export const TRANSIENT =
+  /#(4|17|32|613)\b|request limit|rate limit|timed? ?out|ETIMEDOUT|ECONNRESET|fetch failed/i;
+
 const TOKEN_ERROR = /#(190|200|10|4|17|32)\b/;
 
 /** A link post's caption: the link is the preview below it, so the line with the bare URL goes. */
@@ -478,15 +484,11 @@ export async function publishPost(
     }
     if (post.videoUrl) return provider.publishVideo(n, post.videoUrl, caption);
     if (slides > 1)
+      // Photos on both networks: the page's caption carries the link (owner, 9 Nov 2026).
       return provider.publishCarousel(
         n,
-        slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({
-          url,
-          alt: alts[i],
-          ...(n === "facebook" ? { card: carouselCard(deps.baseUrl, post, card.slides![i]!, i) } : {}),
-        })),
+        slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({ url, alt: alts[i] })),
         caption,
-        n === "facebook" ? fbLink : undefined,
       );
     return provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption, post.alt);
   };
@@ -498,10 +500,27 @@ export async function publishPost(
     if (r.ok) fb = r.id;
     else errors.push(`Facebook: ${r.error}`);
   }
+  let retry = false;
   if (!ig && only.includes("instagram")) {
-    const r = await send("instagram", post.captionIg);
-    if (r.ok) ig = r.id;
-    else errors.push(`Instagram: ${r.error}`);
+    // A retry first looks for the post on Instagram: a publish that failed on our side
+    // (a rate limit, a timeout) may still have gone out, and must not go out twice.
+    const since = new Date(Math.min(post.slotAt.getTime(), now.getTime()) - 3600_000);
+    const found = post.error ? await provider.findInstagram(post.captionIg, since) : null;
+    if (found?.id) ig = found.id;
+    else {
+      const r = await send("instagram", post.captionIg);
+      if (r.ok) ig = r.id;
+      else {
+        // Look once more: Meta may have published before the error came back.
+        const after = await provider.findInstagram(post.captionIg, since);
+        if (after?.id) ig = after.id;
+        else {
+          errors.push(`Instagram: ${r.error}`);
+          // Meta's limits and timeouts pass: the post stays approved and the next tick (15 min) tries again.
+          retry = TRANSIENT.test(r.error);
+        }
+      }
+    }
   }
   const [row] = await db
     .update(socialPosts)
@@ -509,9 +528,10 @@ export async function publishPost(
       fbPostId: fb,
       igMediaId: ig,
       // A Facebook-only re-post keeps the post's own status and Instagram's note.
-      status: only.length < 2 ? post.status : errors.length ? "failed" : "published",
+      status: only.length < 2 ? post.status : errors.length ? (retry ? "approved" : "failed") : "published",
       error: errors.length ? errors.join(" · ") : only.length < 2 ? post.error : null,
       publishedAt: fb || ig ? (post.publishedAt ?? now) : null,
+      attemptedAt: now,
     })
     .where(eq(socialPosts.id, post.id))
     .returning();
@@ -529,9 +549,17 @@ export async function publishDue(
   const due = await db
     .select()
     .from(socialPosts)
-    .where(and(inArray(socialPosts.status, ["draft", "approved"]), lte(socialPosts.slotAt, now)))
+    .where(and(inArray(socialPosts.status, ["draft", "approved", "failed"]), lte(socialPosts.slotAt, now)))
     .orderBy(socialPosts.slotAt);
-  for (const p of due) {
+  // A post Meta's limit held back waits an hour between tries: retrying sooner only spends more calls.
+  const retryable = (x: SocialPost) =>
+    !x.error ||
+    !TRANSIENT.test(x.error) ||
+    !x.attemptedAt ||
+    now.getTime() - x.attemptedAt.getTime() >= RETRY_AFTER_MS;
+  for (const p of due.filter(
+    (x) => (x.status !== "failed" || TRANSIENT.test(x.error ?? "")) && retryable(x),
+  )) {
     const skip = async (error: string) => {
       await db.update(socialPosts).set({ status: "skipped", error }).where(eq(socialPosts.id, p.id));
       out.skipped++;
@@ -544,6 +572,18 @@ export async function publishDue(
       // Already on one network (the other failed and was retried): it stays published there;
       // only the late network is left out.
       if (p.fbPostId || p.igMediaId) {
+        // Instagram may have taken it after all (the error came back, the post went out).
+        if (!p.igMediaId && deps.provider) {
+          const since = new Date(p.slotAt.getTime() - 3600_000);
+          const found = await deps.provider.findInstagram(p.captionIg, since);
+          if (found?.id) {
+            await db
+              .update(socialPosts)
+              .set({ igMediaId: found.id, status: "published", error: null })
+              .where(eq(socialPosts.id, p.id));
+            continue;
+          }
+        }
         const missing = p.fbPostId ? "Instagram" : "Facebook";
         await db
           .update(socialPosts)
@@ -554,7 +594,8 @@ export async function publishDue(
       await skip("Nokavēts: vairāk nekā 6 stundas pēc laika.");
       continue;
     }
-    const r = await refresh(db, deps, p, now);
+    // Half out already (one network done, the other being retried): its text stays as it went.
+    const r = p.fbPostId || p.igMediaId ? { ok: true as const, post: p } : await refresh(db, deps, p, now);
     if (!r.ok) {
       await skip(r.reason);
       continue;
@@ -633,10 +674,7 @@ export async function removePost(db: Db, deps: SocialDeps, id: string): Promise<
   return fb && ig;
 }
 
-/**
- * Published Facebook posts of the last 30 days whose pictures Facebook fetched
- * from the site: link posts (the preview) and link carousels (the cards). Videos are uploaded.
- */
+/** Published Facebook link posts of the last 30 days: their preview picture is fetched from the site. */
 async function publishedFacebookPosts(db: Db, now: Date, id?: string): Promise<SocialPost[]> {
   const since = new Date(now.getTime() - 30 * 86_400_000);
   const rows = await db
@@ -651,7 +689,9 @@ async function publishedFacebookPosts(db: Db, now: Date, id?: string): Promise<S
         ...(id ? [eq(socialPosts.id, id)] : []),
       ),
     );
-  return rows.filter((p) => !p.videoUrl);
+  // Only link posts: a carousel goes out as uploaded photos (owner, 9 Nov 2026), so Facebook
+  // fetches nothing for it and there is nothing to check (every check is a Meta call).
+  return rows.filter((p) => isLinkPost(p));
 }
 
 /** What Facebook reads for a post: the link and preview picture, or each carousel card's. */
