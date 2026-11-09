@@ -24,7 +24,17 @@ export function composeNotifyConfirmEmail(input: {
   const m = input.lang === "en" ? en.notifyEmail : lv.notifyEmail;
   const c = input.offers
     ? m
-    : { ...m, title: m.titlePlain, subject: m.subjectPlain, product: m.productPlain };
+    : {
+        ...m,
+        title: m.titlePlain,
+        subject: m.subjectPlain,
+        product: m.productPlain,
+        // Without Trilio's offers nothing at all is sent before the click.
+        cta: m.ctaPlain,
+        button: m.buttonPlain,
+        link: m.linkPlain,
+        notYou: m.notYouPlain,
+      };
   const t = input.target;
   const url = `${input.baseUrl}${localizedPath(`/pazinot/${input.token}`, input.lang)}`;
   const name = t.kind === "product" ? offerProductName(t.name) : t.label;

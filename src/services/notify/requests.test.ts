@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import { notifyRequests, savedItems, uiEvents, users, products } from "@/db/schema";
 import { memoryEmailSender } from "@/services/notify/email";
+import { CONSENT_VERSION } from "@/domain/notify/notify";
 import { notifyFunnel, purgeUiEvents } from "./events";
 import {
   confirmNotify,
@@ -108,7 +109,7 @@ run("notify requests", () => {
     expect(m.html).toContain(`${BASE}/email/logo.png`);
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
-      consent: "notify.bodySearch@2026-10-31",
+      consent: `notify.bodySearch@${CONSENT_VERSION}`,
       offers: false,
       confirmedAt: null,
     });
@@ -136,9 +137,11 @@ run("notify requests", () => {
     );
     expect(await requestByToken(db, tokenOf())).toMatchObject({
       offers: true,
-      consent: "notify.body@2026-10-31",
+      consent: `notify.body@${CONSENT_VERSION}`,
     });
-    expect(mail.sent.at(-1)!.subject).toMatch(/^Apstiprini, lai sāktu meklēt zemāku cenu: /);
+    // The request is received: the proposal comes either way; the button follows the price too.
+    expect(mail.sent.at(-1)!.subject).toMatch(/^Pieprasījums saņemts: /);
+    expect(mail.sent.at(-1)!.text).toContain("bez apstiprinājuma sūtīsim tikai vienu pieprasīto piedāvājumu");
   });
 
   it("where the file leaves a category out, the consent covers price e-mails only", async () => {
@@ -157,7 +160,7 @@ run("notify requests", () => {
     const stored = (await requestByToken(db, tokenOf()))!;
     expect(stored).toMatchObject({
       offers: false,
-      consent: "notify.bodySearch@2026-10-31",
+      consent: `notify.bodySearch@${CONSENT_VERSION}`,
       returnPath: null,
       locale: "en",
     });

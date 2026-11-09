@@ -1,7 +1,16 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { offerEvents, products, savedItems, specialOffers, users, type SpecialOffer } from "@/db/schema";
+import {
+  notifyRequests,
+  offerEvents,
+  products,
+  savedItems,
+  specialOffers,
+  users,
+  type SpecialOffer,
+} from "@/db/schema";
+import { requestOfferable, type OfferableReason } from "@/domain/notify/notify";
 import { IMAGE_HOSTS } from "@/db/stores";
 import { imageSrc } from "@/domain/catalog/media";
 import { canAccept } from "@/domain/offers/offers";
@@ -20,6 +29,11 @@ export const token = () => randomBytes(32).toString("base64url");
 export type OfferInput = {
   productId: string;
   userIds: string[];
+  /**
+   * "Iegūt lētāk" requests whose address is not confirmed: one proposal each, to the
+   * address entered (docs/REQUEST_OFFER_PLAN.md). Only requests requestOfferable allows.
+   */
+  requestIds?: string[];
   priceCents: number;
   condition: "new" | "refurbished";
   grade: string | null;
@@ -32,15 +46,49 @@ export type OfferInput = {
   costCents: number | null;
 };
 
+export type SkipReason =
+  "no_consent" | "unknown" | "other_product" | "offered" | Exclude<OfferableReason, "ok">;
+
 export type CreateResult =
-  | { ok: true; offerIds: string[]; skipped: { userId: string; reason: "no_consent" | "unknown" }[] }
+  | { ok: true; offerIds: string[]; skipped: { userId: string; reason: SkipReason }[] }
   | { ok: false; reason: "product" | "price" | "recipients" | "validity" };
+
+/**
+ * Which of these requests may get a proposal for this product now, and why not the
+ * rest: requestOfferable, the same product, and no proposal for the request yet.
+ */
+export async function offerableRequests(db: Db, requestIds: string[], productId: string, now = new Date()) {
+  const ids = [...new Set(requestIds)];
+  if (ids.length === 0) return { ok: [] as (typeof notifyRequests.$inferSelect)[], skipped: [] };
+  const rows = await db.select().from(notifyRequests).where(inArray(notifyRequests.id, ids));
+  const offered = await db
+    .select({ id: specialOffers.notifyRequestId })
+    .from(specialOffers)
+    .where(and(inArray(specialOffers.notifyRequestId, ids), sql`${specialOffers.status} <> 'cancelled'`));
+  const taken = new Set(offered.map((o) => o.id));
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const ok: (typeof notifyRequests.$inferSelect)[] = [];
+  const skipped: { userId: string; reason: SkipReason }[] = [];
+  for (const id of ids) {
+    const r = byId.get(id);
+    if (!r) {
+      skipped.push({ userId: id, reason: "unknown" });
+      continue;
+    }
+    const why = requestOfferable(r, now);
+    if (why !== "ok") skipped.push({ userId: id, reason: why });
+    else if (r.productId !== productId) skipped.push({ userId: id, reason: "other_product" });
+    else if (taken.has(r.id)) skipped.push({ userId: id, reason: "offered" });
+    else ok.push(r);
+  }
+  return { ok, skipped };
+}
 
 /** Drafts, one per recipient who opted in. Recipients without consent are skipped and reported. */
 export async function createOffers(db: Db, input: OfferInput, createdBy: string): Promise<CreateResult> {
   if (!Number.isInteger(input.priceCents) || input.priceCents <= 0) return { ok: false, reason: "price" };
   if (input.validUntil.getTime() <= Date.now()) return { ok: false, reason: "validity" };
-  if (input.userIds.length === 0) return { ok: false, reason: "recipients" };
+  if (input.userIds.length === 0 && !input.requestIds?.length) return { ok: false, reason: "recipients" };
   const ref = await referenceFor(db, input.productId);
   if (!ref) return { ok: false, reason: "product" };
 
@@ -49,22 +97,29 @@ export async function createOffers(db: Db, input: OfferInput, createdBy: string)
     .from(users)
     .where(inArray(users.id, input.userIds));
   const known = new Map(people.map((p) => [p.id, p.optIn]));
-  const skipped: { userId: string; reason: "no_consent" | "unknown" }[] = [];
+  const skipped: { userId: string; reason: SkipReason }[] = [];
   const recipients: string[] = [];
   for (const id of new Set(input.userIds)) {
     if (!known.has(id)) skipped.push({ userId: id, reason: "unknown" });
     else if (!known.get(id)) skipped.push({ userId: id, reason: "no_consent" });
     else recipients.push(id);
   }
-  if (recipients.length === 0) return { ok: true, offerIds: [], skipped };
+  // Requests whose address is not confirmed: one proposal each, to the address entered.
+  const requests = await offerableRequests(db, input.requestIds ?? [], ref.product.id);
+  skipped.push(...requests.skipped);
+  const targets: { userId: string | null; email: string | null; notifyRequestId: string | null }[] = [
+    ...recipients.map((userId) => ({ userId, email: null, notifyRequestId: null })),
+    ...requests.ok.map((r) => ({ userId: null, email: r.email, notifyRequestId: r.id })),
+  ];
+  if (targets.length === 0) return { ok: true, offerIds: [], skipped };
 
-  const batchId = recipients.length > 1 ? randomUUID() : null;
+  const batchId = targets.length > 1 ? randomUUID() : null;
   const rows = await db
     .insert(specialOffers)
     .values(
-      recipients.map((userId) => ({
+      targets.map((target) => ({
         token: token(),
-        userId,
+        ...target,
         productId: ref.product.id,
         productName: ref.product.name,
         subcategoryId: ref.product.subcategoryId,
@@ -148,6 +203,73 @@ export type SendResult =
   | { ok: false; reason: "not_draft" | "no_consent" | "paused" | "expired" | "email_failed" };
 
 /**
+ * Who an offer goes to and how the e-mail closes: an account (with its consent and
+ * unsubscribe link), or an "Iegūt lētāk" request whose address is not confirmed
+ * (docs/REQUEST_OFFER_PLAN.md: one proposal, the reason it came, a link that
+ * confirms the address, and an unsubscribe that deletes the request). A request
+ * confirmed since hands its offer to the new account. Null with the reason it cannot go.
+ */
+async function recipientOf(
+  db: Db,
+  offer: SpecialOffer,
+  baseUrl: string,
+  now: Date,
+): Promise<
+  | {
+      ok: true;
+      to: string;
+      lang: "lv" | "en";
+      unsubscribeUrl?: string;
+      request?: { at: Date; followUrl: string };
+      userId: string | null;
+    }
+  | { ok: false; reason: "no_consent" | "expired" }
+> {
+  let userId = offer.userId;
+  if (!userId && offer.notifyRequestId) {
+    const [request] = await db
+      .select()
+      .from(notifyRequests)
+      .where(eq(notifyRequests.id, offer.notifyRequestId));
+    if (!request) return { ok: false, reason: "expired" };
+    if (request.confirmedAt && request.userId) {
+      userId = request.userId;
+      await db.update(specialOffers).set({ userId }).where(eq(specialOffers.id, offer.id));
+    } else {
+      if (requestOfferable(request, now) !== "ok") return { ok: false, reason: "expired" };
+      const lang = request.locale === "en" ? "en" : "lv";
+      return {
+        ok: true,
+        to: offer.email ?? request.email,
+        lang,
+        request: {
+          at: request.createdAt,
+          followUrl: `${baseUrl}${localizedPath(`/pazinot/${request.token}`, lang)}`,
+        },
+        // The lawyer (9 Nov 2026): typing the address is consent enough, but it must be easy to stop.
+        unsubscribeUrl: `${baseUrl}${localizedPath(`/piedavajumi/atteikties/${request.token}`, lang)}`,
+        userId: null,
+      };
+    }
+  }
+  if (!userId) return { ok: false, reason: "no_consent" };
+  const [user] = await db
+    .select({ email: users.email, optIn: users.offersOptIn, locale: users.locale })
+    .from(users)
+    .where(eq(users.id, userId));
+  if (!user?.optIn) return { ok: false, reason: "no_consent" };
+  const unsub = await ensureOffersToken(db, userId);
+  const lang = user.locale === "en" ? "en" : "lv";
+  return {
+    ok: true,
+    to: user.email,
+    lang,
+    unsubscribeUrl: `${baseUrl}${localizedPath(`/piedavajumi/atteikties/${unsub}`, lang)}`,
+    userId,
+  };
+}
+
+/**
  * Sends a draft. Without an e-mail service (development) the offer still
  * counts as sent and the admin copies the link; a failed send keeps the draft.
  */
@@ -158,22 +280,19 @@ export async function sendOffer(
 ): Promise<SendResult> {
   const now = deps.now ?? new Date();
   const offer = await offerById(db, offerId);
-  if (!offer || offer.status !== "draft" || !offer.userId) return { ok: false, reason: "not_draft" };
+  if (!offer || offer.status !== "draft" || (!offer.userId && !offer.notifyRequestId))
+    return { ok: false, reason: "not_draft" };
   if (offer.validUntil.getTime() <= now.getTime()) return { ok: false, reason: "expired" };
   if (await offersPaused(db)) return { ok: false, reason: "paused" };
-  const [user] = await db
-    .select({ email: users.email, optIn: users.offersOptIn, locale: users.locale })
-    .from(users)
-    .where(eq(users.id, offer.userId));
-  if (!user?.optIn) return { ok: false, reason: "no_consent" };
-  const unsub = await ensureOffersToken(db, offer.userId);
-  const lang = user.locale === "en" ? "en" : "lv";
-  const message = composeOfferEmail(await withImage(db, offer), {
+  const to = await recipientOf(db, offer, deps.baseUrl, now);
+  if (!to.ok) return to;
+  const message = composeOfferEmail(await withImage(db, { ...offer, userId: to.userId }), {
     ...deps,
-    to: user.email,
-    lang,
-    unsubscribeUrl: `${deps.baseUrl}${localizedPath(`/piedavajumi/atteikties/${unsub}`, lang)}`,
-    saved: await savedContext(db, offer),
+    to: to.to,
+    lang: to.lang,
+    unsubscribeUrl: to.unsubscribeUrl,
+    request: to.request,
+    saved: to.userId ? await savedContext(db, { ...offer, userId: to.userId }) : null,
     now,
   });
   const sent = await deps.email.send(message);
@@ -195,7 +314,27 @@ export async function previewOffer(
   ctx: OfferMailContext & { now?: Date },
 ): Promise<EmailMessage | null> {
   const offer = await offerById(db, offerId);
-  if (!offer?.userId) return null;
+  if (!offer?.userId && !offer?.notifyRequestId) return null;
+  if (!offer.userId) {
+    // A proposal answering an unconfirmed request, as it would go out (or "…" once the request is gone).
+    const [request] = await db
+      .select()
+      .from(notifyRequests)
+      .where(eq(notifyRequests.id, offer.notifyRequestId!));
+    const lang = request?.locale === "en" ? "en" : "lv";
+    return composeOfferEmail(await withImage(db, offer), {
+      ...ctx,
+      to: offer.email ?? "",
+      lang,
+      request: {
+        at: request?.createdAt ?? offer.createdAt,
+        followUrl: `${ctx.baseUrl}${localizedPath(`/pazinot/${request?.token ?? "…"}`, lang)}`,
+      },
+      unsubscribeUrl: `${ctx.baseUrl}${localizedPath("/piedavajumi/atteikties/…", lang)}`,
+      saved: null,
+      now: ctx.now ?? new Date(),
+    });
+  }
   const [user] = await db
     .select({ email: users.email, locale: users.locale })
     .from(users)
@@ -262,9 +401,14 @@ export async function offerSignIn(
   value: string,
   now = new Date(),
 ): Promise<{ id: string; email: string; name: string | null } | null> {
-  const offer = await offerByToken(db, value);
-  if (!offer?.userId || !canAccept(offer, now)) return null;
-  if (await offerSignInUsed(db, offer.id)) return null;
+  const found = await offerByToken(db, value);
+  if (!found || !canAccept(found, now)) return null;
+  if (await offerSignInUsed(db, found.id)) return null;
+  // A proposal sent to an unconfirmed request's address (docs/REQUEST_OFFER_PLAN.md): the link
+  // came to that inbox, so it proves the address as a magic link does. The account is found or
+  // made for it and the offer attached; Trilio's other offers stay off until the person says yes.
+  const offer = found.userId ? found : await attachOfferAccount(db, found, now);
+  if (!offer?.userId) return null;
   const [user] = await db
     .select({ id: users.id, email: users.email, name: users.name })
     .from(users)
@@ -272,6 +416,28 @@ export async function offerSignIn(
   if (!user) return null;
   await db.insert(offerEvents).values({ offerId: offer.id, kind: "signin", source: "buyer" });
   return user;
+}
+
+/** The account for an account-less offer's address, found or made, with the offer attached. */
+async function attachOfferAccount(db: Db, offer: SpecialOffer, now: Date): Promise<SpecialOffer | null> {
+  const email = offer.email?.trim().toLowerCase();
+  if (!email || !offer.notifyRequestId || offer.status === "draft") return null;
+  let [user] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
+  if (!user) {
+    [user] = await db
+      .insert(users)
+      .values({ email, emailVerified: now })
+      .onConflictDoNothing()
+      .returning({ id: users.id });
+    if (!user) [user] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
+  }
+  if (!user) return null;
+  const [attached] = await db
+    .update(specialOffers)
+    .set({ userId: user.id })
+    .where(and(eq(specialOffers.id, offer.id), isNull(specialOffers.userId)))
+    .returning();
+  return attached ?? (await offerById(db, offer.id));
 }
 
 export async function offerSignInUsed(db: Db, offerId: string): Promise<boolean> {
@@ -297,7 +463,23 @@ export async function offersOptIn(db: Db, userId: string): Promise<boolean> {
   return row?.v ?? false;
 }
 
-/** One-click unsubscribe from an e-mail; needs no sign-in. Open offers to that person are cancelled. */
+/** Whose link this is: an account's offers token, or an unconfirmed "Iegūt lētāk" request's. */
+export async function unsubscribeKind(db: Db, value: string): Promise<"account" | "request" | null> {
+  if (!/^[A-Za-z0-9_-]{20,64}$/.test(value)) return null;
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.offersToken, value));
+  if (user) return "account";
+  const [request] = await db
+    .select({ id: notifyRequests.id })
+    .from(notifyRequests)
+    .where(and(eq(notifyRequests.token, value), isNull(notifyRequests.confirmedAt)));
+  return request ? "request" : null;
+}
+
+/**
+ * One-click unsubscribe from an e-mail; needs no sign-in. Open offers to that person are cancelled.
+ * For a proposal to an unconfirmed request the link carries the request's token: the request is
+ * deleted, so nothing more goes to that address and its confirmation link stops working.
+ */
 export async function unsubscribeByToken(db: Db, value: string): Promise<boolean> {
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(value)) return false;
   const rows = await db
@@ -306,7 +488,7 @@ export async function unsubscribeByToken(db: Db, value: string): Promise<boolean
     .where(eq(users.offersToken, value))
     .returning({ id: users.id });
   const userId = rows[0]?.id;
-  if (!userId) return false;
+  if (!userId) return unsubscribeRequest(db, value);
   const open = await db
     .update(specialOffers)
     .set({ status: "cancelled", cancelledAt: new Date() })
@@ -316,6 +498,31 @@ export async function unsubscribeByToken(db: Db, value: string): Promise<boolean
     await db
       .insert(offerEvents)
       .values(open.map((o) => ({ offerId: o.id, kind: "cancelled", source: "buyer", note: "unsubscribed" })));
+  return true;
+}
+
+async function unsubscribeRequest(db: Db, value: string): Promise<boolean> {
+  const [request] = await db
+    .select({ id: notifyRequests.id })
+    .from(notifyRequests)
+    .where(and(eq(notifyRequests.token, value), isNull(notifyRequests.confirmedAt)));
+  if (!request) return false;
+  const open = await db
+    .update(specialOffers)
+    .set({ status: "cancelled", cancelledAt: new Date() })
+    .where(
+      and(
+        eq(specialOffers.notifyRequestId, request.id),
+        isNull(specialOffers.userId),
+        inArray(specialOffers.status, ["draft", "sent", "opened"]),
+      ),
+    )
+    .returning({ id: specialOffers.id });
+  if (open.length)
+    await db
+      .insert(offerEvents)
+      .values(open.map((o) => ({ offerId: o.id, kind: "cancelled", source: "buyer", note: "unsubscribed" })));
+  await db.delete(notifyRequests).where(eq(notifyRequests.id, request.id));
   return true;
 }
 

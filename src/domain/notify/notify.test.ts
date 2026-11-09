@@ -7,6 +7,8 @@ import {
   REQUEST_TTL_MS,
   SIGN_IN_TTL_MS,
   consentFor,
+  consentVersion,
+  requestOfferable,
   normaliseEmail,
   rateLimit,
   requestState,
@@ -87,5 +89,29 @@ describe("notify rules", () => {
     expect(trilioSources("kettle", { sourcing: ["fridge"] })).toBe(false);
     expect(trilioSources("fridge", { sourcing: ["fridge"] })).toBe(true);
     expect(trilioSources("kettle", { sourcing: ["*"], except: ["kettle"] })).toBe(false);
+  });
+});
+
+describe("a proposal without a confirmed address (docs/REQUEST_OFFER_PLAN.md)", () => {
+  const now = new Date("2026-11-10T10:00:00Z");
+  const base = {
+    kind: "product",
+    offers: true,
+    consent: "notify.body@2026-11-09",
+    createdAt: new Date("2026-11-09T12:00:00Z"),
+    confirmedAt: null,
+  };
+  it("is allowed for a product request whose text promised a proposal", () => {
+    expect(requestOfferable(base, now)).toBe("ok");
+    expect(consentVersion("notify.body@2026-11-09")).toBe("2026-11-09");
+  });
+  it("is refused when the text shown never said so, for searches and plain categories, once confirmed or expired", () => {
+    expect(requestOfferable({ ...base, consent: "notify.body@2026-10-31" }, now)).toBe("old_text");
+    expect(requestOfferable({ ...base, kind: "search" }, now)).toBe("search");
+    expect(requestOfferable({ ...base, offers: false, consent: "notify.bodyPlain@2026-11-09" }, now)).toBe(
+      "no_offers",
+    );
+    expect(requestOfferable({ ...base, confirmedAt: now }, now)).toBe("confirmed");
+    expect(requestOfferable(base, new Date("2026-11-17T12:00:01Z"))).toBe("expired");
   });
 });

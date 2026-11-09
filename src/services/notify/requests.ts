@@ -1,6 +1,6 @@
 import { and, count, eq, gte, isNull, lt } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { notifyRequests, users, type NotifyRequest } from "@/db/schema";
+import { notifyRequests, specialOffers, users, type NotifyRequest } from "@/db/schema";
 import {
   REQUEST_TTL_MS,
   consentFor,
@@ -157,6 +157,11 @@ export async function confirmNotify(
     .set({ confirmedAt: now, userId })
     .where(eq(notifyRequests.id, request.id))
     .returning();
+  // A proposal already sent to this request's address now belongs to the account (docs/REQUEST_OFFER_PLAN.md).
+  await db
+    .update(specialOffers)
+    .set({ userId })
+    .where(and(eq(specialOffers.notifyRequestId, request.id), isNull(specialOffers.userId)));
   return { ok: true, request: updated!, userId };
 }
 

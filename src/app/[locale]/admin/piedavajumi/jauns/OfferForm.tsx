@@ -17,8 +17,11 @@ import { inputClass, labelClass } from "../../ui";
 export type Recipient = {
   id: string;
   email: string;
+  /** May get this offer: an account that agreed to offers, or a request that may get one proposal. */
   optIn: boolean;
   saved: { at: string; priceCents: number | null } | null;
+  /** An "Iegūt lētāk" request whose address is not confirmed (docs/REQUEST_OFFER_PLAN.md). */
+  request?: { at: string; reason: string };
 };
 
 type Props = {
@@ -115,7 +118,9 @@ export function OfferForm({
         inbox,
         company,
         to: first.email,
-        unsubscribeUrl: `${baseUrl}/piedavajumi/atteikties/…`,
+        ...(first.request
+          ? { request: { at: new Date(first.request.at), followUrl: `${baseUrl}/pazinot/…` } }
+          : { unsubscribeUrl: `${baseUrl}/piedavajumi/atteikties/…` }),
         saved: first.saved ? { at: new Date(first.saved.at), priceCents: first.saved.priceCents } : null,
         now: new Date(),
       },
@@ -146,7 +151,7 @@ export function OfferForm({
                 >
                   <input
                     type="checkbox"
-                    name="userIds"
+                    name={r.request ? "requestIds" : "userIds"}
                     value={r.id}
                     checked={chosen.has(r.id)}
                     disabled={!r.optIn}
@@ -155,7 +160,15 @@ export function OfferForm({
                   />
                   <span>
                     {r.email}
-                    {!r.optIn ? <span className="block text-sm">{t("noConsent")}</span> : null}
+                    {r.request ? (
+                      <span className="block text-sm text-stone">
+                        {r.optIn
+                          ? t("request", { date: new Date(r.request.at).toLocaleDateString("lv-LV") })
+                          : t("requestNo", { reason: r.request.reason })}
+                      </span>
+                    ) : !r.optIn ? (
+                      <span className="block text-sm">{t("noConsent")}</span>
+                    ) : null}
                   </span>
                 </label>
               </li>

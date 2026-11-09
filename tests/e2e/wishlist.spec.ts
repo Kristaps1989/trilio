@@ -120,7 +120,8 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await expect(pitch).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
   const panel = first.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
   await expect(panel).toContainText(
-    "Pajautāsim izplatītājam un uzrakstīsim, tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali vai kad tās cena veikalos samazināsies.",
+    // The text names the proposal and the address (docs/REQUEST_OFFER_PLAN.md).
+    "Pajautāsim izplatītājam un 2 darba dienu laikā atsūtīsim piedāvājumu par šo preci uz šo e-pastu.",
   );
   await expectNoAxeViolations(page);
   await panel.getByLabel("E-pasts").fill("nav-epasts");
@@ -129,14 +130,14 @@ test("signed out: one e-mail field on the card, one confirmation link, back on t
   await panel.getByLabel("E-pasts").fill(email);
   await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(first.getByRole("status")).toHaveText(
-    `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
+    `Paldies! Piedāvājumu atsūtīsim uz ${email} 2 darba dienu laikā. Lai pēc tam sekotu arī cenai, apstiprini adresi saitē, ko tikko nosūtījām.`,
   );
 
   // A mail scanner that only fetches the link confirms nothing: the page is the one-button form.
   const link = await confirmationLink(page, email);
   const scanned = await page.request.get(link);
   const html = await scanned.text();
-  expect(html).toContain("Apstiprini, lai sāktu meklēt zemāku cenu");
+  expect(html).toContain("Piedāvājumu atsūtīsim 2 darba dienu laikā");
   expect(html).toContain("Tu pajautāji cenu:");
   // In a browser the e-mail's "Apstiprināt" is the only click (owner, 4 Nov 2026): the page confirms by itself.
   await page.goto(link);
@@ -189,7 +190,9 @@ test("fridges: Trilio's own offer is promised, and one yes on the card covers bo
   const first = picks(page).first();
   await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   const panel = first.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
-  await expect(panel).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
+  // Signed in: the address is already proven, so nothing to confirm.
+  await expect(panel).toContainText("Sekosim arī cenai un uzrakstīsim");
+  await expect(panel).not.toContainText("apstiprināsi");
   await expectNoAxeViolations(page);
   await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(
@@ -290,7 +293,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
   await panel.getByLabel("E-pasts").fill(email);
   await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(sheet.getByRole("status")).toHaveText(
-    `Nosūtījām apstiprinājuma saiti uz ${email}. Pēc apstiprināšanas sāksim meklēt zemāku cenu.`,
+    `Paldies! Piedāvājumu atsūtīsim uz ${email} 2 darba dienu laikā. Lai pēc tam sekotu arī cenai, apstiprini adresi saitē, ko tikko nosūtījām.`,
   );
   await expect(sheet.getByRole("link", { name: `Uz ${shop}` })).toBeVisible();
   await sheet.getByRole("button", { name: "Aizvērt" }).click();
@@ -342,7 +345,7 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   await product.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   // The first product tap asks the one yes, with the address already known; it covers Trilio's offers too.
   const ask = product.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
-  await expect(ask).toContainText("tiklīdz varēsim piedāvāt šo preci lētāk nekā veikali");
+  await expect(ask).toContainText("Sekosim arī cenai un uzrakstīsim");
   await ask.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
   await expect(
     product.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),

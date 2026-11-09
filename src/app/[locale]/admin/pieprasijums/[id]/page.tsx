@@ -33,14 +33,16 @@ export default async function AdminLead({ params, searchParams }: Props) {
   if (!record) notFound();
   const item = (await leadItems(db)).find((i) => i.id === id);
   const optedIn = record.savers.filter((s) => s.optIn).length;
+  const requestable = record.requests.filter((r) => r.reason === "ok").length;
+  const reachable = optedIn + requestable;
   const sp = await searchParams;
 
   return (
     <>
       <AdminTitle title={record.product.name} sub={t("leadSub", { count: record.savers.length })}>
-        {optedIn > 0 ? (
+        {reachable > 0 ? (
           <ButtonLink href={`/admin/piedavajumi/jauns?product=${id}&all=1`}>
-            {t("offerAll", { count: optedIn })}
+            {t("offerAll", { count: reachable })}
           </ButtonLink>
         ) : null}
       </AdminTitle>
@@ -101,6 +103,41 @@ export default async function AdminLead({ params, searchParams }: Props) {
               ])}
             />
           </Section>
+          {record.requests.length ? (
+            <Section title={t("leadRequests")} id="requests">
+              <div data-lead-request-list={record.requests.length}>
+                <Table
+                  caption={t("leadRequests")}
+                  head={[t("email"), t("requestedAt"), t("deleteAt"), ""]}
+                  rows={record.requests.map((r) => [
+                    r.email,
+                    formatDateShort(r.createdAt),
+                    formatDateShort(r.deleteAt),
+                    r.reason === "ok" ? (
+                      <Link
+                        key="o"
+                        href={`/admin/piedavajumi/jauns?product=${id}&request=${r.id}`}
+                        className="font-semibold underline underline-offset-2"
+                      >
+                        {t("offerRequest")}
+                      </Link>
+                    ) : r.reason === "offered" && r.offer ? (
+                      <Link
+                        key="o"
+                        href={`/admin/piedavajumi/${r.offer.id}`}
+                        className="underline underline-offset-2"
+                      >
+                        {t("requestReason.offered")}
+                      </Link>
+                    ) : (
+                      <Chip key="o">{t(`requestReason.${r.reason}` as "requestReason.old_text")}</Chip>
+                    ),
+                  ])}
+                />
+                <p className="mt-2 text-sm text-stone">{t("requestsMethod")}</p>
+              </div>
+            </Section>
+          ) : null}
           <Section title={t("leadOffers")} id="offers">
             <Table
               caption={t("leadOffers")}

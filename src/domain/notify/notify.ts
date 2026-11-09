@@ -3,7 +3,14 @@
 // where the text shown said so, and that text is stored with its version.
 
 /** Bump when the wording in notify.body* changes, so every stored consent names the text it saw. */
-export const CONSENT_VERSION = "2026-10-31";
+export const CONSENT_VERSION = "2026-11-09";
+
+/**
+ * From this consent version on, the text shown says that one proposal for the product
+ * is e-mailed to the address entered, confirmed or not (docs/REQUEST_OFFER_PLAN.md).
+ * Requests that saw an older text were told nothing would come before confirming.
+ */
+export const OFFER_WITHOUT_CONFIRM_FROM = "2026-11-09";
 
 export const REQUEST_TTL_MS = 7 * 24 * 3600 * 1000;
 /** After confirming, the same link signs the person in once, for this long. */
@@ -57,4 +64,31 @@ export function requestState(
   const canSignIn =
     !!r.confirmedAt && !r.signedInAt && now.getTime() - r.confirmedAt.getTime() <= SIGN_IN_TTL_MS;
   return { confirmable, canSignIn };
+}
+
+/** The version part of a stored consent key ("notify.body@2026-11-09" → "2026-11-09"). */
+export function consentVersion(key: string): string | null {
+  const m = /@(\d{4}-\d{2}-\d{2})$/.exec(key);
+  return m ? m[1]! : null;
+}
+
+export type OfferableReason = "ok" | "search" | "no_offers" | "old_text" | "confirmed" | "expired";
+
+/**
+ * Whether Trilio may e-mail one proposal for this request without its address
+ * being confirmed (docs/REQUEST_OFFER_PLAN.md §1): a product, a text that covered
+ * Trilio's offers and said a proposal would come, not confirmed (a confirmed
+ * request has an account and goes the usual way), still kept (7 days).
+ */
+export function requestOfferable(
+  r: { kind: string; offers: boolean; consent: string; createdAt: Date; confirmedAt: Date | null },
+  now: Date,
+): OfferableReason {
+  if (r.kind !== "product") return "search";
+  if (!r.offers) return "no_offers";
+  if (r.confirmedAt) return "confirmed";
+  const v = consentVersion(r.consent);
+  if (!v || v < OFFER_WITHOUT_CONFIRM_FROM) return "old_text";
+  if (now.getTime() - r.createdAt.getTime() > REQUEST_TTL_MS) return "expired";
+  return "ok";
 }

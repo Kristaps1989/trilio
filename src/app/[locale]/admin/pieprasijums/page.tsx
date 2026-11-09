@@ -64,6 +64,11 @@ export default async function AdminDemand({ searchParams }: Props) {
             <ProductCell key="p" item={item} />,
             <span key="s" className="flex flex-col text-sm">
               <span>{tc("savers", { total: s.total, optedIn: s.optedIn })}</span>
+              {s.requested ? (
+                <span data-lead-requests={s.requested}>
+                  {tc("requested", { count: s.requested, ok: s.requestable ?? 0 })}
+                </span>
+              ) : null}
               <span className="text-stone">{tc("saversDone", { offered: s.offered, bought: s.bought })}</span>
             </span>,
             p?.bestCents != null ? (

@@ -46,7 +46,7 @@ export function NotifyPanel({
   const [sent, setSent] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const search = target.kind === "search";
-  const body = search ? t("bodySearch") : offers ? t("body") : t("bodyPlain");
+  const body = search ? t("bodySearch") : offers ? t(email ? "bodySignedIn" : "body") : t("bodyPlain");
 
   if (sent)
     return (
