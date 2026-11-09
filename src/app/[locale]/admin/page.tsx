@@ -88,6 +88,7 @@ export default async function AdminTasks({ searchParams }: Props) {
           item.kind === "lead" && item.savers ? (
             <span key="s" className="text-sm">
               {t("savers", { total: item.savers.total, optedIn: item.savers.optedIn })}
+              {item.savers.requested ? ` · ${t("requested", { count: item.savers.requested })}` : ""}
             </span>
           ) : (
             (item.person ?? "—")

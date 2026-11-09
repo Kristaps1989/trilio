@@ -685,6 +685,15 @@ export const specialOffers = pgTable(
     /** The public link /piedavajums/{token}: 32 random bytes, base64url. */
     token: text("token").notNull().unique(),
     userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    /**
+     * An offer answering an "Iegūt lētāk" request whose address is not confirmed
+     * (docs/REQUEST_OFFER_PLAN.md): the request, and the address it goes to. The
+     * request is purged after 7 days; the address stays with the offer.
+     */
+    notifyRequestId: uuid("notify_request_id").references((): AnyPgColumn => notifyRequests.id, {
+      onDelete: "set null",
+    }),
+    email: text("email"),
     productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
     /** Snapshot, so the offer still reads right if the catalogue changes. */
     productName: text("product_name").notNull(),
@@ -715,7 +724,11 @@ export const specialOffers = pgTable(
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
   },
-  (t) => [index("special_offers_user_idx").on(t.userId), index("special_offers_status_idx").on(t.status)],
+  (t) => [
+    index("special_offers_user_idx").on(t.userId),
+    index("special_offers_status_idx").on(t.status),
+    index("special_offers_request_idx").on(t.notifyRequestId),
+  ],
 );
 
 export const orderStatusEnum = pgEnum("order_status", [

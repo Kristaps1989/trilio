@@ -50,7 +50,9 @@ const optionalEuros = z
 
 const OfferForm = z.object({
   productId: z.string().uuid(),
-  userIds: z.array(z.string().uuid()).min(1),
+  userIds: z.array(z.string().uuid()),
+  /** "Iegūt lētāk" requests whose address is not confirmed (docs/REQUEST_OFFER_PLAN.md). */
+  requestIds: z.array(z.string().uuid()),
   price: euros,
   cost: optionalEuros,
   condition: z.enum(["new", "refurbished"]),
@@ -72,15 +74,18 @@ export async function createOfferAction(_prev: OfferFormState, formData: FormDat
   const parsed = OfferForm.safeParse({
     ...Object.fromEntries(formData),
     userIds: formData.getAll("userIds").map(String),
+    requestIds: formData.getAll("requestIds").map(String),
   });
   if (!parsed.success) return { error: `invalid:${parsed.error.issues[0]?.path.join(".")}` };
   const v = parsed.data;
+  if (v.userIds.length + v.requestIds.length === 0) return { error: "invalid:userIds" };
   const validUntil = endOfRigaDay(new Date(`${v.validUntil}T12:00:00Z`));
   const created = await createOffers(
     db,
     {
       productId: v.productId,
       userIds: v.userIds,
+      requestIds: v.requestIds,
       priceCents: v.price,
       condition: v.condition,
       grade: v.grade || null,

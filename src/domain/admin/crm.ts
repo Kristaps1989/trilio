@@ -161,7 +161,15 @@ export type WorkItem = Classified & {
   amountCents: number | null;
   partner: PartnerMark | null;
   late?: boolean;
-  savers?: { total: number; optedIn: number; offered: number; bought: number };
+  savers?: {
+    total: number;
+    optedIn: number;
+    offered: number;
+    bought: number;
+    /** Unconfirmed "Iegūt lētāk" requests still kept, and how many of them may get one proposal. */
+    requested?: number;
+    requestable?: number;
+  };
   /** Extra text the search should find (phone, buyer name, company). */
   searchText?: string;
 };

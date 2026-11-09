@@ -98,7 +98,14 @@ export function composeOfferEmail(
   offer: OfferDraft,
   ctx: OfferMailContext & {
     to: string;
-    unsubscribeUrl: string;
+    /** Absent for a proposal answering an unconfirmed request: nothing else will follow it. */
+    unsubscribeUrl?: string;
+    /**
+     * A proposal answering an "Iegūt lētāk" request whose address is not confirmed
+     * (docs/REQUEST_OFFER_PLAN.md): when it was asked, and the link that confirms the
+     * address and follows the price. The e-mail says why it came and that no more will.
+     */
+    request?: { at: Date; followUrl: string };
     saved: { at: Date; priceCents: number | null } | null;
     now: Date;
     /** The reader's language (users.locale); the admin's own note stays as typed. */
@@ -122,12 +129,15 @@ export function composeOfferEmail(
   const headline = (
     savingText ? fill(c.heroCheaper, { saving: savingText }) : fill(c.hero, { price })
   ).replace(/ (?=\d)/g, "\u00a0");
-  const opening = ctx.saved?.priceCents
-    ? fill(c.saved, {
-        date: formatDayLocative(ctx.saved.at, lang),
-        then: formatEur(ctx.saved.priceCents, lang),
-      })
-    : c.intro;
+  const asked = ctx.request ? formatDayLocative(ctx.request.at, lang) : null;
+  const opening = asked
+    ? fill(c.requestIntro, { date: asked })
+    : ctx.saved?.priceCents
+      ? fill(c.saved, {
+          date: formatDayLocative(ctx.saved.at, lang),
+          then: formatEur(ctx.saved.priceCents, lang),
+        })
+      : c.intro;
   const priceLines = [
     offer.referencePriceCents ? fill(c.shopsNow, { ref: formatEur(offer.referencePriceCents, lang) }) : "",
     savingText ? fill(c.savingNote, { saving: savingText }) : "",
@@ -165,8 +175,14 @@ export function composeOfferEmail(
     offer.message,
     c.noPressure,
     questions,
+    ctx.request ? fill(c.followLine, { url: ctx.request.followUrl }) : null,
     sign,
-    [c.consent, fill(c.footer, { url: ctx.unsubscribeUrl }), ctx.company].filter(Boolean).join("\n"),
+    (asked
+      ? [fill(c.requestReason, { date: asked }), ctx.company]
+      : [c.consent, ctx.unsubscribeUrl ? fill(c.footer, { url: ctx.unsubscribeUrl }) : null, ctx.company]
+    )
+      .filter(Boolean)
+      .join("\n"),
   ]
     .filter((x): x is string => !!x)
     .join("\n\n");
@@ -184,6 +200,8 @@ export function composeOfferEmail(
     offer.message ? aside(null, offer.message) : "",
     paragraph(c.noPressure, "font-size:15px"),
     questions ? paragraph(questions, "font-size:15px") : "",
+    ctx.request ? paragraph(c.followAsk, "font-size:15px") : "",
+    ctx.request ? button(c.follow, ctx.request.followUrl) : "",
     paragraph(sign, "font-weight:600"),
   ].join("");
 
@@ -198,8 +216,10 @@ export function composeOfferEmail(
     preheader: fill(c.preheader, { date: valid }),
     tagline: c.tagline,
     body,
-    footer: [c.consent, ctx.company ?? ""],
-    unsubscribe: { label: c.unsubscribe, url: ctx.unsubscribeUrl },
+    footer: asked
+      ? [fill(c.requestReason, { date: asked }), ctx.company ?? ""]
+      : [c.consent, ctx.company ?? ""],
+    ...(ctx.unsubscribeUrl ? { unsubscribe: { label: c.unsubscribe, url: ctx.unsubscribeUrl } } : {}),
   });
 
   return {
@@ -208,9 +228,13 @@ export function composeOfferEmail(
     text,
     html,
     ...(replyTo ? { replyTo } : {}),
-    headers: {
-      "List-Unsubscribe": `<${ctx.unsubscribeUrl.replace(/(\/en)?\/piedavajumi\/atteikties\//, "/api/offers/unsubscribe/")}>`,
-      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-    },
+    ...(ctx.unsubscribeUrl
+      ? {
+          headers: {
+            "List-Unsubscribe": `<${ctx.unsubscribeUrl.replace(/(\/en)?\/piedavajumi\/atteikties\//, "/api/offers/unsubscribe/")}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        }
+      : {}),
   };
 }

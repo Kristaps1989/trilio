@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import {
   leadNotes,
@@ -6,6 +6,7 @@ import {
   offerOrders,
   partnerRequests,
   products,
+  notifyRequests,
   savedItems,
   specialOffers,
   users,
@@ -23,6 +24,7 @@ import {
   type WorkKind,
 } from "@/domain/admin/crm";
 import { isLate } from "@/domain/offers/offers";
+import { OFFER_WITHOUT_CONFIRM_FROM, REQUEST_TTL_MS, requestOfferable } from "@/domain/notify/notify";
 import { currentOffer } from "@/domain/wishlist/wishlist";
 
 // The CRM's data (docs/CRM_PLAN.md §6): leads, offers and orders as one list
@@ -95,6 +97,31 @@ export async function leadItems(
     .innerJoin(users, eq(users.id, savedItems.userId))
     .where(and(eq(savedItems.kind, "product"), isNotNull(savedItems.productId)))
     .groupBy(savedItems.productId);
+  // "Iegūt lētāk" requests whose address is not confirmed, still kept (docs/REQUEST_OFFER_PLAN.md):
+  // demand too, and the newer ones may get one proposal.
+  const since = new Date(Date.now() - REQUEST_TTL_MS);
+  const requested = await db
+    .select({
+      productId: notifyRequests.productId,
+      total: sql<number>`count(*)::int`,
+      offerable: sql<number>`(count(*) filter (where ${notifyRequests.offers} and split_part(${notifyRequests.consent}, '@', 2) >= ${OFFER_WITHOUT_CONFIRM_FROM}))::int`,
+      first: sql<Date>`min(${notifyRequests.createdAt})`,
+      last: sql<Date>`max(${notifyRequests.createdAt})`,
+    })
+    .from(notifyRequests)
+    .where(
+      and(
+        eq(notifyRequests.kind, "product"),
+        isNotNull(notifyRequests.productId),
+        isNull(notifyRequests.confirmedAt),
+        gte(notifyRequests.createdAt, since),
+      ),
+    )
+    .groupBy(notifyRequests.productId);
+  const byRequest = new Map(requested.map((r) => [r.productId!, r]));
+  for (const r of requested)
+    if (!saved.some((s) => s.productId === r.productId))
+      saved.push({ productId: r.productId, total: 0, optedIn: 0, first: r.first, last: r.last });
   const ids = saved.map((s) => s.productId!).filter(Boolean);
   if (ids.length === 0) return [];
   const offers = await db
@@ -117,9 +144,12 @@ export async function leadItems(
     if (!p) continue;
     const o = byProduct.get(p.id);
     const partner = mark(m.byProduct.get(p.id));
+    const req = byRequest.get(p.id);
+    const firstAt = Math.min(new Date(s.first).getTime(), req ? new Date(req.first).getTime() : Infinity);
+    const lastAt = Math.max(new Date(s.last).getTime(), req ? new Date(req.last).getTime() : 0);
     const c = classifyLead({
-      firstSavedAt: new Date(s.first),
-      lastSavedAt: new Date(s.last),
+      firstSavedAt: new Date(firstAt),
+      lastSavedAt: new Date(lastAt),
       openOffers: Number(o?.open ?? 0),
       paidOffers: Number(o?.paid ?? 0),
       lastOfferAt: o?.last ? new Date(o.last) : null,
@@ -133,12 +163,14 @@ export async function leadItems(
       number: null,
       product: productOf(p, p),
       person: null,
-      date: new Date(s.last),
+      date: new Date(lastAt),
       amountCents: null,
       partner,
       savers: {
         total: Number(s.total),
         optedIn: Number(s.optedIn),
+        requested: Number(req?.total ?? 0),
+        requestable: Number(req?.offerable ?? 0),
         offered: Number(o?.offered ?? 0),
         bought: Number(o?.paid ?? 0),
       },
@@ -152,7 +184,10 @@ export async function offerItems(
   marks?: Awaited<ReturnType<typeof partnerMarks>>,
 ): Promise<WorkItem[]> {
   const rows = await db
-    .select({ offer: specialOffers, email: users.email })
+    .select({
+      offer: specialOffers,
+      email: sql<string | null>`coalesce(${users.email}, ${specialOffers.email})`,
+    })
     .from(specialOffers)
     .leftJoin(users, eq(users.id, specialOffers.userId));
   const prods = await productsById(
@@ -397,7 +432,7 @@ export async function leadNotesOf(db: Db, productId: string) {
 export async function leadRecord(db: Db, productId: string) {
   const [product] = await loadProducts(db, [productId]);
   if (!product) return null;
-  const [savers, offers, notes, history, prices] = await Promise.all([
+  const [savers, offers, notes, history, prices, requests] = await Promise.all([
     db
       .select({
         userId: users.id,
@@ -411,7 +446,10 @@ export async function leadRecord(db: Db, productId: string) {
       .where(and(eq(savedItems.kind, "product"), eq(savedItems.productId, productId)))
       .orderBy(desc(savedItems.createdAt)),
     db
-      .select({ offer: specialOffers, email: users.email })
+      .select({
+        offer: specialOffers,
+        email: sql<string | null>`coalesce(${users.email}, ${specialOffers.email})`,
+      })
       .from(specialOffers)
       .leftJoin(users, eq(users.id, specialOffers.userId))
       .where(eq(specialOffers.productId, productId))
@@ -419,6 +457,53 @@ export async function leadRecord(db: Db, productId: string) {
     leadNotesOf(db, productId),
     partnerHistory(db, productId),
     leadPrices(db, [productId]),
+    requestsOf(db, productId),
   ]);
-  return { product, savers, offers, notes, history, prices: prices.get(productId) ?? null };
+  return { product, savers, offers, notes, history, prices: prices.get(productId) ?? null, requests };
+}
+
+/**
+ * A product's "Iegūt lētāk" requests whose address is not confirmed and still kept
+ * (docs/REQUEST_OFFER_PLAN.md), newest first: whether one proposal may go
+ * ("ok"), or why not, the proposal already made, and when the request is deleted.
+ */
+export async function requestsOf(db: Db, productId: string, now = new Date()) {
+  const rows = await db
+    .select()
+    .from(notifyRequests)
+    .where(
+      and(
+        eq(notifyRequests.kind, "product"),
+        eq(notifyRequests.productId, productId),
+        isNull(notifyRequests.confirmedAt),
+        gte(notifyRequests.createdAt, new Date(now.getTime() - REQUEST_TTL_MS)),
+      ),
+    )
+    .orderBy(desc(notifyRequests.createdAt));
+  if (!rows.length) return [];
+  const offers = await db
+    .select({ id: specialOffers.id, requestId: specialOffers.notifyRequestId, status: specialOffers.status })
+    .from(specialOffers)
+    .where(
+      and(
+        inArray(
+          specialOffers.notifyRequestId,
+          rows.map((r) => r.id),
+        ),
+        sql`${specialOffers.status} <> 'cancelled'`,
+      ),
+    );
+  const offerOf = new Map(offers.map((o) => [o.requestId, o]));
+  return rows.map((r) => {
+    const offer = offerOf.get(r.id) ?? null;
+    const reason = offer ? ("offered" as const) : requestOfferable(r, now);
+    return {
+      id: r.id,
+      email: r.email,
+      createdAt: r.createdAt,
+      deleteAt: new Date(r.createdAt.getTime() + REQUEST_TTL_MS),
+      reason,
+      offer,
+    };
+  });
 }

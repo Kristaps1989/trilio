@@ -190,6 +190,13 @@
       "when": 1794174234365,
       "tag": "0026_bots_images_pixel",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794222671749,
+      "tag": "0027_request_offers",
+      "breakpoints": true
     }
   ]
 }

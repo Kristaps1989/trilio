@@ -10,6 +10,7 @@ import { defaultValidUntil, deliveryOptions, vatRateFor } from "@/domain/offers/
 import { getSubcategory } from "@/domain/questions/catalog";
 import { formatEur } from "@/i18n/format";
 import { saversOf } from "@/services/admin/stats";
+import { requestsOf } from "@/services/admin/crm";
 import { referenceFor } from "@/services/offers/reference";
 import { confirmedCost } from "@/services/admin/crm";
 import { appBaseUrl } from "@/services/payments";
@@ -27,7 +28,14 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Jauns piedāvājums" };
 
 type Props = {
-  searchParams: Promise<{ product?: string; user?: string; all?: string; q?: string; uq?: string }>;
+  searchParams: Promise<{
+    product?: string;
+    user?: string;
+    all?: string;
+    request?: string;
+    q?: string;
+    uq?: string;
+  }>;
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -136,6 +144,24 @@ export default async function NewOffer({ searchParams }: Props) {
     const s = savedBy.get(p.id);
     return { ...p, saved: s ? { at: s.at.toISOString(), priceCents: s.priceCents } : null };
   });
+  // "Iegūt lētāk" requests whose address is not confirmed: everyone's with "all", or the one asked for.
+  if (sp.all || sp.request) {
+    const tc = await getTranslations("admin.crm");
+    for (const r of await requestsOf(db, product.id)) {
+      if (sp.request && !sp.all && r.id !== sp.request) continue;
+      if (recipients.some((x) => x.email === r.email && x.optIn)) continue;
+      recipients.push({
+        id: r.id,
+        email: r.email,
+        optIn: r.reason === "ok",
+        saved: null,
+        request: {
+          at: r.createdAt.toISOString(),
+          reason: tc(`requestReason.${r.reason}` as "requestReason.ok"),
+        },
+      });
+    }
+  }
   const { image } = cardMedia(product);
   const large = !deliveryOptions(product.subcategoryId).locker;
 
