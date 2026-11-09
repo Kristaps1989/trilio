@@ -55,11 +55,8 @@ export function siteJsonLd(input: {
       url: base,
       inLanguage: input.inLanguage,
       publisher: { "@id": org },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: { "@type": "EntryPoint", urlTemplate: `${base}/modelis?q={search_term_string}` },
-        "query-input": "required name=search_term_string",
-      },
+      // No SearchAction: Google retired the sitelinks search box it served, and it only
+      // crawled the literal template (/modelis?q={search_term_string}, Search Console, 9 Nov 2026).
     },
   ];
 }

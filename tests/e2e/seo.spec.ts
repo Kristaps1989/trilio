@@ -18,9 +18,10 @@ test("category landing page renders three ranked cards with structured data and 
   );
   expect(all.find((x: { "@type": string }) => x["@type"] === "FAQPage").mainEntity).toHaveLength(3);
   expect(all.find((x: { "@type": string }) => x["@type"] === "Organization").name).toBe("Trilio");
-  expect(all.find((x: { "@type": string }) => x["@type"] === "WebSite").potentialAction["@type"]).toBe(
-    "SearchAction",
-  );
+  // The WebSite names the brand, without a search template Google would only crawl literally.
+  const website = all.find((x: { "@type": string }) => x["@type"] === "WebSite");
+  expect(website.name).toBe("Trilio");
+  expect(website.potentialAction).toBeUndefined();
   expect(data.itemListElement).toHaveLength(3);
   const first = data.itemListElement[0].item;
   expect(first.offers).toMatchObject({ "@type": "AggregateOffer", priceCurrency: "EUR" });
