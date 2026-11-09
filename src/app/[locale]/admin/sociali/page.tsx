@@ -8,6 +8,7 @@ import { requireAdmin } from "../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../ui";
 import { Outcome } from "../reklama/shared";
 import { socialProvider } from "@/services/social";
+import { metaConfigFromEnv } from "@/services/social/meta";
 import { appBaseUrl } from "@/services/payments";
 import { slideUrls, socialSettings } from "@/services/social/posts";
 import {
@@ -109,6 +110,12 @@ export default async function SocialPage({ searchParams }: Props) {
       <p className="text-[15px] text-mist" data-social-connection>
         <span className="font-semibold">{t("connection")}:</span> {conn}
       </p>
+      {provider?.name === "meta" ? (
+        <p className="text-[15px] text-mist" data-social-carousel>
+          <span className="font-semibold">{t("carousel")}:</span>{" "}
+          {metaConfigFromEnv()?.adAccountId ? t("carouselLinks") : t("carouselPhotos")}
+        </p>
+      ) : null}
       <p className="text-sm text-stone">{t("rules")}</p>
 
       <Section title={t("settings")} id="social-settings">

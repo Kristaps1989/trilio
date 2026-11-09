@@ -2650,10 +2650,9 @@
       "repost": "Publicēt Facebook vēlreiz",
       "ok_refreshed_missing": "Facebook nolasīs saites vēlreiz. Dažiem ierakstiem attēla joprojām nav (atzīmēti „Facebook bez attēla”): karuselim attēlus Facebook vairs nenolasa, spied „Publicēt Facebook vēlreiz”.",
       "ok_reposted": "Ieraksts Facebook publicēts vēlreiz ar attēliem; vecais ieraksts dzēsts.",
-      "domain": "Domēns trilio.lv Meta",
-      "domainOwned": "apstiprināts un piesaistīts lapai: karuseļi tiek publicēti ar saitēm un saviem attēliem.",
-      "domainNotOwned": "nav apstiprināts šai lapai: karuseļi tiek publicēti kā foto ar saiti tekstā. Meta Business Suite → Iestatījumi → Zīmola drošība → Domēni → pievienot trilio.lv, apstiprināt un pie „Saistītie līdzekļi” pievienot Trilio lapu.",
-      "domainUnknown": "neizdevās nolasīt; karuseļi tiek publicēti kā foto."
+      "carousel": "Facebook karuseļi",
+      "carouselLinks": "ar saitēm: katras kartes attēls tiek augšupielādēts reklāmu konta attēlu bibliotēkā (META_AD_ACCOUNT_ID), tāpēc Facebook neko neielādē pats. Ja augšupielāde neizdodas, ieraksts aiziet kā foto.",
+      "carouselPhotos": "kā foto ar saiti tekstā. Lai kartes būtu klikšķināmas, iestati META_AD_ACCOUNT_ID (Ads Manager „act_…”) un sistēmas lietotājam piešķir ads_management šim kontam (docs/FACEBOOK_CAROUSEL_PLAN.md)."
     }
   },
   "alertsUnsubscribe": {

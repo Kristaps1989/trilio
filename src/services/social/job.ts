@@ -3,7 +3,7 @@ import { siteUrl } from "@/services/ads/account";
 import { createCaller } from "@/services/llm/client";
 import { socialProvider } from "./index";
 import { preparePostImages } from "./stored-images";
-import { draftUpcoming, publishDue, syncInsights, type SocialDeps } from "./posts";
+import { checkRecentCarousels, draftUpcoming, publishDue, syncInsights, type SocialDeps } from "./posts";
 
 // The scheduler's hook (docs/SOCIAL_PLAN.md §7): every tick drafts the coming
 // day's slots, sends what is due and, once a day, pulls the numbers. With
@@ -26,5 +26,6 @@ export async function runSocialJob(db: Db, now = new Date()) {
   const drafted = await draftUpcoming(db, deps, now);
   const sent = await publishDue(db, deps, now);
   const insights = await syncInsights(db, deps, now);
-  return { drafted, ...sent, insights };
+  const blankCarousels = await checkRecentCarousels(db, deps, now).catch(() => 0);
+  return { drafted, ...sent, insights, blankCarousels };
 }

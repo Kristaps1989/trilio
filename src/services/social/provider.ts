@@ -25,9 +25,10 @@ export interface SocialProvider {
   /** A photo post: Meta fetches the image from a public URL (JPEG for Instagram). */
   publishImage(network: Network, imageUrl: string, caption: string, alt?: string): Promise<PublishResult>;
   /**
-   * 2–10 images: a carousel on Instagram; on the page a multi-photo post, the
-   * slides uploaded (owner, 9 Nov 2026: link-carousel cards came out blank).
-   * `card` and `link` are no longer used for the page.
+   * 2–10 images: a carousel on Instagram. On the page a clickable link carousel
+   * when every image has `card`, `link` is given and an ad account is set: each
+   * card's picture is uploaded to its image library and named by hash, so Facebook
+   * fetches nothing. Otherwise (or on any failure) a multi-photo post.
    */
   publishCarousel(
     network: Network,

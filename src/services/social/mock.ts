@@ -35,13 +35,15 @@ export function mockSocialProvider(): SocialProvider {
     async publishImage(network, imageUrl, caption, alt) {
       return add(network, imageUrl, caption, alt ? [alt] : undefined);
     },
-    async publishCarousel(network, images, caption) {
-      // Photos on both networks (the page no longer gets link carousels).
+    async publishCarousel(network, images, caption, link) {
+      // The page: a link carousel (as with an ad account set), so each card's link is recorded.
+      const cards = network === "facebook" && !!link && images.every((i) => i.card);
       return add(
         network,
         images.map((i) => i.url).join(" "),
         caption,
         images.map((i) => i.alt ?? ""),
+        cards ? images.map((i) => i.card!.link) : undefined,
       );
     },
     async findInstagram(caption) {
