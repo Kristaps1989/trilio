@@ -147,12 +147,14 @@ export async function activateRequest(
     .select({ id: users.id, priceAlerts: users.priceAlerts, offersAskedAt: users.offersAskedAt })
     .from(users)
     .where(eq(users.email, request.email));
+  let created = false;
   if (!user) {
     [user] = await db
       .insert(users)
       .values({ email: request.email, locale: request.locale, ...offers })
       .onConflictDoNothing()
       .returning({ id: users.id, priceAlerts: users.priceAlerts, offersAskedAt: users.offersAskedAt });
+    created = !!user;
     if (!user)
       [user] = await db
         .select({ id: users.id, priceAlerts: users.priceAlerts, offersAskedAt: users.offersAskedAt })
@@ -161,7 +163,12 @@ export async function activateRequest(
   } else if (request.offers && !user.offersAskedAt) {
     await db.update(users).set(offers).where(eq(users.id, user.id));
   }
-  if (!user || !(await save(user.id, request))) return null;
+  if (!user) return null;
+  if (!(await save(user.id, request))) {
+    // Nothing was saved (the product is gone): leave no empty account behind.
+    if (created) await db.delete(users).where(eq(users.id, user.id));
+    return null;
+  }
   await db
     .update(notifyRequests)
     .set({ userId: user.id, activatedAt: now })

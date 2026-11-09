@@ -13,6 +13,7 @@ import { Analytics } from "@/ui/analytics/Analytics";
 import { VisitBeacon } from "@/ui/analytics/VisitBeacon";
 import { Footer } from "@/ui/shell/Footer";
 import { Header } from "@/ui/shell/Header";
+import { OffersAsk } from "@/ui/OffersAsk";
 import { OG_IMAGE, openGraphBase } from "./seo";
 import { siteJsonLd } from "./site-jsonld";
 import { brandProfiles, companyFromEnv } from "@/config/company";
@@ -134,6 +135,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
             <div className="h-full bg-track" />
           </div>
           <Header />
+          <OffersAsk />
           <main id="saturs" tabIndex={-1} className="flex flex-1 flex-col px-gutter outline-none">
             {children}
           </main>

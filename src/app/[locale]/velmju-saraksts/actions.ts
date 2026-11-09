@@ -133,7 +133,9 @@ export async function toggleSavedAction(
   if (!user) return { ok: false, reason: "auth" };
   if (save) {
     // Only a product is a request to a partner; a saved search is a watch and asks nothing.
-    const ask = target.data.kind === "product" && !!sub && trilioSources(sub) && !user.optIn && !user.asked;
+    // Pressing "Iegūt lētāk" is asking for a lower price (owner, 9 Nov 2026): whoever has offers off
+    // sees the one sentence again, even after an earlier "no", and its yes turns them on.
+    const ask = target.data.kind === "product" && !!sub && trilioSources(sub) && !user.optIn;
     if (ask && !consent) return { ok: false, reason: "consent", email: user.email };
     if (!(await saveTarget(userId, target.data))) return { ok: false, reason: "invalid" };
     await creditAdLanding(userId, keyOf(target.data)).catch(() => undefined);
@@ -223,6 +225,30 @@ export async function setPriceAlertsAction(on: boolean): Promise<boolean> {
   const userId = await currentUserId();
   if (!userId || typeof on !== "boolean") return false;
   await setPriceAlerts(db, userId, on);
+  revalidatePath("/velmju-saraksts");
+  revalidatePath("/konts");
+  return true;
+}
+
+/**
+ * Whether to ask the one-tap offers question (owner, 9 Nov 2026): signed in, offers off, and
+ * never answered. Read by the client so pages stay cacheable.
+ */
+export async function offersAskStateAction(): Promise<{ ask: boolean }> {
+  const userId = await currentUserId();
+  if (!userId) return { ask: false };
+  const [user] = await db
+    .select({ optIn: users.offersOptIn, asked: users.offersAskedAt })
+    .from(users)
+    .where(eq(users.id, userId));
+  return { ask: !!user && !user.optIn && !user.asked };
+}
+
+/** The answer to that question: "Jā" turns offers on; either answer means it is not asked again. */
+export async function answerOffersAskAction(yes: boolean): Promise<boolean> {
+  const userId = await currentUserId();
+  if (!userId || typeof yes !== "boolean") return false;
+  await setOffersOptIn(db, userId, yes);
   revalidatePath("/velmju-saraksts");
   revalidatePath("/konts");
   return true;

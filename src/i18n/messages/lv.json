@@ -1732,7 +1732,22 @@
       "notes": "Piezīmes",
       "notesLabel": "Privātas piezīmes (redz tikai admins un lietotājs savā datu eksportā)",
       "saveNotes": "Saglabāt piezīmes",
-      "notesSaved": "Saglabāts"
+      "notesSaved": "Saglabāts",
+      "joined": {
+        "google": "Pievienojās ar Google.",
+        "email": "Pievienojās ar e-pasta saiti (ienāca vai apstiprināja pieprasījumu).",
+        "request": "Pievienojās ar pieprasījumu „Iegūt lētāk”: adresi ievadīja, bet vēl nav ienācis."
+      },
+      "nothingYet": "Šis cilvēks tikai ienāca: nav saglabājis preci vai meklējumu un nav neko pieprasījis. Ko sūtīt, nav zināms, tāpēc uzdevumos viņš neparādās. Var uzrakstīt pats vai gaidīt, kad kaut ko saglabās.",
+      "requests": "Pieprasījumi „Iegūt lētāk”",
+      "requestWhat": "Ko prasīja",
+      "requestAt": "Kad",
+      "noRequests": "Pieprasījumu nav.",
+      "requestState": {
+        "active": "Sākts",
+        "confirmed": "Apstiprināts",
+        "pending": "Neapstiprināts"
+      }
     },
     "demand": {
       "title": "Pieprasījums",
@@ -2771,5 +2786,21 @@
     "doneTitle": "Gatavs",
     "doneBody": "Sekosim cenai vēl 90 dienas. Pirms tās beigsies, atkal pajautāsim.",
     "gone": "Šī saite vairs nav derīga."
+  },
+  "signInEmail": {
+    "subject": "Ienākt Trilio",
+    "title": "Ienākt Trilio",
+    "intro": "Spied pogu, lai ienāktu Trilio ar šo e-pastu. Parole nav vajadzīga.",
+    "button": "Ienākt",
+    "valid": "Poga derīga 15 minūtes un darbojas vienu reizi.",
+    "notYou": "Ja tu nelūdzi ienākt, neko nedari: bez pogas nospiešanas nekas nenotiks."
+  },
+  "offersAsk": {
+    "label": "Personīgie piedāvājumi",
+    "question": "Gribi, lai uzrakstām, ja kādu no tavām saglabātajām precēm varam piedāvāt lētāk nekā veikali?",
+    "fine": "Tikai par tavām precēm, bez reklāmām. Atteikties var jebkurā brīdī.",
+    "yes": "Jā, rakstiet man",
+    "no": "Nē, paldies",
+    "thanks": "Paldies! Uzrakstīsim, ja varēsim piedāvāt lētāk."
   }
 }

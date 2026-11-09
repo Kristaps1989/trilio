@@ -89,6 +89,11 @@ test("a request with no click is a saver who accepts offers; the proposal's link
     await admin.goto(`/admin/lietotaji?q=${encodeURIComponent(shopper)}`);
     await admin.getByRole("link", { name: shopper }).click();
     await expect(admin.getByText("Piekrīt piedāvājumiem")).toBeVisible();
+    // The person page says how they came and what they asked.
+    await expect(admin.locator("[data-user-joined]")).toHaveAttribute("data-user-joined", "request");
+    const asked = admin.getByRole("region", { name: "Pieprasījumi „Iegūt lētāk”" });
+    await expect(asked.getByRole("row")).toHaveCount(2);
+    await expect(asked.getByText("Sākts")).toBeVisible();
     await admin.getByRole("link", { name: "Izveidot piedāvājumu" }).first().click();
     await admin.getByLabel("Tava cena").fill("1");
     await admin.getByRole("button", { name: "Nosūtīt", exact: true }).click();

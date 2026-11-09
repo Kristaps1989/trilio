@@ -467,3 +467,47 @@ test("the retired plan page and the e-mail unsubscribe page need no payment", as
   const res = await page.request.post("/api/wishlist/unsubscribe/e2e-not-a-real-token-000000");
   expect(res.status()).toBe(200);
 });
+
+test("after signing in, one question asks about offers; a no is remembered, and „Iegūt lētāk” still asks", async ({
+  page,
+}) => {
+  const email = `e2e-offers-ask-${Date.now()}@example.invalid`;
+  await devLogin(page, email, "/velmju-saraksts");
+  const offers = page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm");
+  // Never pre-ticked: the box is empty until the person says yes (owner, 9 Nov 2026).
+  await expect(offers).not.toBeChecked();
+  const ask = page.locator("[data-offers-ask]");
+  await expect(ask).toContainText("Gribi, lai uzrakstām");
+  await expectNoAxeViolations(page);
+  await ask.getByRole("button", { name: "Nē, paldies" }).click();
+  await expect(ask).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator("[data-offers-ask]")).toHaveCount(0);
+  await expect(offers).not.toBeChecked();
+
+  // Pressing „Iegūt lētāk” is asking for a lower price: the sentence shows again, and its yes turns offers on.
+  await kettleResults(page);
+  const first = picks(page).first();
+  await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
+  const panel = first.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });
+  await expect(panel).toBeVisible();
+  await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
+  // The heart fills at once; enabled again once the save has reached the server.
+  await expect(
+    first.getByRole("button", { name: "Pajautāts · meklējam zemāku cenu", exact: true }),
+  ).toBeEnabled();
+  await page.goto("/velmju-saraksts");
+  await expect(offers).toBeChecked();
+  await deleteAccount(page);
+});
+
+test("the offers question's yes turns offers on, once", async ({ page }) => {
+  await devLogin(page, `e2e-offers-yes-${Date.now()}@example.invalid`, "/velmju-saraksts");
+  const ask = page.locator("[data-offers-ask]");
+  await ask.getByRole("button", { name: "Jā, rakstiet man" }).click();
+  await expect(ask.getByRole("status")).toHaveText("Paldies! Uzrakstīsim, ja varēsim piedāvāt lētāk.");
+  await page.reload();
+  await expect(page.locator("[data-offers-ask]")).toHaveCount(0);
+  await expect(page.getByLabel("Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm")).toBeChecked();
+  await deleteAccount(page);
+});

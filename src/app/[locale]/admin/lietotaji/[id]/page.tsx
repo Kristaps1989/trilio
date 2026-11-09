@@ -36,7 +36,57 @@ export default async function AdminUser({ params, searchParams }: Props) {
           {detail.subscription ? <Chip>{t("service", { status: detail.subscription.status })}</Chip> : null}
         </div>
       </AdminTitle>
+      <p className="text-[15px] text-stone" data-user-joined={detail.joined}>
+        {t(`joined.${detail.joined}`)}
+      </p>
       {!user.offersOptIn ? <p className="text-[15px] text-stone">{t("noOptInHint")}</p> : null}
+      {detail.requests.length === 0 &&
+      detail.savedProducts.length === 0 &&
+      detail.savedSearches.length === 0 &&
+      detail.offers.length === 0 ? (
+        <p className="text-[15px] text-stone" data-user-nothing>
+          {t("nothingYet")}
+        </p>
+      ) : null}
+
+      <Section title={t("requests")} id="requests">
+        <Table
+          caption={t("requests")}
+          head={[t("requestWhat"), t("requestAt"), t("status")]}
+          empty={t("noRequests")}
+          rows={detail.requests.map(({ request: r, productName }) => [
+            r.kind === "product" && r.productId ? (
+              <Link
+                key="w"
+                href={`/admin/pieprasijums/${r.productId}`}
+                className="font-semibold underline underline-offset-2"
+              >
+                {productName}
+              </Link>
+            ) : (
+              <Link
+                key="w"
+                href={`/rezultati?sub=${r.subcategoryId}&a=${r.answersParam ?? ""}`}
+                className="underline underline-offset-2"
+              >
+                {productName ?? r.subcategoryId}
+              </Link>
+            ),
+            formatDateShort(r.createdAt),
+            r.confirmedAt ? (
+              <Chip key="s" tone="lime">
+                {t("requestState.confirmed")}
+              </Chip>
+            ) : r.activatedAt ? (
+              <Chip key="s" tone="lime">
+                {t("requestState.active")}
+              </Chip>
+            ) : (
+              <Chip key="s">{t("requestState.pending")}</Chip>
+            ),
+          ])}
+        />
+      </Section>
 
       <Section title={t("products")} id="products">
         <Table

@@ -454,7 +454,8 @@ export async function offerSignInUsed(db: Db, offerId: string): Promise<boolean>
 export async function setOffersOptIn(db: Db, userId: string, optIn: boolean): Promise<void> {
   await db
     .update(users)
-    .set({ offersOptIn: optIn, offersOptInAt: optIn ? new Date() : null })
+    // Either way the person has answered, so the one-tap question is not asked again.
+    .set({ offersOptIn: optIn, offersOptInAt: optIn ? new Date() : null, offersAskedAt: new Date() })
     .where(eq(users.id, userId));
 }
 

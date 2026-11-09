@@ -306,6 +306,28 @@ run("notify requests", () => {
     expect(after!.priceAlerts).toBe(true);
   });
 
+  it("a request whose item cannot be saved leaves no account behind", async () => {
+    const r = await requestNotify(
+      db,
+      {
+        email: `gone@${DOMAIN}`,
+        target: kettle,
+        returnPath: "/",
+        locale: "lv",
+        visitorHash: null,
+        adLandingId: null,
+      },
+      { ...deps, save: async () => false },
+    );
+    expect(r).toEqual({ ok: false, reason: "invalid" });
+    expect(
+      await db
+        .select()
+        .from(users)
+        .where(eq(users.email, `gone@${DOMAIN}`)),
+    ).toHaveLength(0);
+  });
+
   it("counts the funnel per category from first-party events", async () => {
     const day = "2026-10-30";
     await db.insert(uiEvents).values([

@@ -8,7 +8,11 @@ import { db } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
 import { isAdminEmail } from "@/config/admin";
 import { rememberedLanguage } from "@/i18n/path";
+import { companyFromEnv, companyLine } from "@/config/company";
+import { createEmailSender } from "@/services/notify/email";
 import { notifySignIn } from "@/services/notify/requests";
+import { composeSignInEmail } from "@/services/notify/signin-email";
+import { appBaseUrl } from "@/services/payments";
 import { offerSignIn } from "@/services/offers/offers";
 
 // Google and email magic link (spec §5.1 step 4; Apple deferred by the owner
@@ -35,6 +39,21 @@ function providers(): NextAuthConfig["providers"] {
         from: process.env.EMAIL_FROM ?? "Trilio <noreply@trilio.lv>",
         // Single-use token, 15 minutes (spec: magic links are short-lived).
         maxAge: 15 * 60,
+        // Trilio's own branded e-mail in the visitor's language, not Auth.js's English default.
+        async sendVerificationRequest({ identifier, url }) {
+          const lang = await rememberedLanguage();
+          const sent = await createEmailSender().send(
+            composeSignInEmail({
+              to: identifier,
+              url,
+              lang: lang === "en" ? "en" : "lv",
+              baseUrl: appBaseUrl(),
+              company: companyLine(companyFromEnv()),
+            }),
+          );
+          if (!sent.ok && sent.reason === "error")
+            throw new Error(`sign-in e-mail failed: ${sent.detail ?? ""}`);
+        },
       }),
     );
   }
