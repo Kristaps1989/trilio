@@ -31,8 +31,12 @@ answer is one message only, saying plainly why it came: „Šo piedāvājumu sū
 ignorē: vairāk nerakstīsim." There are no reminders and no follow-ups until the address
 is confirmed. The existing rate limits stay: 3 a day per address, 5 per visitor.
 
-The lawyer confirms the new wording once, as for the first consent text (§6 of
-docs/PRICE_NOTIFY_PLAN.md).
+**The lawyer's answer (9 Nov 2026):** no extra approval is needed to send the
+information; by entering the e-mail the person consents. But the person must always be
+able to unsubscribe. So the proposal carries an unsubscribe link (and the one-click
+List-Unsubscribe header). For an unconfirmed request it deletes the request and cancels
+its open proposal: nothing more goes to that address, and its confirmation link stops
+working.
 
 ## 2. What changes
 
@@ -49,7 +53,8 @@ docs/PRICE_NOTIFY_PLAN.md).
 - The proposal e-mail to an unconfirmed address:
   - carries the reason line above;
   - has a „Sekot cenai" button, which is the confirmation link;
-  - has no unsubscribe link, because nothing else will follow.
+  - has an unsubscribe link, „Atteikties no piedāvājumiem", which deletes the request
+    (lawyer, 9 Nov 2026); the page says no account is needed.
 - To order, the person signs in with that e-mail (a magic link, which proves the address).
   The offer is then theirs. Confirming the request attaches the offer to their account too.
 
@@ -90,7 +95,8 @@ docs/PRICE_NOTIFY_PLAN.md).
   - drafting for a request;
   - one per request;
   - send without an account;
-  - the e-mail's reason line, with no unsubscribe;
+  - the e-mail's reason line and its unsubscribe link and header;
+  - unsubscribing deletes the request and cancels the open proposal;
   - no reminder;
   - confirming attaches the offer;
   - ordering by the same address after sign-in, refused for another.

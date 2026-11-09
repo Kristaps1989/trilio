@@ -826,7 +826,7 @@
             "Clicks on shop links: we record which offer was opened and when, without your identity, to account for partner commissions. Basis: legitimate interests.",
             "Account: e-mail address. If you sign in with Google, also the name, profile picture link and access tokens issued by Google. Basis: performance of a contract.",
             "Wishlist: the products and searches you save and notification settings (whether price e-mails are on). For browser notifications we keep the subscription address and keys issued by the browser. Basis: performance of a contract; by saving a product you ask to be told when its price drops.",
-            "A request without an account: if you press “Get it cheaper” at a product or enter an e-mail at a search, we keep what you asked for, the text shown and the time. We send that address one confirmation e-mail and, if you asked for a lower price for a product, one proposal for it (basis: your request, steps before a contract). Price notifications and other offers are sent only after you confirm the address; confirming creates an account with that e-mail (basis: your consent). If you did not enter the address, just ignore those two e-mails: we will not write again.",
+            "A request without an account: if you press “Get it cheaper” at a product or enter an e-mail at a search, we keep what you asked for, the text shown and the time. We send that address one confirmation e-mail and, if you asked for a lower price for a product, one proposal for it (basis: your request, steps before a contract). Price notifications and other offers are sent only after you confirm the address; confirming creates an account with that e-mail (basis: your consent). If you did not enter the address, just ignore those two e-mails: we will not write again. The proposal has an “Unsubscribe from offers” link: it deletes the request, and we won't write again.",
             "Payments for Trilio offers: amounts, dates and status. Card data is processed only by Paysera; Trilio never sees or stores it. Basis: performance of a contract and a legal obligation.",
             "Waiting list: if you leave an e-mail under “Something else”, we keep the e-mail and the request text to tell you when the category is available. Basis: your consent, which you can withdraw at any time.",
             "Technical logs: the hosting service briefly records IP addresses and requests for security and fixing errors. Basis: legitimate interests.",
@@ -1483,7 +1483,9 @@
     "body": "We'll stop sending e-mails about personal offers. Your wishlist and account stay.",
     "confirm": "Unsubscribe",
     "doneTitle": "Done",
-    "doneBody": "We won't send personal offers any more. If you change your mind, switch them on in your wishlist."
+    "doneBody": "We won't send personal offers any more. If you change your mind, switch them on in your wishlist.",
+    "requestBody": "We'll delete your request and won't write to this address again. You don't need an account.",
+    "requestDoneBody": "Your request is deleted. We won't write to this address again."
   },
   "invoice": {
     "title": "Invoice",

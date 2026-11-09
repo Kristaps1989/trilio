@@ -816,7 +816,7 @@
             "Klikšķi uz veikalu saitēm: reģistrējam, kurš piedāvājums atvērts un kad, bez tavas identitātes, lai uzskaitītu partneru komisijas. Pamats: leģitīmās intereses.",
             "Konts: e-pasta adrese. Ja ienāc ar Google, arī vārds, profila attēla saite un Google izsniegtie piekļuves marķieri. Pamats: līguma izpilde.",
             "Vēlmju saraksts: preces un meklējumi, ko saglabā, un paziņojumu iestatījumi (vai cenu e-pasti ieslēgti). Pārlūka paziņojumiem glabājam pārlūka izsniegto abonēšanas adresi un atslēgas. Pamats: līguma izpilde — saglabājot preci, tu lūdz paziņot, kad cena samazinās vai parādās lētāks variants.",
-            "Pieprasījums bez konta: ja pie preces spied „Iegūt lētāk” vai pie meklējuma ievadi e-pastu, glabājam to, ko lūdzi, parādīto tekstu un laiku. Uz šo adresi sūtām vienu apstiprinājuma e-pastu un, ja pieprasīji zemāku cenu precei, vienu piedāvājumu par to (pamats: tavs pieprasījums, darbības pirms līguma noslēgšanas). Cenu paziņojumus un citus piedāvājumus sūtām tikai pēc tam, kad apstiprini adresi; apstiprinot izveidojam kontu ar šo e-pastu (pamats: tava piekrišana). Ja e-pastu neesi ievadījis tu, pietiek ignorēt šos divus e-pastus: vairāk nerakstīsim.",
+            "Pieprasījums bez konta: ja pie preces spied „Iegūt lētāk” vai pie meklējuma ievadi e-pastu, glabājam to, ko lūdzi, parādīto tekstu un laiku. Uz šo adresi sūtām vienu apstiprinājuma e-pastu un, ja pieprasīji zemāku cenu precei, vienu piedāvājumu par to (pamats: tavs pieprasījums, darbības pirms līguma noslēgšanas). Cenu paziņojumus un citus piedāvājumus sūtām tikai pēc tam, kad apstiprini adresi; apstiprinot izveidojam kontu ar šo e-pastu (pamats: tava piekrišana). Ja e-pastu neesi ievadījis tu, pietiek ignorēt šos divus e-pastus: vairāk nerakstīsim. Pieprasījuma piedāvājumā ir saite „Atteikties no piedāvājumiem”: tā dzēš pieprasījumu, un vairāk nerakstīsim.",
             "Maksājumi par Trilio piedāvājumiem: summas, datumi un statuss. Kartes datus apstrādā tikai Paysera, Trilio tos neredz un neglabā. Pamats: līguma izpilde un juridisks pienākums.",
             "Gaidītāju saraksts: ja atstāj e-pastu sadaļā „Kaut kas cits”, glabājam e-pastu un pieprasījuma tekstu, lai paziņotu, kad kategorija būs pieejama. Pamats: tava piekrišana, ko vari atsaukt jebkurā brīdī.",
             "Tehniskie žurnāli: hostinga pakalpojums īslaicīgi reģistrē IP adreses un pieprasījumus drošībai un kļūdu labošanai. Pamats: leģitīmās intereses.",
@@ -1485,7 +1485,9 @@
     "body": "Vairs nesūtīsim e-pastus par personīgiem piedāvājumiem. Vēlmju saraksts un konts paliek.",
     "confirm": "Atteikties",
     "doneTitle": "Gatavs",
-    "doneBody": "Personīgus piedāvājumus vairs nesūtīsim. Ja pārdomāsi, to var ieslēgt vēlmju sarakstā."
+    "doneBody": "Personīgus piedāvājumus vairs nesūtīsim. Ja pārdomāsi, to var ieslēgt vēlmju sarakstā.",
+    "requestBody": "Dzēsīsim tavu pieprasījumu un uz šo adresi vairs nerakstīsim. Kontu tev nav jāveido.",
+    "requestDoneBody": "Tavu pieprasījumu dzēsām. Uz šo adresi vairs nerakstīsim."
   },
   "invoice": {
     "title": "Rēķins",

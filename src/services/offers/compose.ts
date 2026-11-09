@@ -98,12 +98,12 @@ export function composeOfferEmail(
   offer: OfferDraft,
   ctx: OfferMailContext & {
     to: string;
-    /** Absent for a proposal answering an unconfirmed request: nothing else will follow it. */
+    /** The one-step unsubscribe; for an unconfirmed request it deletes the request (docs/REQUEST_OFFER_PLAN.md). */
     unsubscribeUrl?: string;
     /**
      * A proposal answering an "Iegūt lētāk" request whose address is not confirmed
      * (docs/REQUEST_OFFER_PLAN.md): when it was asked, and the link that confirms the
-     * address and follows the price. The e-mail says why it came and that no more will.
+     * address and follows the price. The e-mail says why it came, and how to stop.
      */
     request?: { at: Date; followUrl: string };
     saved: { at: Date; priceCents: number | null } | null;
@@ -178,7 +178,11 @@ export function composeOfferEmail(
     ctx.request ? fill(c.followLine, { url: ctx.request.followUrl }) : null,
     sign,
     (asked
-      ? [fill(c.requestReason, { date: asked }), ctx.company]
+      ? [
+          fill(c.requestReason, { date: asked }),
+          ctx.unsubscribeUrl ? fill(c.footer, { url: ctx.unsubscribeUrl }) : null,
+          ctx.company,
+        ]
       : [c.consent, ctx.unsubscribeUrl ? fill(c.footer, { url: ctx.unsubscribeUrl }) : null, ctx.company]
     )
       .filter(Boolean)

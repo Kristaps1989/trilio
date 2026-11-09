@@ -206,7 +206,7 @@ export type SendResult =
  * Who an offer goes to and how the e-mail closes: an account (with its consent and
  * unsubscribe link), or an "Iegūt lētāk" request whose address is not confirmed
  * (docs/REQUEST_OFFER_PLAN.md: one proposal, the reason it came, a link that
- * confirms the address, no unsubscribe because nothing else follows). A request
+ * confirms the address, and an unsubscribe that deletes the request). A request
  * confirmed since hands its offer to the new account. Null with the reason it cannot go.
  */
 async function recipientOf(
@@ -246,6 +246,8 @@ async function recipientOf(
           at: request.createdAt,
           followUrl: `${baseUrl}${localizedPath(`/pazinot/${request.token}`, lang)}`,
         },
+        // The lawyer (9 Nov 2026): typing the address is consent enough, but it must be easy to stop.
+        unsubscribeUrl: `${baseUrl}${localizedPath(`/piedavajumi/atteikties/${request.token}`, lang)}`,
         userId: null,
       };
     }
@@ -328,6 +330,7 @@ export async function previewOffer(
         at: request?.createdAt ?? offer.createdAt,
         followUrl: `${ctx.baseUrl}${localizedPath(`/pazinot/${request?.token ?? "…"}`, lang)}`,
       },
+      unsubscribeUrl: `${ctx.baseUrl}${localizedPath("/piedavajumi/atteikties/…", lang)}`,
       saved: null,
       now: ctx.now ?? new Date(),
     });
@@ -460,7 +463,23 @@ export async function offersOptIn(db: Db, userId: string): Promise<boolean> {
   return row?.v ?? false;
 }
 
-/** One-click unsubscribe from an e-mail; needs no sign-in. Open offers to that person are cancelled. */
+/** Whose link this is: an account's offers token, or an unconfirmed "Iegūt lētāk" request's. */
+export async function unsubscribeKind(db: Db, value: string): Promise<"account" | "request" | null> {
+  if (!/^[A-Za-z0-9_-]{20,64}$/.test(value)) return null;
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.offersToken, value));
+  if (user) return "account";
+  const [request] = await db
+    .select({ id: notifyRequests.id })
+    .from(notifyRequests)
+    .where(and(eq(notifyRequests.token, value), isNull(notifyRequests.confirmedAt)));
+  return request ? "request" : null;
+}
+
+/**
+ * One-click unsubscribe from an e-mail; needs no sign-in. Open offers to that person are cancelled.
+ * For a proposal to an unconfirmed request the link carries the request's token: the request is
+ * deleted, so nothing more goes to that address and its confirmation link stops working.
+ */
 export async function unsubscribeByToken(db: Db, value: string): Promise<boolean> {
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(value)) return false;
   const rows = await db
@@ -469,7 +488,7 @@ export async function unsubscribeByToken(db: Db, value: string): Promise<boolean
     .where(eq(users.offersToken, value))
     .returning({ id: users.id });
   const userId = rows[0]?.id;
-  if (!userId) return false;
+  if (!userId) return unsubscribeRequest(db, value);
   const open = await db
     .update(specialOffers)
     .set({ status: "cancelled", cancelledAt: new Date() })
@@ -479,6 +498,31 @@ export async function unsubscribeByToken(db: Db, value: string): Promise<boolean
     await db
       .insert(offerEvents)
       .values(open.map((o) => ({ offerId: o.id, kind: "cancelled", source: "buyer", note: "unsubscribed" })));
+  return true;
+}
+
+async function unsubscribeRequest(db: Db, value: string): Promise<boolean> {
+  const [request] = await db
+    .select({ id: notifyRequests.id })
+    .from(notifyRequests)
+    .where(and(eq(notifyRequests.token, value), isNull(notifyRequests.confirmedAt)));
+  if (!request) return false;
+  const open = await db
+    .update(specialOffers)
+    .set({ status: "cancelled", cancelledAt: new Date() })
+    .where(
+      and(
+        eq(specialOffers.notifyRequestId, request.id),
+        isNull(specialOffers.userId),
+        inArray(specialOffers.status, ["draft", "sent", "opened"]),
+      ),
+    )
+    .returning({ id: specialOffers.id });
+  if (open.length)
+    await db
+      .insert(offerEvents)
+      .values(open.map((o) => ({ offerId: o.id, kind: "cancelled", source: "buyer", note: "unsubscribed" })));
+  await db.delete(notifyRequests).where(eq(notifyRequests.id, request.id));
   return true;
 }
 

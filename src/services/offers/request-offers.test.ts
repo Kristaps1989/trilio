@@ -18,7 +18,16 @@ import { memoryEmailSender } from "@/services/notify/email";
 import { confirmNotify } from "@/services/notify/requests";
 import type { MailDeps } from "./emails";
 import { sendReminder } from "./emails";
-import { createOffers, offerById, offerSignIn, previewOffer, sendOffer, type OfferInput } from "./offers";
+import {
+  createOffers,
+  offerById,
+  offerSignIn,
+  previewOffer,
+  sendOffer,
+  unsubscribeByToken,
+  unsubscribeKind,
+  type OfferInput,
+} from "./offers";
 import { placeOrder } from "./orders";
 
 // One proposal to an "Iegūt lētāk" request whose address is not confirmed
@@ -202,7 +211,7 @@ run("proposals to unconfirmed requests", { timeout: 60_000 }, () => {
     expect(lead.savers).toMatchObject({ total: 0, requested: 3 });
   });
 
-  it("sends it once to the address, saying why, with a link to follow the price and no unsubscribe", async () => {
+  it("sends it once to the address, saying why, with a link to follow the price and one to stop", async () => {
     const [offer] = await db
       .select()
       .from(specialOffers)
@@ -215,8 +224,14 @@ run("proposals to unconfirmed requests", { timeout: 60_000 }, () => {
     expect(message.text).toContain("pieprasīji zemāku cenu šai precei");
     expect(message.text).toContain("vairāk nerakstīsim");
     expect(message.text).toContain(`/pazinot/${PREFIX}fresh-${stamp}-token-abcdefghij`);
-    expect(message.headers?.["List-Unsubscribe"]).toBeUndefined();
-    expect(message.html).not.toContain("Atteikties no piedāvājumiem");
+    // The lawyer (9 Nov 2026): no extra approval, but always a way to stop.
+    expect(message.text).toContain(
+      `Atteikties no piedāvājumiem: ${BASE}/piedavajumi/atteikties/${PREFIX}fresh-`,
+    );
+    expect(message.html).toContain("Atteikties no piedāvājumiem");
+    expect(message.headers?.["List-Unsubscribe"]).toBe(
+      `<${BASE}/api/offers/unsubscribe/${PREFIX}fresh-${stamp}-token-abcdefghij>`,
+    );
     // No reminder: nothing else goes to an unconfirmed address.
     expect(await sendReminder(db, (await offerById(db, offer!.id))!, deps)).toBe(false);
   });
@@ -254,5 +269,21 @@ run("proposals to unconfirmed requests", { timeout: 60_000 }, () => {
     expect(confirmed.ok).toBe(true);
     const offer = (await offerById(db, id))!;
     expect(offer.userId).toBe(confirmed.ok ? confirmed.userId : "");
+  });
+
+  it("its unsubscribe deletes the request and cancels what is still open", async () => {
+    const stop = await request("stop");
+    const made = await createOffers(db, input([stop.id]), "admin@test");
+    const id = made.ok ? made.offerIds[0]! : "";
+    expect(await sendOffer(db, id, deps)).toEqual({ ok: true, emailed: true });
+    expect(await unsubscribeKind(db, stop.token)).toBe("request");
+    expect(await unsubscribeByToken(db, stop.token)).toBe(true);
+    expect((await offerById(db, id))!.status).toBe("cancelled");
+    expect(await db.select().from(notifyRequests).where(eq(notifyRequests.id, stop.id))).toEqual([]);
+    // Nothing more can be drafted for it, and the link now does nothing.
+    const again = await createOffers(db, input([stop.id]), "admin@test");
+    expect(again.ok && again.offerIds).toEqual([]);
+    expect(await unsubscribeKind(db, stop.token)).toBeNull();
+    expect(await unsubscribeByToken(db, stop.token)).toBe(false);
   });
 });

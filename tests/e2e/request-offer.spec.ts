@@ -79,7 +79,7 @@ test("an unconfirmed request gets one proposal, saying why, and its link lets th
     offerLink = await admin.getByLabel("Saite (var nosūtīt arī pats)").inputValue();
   });
 
-  await test.step("the proposal arrives, says why it came, and has no unsubscribe", async () => {
+  await test.step("the proposal arrives, says why it came, and has an unsubscribe", async () => {
     let mail: Mail | undefined;
     await expect(async () => {
       mail = (await outbox(page, shopper)).find((m) => m.text.includes("/piedavajums/"));
@@ -88,7 +88,7 @@ test("an unconfirmed request gets one proposal, saying why, and its link lets th
     expect(mail!.text).toContain("pieprasīji zemāku cenu šai precei");
     expect(mail!.text).toContain("vairāk nerakstīsim");
     expect(mail!.text).toContain(new URL(offerLink).pathname);
-    expect(mail!.text).not.toContain("Atteikties no piedāvājumiem");
+    expect(mail!.text).toMatch(/Atteikties no piedāvājumiem: \S+\/piedavajumi\/atteikties\//);
   });
 
   await test.step("a second proposal for the same request is not offered", async () => {
@@ -107,6 +107,44 @@ test("an unconfirmed request gets one proposal, saying why, and its link lets th
     await expect(phone).toHaveURL(/\/piedavajums\/[^/]+\/pasutit$/);
     await expect(phone.getByRole("button", { name: "Apmaksāt 1 €" })).toBeVisible();
     await phone.context().close();
+  });
+
+  await test.step("a second request's proposal can be stopped from its unsubscribe link", async () => {
+    const other = await newPage(browser);
+    const stopper = shopper.replace("e2e-request-", "e2e-request-stop-");
+    await other.goto("/izvelies/kitchensmall/kettle");
+    await other.getByRole("button", { name: "Tālāk", exact: true }).click();
+    await other.getByRole("button", { name: "Budžets nav noteikts" }).click();
+    const first = picks(other).first();
+    await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
+    const panel = first.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
+    await panel.getByLabel("E-pasts").fill(stopper);
+    await panel.getByRole("button", { name: "Sūtīt pieprasījumu" }).click();
+    await expect(first.getByRole("status")).toContainText(stopper);
+
+    await admin.goto(`/admin/pieprasijums/${productId}`);
+    const row = admin.locator("[data-lead-request-list]").getByRole("row").filter({ hasText: stopper });
+    await row.getByRole("link", { name: "Sūtīt piedāvājumu" }).click();
+    await admin.getByLabel("Tava cena").fill("1");
+    await admin.getByRole("button", { name: "Nosūtīt", exact: true }).click();
+    await expect(admin.getByRole("status")).toHaveText("Nosūtīts.");
+
+    let unsubscribe = "";
+    await expect(async () => {
+      const mail = (await outbox(other, stopper)).find((m) => m.text.includes("/piedavajums/"));
+      const m = mail?.text.match(/https?:\/\/[^\s]+\/piedavajumi\/atteikties\/[A-Za-z0-9_-]+/);
+      expect(m).not.toBeNull();
+      unsubscribe = new URL(m![0]).pathname;
+    }).toPass({ timeout: 10_000 });
+    await other.goto(unsubscribe);
+    await expect(other.getByText("Kontu tev nav jāveido.")).toBeVisible();
+    await other.getByRole("button", { name: "Atteikties" }).click();
+    await expect(other.getByRole("status")).toHaveText(
+      "Tavu pieprasījumu dzēsām. Uz šo adresi vairs nerakstīsim.",
+    );
+    await admin.goto(`/admin/pieprasijums/${productId}`);
+    await expect(admin.locator("[data-lead-request-list]").getByText(stopper)).toHaveCount(0);
+    await other.context().close();
   });
 
   await admin.context().close();
