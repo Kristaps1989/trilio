@@ -484,11 +484,17 @@ export async function publishPost(
     }
     if (post.videoUrl) return provider.publishVideo(n, post.videoUrl, caption);
     if (slides > 1)
-      // Photos on both networks: the page's caption carries the link (owner, 9 Nov 2026).
+      // Instagram: a carousel. The page: a clickable link carousel whose card pictures are
+      // uploaded (image_hash) when an ad account is set, else photos (owner, 9 Nov 2026).
       return provider.publishCarousel(
         n,
-        slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({ url, alt: alts[i] })),
+        slideUrls(deps.baseUrl, post.id, slides).map((url, i) => ({
+          url,
+          alt: alts[i],
+          ...(n === "facebook" ? { card: carouselCard(deps.baseUrl, post, card.slides![i]!, i) } : {}),
+        })),
         caption,
+        n === "facebook" ? fbLink : undefined,
       );
     return provider.publishImage(n, imageUrl(deps.baseUrl, post.id), caption, post.alt);
   };
@@ -689,9 +695,31 @@ async function publishedFacebookPosts(db: Db, now: Date, id?: string): Promise<S
         ...(id ? [eq(socialPosts.id, id)] : []),
       ),
     );
-  // Only link posts: a carousel goes out as uploaded photos (owner, 9 Nov 2026), so Facebook
-  // fetches nothing for it and there is nothing to check (every check is a Meta call).
-  return rows.filter((p) => isLinkPost(p));
+  return rows.filter((p) => !p.videoUrl);
+}
+
+/**
+ * A carousel just made whose read-back could not run (Meta's rate limit, as at 19:00 on
+ * 9 Nov) is looked at again on the next ticks, 15 to 120 minutes after posting: one cheap
+ * read each, so a blank carousel is flagged for a re-post within hours, not a day.
+ */
+export async function checkRecentCarousels(db: Db, deps: SocialDeps, now = new Date()): Promise<number> {
+  const provider = deps.provider;
+  if (!provider) return 0;
+  const from = new Date(now.getTime() - 120 * 60_000);
+  const to = new Date(now.getTime() - 15 * 60_000);
+  const rows = (await publishedFacebookPosts(db, now)).filter(
+    (p) => !isLinkPost(p) && !p.previewMissing && p.publishedAt! >= from && p.publishedAt! <= to,
+  );
+  let missing = 0;
+  for (const p of rows) {
+    const preview = await provider.linkPreview(p.fbPostId!);
+    if (preview && !preview.image) {
+      missing++;
+      await db.update(socialPosts).set({ previewMissing: true }).where(eq(socialPosts.id, p.id));
+    }
+  }
+  return missing;
 }
 
 /** What Facebook reads for a post: the link and preview picture, or each carousel card's. */

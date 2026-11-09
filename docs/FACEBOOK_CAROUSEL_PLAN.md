@@ -1,17 +1,26 @@
 # Facebook carousel: what Meta's documentation requires, and the fix
 
-> **Decision, 9 Nov 2026 (owner: "It is too much, do deep analyze and finally fix the issue").**
-> The link carousel is retired. A post made on 9 Nov with the domain verified and owned still
-> showed blank cards, and the read-back below did not catch it: Facebook serves its own
-> placeholder picture for a card it could not fetch, and the placeholder loads. This was the
-> third fix that relied on Facebook fetching each card's picture from trilio.lv by itself,
-> which Trilio cannot control. The page now always gets the slides as **uploaded photos**
-> (`/{page}/photos` unpublished, then one `/{page}/feed` with `attached_media`). The pictures
-> always show; the cards are not clickable, and the caption carries the trilio.lv link.
-> Removed with it: the ownership check (it also cost two Meta calls on every admin page
-> load), the card pictures' warm-up and read-back, and the daily check of carousels.
-> Single-image link posts keep their preview check. The card share pages stay, because
-> earlier posts link to them. What follows is the history.
+> **Decision, 9 Nov 2026, revised the same night (owner: "Before carousel was used";
+> "Maybe issue are limits you are not following?").** The clickable carousel stays.
+>
+> - **Why 19:00 was blank and stayed blank:** that night Meta's app limit (#4) was in force.
+>   The read-back after posting could not run, and the code kept any carousel it could not
+>   read. The limit did not draw the cards blank, but it switched off the check that would
+>   have replaced them. The carousel 14 hours earlier was drawn fine. The fewer Meta calls
+>   from PR 94 stop the limit itself.
+> - **With `META_AD_ACCOUNT_ID` set (preferred):** each card picture is uploaded to the ad
+>   account's image library (`/act_{id}/adimages`) and the card names it by `image_hash`.
+>   Facebook fetches nothing, so nothing can come out blank. No ad is made and nothing is
+>   paid. The system user needs `ads_management` on that ad account. If an upload fails or
+>   the carousel is refused, the post goes out as photos.
+> - **Without it:** the carousel as it ran before. Each card names its square picture on
+>   trilio.lv, and this needs domain ownership. A read-back that cannot run now no longer
+>   ends the matter: `checkRecentCarousels` looks again on the ticks 15–120 minutes after
+>   posting and flags blank cards („Pārpublicēt").
+> - **Unchanged:** the admin page makes no Meta call per load. Its carousel line says which
+>   mode is on.
+>
+> What follows is the history.
 
 Owner's ask (8 Nov 2026), after the third attempt showed a carousel with no
 pictures at all: "Review Meta documentation and implement based on that.

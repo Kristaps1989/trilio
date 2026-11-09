@@ -10,6 +10,12 @@ export type MetaConfig = {
   igUserId: string;
   token: string;
   version: string;
+  /**
+   * The ad account (without "act_") whose image library holds a link carousel's card
+   * pictures: each card names its uploaded picture by `image_hash`, so Facebook fetches
+   * nothing itself (owner, 9 Nov 2026). Without it carousels go to the page as photos.
+   */
+  adAccountId?: string;
 };
 
 export function metaConfigFromEnv(env: Record<string, string | undefined> = process.env): MetaConfig | null {
@@ -17,7 +23,14 @@ export function metaConfigFromEnv(env: Record<string, string | undefined> = proc
   const igUserId = env.META_IG_USER_ID?.trim();
   const token = env.META_SYSTEM_USER_TOKEN?.trim();
   if (!pageId || !igUserId || !token) return null;
-  return { pageId, igUserId, token, version: env.META_GRAPH_VERSION?.trim() || "v23.0" };
+  const ad = env.META_AD_ACCOUNT_ID?.trim().replace(/^act_/, "");
+  return {
+    pageId,
+    igUserId,
+    token,
+    version: env.META_GRAPH_VERSION?.trim() || "v23.0",
+    ...(ad ? { adAccountId: ad } : {}),
+  };
 }
 
 type Fetch = typeof fetch;
@@ -216,6 +229,25 @@ export function metaProvider(
     }
   }
 
+  /**
+   * Uploads each card picture (fetched from the site) to the ad account's image library and
+   * returns their hashes in order. Throws on any failure: a carousel is all cards or none.
+   */
+  async function uploadCardPictures(urls: string[]): Promise<string[]> {
+    const hashes: string[] = [];
+    for (const url of urls) {
+      const res = await http(url, { signal: AbortSignal.timeout(30_000) });
+      if (!res.ok || !(res.headers.get("content-type") ?? "").startsWith("image/"))
+        throw new Error(`card picture ${res.status} at ${url}`);
+      const bytes = Buffer.from(await res.arrayBuffer()).toString("base64");
+      const r = await call("POST", `act_${cfg.adAccountId}/adimages`, { bytes }, cfg.token);
+      const first = Object.values((r.images ?? {}) as Record<string, { hash?: string }>)[0];
+      if (!first?.hash) throw new Error("no image hash returned");
+      hashes.push(first.hash);
+    }
+    return hashes;
+  }
+
   async function linkPreview(postId: string): Promise<Preview | null> {
     try {
       type Media = {
@@ -267,7 +299,7 @@ export function metaProvider(
         return fail(err);
       }
     },
-    async publishCarousel(network: Network, images: CarouselImage[], caption: string) {
+    async publishCarousel(network: Network, images: CarouselImage[], caption: string, link?: string) {
       try {
         if (network === "instagram") {
           // Each image is a carousel item first, then one container holds them all.
@@ -289,10 +321,102 @@ export function metaProvider(
           return await instagram({ media_type: "CAROUSEL", children: children.join(","), caption }, false);
         }
         const token = await page();
-        // The page always gets the slides as photos (owner, 9 Nov 2026). A link carousel's
-        // cards are pictures Facebook fetches on its own, and three tries to make that
-        // reliable still left cards blank; uploaded photos always show. The caption carries
-        // the link to the site.
+        // A clickable link carousel whose card pictures are uploaded to the ad account's image
+        // library and named by hash (owner, 9 Nov 2026): Facebook fetches nothing itself, which
+        // is what left cards blank before (three tries with picture URLs). Without an ad
+        // account, or if any upload fails, the slides go out as photos below; the caption
+        // carries the link either way.
+        if (link && cfg.adAccountId && images.every((i) => i.card)) {
+          const hashes = await uploadCardPictures(images.map((i) => i.card!.picture)).catch(
+            (err: unknown) => {
+              if (err instanceof Error && /#(190|200|10)\b/.test(err.message)) throw err;
+              console.warn(`[social] card pictures not uploaded (${(err as Error).message}); posting photos`);
+              return null;
+            },
+          );
+          if (hashes) {
+            try {
+              const r = await call(
+                "POST",
+                `${cfg.pageId}/feed`,
+                {
+                  message: caption,
+                  link,
+                  child_attachments: JSON.stringify(
+                    images.map(({ card }, k) => ({
+                      link: card!.link,
+                      name: card!.name,
+                      ...(card!.description ? { description: card!.description } : {}),
+                      image_hash: hashes[k],
+                    })),
+                  ),
+                  multi_share_optimized: "false",
+                  multi_share_end_card: "false",
+                },
+                token,
+              );
+              return { ok: true, id: String(r.id) };
+            } catch (err) {
+              if (err instanceof Error && /#(190|200|10)\b/.test(err.message)) throw err;
+              console.warn(`[social] link carousel refused (${(err as Error).message}); posting photos`);
+            }
+          }
+        }
+        // Without an ad account: the carousel that ran until 9 Nov, each card naming its square
+        // picture on trilio.lv for Facebook to fetch (clickable; usually drawn, not always).
+        // Only when this Page owns trilio.lv (domain verified), else photos below.
+        if (
+          link &&
+          !cfg.adAccountId &&
+          images.every((i) => i.card) &&
+          (await canCustomize(images[0]!.card!.link, token))
+        ) {
+          // Each card names its own square picture on trilio.lv, drawn and cached first:
+          // Facebook fetches it once, when the post is made. (A copy on Facebook's own
+          // CDN is not taken as a card picture: tried 8 Nov 2026, no pictures at all.)
+          await warm(images.map((i) => i.card!.picture));
+          const cards = images.map(({ card }) => card!);
+          let posted: string | null = null;
+          try {
+            const r = await call(
+              "POST",
+              `${cfg.pageId}/feed`,
+              {
+                message: caption,
+                link,
+                child_attachments: JSON.stringify(
+                  cards.map((card) => ({
+                    link: card.link,
+                    name: card.name,
+                    ...(card.description ? { description: card.description } : {}),
+                    picture: card.picture,
+                  })),
+                ),
+                multi_share_optimized: "false",
+                multi_share_end_card: "false",
+              },
+              token,
+            );
+            posted = String(r.id);
+          } catch (err) {
+            // A token or page problem fails the same way below; anything else
+            // (the format refused) still posts the slides, without links.
+            if (err instanceof Error && /\b(190|200|10)\b|#(190|200|10)\b/.test(err.message)) throw err;
+          }
+          if (posted) {
+            // Read back: a carousel drawn without its pictures is removed at once and the
+            // slides go out as photos instead. A preview that cannot be read now (Meta's rate
+            // limit, as at 19:00 on 9 Nov, when a blank carousel stayed up this way) is kept and
+            // checked again by the next ticks (checkPreviews), which flag it for a re-post.
+            const preview = await previewHasPicture(posted, linkPreview);
+            if (preview === null || preview.image) return { ok: true, id: posted };
+            // Which cards Facebook drew without a picture: the next diagnosis starts from data.
+            console.warn(
+              `[social] Facebook carousel ${posted} drawn without pictures (cards ${(preview.missing ?? []).join(", ") || "?"}); posting the slides as photos`,
+            );
+            await call("DELETE", posted, {}, token).catch(() => undefined);
+          }
+        }
         // The page: each photo uploaded unpublished, then one feed post with all of them.
         const media: Record<string, string> = {};
         for (const [i, { url }] of images.entries()) {

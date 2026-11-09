@@ -29,6 +29,7 @@ import {
   refreshPreviews,
   removePost,
   checkPreviews,
+  checkRecentCarousels,
   repostFacebook,
   socialSettings,
   syncInsights,
@@ -447,16 +448,31 @@ run("social posts", () => {
         `${BASE}/api/social/${id}/3/image.jpg`,
         `${BASE}/api/social/${id}/4/image.jpg`,
       ]);
-    // Photos on both networks (owner, 9 Nov 2026): no link cards, the page's caption has the link.
+    // The page: a link carousel, each card linking its own share page (its picture uploaded by
+    // hash when an ad account is set, else photos); Instagram has no links. The caption has the link too.
     const fb = media.find((m) => m.network === "facebook")!;
-    expect(fb.links).toBeUndefined();
+    expect(fb.links).toEqual([1, 2, 3, 4].map((n) => `${BASE}/social/${id}/${n}`));
+    expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
     expect(fb.caption).toContain(`${BASE}/`);
 
-    // Nothing for Facebook to fetch, so nothing to check or refresh: no Meta calls for it.
+    // Without an ad account the cards' pictures are fetched by Facebook: a refresh asks it to
+    // read each card again; a carousel just made is looked at again on the next ticks, and
+    // one drawn without its pictures is flagged for a re-post.
     const day = new Date();
     mockRefreshed().length = 0;
-    expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 0, ok: 0 });
-    expect(await checkPreviews(db, deps, day)).toBe(0);
+    expect(await refreshPreviews(db, deps, id, day)).toEqual({ asked: 1, ok: 1 });
+    expect(mockRefreshed()).toEqual(fb.links);
+    await db
+      .update(socialPosts)
+      .set({ fbPostId: `${sent!.fbPostId}noimg`, publishedAt: new Date(day.getTime() - 30 * 60_000) })
+      .where(eq(socialPosts.id, id));
+    mockRefreshed().length = 0;
+    expect(await checkRecentCarousels(db, deps, day)).toBe(1);
+    expect((await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!.previewMissing).toBe(true);
+    await db
+      .update(socialPosts)
+      .set({ fbPostId: sent!.fbPostId, previewMissing: false })
+      .where(eq(socialPosts.id, id));
     // Re-posting still replaces the page post only.
     expect(await repostFacebook(db, deps, id)).toBe(true);
     const reposted = (await db.select().from(socialPosts).where(eq(socialPosts.id, id)))[0]!;
