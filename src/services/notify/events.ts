@@ -97,7 +97,17 @@ export async function notifyFunnel(db: Db, from: string, to: string): Promise<Fu
     })
     .from(uiEvents)
     .where(
-      and(gte(uiEvents.day, from), lte(uiEvents.day, to), cleanVisitor(uiEvents.day, uiEvents.visitorHash)),
+      and(
+        gte(uiEvents.day, from),
+        lte(uiEvents.day, to),
+        cleanVisitor(uiEvents.day, uiEvents.visitorHash),
+        // The question before the shop counts only for a visitor who viewed a page that day
+        // (10 Nov 2026): scripts open "Pirkt" links (/go/ → /pirms-veikala/) without ever
+        // loading a page, and were counted as 23 questions against 4 searches. A person's
+        // browser always sends the page-view beacon; such a client never does.
+        sql`(${uiEvents.event} not in ('ask_shown', 'ask_shop') or exists (
+          select 1 from visits v where v.day = ${uiEvents.day} and v.visitor_hash = ${uiEvents.visitorHash}))`,
+      ),
     )
     .groupBy(uiEvents.subcategoryId, uiEvents.event);
   const rows = new Map<string, FunnelRow>();
