@@ -1,5 +1,6 @@
 import { after, NextResponse } from "next/server";
 import { db } from "@/db";
+import { requestSuspicion, signalsOf } from "@/domain/analytics/click-quality";
 import { isBot } from "@/domain/analytics/visits";
 import { landingWithTags } from "@/domain/growth/tv";
 import { getTvCampaign, recordTvLinkOpen } from "@/services/growth/tv";
@@ -15,7 +16,11 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
   const { slug } = await ctx.params;
   const campaign = await getTvCampaign(db, slug.toLowerCase()).catch(() => null);
   if (!campaign) return NextResponse.redirect(`${appBaseUrl()}/`, 302);
-  if (!isBot(request.headers.get("user-agent")))
+  // Counted like every other figure (owner, 11 Nov 2026): not a named bot, and a browser that
+  // sends the navigation headers a person's browser always sends (a scan or a typed address
+  // does); a script with a browser's name does not.
+  const ua = request.headers.get("user-agent");
+  if (!isBot(ua) && requestSuspicion(ua, signalsOf(request.headers), "page") === null)
     after(() => recordTvLinkOpen(db, campaign.slug).catch(() => undefined));
   return NextResponse.redirect(`${appBaseUrl()}${landingWithTags(campaign.landingPath, campaign.slug)}`, {
     status: 302,

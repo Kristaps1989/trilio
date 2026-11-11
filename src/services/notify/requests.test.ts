@@ -1,7 +1,7 @@
 import { eq, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { notifyRequests, uiEvents, users, products } from "@/db/schema";
+import { notifyRequests, uiEvents, users, products, visits } from "@/db/schema";
 import { memoryEmailSender } from "@/services/notify/email";
 import { CONSENT_VERSION } from "@/domain/notify/notify";
 import { notifyFunnel, purgeUiEvents } from "./events";
@@ -67,6 +67,7 @@ run("notify requests", () => {
     await db.delete(notifyRequests).where(like(notifyRequests.email, `%@${DOMAIN}`));
     await db.delete(users).where(like(users.email, `%@${DOMAIN}`));
     await db.delete(uiEvents).where(like(uiEvents.visitorHash, "notify-test-%"));
+    await db.delete(visits).where(like(visits.visitorHash, "notify-test-%"));
   }
 
   beforeAll(async () => {
@@ -340,6 +341,14 @@ run("notify requests", () => {
       { day, visitorHash: "notify-test-a", event: "ask_shown", subcategoryId: "fridge" },
       { day, visitorHash: "notify-test-b", event: "ask_shown", subcategoryId: "fridge" },
       { day, visitorHash: "notify-test-b", event: "ask_shop", subcategoryId: "fridge" },
+      // A script opening "Pirkt" links straight (no page ever viewed): never counted.
+      { day, visitorHash: "notify-test-script", event: "ask_shown", subcategoryId: "hob" },
+      { day, visitorHash: "notify-test-script", event: "ask_shop", subcategoryId: "hob" },
+    ]);
+    // Both people viewed a page that day (the beacon); the script did not.
+    await db.insert(visits).values([
+      { day, path: "/rezultati", section: "results", subcategory: "fridge", visitorHash: "notify-test-a" },
+      { day, path: "/rezultati", section: "results", subcategory: "fridge", visitorHash: "notify-test-b" },
     ]);
     const rows = await notifyFunnel(db, day, day);
     const f = rows.find((r) => r.subcategoryId === "fridge")!;
@@ -348,6 +357,9 @@ run("notify requests", () => {
     expect(f.confirmed).toBeGreaterThanOrEqual(1);
     expect(f.askShown).toBeGreaterThanOrEqual(2);
     expect(f.askShop).toBeGreaterThanOrEqual(1);
+    const hob = rows.find((r) => r.subcategoryId === "hob");
+    expect(hob?.askShown ?? 0).toBe(0);
+    expect(hob?.askShop ?? 0).toBe(0);
   });
 
   it("housekeeping deletes requests that started nothing after 7 days, and old button events after 90", async () => {

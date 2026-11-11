@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { adLandings, affiliateClicks, offers, tvCampaigns, tvViewers } from "@/db/schema";
+import { adLandings, affiliateClicks, offers, tvCampaigns, tvViewers, visits } from "@/db/schema";
 import {
   createTvCampaign,
   deleteTvCampaign,
@@ -89,11 +89,34 @@ run("TV campaigns", { timeout: 60_000 }, () => {
       })
       .returning();
     await db.insert(affiliateClicks).values({ offerId: offer!.id, adLandingId: landing!.id });
+    // A script that opened the short link: its day is left out, as everywhere else.
+    const [scripted] = await db
+      .insert(adLandings)
+      .values({
+        day: "2031-05-05",
+        visitorHash: "unit-script",
+        path: "/izvelies",
+        utmSource: "go3",
+        utmMedium: "tv",
+        utmCampaign: SLUG,
+      })
+      .returning();
+    await db.insert(visits).values({
+      day: "2031-05-05",
+      path: "/izvelies",
+      section: "choose",
+      visitorHash: "unit-script",
+      suspect: "no_fetch_meta",
+    });
+    await db.insert(affiliateClicks).values({ offerId: offer!.id, adLandingId: scripted!.id });
 
     const s = (await tvStats(db)).find((c) => c.campaign.slug === SLUG)!;
     expect(s).toMatchObject({ impressions: 5, reach: 3, linkOpens: 1, visits: 1, shopClicks: 1 });
     expect(s.days).toEqual([{ day: "2031-05-05", impressions: 5, reach: 3, linkOpens: 1 }]);
-    await db.delete(affiliateClicks).where(sql`${affiliateClicks.adLandingId} = ${landing!.id}`);
+    await db
+      .delete(affiliateClicks)
+      .where(sql`${affiliateClicks.adLandingId} in (${landing!.id}, ${scripted!.id})`);
+    await db.delete(visits).where(sql`${visits.visitorHash} = 'unit-script'`);
   });
 
   it("forgets devices after 90 days and deletes everything with the campaign", async () => {
