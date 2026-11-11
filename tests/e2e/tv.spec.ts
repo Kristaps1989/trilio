@@ -108,6 +108,10 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   expect(Number(await effect.getAttribute("data-tv-sessions-after"))).toBeGreaterThanOrEqual(1);
   await expect(effect.locator("[data-tv-profile] svg")).toBeVisible();
   await expect(page.locator(`[data-tv-campaign="${SLUG}"]`).getByText("aprēķināts tagad")).toBeVisible();
+  // The channel mix (§8): the viewer came with no ad tags, so is direct and counted (✓).
+  await expect(page.locator(`[data-tv-campaign="${SLUG}"] [data-tv-channels]`)).toContainText(
+    "✓ Tiešie un organiskie",
+  );
 
   // The pixel with Go3's optional fields (docs/TV_PIXEL_BEST_PRACTICE.md): the viewer's address by
   // macro, a device header, the creative and channel, and a holdout device that is not an impression.

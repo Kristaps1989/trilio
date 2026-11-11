@@ -1,0 +1,1 @@
+ALTER TABLE "tv_uplift" ADD COLUMN "channels" jsonb;

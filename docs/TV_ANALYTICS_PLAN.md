@@ -104,3 +104,34 @@ them, against the flat line of the weeks before.
 - `tests/e2e/tv.spec.ts`: after the pixel hits and a viewer's visit, the
   campaign shows sessions after TV ≥ 1 and the 24-hour chart; the case-study
   page opens, passes axe, has the print button and the method text.
+- `src/services/growth/tv-channels.test.ts`: Meta and non-brand Google ad
+  visitors stay out of the uplift and the baseline but show in the mix; an old
+  baseline is redrawn once, or marked `all` when its raw visits are gone.
+
+## 8. Channels
+
+TV can only cause visits that arrive without another campaign's click. Each
+visitor-day gets one channel from its first landing of the day
+(`src/domain/growth/channels.ts`); a day with no landing is **direct**.
+
+| Channel | From | Counted in the uplift |
+| --- | --- | --- |
+| direct | no tags (typed address, bookmark, organic, untagged e-mail) | yes |
+| tv | `utm_medium=tv` (the `/tv/<slug>` short link) | yes |
+| google_brand | `gclid` or paid Google with „trilio" in the term or campaign | yes |
+| google | other paid Google | no |
+| meta_ads | Facebook/Instagram with a paid medium, or a bare `fbclid` | no |
+| social | unpaid Facebook/Instagram, `utm_medium=social` | no |
+| email | `utm_medium=email` or source email/newsletter | no |
+| other | any other tagged source | no |
+
+- Name Google brand campaigns (or their keywords) with „trilio" so brand
+  searches after a spot count as TV's effect.
+- Our own e-mails are untagged today, so their visitors count as direct.
+- `fbclid` without UTM tags is captured as `facebook / fbclid` (Meta ads).
+- The baseline is drawn with the same filter and records `filter:
+  "tv-eligible-v1"`. A baseline drawn before the filter is redrawn once, by the
+  nightly rollup, while its days are still in the raw visits (35 days);
+  otherwise it is kept and marked `filter: "all"`.
+- The TV page and `/api/stats/tv` show the channel mix next to the uplift, so
+  a busy Meta day is visible and not mistaken for TV.
