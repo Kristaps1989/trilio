@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { controlPixelUrl, extendedPixelUrl, pixelUrl, shortLinkUrl } from "@/domain/growth/tv";
 import { parseTvRange, rangeDays, TV_RANGES } from "@/domain/admin/stats";
 import { formatInt } from "@/i18n/format";
-import { tvPixelReport, tvReport, tvStats } from "@/services/growth/tv";
+import { CHANNELS, TV_ELIGIBLE } from "@/domain/growth/channels";
+import { tvPixelReport, tvReport, tvStats, type TvReport } from "@/services/growth/tv";
 import { appBaseUrl } from "@/services/payments";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
@@ -167,6 +168,7 @@ export default async function AdsTv({ searchParams }: Props) {
               >
                 <EffectSummary report={reports.get(c.campaign.slug)!} tone="dark" />
                 <EffectDays report={reports.get(c.campaign.slug)!} />
+                <ChannelMixLine report={reports.get(c.campaign.slug)!} />
                 <p className="max-w-3xl text-sm text-stone">{t("method")}</p>
                 <form action={recomputeTvBaselineAction} className="flex flex-wrap items-center gap-3">
                   <input type="hidden" name="slug" value={c.campaign.slug} />
@@ -208,5 +210,30 @@ export default async function AdsTv({ searchParams }: Props) {
         </Section>
       ))}
     </>
+  );
+}
+
+/** Visitors per channel next to the uplift (docs/TV_ANALYTICS_PLAN.md §8); ✓ marks what TV is measured on. */
+async function ChannelMixLine({ report }: { report: TvReport }) {
+  const t = await getTranslations("admin.ads.tv.channels");
+  const mix = report.channels;
+  const total = CHANNELS.reduce((n, c) => n + (mix[c] ?? 0), 0);
+  return (
+    <div className="flex max-w-3xl flex-col gap-1" data-tv-channels>
+      <p className="text-[15px] font-semibold text-mist">{t("title")}</p>
+      {total === 0 ? (
+        <p className="text-sm text-stone">{t("none")}</p>
+      ) : (
+        <p className="text-[15px] text-mist">
+          {CHANNELS.filter((c) => mix[c])
+            .map(
+              (c) =>
+                `${TV_ELIGIBLE.has(c) ? "✓ " : ""}${t(c)} ${formatInt(mix[c]!)} (${Math.round((100 * mix[c]!) / total)} %)`,
+            )
+            .join(" · ")}
+        </p>
+      )}
+      <p className="text-sm text-stone">{t("note")}</p>
+    </div>
   );
 }

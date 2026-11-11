@@ -20,6 +20,17 @@ import {
 } from "@/db/schema";
 import { RAW_RETENTION_DAYS, rigaDay } from "@/domain/analytics/visits";
 import { cleanVisitor } from "@/services/visits/suspects";
+import {
+  CHANNELS,
+  mixOf,
+  TV_ELIGIBLE,
+  visitorChannel,
+  type Channel,
+  type ChannelMix,
+} from "@/domain/growth/channels";
+
+/** The visitor filter the baseline and the uplift use now (docs/TV_ANALYTICS_PLAN.md §8). */
+export const CHANNEL_FILTER = "tv-eligible-v1";
 import { SLUG, slugify, viewerHash, viewerId } from "@/domain/growth/tv";
 import { deviceLabel, parseSection } from "@/domain/growth/go3-section";
 import {
@@ -422,8 +433,8 @@ const shiftDay = (day: string, days: number) =>
  * without the visitor days left out of every figure: scripts and the admins'
  * own browsing (docs/CLICK_QUALITY_PLAN.md §6).
  */
-async function pageViews(db: Db, day: string) {
-  const rows = await db
+async function allPageViews(db: Db, day: string) {
+  return db
     .select({
       visitorHash: visits.visitorHash,
       at: visits.createdAt,
@@ -432,7 +443,53 @@ async function pageViews(db: Db, day: string) {
     })
     .from(visits)
     .where(and(eq(visits.day, day), cleanVisitor(visits.day, visits.visitorHash)));
-  return rows;
+}
+
+/** Each visitor's channel that day, from their ad and post landings ("direct" without any). */
+async function channelsOn(db: Db, day: string): Promise<Map<string, Channel>> {
+  const rows = await db
+    .select({
+      visitorHash: adLandings.visitorHash,
+      gclid: adLandings.gclid,
+      utmSource: adLandings.utmSource,
+      utmMedium: adLandings.utmMedium,
+      utmCampaign: adLandings.utmCampaign,
+      utmTerm: adLandings.utmTerm,
+      at: adLandings.createdAt,
+    })
+    .from(adLandings)
+    .where(eq(adLandings.day, day));
+  const by = new Map<string, typeof rows>();
+  for (const r of rows) by.set(r.visitorHash, [...(by.get(r.visitorHash) ?? []), r]);
+  return new Map([...by].map(([hash, list]) => [hash, visitorChannel(list)]));
+}
+
+/**
+ * The day's page views TV is measured on: people (no scripts, no admins) who came through a
+ * channel TV can cause - direct or organic, the TV link, a Google brand search - and not those
+ * another channel sent: other Google Ads, Meta ads, social posts, e-mails, partners
+ * (docs/TV_ANALYTICS_PLAN.md §8). The baseline is drawn the same way.
+ */
+async function pageViews(db: Db, day: string) {
+  const [rows, channel] = await Promise.all([allPageViews(db, day), channelsOn(db, day)]);
+  return rows.filter((r) => TV_ELIGIBLE.has(channel.get(r.visitorHash) ?? "direct"));
+}
+
+/** That day's visitors (people with a page view) per channel, for the mix shown next to the uplift. */
+export async function dayChannelMix(db: Db, day: string): Promise<ChannelMix> {
+  const [rows, channel] = await Promise.all([allPageViews(db, day), channelsOn(db, day)]);
+  const visitors = [...new Set(rows.map((r) => r.visitorHash))];
+  return mixOf(visitors.map((h) => channel.get(h) ?? "direct"));
+}
+
+/** Channel mixes added up, in the fixed channel order. */
+export function sumMix(mixes: (ChannelMix | null | undefined)[]): ChannelMix {
+  const out: ChannelMix = {};
+  for (const c of CHANNELS) {
+    const n = mixes.reduce((t, m) => t + (m?.[c] ?? 0), 0);
+    if (n) out[c] = n;
+  }
+  return out;
 }
 
 /** The first day the pixel counted an impression, or null. */
@@ -461,7 +518,13 @@ export async function ensureTvBaseline(db: Db, campaign: TvCampaign): Promise<Tv
     if (views.length === 0) continue;
     days.push(perBucket(sessionsOf(views)));
   }
-  const baseline: TvBaseline = { from, to, days: days.length, sessions: baselineProfile(days) };
+  const baseline: TvBaseline = {
+    from,
+    to,
+    days: days.length,
+    sessions: baselineProfile(days),
+    filter: CHANNEL_FILTER,
+  };
   await db.update(tvCampaigns).set({ baseline }).where(eq(tvCampaigns.slug, campaign.slug));
   return baseline;
 }
@@ -482,13 +545,36 @@ export async function recomputeTvBaseline(
   const from = campaign.baseline?.from ?? shiftDay(first, -BASELINE_DAYS);
   const kept = rigaDay(new Date(now.getTime() - (RAW_RETENTION_DAYS - 1) * DAY_MS));
   if (from < kept) return { ok: false, error: "expired" };
-  await db.update(tvCampaigns).set({ baseline: null }).where(eq(tvCampaigns.slug, campaign.slug));
-  const baseline = await ensureTvBaseline(db, { ...campaign, baseline: null });
+  const baseline = await redrawBaseline(db, campaign, kept);
   if (!baseline) return { ok: false, error: "none" };
-  // Every stored day still in the raw visits is computed again against the new baseline.
-  await db.delete(tvUplift).where(and(eq(tvUplift.slug, campaign.slug), gte(tvUplift.day, kept)));
   const days = await rollupTvUplift(db, now);
   return { ok: true, baseline, days };
+}
+
+/** A new baseline from the raw visits, and the stored days still in them cleared for the rollup. */
+async function redrawBaseline(db: Db, campaign: TvCampaign, kept: string): Promise<TvBaseline | null> {
+  await db.update(tvCampaigns).set({ baseline: null }).where(eq(tvCampaigns.slug, campaign.slug));
+  const baseline = await ensureTvBaseline(db, { ...campaign, baseline: null });
+  if (!baseline) return null;
+  // Every stored day still in the raw visits is computed again against the new baseline.
+  await db.delete(tvUplift).where(and(eq(tvUplift.slug, campaign.slug), gte(tvUplift.day, kept)));
+  return baseline;
+}
+
+/**
+ * A baseline drawn before the channel filter is drawn again once, with the stored days still
+ * in the raw visits, so the comparison counts the same visitors on both sides. When its raw
+ * visits are gone it is marked "all" and kept: the case study never loses its ground.
+ */
+async function refilterBaseline(db: Db, c: TvCampaign, now: Date): Promise<TvBaseline | null> {
+  if (!c.baseline || c.baseline.filter) return c.baseline ?? null;
+  const kept = rigaDay(new Date(now.getTime() - (RAW_RETENTION_DAYS - 1) * DAY_MS));
+  if (c.baseline.from < kept) {
+    const marked = { ...c.baseline, filter: "all" };
+    await db.update(tvCampaigns).set({ baseline: marked }).where(eq(tvCampaigns.slug, c.slug));
+    return marked;
+  }
+  return redrawBaseline(db, c, kept);
 }
 
 /** The baseline's bucket series when it rests on at least one day; otherwise null (no uplift figure). */
@@ -556,7 +642,7 @@ export async function rollupTvUplift(db: Db, now = new Date()): Promise<number> 
   const campaigns = await db.select().from(tvCampaigns);
   let written = 0;
   for (const c of campaigns) {
-    const baseline = await ensureTvBaseline(db, c);
+    const baseline = (await refilterBaseline(db, c, now)) ?? (await ensureTvBaseline(db, c));
     const campaign = { ...c, baseline };
     const days = await impressionDays(db, c.slug, cutoff, shiftDay(today, -1));
     if (days.length === 0) continue;
@@ -568,7 +654,7 @@ export async function rollupTvUplift(db: Db, now = new Date()): Promise<number> 
     const redo = new Set(days.slice(-2));
     for (const day of days) {
       if (have.has(day) && !redo.has(day)) continue;
-      const u = await computeTvUpliftDay(db, campaign, day);
+      const u = { ...(await computeTvUpliftDay(db, campaign, day)), channels: await dayChannelMix(db, day) };
       await db
         .insert(tvUplift)
         .values({ slug: c.slug, day, ...u, computedAt: now })
@@ -592,8 +678,13 @@ export async function rollupTvUplift(db: Db, now = new Date()): Promise<number> 
 export type TvReport = {
   campaign: TvCampaign;
   /** The campaign's days with impressions, newest first, each with its uplift figures. */
-  days: ({ day: string; live: boolean } & DayUplift)[];
+  days: ({ day: string; live: boolean; channels?: ChannelMix | null } & DayUplift)[];
   summary: UpliftSummary;
+  /**
+   * Visitors per channel over the days shown (docs/TV_ANALYTICS_PLAN.md §8): the uplift counts
+   * only direct, tv and google_brand; the rest came through another channel. Null for days before 11 Nov.
+   */
+  channels: ChannelMix;
   baseline: TvBaseline | null;
   /** Searches containing "trilio" per day (Search Console), from the baseline's first day on. */
   brand: { day: string; clicks: number; impressions: number }[];
@@ -632,7 +723,12 @@ export async function tvReport(
         const { slug: _slug, day: _day, computedAt: _at, ...figures } = row;
         days.push({ day, live: false, ...figures });
       } else if (day >= cutoff) {
-        days.push({ day, live: true, ...(await computeTvUpliftDay(db, campaign, day)) });
+        days.push({
+          day,
+          live: true,
+          ...(await computeTvUpliftDay(db, campaign, day)),
+          channels: await dayChannelMix(db, day),
+        });
       }
     }
   }
@@ -668,6 +764,7 @@ export async function tvReport(
     campaign,
     days,
     summary: summarise([...days].reverse(), base),
+    channels: sumMix(days.map((d) => d.channels)),
     baseline: campaign.baseline ?? null,
     brand: brand.map((b) => ({ day: b.day, clicks: Number(b.clicks), impressions: Number(b.impressions) })),
     offDays: first ? await offDayControl(db, slug, first, today, days, now) : null,

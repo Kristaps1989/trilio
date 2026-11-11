@@ -211,6 +211,13 @@
       "when": 1794260047381,
       "tag": "0029_social_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794382950488,
+      "tag": "0030_tv_channels",
+      "breakpoints": true
     }
   ]
 }

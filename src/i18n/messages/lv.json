@@ -2256,7 +2256,7 @@
         "live": "aprēķināts tagad",
         "noUplift": "Ietekmi rādīsim, kad pikselis būs saskaitījis pirmos parādījumus.",
         "report": "Pārskats Go3",
-        "method": "Metode: diena sadalīta 10 minūšu posmos. Posms ir „pēc TV”, ja tajā vai iepriekšējā posmā bija parādījumi. Apmeklējums ir sesija, kas sākas posmā (lapas skatījums pēc 30 minūšu klusuma). Gaidāmie ir tādu pašu posmu vidējais 14 dienās pirms pirmā parādījuma; pieaugums ir starpība. Tas ir novērtējums: tajās pašās minūtēs darbojas arī citi kanāli.",
+        "method": "Metode: diena sadalīta 10 minūšu posmos. Posms ir „pēc TV”, ja tajā vai iepriekšējā posmā bija parādījumi. Apmeklējums ir sesija, kas sākas posmā (lapas skatījums pēc 30 minūšu klusuma). Skaitām tikai apmeklētājus, kurus TV var atvest: tiešos un organiskos, no TV saites un no Google zīmola meklējuma („trilio”); citas Google reklāmas, Meta reklāmas, sociālo tīklu ieraksti un e-pasti netiek skaitīti ne bāzē, ne pēc TV. Gaidāmie ir tādu pašu posmu vidējais 14 dienās pirms pirmā parādījuma; pieaugums ir starpība.",
         "period": "Periods",
         "periodDays": "{from} – {to}",
         "range": {
@@ -2355,6 +2355,19 @@
             }
           },
           "optOut": "Atteikušās no izsekošanas: {n}"
+        },
+        "channels": {
+          "title": "Apmeklētāji pēc kanāla",
+          "note": "Visi cilvēki, kas tajās dienās apmeklēja vietni. TV ietekmi mēra tikai uz atzīmētajiem kanāliem (✓); pārējos atnesa cits kanāls. Google zīmola reklāma ir tā, kuras atslēgvārdā vai kampaņas nosaukumā ir „trilio”.",
+          "none": "Kanālu dati ir no 11. novembra.",
+          "direct": "Tiešie un organiskie",
+          "tv": "TV saite / QR",
+          "google_brand": "Google: zīmols",
+          "google": "Google reklāmas",
+          "meta_ads": "Meta reklāmas",
+          "social": "Sociālie tīkli",
+          "email": "E-pasti",
+          "other": "Citi avoti"
         }
       },
       "tvReport": {

@@ -11,6 +11,8 @@ export type AdParams = {
 };
 
 const GCLID = /^[A-Za-z0-9_-]{8,200}$/;
+/** Facebook's click id: longer than Google's. */
+const FBCLID = /^[A-Za-z0-9_-]{8,300}$/;
 const TAG = /^[\p{L}\p{N} ._+:/-]{1,100}$/u;
 
 function tag(v: unknown): string | null {
@@ -29,10 +31,14 @@ export function adParams(input: Record<string, unknown>): AdParams | null {
     utmCampaign: tag(input.utm_campaign),
     utmTerm: tag(input.utm_term),
   };
+  // A click from Facebook or Instagram carries fbclid even without tags (an organic share or
+  // post): kept as a social landing, so TV measurement can tell it apart (docs/TV_ANALYTICS_PLAN.md §8).
+  if (!out.gclid && !out.utmSource && typeof input.fbclid === "string" && FBCLID.test(input.fbclid))
+    return { ...out, utmSource: "facebook", utmMedium: "fbclid" };
   // A paid visit has a click id or at least a source and a medium; a bare utm_term is noise.
   if (!out.gclid && !(out.utmSource && out.utmMedium)) return null;
   return out;
 }
 
 /** The query keys the page sends with its first view. */
-export const AD_KEYS = ["gclid", "utm_source", "utm_medium", "utm_campaign", "utm_term"] as const;
+export const AD_KEYS = ["gclid", "fbclid", "utm_source", "utm_medium", "utm_campaign", "utm_term"] as const;

@@ -1,5 +1,6 @@
 import type { ClickSignals } from "@/domain/analytics/click-quality";
 import { sql } from "drizzle-orm";
+import type { ChannelMix } from "@/domain/growth/channels";
 import {
   bigint,
   boolean,
@@ -910,7 +911,18 @@ export const tvCampaigns = pgTable("tv_campaigns", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export type TvBaseline = { from: string; to: string; days: number; sessions: number[] };
+export type TvBaseline = {
+  from: string;
+  to: string;
+  days: number;
+  sessions: number[];
+  /**
+   * Which visitors it counts: "tv-eligible-v1" = only channels TV can cause (direct and
+   * organic, the TV link, Google brand; docs/TV_ANALYTICS_PLAN.md §8). Absent on baselines
+   * drawn before 11 Nov 2026 from all traffic; "all" when it could not be drawn again.
+   */
+  filter?: string;
+};
 
 export type TvHouseholdFigures = {
   source: string;
@@ -1069,6 +1081,8 @@ export const tvUplift = pgTable(
     phoneAfter: integer("phone_after").notNull().default(0),
     correlation: real("correlation"),
     buckets: jsonb("buckets").$type<[number, number][]>().notNull().default([]),
+    /** That day's visitors per channel (docs/TV_ANALYTICS_PLAN.md §8); null before 11 Nov 2026. */
+    channels: jsonb("channels").$type<ChannelMix>(),
     /**
      * Household view-through (docs/TV_PIXEL_BEST_PRACTICE.md §2.2–2.3): households exposed
      * that day, of them those with a site visit 0–20 minutes after an exposure and within

@@ -67,6 +67,9 @@ export async function tvStatsJson(db: Db, rawPeriod: string | null, now = new Da
                 households: report.households,
                 householdSummary: report.households.length ? householdSummary(report.households) : null,
                 brandSearches: report.brand,
+                // Visitors per channel; the uplift counts only direct, tv and google_brand.
+                channels: report.channels,
+                upliftCounts: ["direct", "tv", "google_brand"],
               }
             : null,
           pixel,
@@ -75,6 +78,7 @@ export async function tvStatsJson(db: Db, rawPeriod: string | null, now = new Da
     ),
     notes: [
       "Sessions, the baseline and households leave out visitor days with a script's request or an admin's own browsing.",
+      "Sessions and the baseline count only visitors TV can bring (direct/organic, the TV link, Google brand search); other paid, social and e-mail visitors are left out and shown in effect.channels.",
       "A bucket is 10 minutes; 'after TV' is a bucket with impressions or right after one (0–20 min).",
       "Household figures need a household address from the pixel (macro, X-Device-IP or many forwarded addresses); see pixel.days[].household.",
     ],
