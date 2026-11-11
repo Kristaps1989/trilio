@@ -362,15 +362,24 @@ export async function tvStats(db: Db, range?: DayRange): Promise<TvStats[]> {
         eq(adLandings.utmCampaign, campaign.slug),
         ...within(adLandings.day),
       );
+      // Visits and shop clicks from the short link, without scripts and the admins' own
+      // browsing: the same visitor days the site statistics leave out (cleanVisitor).
       const [visits] = await db
         .select({ n: sql<number>`count(*)::int` })
         .from(adLandings)
-        .where(fromTv);
+        .where(and(fromTv, cleanVisitor(adLandings.day, adLandings.visitorHash)));
       const [clicks] = await db
         .select({ n: sql<number>`count(*)::int` })
         .from(affiliateClicks)
         .innerJoin(adLandings, eq(adLandings.id, affiliateClicks.adLandingId))
-        .where(and(fromTv, isNull(affiliateClicks.suspect)));
+        .where(
+          and(
+            fromTv,
+            isNull(affiliateClicks.suspect),
+            eq(affiliateClicks.internal, false),
+            cleanVisitor(adLandings.day, adLandings.visitorHash),
+          ),
+        );
       const days = new Map<string, { day: string; impressions: number; reach: number; linkOpens: number }>();
       const at = (day: string) => {
         if (!days.has(day)) days.set(day, { day, impressions: 0, reach: 0, linkOpens: 0 });
