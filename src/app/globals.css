@@ -103,6 +103,17 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/*
+ * A dropdown's open list: the fields have a see-through background, which Chromium on
+ * Windows paints as a white list while the text stays light. Give the options their own
+ * dark ground, so every choice is readable, not only the one under the pointer.
+ */
+select option,
+select optgroup {
+  background-color: var(--color-night);
+  color: var(--color-mist);
+}
+
 body {
   background: var(--color-night);
   color: var(--color-mist);
