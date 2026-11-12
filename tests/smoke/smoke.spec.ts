@@ -61,6 +61,8 @@ test("guided flow: home → category → every question → results → shop", a
     .locator("[data-home-start]")
     .getByRole("link", { name: /Virtuves mazā tehnika/ })
     .click();
+  // Wait for the group page: the home page has its own "Tējkannas" link, to the category page.
+  await expect(page).toHaveURL(/\/izvelies\/kitchensmall$/);
   await page.getByRole("link", { name: /^Tējkannas/ }).click();
   // Take the pre-selected answer on every screen ("Tālāk"); on the price
   // screen choose "no budget" so a sparse catalogue still has results.

@@ -203,6 +203,20 @@ export function Analytics({
       aria-label={t("title")}
       data-ga-ignore=""
       data-consent-bar
+      // The bar's height, for what sticks to the bottom of the screen (the question
+      // screen's buttons): they sit above the bar, never under it.
+      ref={(el) => {
+        if (!el) return;
+        const root = document.documentElement;
+        const set = () => root.style.setProperty("--consent-bar-h", `${el.offsetHeight}px`);
+        set();
+        const observer = new ResizeObserver(set);
+        observer.observe(el);
+        return () => {
+          observer.disconnect();
+          root.style.removeProperty("--consent-bar-h");
+        };
+      }}
       className="fixed inset-x-0 bottom-0 z-50 border-t border-line-25 bg-night/95 px-gutter pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(0_0_0/0.3)] backdrop-blur"
     >
       <div className="mx-auto flex w-full max-w-[1160px] items-center gap-3">

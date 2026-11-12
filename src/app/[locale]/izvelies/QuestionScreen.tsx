@@ -112,7 +112,7 @@ function Actions({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   return (
     <div
-      className="sticky bottom-0 z-10 -mx-gutter mt-1 flex flex-wrap items-center gap-[14px] border-t border-line-20 bg-night/95 px-gutter py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
+      className="sticky bottom-[var(--consent-bar-h,0px)] z-10 -mx-gutter mt-1 flex flex-wrap items-center gap-[14px] border-t border-line-20 bg-night/95 px-gutter py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
       data-flow-actions
     >
       <button
