@@ -349,6 +349,20 @@ async function Flight({
       <p className="max-w-3xl text-sm text-stone">
         {t("method", { since: overlap.since.toISOString().slice(0, 10) })}
       </p>
+      {overlap.devices ? (
+        <Table
+          caption={t("devicesTitle")}
+          head={[t("deviceGroup"), t("households")]}
+          rows={[
+            [t("own"), formatInt(overlap.devices.own)],
+            [t("partner"), formatInt(overlap.devices.partner)],
+            [t("both"), formatInt(overlap.devices.both)],
+          ]}
+        />
+      ) : null}
+      <p className="max-w-3xl text-sm text-stone" data-tv-flight-devices={overlap.devices?.both ?? ""}>
+        {t(overlap.devices ? "devicesMethod" : "devicesNone")}
+      </p>
       <form action={unlinkFlightAction}>
         <input type="hidden" name="slug" value={slug} />
         <Button type="submit" variant="outline" size="sm">

@@ -980,6 +980,11 @@ export const tvViewers = pgTable(
     accountHash: text("account_hash"),
     /** A child's profile ("C" in Go3's viewer id). Null when the id has no profile type. */
     child: boolean("child"),
+    /**
+     * The device's advertising id hashed with the flight's shared salt, only while the campaign
+     * is in a flight: the same phone in both campaigns is the same hash (docs/DISPLAY_PLAN.md §3).
+     */
+    deviceHash: text("device_hash"),
   },
   (t) => [
     primaryKey({ columns: [t.slug, t.day, t.viewerHash] }),

@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { tvCampaigns, tvExposures, tvHouseholdVisits } from "@/db/schema";
+import { tvCampaigns, tvExposures, tvHouseholdVisits, tvViewers } from "@/db/schema";
 import { adParams } from "@/domain/growth/attribution";
 import { landingChannel, TV_ELIGIBLE } from "@/domain/growth/channels";
-import { displayPixelUrl, landingWithTags } from "@/domain/growth/tv";
+import { advertisingId, displayPixelUrl, landingWithTags } from "@/domain/growth/tv";
 import { pixelParams } from "@/domain/growth/tv-pixel";
 import {
   createTvCampaign,
@@ -175,6 +175,8 @@ run("display campaigns and flights", { timeout: 60_000 }, () => {
       partner: { households: 1, came: 1 },
       both: { households: 1, came: 1 },
     });
+    // No tracker has carried a device advertising id yet.
+    expect(o.devices).toBeNull();
     // The same flight from the banner's side.
     expect((await flightOverlap(db, BANNER))!.groups).toEqual({
       own: { households: 1, came: 1 },
@@ -183,9 +185,47 @@ run("display campaigns and flights", { timeout: 60_000 }, () => {
     });
   });
 
+  it("matches the same device exactly when both trackers carry its advertising id", async () => {
+    const PHONE = "38400000-8cf0-11bd-b23e-10b96e40000d";
+    const OTHER = "11111111-2222-3333-4444-555555555555";
+    const call = (slug: string, query: Record<string, string>, ip: string) =>
+      recordTvImpression(db, {
+        slug,
+        vid: query.vid ?? null,
+        ip,
+        userAgent: CHROME,
+        now: at(60),
+        pixel: { params: pixelParams(new URLSearchParams(query)), headers: {} },
+      });
+    // Go3 sends the id in did (with its type); Ad Manager, in an app, in vid.
+    await call(
+      TV,
+      { vid: "3205728-344371-M", did: `aaid:${PHONE.toUpperCase()}`, ip: "198.51.100.30" },
+      "203.0.113.200",
+    );
+    await call(BANNER, { vid: PHONE }, "198.51.100.31");
+    await call(BANNER, { vid: OTHER }, "198.51.100.32");
+    // Limited ad tracking: counted, but no device hash.
+    await call(BANNER, { vid: "99999999-2222-3333-4444-555555555555", lat: "1" }, "198.51.100.33");
+    expect((await flightOverlap(db, TV))!.devices).toEqual({ own: 0, partner: 1, both: 1 });
+    const rows = await db
+      .select()
+      .from(tvViewers)
+      .where(sql`${tvViewers.slug} like 'flighttest-%'`);
+    expect(JSON.stringify(rows)).not.toContain(PHONE);
+    expect(advertisingId("00000000-0000-0000-0000-000000000000")).toBeNull();
+    expect(advertisingId("3205728-344371-M")).toBeNull();
+  });
+
   it("ends the flight when asked, or when one of its campaigns is deleted", async () => {
     await unlinkFlight(db, BANNER);
     expect((await getTvCampaign(db, TV))!.flightSalt).toBeNull();
+    // The device hashes go with the shared salt.
+    const kept = await db
+      .select()
+      .from(tvViewers)
+      .where(sql`${tvViewers.slug} like 'flighttest-%'`);
+    expect(kept.every((r) => r.deviceHash === null)).toBe(true);
     expect(await flightOverlap(db, TV)).toBeNull();
     expect(await linkFlight(db, BANNER, TV)).toEqual({ ok: true });
     await deleteTvCampaign(db, BANNER);

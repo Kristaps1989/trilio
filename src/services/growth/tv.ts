@@ -31,7 +31,17 @@ import {
 
 /** The visitor filter the baseline and the uplift use now (docs/TV_ANALYTICS_PLAN.md §8). */
 export const CHANNEL_FILTER = "tv-eligible-v1";
-import { accountHash, parseGo3Viewer, SLUG, slugify, SOURCE, viewerHash, viewerId } from "@/domain/growth/tv";
+import {
+  accountHash,
+  advertisingId,
+  deviceHash,
+  parseGo3Viewer,
+  SLUG,
+  slugify,
+  SOURCE,
+  viewerHash,
+  viewerId,
+} from "@/domain/growth/tv";
 import { deviceLabel, parseSection } from "@/domain/growth/go3-section";
 import {
   addressHash,
@@ -106,6 +116,7 @@ export async function deleteTvCampaign(db: Db, slug: string): Promise<void> {
   // Its flight ends with it: the partner goes back to its own salt.
   await unlinkFlight(db, slug);
   await db.delete(tvCampaigns).where(eq(tvCampaigns.slug, slug));
+  activeCache = null;
 }
 
 async function bump(db: Db, slug: string, day: string, kind: "impression" | "link" | "control") {
@@ -179,6 +190,10 @@ export async function recordTvImpression(
           userAgent: input.userAgent,
         });
     const go3 = p?.optOut ? null : parseGo3Viewer(viewerId(input.vid));
+    // In a flight, the device's advertising id under the shared salt: the same phone in the
+    // TV app and in a banner's app is one hash. Never for an opted-out device.
+    const adId = p?.optOut ? null : (advertisingId(p?.did) ?? advertisingId(viewerId(input.vid)));
+    const device = campaign.flightSalt && adId ? deviceHash(campaign.flightSalt, adId) : null;
     if (hash)
       await db
         .insert(tvViewers)
@@ -189,10 +204,14 @@ export async function recordTvImpression(
           impressions: 1,
           accountHash: go3 ? accountHash(campaign.salt, go3.account) : null,
           child: go3 ? go3.child : null,
+          deviceHash: device,
         })
         .onConflictDoUpdate({
           target: [tvViewers.slug, tvViewers.day, tvViewers.viewerHash],
-          set: { impressions: sql`${tvViewers.impressions} + 1` },
+          set: {
+            impressions: sql`${tvViewers.impressions} + 1`,
+            deviceHash: sql`coalesce(excluded.device_hash, ${tvViewers.deviceHash})`,
+          },
         });
   }
   if (input.pixel) await recordPixelDetail(db, campaign, day, minute, input, input.pixel, received);
@@ -349,18 +368,21 @@ export async function recordHouseholdVisit(
   const campaigns = await activeCampaigns(db, input.now);
   if (!campaigns.length) return 0;
   const minute = new Date(Math.floor(input.now.getTime() / 60_000) * 60_000);
-  await db
-    .insert(tvHouseholdVisits)
-    .values(
-      campaigns.map((c) => ({
-        slug: c.slug,
-        household: householdHash(c.salt, key),
-        minute,
-        day: input.day,
-        visitorHash: input.visitorHash,
-      })),
-    )
-    .onConflictDoNothing();
+  // Only for campaigns that still exist: the list is cached for five minutes, and one deleted
+  // meanwhile would fail the whole insert on its foreign key, losing every campaign's row.
+  const rows = sql.join(
+    campaigns.map(
+      (c) =>
+        sql`(${c.slug}, ${householdHash(c.salt, key)}, ${minute.toISOString()}::timestamptz, ${input.day}::date, ${input.visitorHash})`,
+    ),
+    sql`, `,
+  );
+  await db.execute(sql`
+    insert into tv_household_visits (slug, household, minute, day, visitor_hash)
+    select v.slug, v.household, v.minute, v.day, v.visitor_hash
+      from (values ${rows}) as v(slug, household, minute, day, visitor_hash)
+      join tv_campaigns c on c.slug = v.slug
+    on conflict do nothing`);
   return campaigns.length;
 }
 
@@ -1210,6 +1232,11 @@ export async function unlinkFlight(db: Db, slug: string): Promise<void> {
     .update(tvCampaigns)
     .set({ flightSalt: null, flightWith: null, flightAt: null })
     .where(inArray(tvCampaigns.slug, [c.slug, c.flightWith]));
+  // The shared salt is forgotten, so its device hashes mean nothing any more.
+  await db
+    .update(tvViewers)
+    .set({ deviceHash: null })
+    .where(inArray(tvViewers.slug, [c.slug, c.flightWith]));
   activeCache = null;
 }
 
@@ -1218,6 +1245,11 @@ export type FlightOverlap = {
   since: Date;
   /** Households that saw only this campaign, only the partner, or both; and of each, those that came. */
   groups: Record<"own" | "partner" | "both", { households: number; came: number }>;
+  /**
+   * The same split by device advertising id, exact where both trackers carry it (apps);
+   * null when neither campaign has received one since the link.
+   */
+  devices: Record<"own" | "partner" | "both", number> | null;
 };
 
 /**
@@ -1252,9 +1284,18 @@ export async function flightOverlap(db: Db, slug: string): Promise<FlightOverlap
     both: { households: 0, came: 0 },
   };
   for (const r of rows) groups[r.grp] = { households: Number(r.households), came: Number(r.came) };
+  const dev = (await db.execute(sql`
+    select case when bool_or(slug = ${c.slug}) and bool_or(slug = ${partner.slug}) then 'both'
+                when bool_or(slug = ${c.slug}) then 'own' else 'partner' end as grp
+      from tv_viewers
+     where slug in (${c.slug}, ${partner.slug}) and device_hash is not null
+     group by device_hash`)) as unknown as { grp: "own" | "partner" | "both" }[];
+  const devices = dev.length ? { own: 0, partner: 0, both: 0 } : null;
+  for (const r of dev) devices![r.grp]++;
   return {
     partner: { slug: partner.slug, name: partner.name, kind: partner.kind },
     since: c.flightAt,
     groups,
+    devices,
   };
 }

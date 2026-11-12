@@ -232,6 +232,13 @@
       "when": 1794495911200,
       "tag": "0032_display_flights",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794497071438,
+      "tag": "0033_flight_devices",
+      "breakpoints": true
     }
   ]
 }

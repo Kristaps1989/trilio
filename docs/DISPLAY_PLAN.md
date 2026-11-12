@@ -68,6 +68,14 @@ site's own page views.
 - Household rows are kept 21 days, so the table covers the last 21 days.
 - Unlinking, or deleting either campaign, ends the flight; the shared salt is
   dropped.
+- **Exact device match (apps).** While a campaign is in a flight, a device's
+  advertising id is hashed with the shared salt into `tv_viewers.device_hash`.
+  The banner's tracker gets the id from Ad Manager in an app (`vid`); the Go3
+  tracker gets it in `did` (`#{request.keyValue("_fw_did")}` in the extended
+  tracker address; that key was written from memory of FreeWheel and is not
+  verified with Go3). The card then shows devices seen by one campaign, the
+  other, or both. Browsers have no such id, an opted-out device gets no hash,
+  and unlinking clears the hashes.
 - It is approximate: a phone on mobile data does not match the home address,
   and one address can be several people (or an office).
 

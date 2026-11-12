@@ -54,7 +54,12 @@ export async function tvStatsJson(db: Db, rawPeriod: string | null, now = new Da
           source: c.campaign.source,
           // A TV campaign and a display campaign measured together: households that saw one or both.
           flight: overlap
-            ? { partner: overlap.partner.slug, since: overlap.since.toISOString(), groups: overlap.groups }
+            ? {
+                partner: overlap.partner.slug,
+                since: overlap.since.toISOString(),
+                groups: overlap.groups,
+                devices: overlap.devices,
+              }
             : null,
           landingPath: c.campaign.landingPath,
           totals: {

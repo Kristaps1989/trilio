@@ -54,6 +54,8 @@ export function extendedPixelUrl(base: string, slug: string): string {
     "co=#{request.country}",
     "lat=#{request.deviceOptOut}",
     'idt=#{request.deviceIdType("iab")}',
+    // The device's advertising id, for an exact match with a banner campaign in an app.
+    'did=#{request.keyValue("_fw_did")}',
     "dur=#{ad.creative.rendition.duration}",
     "pg=#e{series.title}",
     "ast=#e{asset.title}",
@@ -130,6 +132,26 @@ export function parseGo3Viewer(vid: string | null): { account: string; child: bo
 /** A subscription's hash for one campaign, salted like the viewer's; the customer id is not kept. */
 export function accountHash(salt: string, account: string): string {
   return createHash("sha256").update(`${salt}|acct:${account}`).digest("base64url").slice(0, 22);
+}
+
+const AD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * A device's advertising id (an Android, iOS or TV platform's resettable id), lower-cased and
+ * without a type prefix ("rida:…", "idfa:…"). Null for anything else, and for the all-zero id
+ * a device sends when tracking is limited.
+ */
+export function advertisingId(raw: string | null | undefined): string | null {
+  const v = (raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^[a-z_]{2,12}:/, "");
+  return AD_ID.test(v) && !/^[0-]+$/.test(v) ? v : null;
+}
+
+/** A device's hash inside one flight; the id itself is never kept. */
+export function deviceHash(flightSalt: string, id: string): string {
+  return createHash("sha256").update(`${flightSalt}|dev:${id}`).digest("base64url").slice(0, 22);
 }
 
 /** A viewer's hash for one campaign: the id (or IP and user agent) never leaves this function. */

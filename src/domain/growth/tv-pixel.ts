@@ -30,6 +30,8 @@ export type PixelParams = {
   country: string | null;
   /** The device opted out of ad tracking (`lat=1`, #{request.deviceOptOut}): counted, never followed. */
   optOut: boolean;
+  /** The device's advertising id when the tracker carries it apart from the viewer id (`did`). */
+  did: string | null;
   /** An ad server's own preview of the creative (`pv=true`, Ad Manager's %%PREVIEW_MODE%%): not an impression. */
   preview: boolean;
   /** The spot's length in seconds (`dur`, #{ad.creative.rendition.duration}). */
@@ -103,6 +105,7 @@ export function pixelParams(params: URLSearchParams): PixelParams {
     daypart: cleanValue(params.get("dp"), 40),
     placement: cleanValue(params.get("pl"), 80),
     idType: cleanValue(params.get("idt"), 20)?.toLowerCase() ?? null,
+    did: raw("did")?.slice(0, 80) ?? null,
     grp: grp === "control" || grp === "holdout" || grp === "psa" ? "control" : "ad",
   };
 }
