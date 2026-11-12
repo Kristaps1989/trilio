@@ -54,11 +54,11 @@ test("after consent: page views carry the section, clicks and answers are tracke
   await expect.poll(async () => (await events(page)).some((e) => e.name === "page_view")).toBe(true);
   expect((await events(page)).find((e) => e.name === "page_view")?.params.section).toBe("home");
 
-  await page.getByRole("link", { name: "Palīdzi izvēlēties" }).click();
-  await expect(page).toHaveURL(/\/izvelies$/);
+  await page.locator("[data-home-start]").getByRole("link", { name: "Uzkopšana" }).click();
+  await expect(page).toHaveURL(/\/izvelies\/clean$/);
   await expect
     .poll(async () => (await events(page)).find((e) => e.name === "ui_click")?.params.label)
-    .toBe("Palīdzi izvēlēties");
+    .toBe("Uzkopšana");
   await expect
     .poll(async () => (await events(page)).filter((e) => e.name === "page_view").at(-1)?.params.section)
     .toBe("choose");

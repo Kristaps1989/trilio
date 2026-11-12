@@ -83,3 +83,14 @@ One PR, about a day: domain rule and tests, landing pages and sitemap, names, th
 ## 5. What this does not fix
 
 The 59 pages with fewer than three picks are a catalogue question, not an SEO one: breadmakers, dehydrators, epilators, choppers and juicers have one or two products in stock across the partner shops. More partners or more feeds are the only cure; the pages stay honest about what is available.
+
+## Home page and llms.txt (12 Nov 2026)
+
+- The home page carries the first question: "Ko tu meklē?" with a link to every
+  group (`/izvelies/<group>`) beside the headline, and the 39 category links
+  below as before. `/izvelies` stays in the sitemap; it is the same choice for
+  visitors who land there.
+- The third "Kā Trilio strādā" step now names both ways to buy (the shop, or
+  the lower-price request), so the indexed text matches the product.
+- `/llms.txt` describes the lower-price request, the 90-day price watch and
+  the About page, and says "Latvia", not "the Baltics".

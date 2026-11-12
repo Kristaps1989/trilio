@@ -4,7 +4,8 @@ import AxeBuilder from "@axe-core/playwright";
 test("welcome screen renders in Latvian with both entry points", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Trīs labākās preces tev");
-  await expect(page.getByRole("link", { name: "Palīdzi izvēlēties" })).toBeVisible();
+  // The choice starts here: every group, and "something else", as a tile.
+  await expect(page.locator("[data-home-start]").getByRole("link")).toHaveCount(10);
   await expect(page.getByRole("link", { name: "Es jau zinu modeli" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "lv");
 });

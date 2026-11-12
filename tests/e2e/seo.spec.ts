@@ -71,6 +71,9 @@ test("home page links every category page and llms.txt describes the site", asyn
   const txt = await llms.text();
   expect(txt).toContain("# Trilio");
   expect(txt).toContain("/kategorija/fridge/lidz-800");
+  // The site map for assistants says what the product does today.
+  expect(txt).toContain("Iegūt lētāk");
+  expect(txt).toContain("/par-trilio");
 });
 
 test("sitemap and robots are served", async ({ request }) => {

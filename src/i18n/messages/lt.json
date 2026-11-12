@@ -31,9 +31,7 @@
   },
   "welcome": {
     "headline": "Pastāsti, kas tev vajadzīgs. Trīs labākos variantus atradīsim mēs.",
-    "help": "Palīdzi izvēlēties",
     "knowModel": "Es jau zinu modeli",
-    "kicker": "Pirkumu palīgs · sadzīves tehnika",
     "lead": "Atbildi uz dažiem jautājumiem, un mēs salīdzināsim tikai tās preces, kas tiešām ir pieejamas partneru veikalos.",
     "meta": "Aizņem apmēram minūti · bez reģistrācijas · jaunas un atjaunotas preces nekad nejaucam kopā"
   },

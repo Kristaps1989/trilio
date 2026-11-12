@@ -39,18 +39,19 @@ export default async function WelcomePage() {
       {/* The first question is on the home page (docs/UX_REVIEW_PLAN.md §8): the promise and the
           proof on one side, "Ko tu meklē?" with the groups on the other, so choosing starts here. */}
       <section className="pt-4 pb-12 lg:pt-10">
-        <Container size="wide" className="grid gap-x-12 gap-y-7 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-          <div className="flex flex-col gap-4 lg:gap-5">
+        <Container
+          size="wide"
+          className="grid gap-x-12 gap-y-7 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr]"
+        >
+          <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:gap-5">
             <PageTitle scale="hero">{t("welcome.headline")}</PageTitle>
             {proof ? (
               <p className="max-w-[520px] text-[15px] font-semibold text-lime" data-home-proof>
                 {proof}
               </p>
             ) : null}
-            <Lead className="hidden max-w-[520px] lg:block">{t("welcome.lead")}</Lead>
-            <p className="hidden max-w-[520px] text-sm text-stone lg:block">{t("welcome.meta")}</p>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:col-start-2 lg:row-span-2 lg:row-start-1">
             <h2 className="font-heading text-[22px] font-semibold text-mist" id="start-title">
               {t("flow.chooseGroup")}
             </h2>
@@ -83,9 +84,10 @@ export default async function WelcomePage() {
               {t("welcome.knowModel")}
             </Link>
           </div>
-          <div className="flex flex-col gap-3 lg:hidden">
-            <Lead>{t("welcome.lead")}</Lead>
-            <p className="text-sm text-stone">{t("welcome.meta")}</p>
+          {/* After the tiles on a phone, under the headline from 1024 px. */}
+          <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-2">
+            <Lead className="max-w-[520px]">{t("welcome.lead")}</Lead>
+            <p className="max-w-[520px] text-sm text-stone">{t("welcome.meta")}</p>
           </div>
         </Container>
       </section>

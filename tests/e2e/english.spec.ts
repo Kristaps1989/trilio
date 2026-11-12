@@ -22,7 +22,10 @@ test("the English home page: lang, hreflang, canonical and the switch to Latvian
       "Answer a few questions. We compare partner shops' prices by barcode and ask the distributor for a lower price. Free.",
     ),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Help me choose" })).toHaveAttribute("href", "/en/izvelies");
+  await expect(page.locator("[data-home-start]").getByRole("link").first()).toHaveAttribute(
+    "href",
+    "/en/izvelies/cool",
+  );
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/en$/);
   await expect(page.locator('link[rel="alternate"][hreflang="lv"]')).toHaveAttribute(
     "href",
