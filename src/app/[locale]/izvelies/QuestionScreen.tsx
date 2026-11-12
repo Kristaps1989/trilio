@@ -103,6 +103,43 @@ export function QuestionScreen({
   );
 }
 
+/**
+ * The step's buttons. On a phone they stay at the bottom of the screen, with the way back
+ * beside them, so a long list of options never hides "Tālāk"; from 640 px they sit in place.
+ */
+function Actions({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("flow");
+  const router = useRouter();
+  return (
+    <div
+      className="sticky bottom-[var(--consent-bar-h,0px)] z-10 -mx-gutter mt-1 flex flex-wrap items-center gap-[14px] border-t border-line-20 bg-night/95 px-gutter py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
+      data-flow-actions
+    >
+      <button
+        type="button"
+        aria-label={t("back")}
+        onClick={() => router.back()}
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control border-[1.5px] border-line-30 text-mist sm:hidden"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      {children}
+    </div>
+  );
+}
+
 function ChoiceBody({
   q,
   state,
@@ -134,7 +171,12 @@ function ChoiceBody({
         selectOnArrow={false}
         className={
           pictures
-            ? "mt-1.5 grid grid-cols-2 gap-[10px] sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
+            ? `mt-1.5 grid grid-cols-2 gap-[10px] ${
+                // Five options fill one row, not four and one alone.
+                q.options.length === 5
+                  ? "sm:grid-cols-5"
+                  : "sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
+              }`
             : "mt-1.5 flex max-w-[540px] flex-col gap-[10px]"
         }
       >
@@ -164,11 +206,11 @@ function ChoiceBody({
           ),
         )}
       </RadioGroup>
-      <div className="mt-1 flex flex-wrap items-center gap-[14px]">
+      <Actions>
         <Button disabled={!selected} onClick={() => selected && go(selected)}>
           {t("next")}
         </Button>
-      </div>
+      </Actions>
     </>
   );
 }
@@ -301,9 +343,9 @@ function RangeBody({
         </div>
       ) : null}
       <LiveLine count={count} />
-      <div className="flex flex-wrap items-center gap-[14px]">
+      <Actions>
         <Button onClick={() => go(answer)}>{t("next")}</Button>
-      </div>
+      </Actions>
     </>
   );
 }
@@ -374,9 +416,9 @@ function NumberBody({
         </p>
       ) : null}
       <LiveLine count={valid ? count : null} />
-      <div className="flex flex-wrap items-center gap-[14px]">
+      <Actions>
         <Button type="submit">{t("next")}</Button>
-      </div>
+      </Actions>
     </form>
   );
 }
@@ -427,7 +469,7 @@ function PriceBody({
           </span>
         </InfoBox>
       ) : null}
-      <div className="flex flex-wrap items-center gap-[14px]">
+      <Actions>
         <Button
           disabled={count === 0}
           onClick={() => go(answer.min === undefined && answer.max === undefined ? "none" : answer)}
@@ -437,7 +479,7 @@ function PriceBody({
         <Button variant="link" size="md" onClick={() => go("none")}>
           {t("notSet")}
         </Button>
-      </div>
+      </Actions>
     </>
   );
 }

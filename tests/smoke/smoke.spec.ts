@@ -55,9 +55,14 @@ test.describe("every sitemap URL renders", () => {
 
 test("guided flow: home → category → every question → results → shop", async ({ page }) => {
   await expectHealthyPage(page, "/");
-  await page.getByRole("link", { name: "Palīdzi izvēlēties" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ko tu meklē?");
-  await page.getByRole("link", { name: /Virtuves mazā tehnika/ }).click();
+  // The first question is on the home page: the group tiles under "Ko tu meklē?".
+  await expect(page.getByRole("heading", { level: 2, name: "Ko tu meklē?" })).toBeVisible();
+  await page
+    .locator("[data-home-start]")
+    .getByRole("link", { name: /Virtuves mazā tehnika/ })
+    .click();
+  // Wait for the group page: the home page has its own "Tējkannas" link, to the category page.
+  await expect(page).toHaveURL(/\/izvelies\/kitchensmall$/);
   await page.getByRole("link", { name: /^Tējkannas/ }).click();
   // Take the pre-selected answer on every screen ("Tālāk"); on the price
   // screen choose "no budget" so a sparse catalogue still has results.

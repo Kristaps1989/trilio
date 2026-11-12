@@ -30,11 +30,9 @@
   },
   "welcome": {
     "headline": "Trīs labākās preces tev — un zemāka cena, ja to varam panākt.",
-    "help": "Palīdzi izvēlēties",
     "knowModel": "Es jau zinu modeli",
-    "kicker": "Pirkumu palīgs · sadzīves tehnika",
     "lead": "Atbildi uz dažiem jautājumiem. Salīdzinām cenas partneru veikalos pēc svītrkoda un pajautājam izplatītājam zemāku cenu. Bez maksas.",
-    "meta": "Aizņem apmēram minūti · bez reģistrācijas · jaunas un atjaunotas preces nekad nejaucam kopā"
+    "meta": "Aizņem apmēram minūti, bez reģistrācijas. Jaunas un atjaunotas preces nekad nejaucam kopā."
   },
   "flow": {
     "progress": "Jautājums {n} no {m}",
@@ -792,7 +790,7 @@
     "howTitle": "Kā Trilio strādā",
     "how1": "Atbildi uz 3–6 jautājumiem par to, kas tev patiešām svarīgs.",
     "how2": "Salīdzinām partneru veikalu krājumus pēc EAN svītrkoda — viens modelis, viena prece.",
-    "how3": "Rādām trīs labākos variantus dažādās cenās. Atjaunotas preces rādām atsevišķi.",
+    "how3": "Rādām trīs labākos variantus dažādās cenās; atjaunotas preces rādām atsevišķi. Pērc veikalā uzreiz vai pajautā mums zemāku cenu.",
     "about": "Vairāk par Trilio"
   },
   "legal": {

@@ -30,11 +30,9 @@
   },
   "welcome": {
     "headline": "The three best products for you — and a lower price, if we can get it.",
-    "help": "Help me choose",
     "knowModel": "I already know the model",
-    "kicker": "Shopping helper · home appliances",
     "lead": "Answer a few questions. We compare partner shops' prices by barcode and ask the distributor for a lower price. Free.",
-    "meta": "Takes about a minute · no sign-up · new and refurbished products are never mixed"
+    "meta": "Takes about a minute, no sign-up. New and refurbished products are never mixed."
   },
   "flow": {
     "progress": "Question {n} of {m}",
@@ -792,7 +790,7 @@
     "howTitle": "How Trilio works",
     "how1": "Answer 3–6 questions about what really matters to you.",
     "how2": "We compare partner shops' stock by the EAN barcode — one model, one product.",
-    "how3": "We show the best three in three price classes, refurbished separately. Shop commissions don't affect the order.",
+    "how3": "We show the best three in three price classes, refurbished separately. Buy in the shop right away or ask us for a lower price.",
     "about": "More about Trilio"
   },
   "legal": {

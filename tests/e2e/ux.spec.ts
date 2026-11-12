@@ -35,13 +35,17 @@ test.describe("before any consent choice", () => {
   });
 });
 
-test("the home page says what Trilio does and offers one primary action", async ({ page }) => {
+test("the home page says what Trilio does and starts the choice", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Trīs labākās preces tev — un zemāka cena, ja to varam panākt.",
   );
   await expect(page.getByText("pajautājam izplatītājam zemāku cenu", { exact: false }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Palīdzi izvēlēties" })).toBeVisible();
+  // The first question is the action (owner, 12 Nov 2026): the group tiles, no separate button.
+  await expect(page.getByRole("heading", { level: 2, name: "Ko tu meklē?" })).toBeVisible();
+  await expect(
+    page.locator("[data-home-start]").getByRole("link", { name: "Ledusskapji un saldētavas" }),
+  ).toHaveAttribute("href", "/izvelies/cool");
   // The model check is a plain link, not a second big button.
   const model = page.getByRole("link", { name: "Es jau zinu modeli" });
   await expect(model).toBeVisible();

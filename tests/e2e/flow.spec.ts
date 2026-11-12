@@ -50,9 +50,10 @@ test("the owner's fridge: standard, at most 178 cm, 350–500 € — no small o
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Palīdzi izvēlēties" }).click();
-  await expect(h1(page)).toHaveText("Ko tu meklē?");
-  await page.getByRole("link", { name: /Ledusskapji un saldētavas/ }).click();
+  await page
+    .locator("[data-home-start]")
+    .getByRole("link", { name: /Ledusskapji un saldētavas/ })
+    .click();
   await expect(h1(page)).toHaveText("Izvēlies precīzāk");
   await page.getByRole("link", { name: /^Ledusskapji brīvi/ }).click();
 

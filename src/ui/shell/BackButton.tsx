@@ -12,12 +12,24 @@ export function BackButton({ label }: { label: string }) {
   const router = useRouter();
   const pathname = usePathname();
   if (NO_BACK.has(pathname)) return <span aria-hidden="true" className="h-12 w-12" />;
+  // A question screen has its own way back beside "Tālāk" on phones (QuestionScreen's Actions).
+  const inFlow = /^\/izvelies\/[^/]+\/[^/]+/.test(pathname);
+  return (
+    <>
+      {inFlow ? <span aria-hidden="true" className="h-12 w-12 sm:hidden" /> : null}
+      <BackControl label={label} className={inFlow ? "hidden sm:flex" : "flex"} />
+    </>
+  );
+}
+
+function BackControl({ label, className }: { label: string; className: string }) {
+  const router = useRouter();
   return (
     <button
       type="button"
       aria-label={label}
       onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control border-[1.5px] border-line-30 text-mist"
+      className={`${className} h-12 w-12 shrink-0 items-center justify-center rounded-control border-[1.5px] border-line-30 text-mist`}
     >
       <svg
         width="20"
