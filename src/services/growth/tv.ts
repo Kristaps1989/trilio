@@ -31,7 +31,7 @@ import {
 
 /** The visitor filter the baseline and the uplift use now (docs/TV_ANALYTICS_PLAN.md §8). */
 export const CHANNEL_FILTER = "tv-eligible-v1";
-import { SLUG, slugify, viewerHash, viewerId } from "@/domain/growth/tv";
+import { accountHash, parseGo3Viewer, SLUG, slugify, viewerHash, viewerId } from "@/domain/growth/tv";
 import { deviceLabel, parseSection } from "@/domain/growth/go3-section";
 import {
   addressHash,
@@ -166,10 +166,18 @@ export async function recordTvImpression(
           ip: input.ip,
           userAgent: input.userAgent,
         });
+    const go3 = p?.optOut ? null : parseGo3Viewer(viewerId(input.vid));
     if (hash)
       await db
         .insert(tvViewers)
-        .values({ slug: campaign.slug, day, viewerHash: hash, impressions: 1 })
+        .values({
+          slug: campaign.slug,
+          day,
+          viewerHash: hash,
+          impressions: 1,
+          accountHash: go3 ? accountHash(campaign.salt, go3.account) : null,
+          child: go3 ? go3.child : null,
+        })
         .onConflictDoUpdate({
           target: [tvViewers.slug, tvViewers.day, tvViewers.viewerHash],
           set: { impressions: sql`${tvViewers.impressions} + 1` },
@@ -951,6 +959,18 @@ export type TvPixelReport = {
   sections: Record<"screen" | "device" | "type" | "channel", { value: string; hits: number }[]>;
   /** Devices by impressions over the period: 1, 2, 3–4, 5 and more. */
   frequency: { band: "1" | "2" | "3-4" | "5+"; devices: number }[];
+  /**
+   * Households by Go3 subscription (the customer part of the viewer id), over the days that
+   * carry it; null before the first such day. Child profiles are the "C" ones.
+   */
+  accounts: {
+    households: number;
+    profiles: number;
+    impressions: number;
+    childProfiles: number;
+    childImpressions: number;
+    frequency: { band: "1" | "2" | "3-4" | "5+"; households: number }[];
+  } | null;
 };
 
 export async function tvPixelReport(db: Db, slug: string, range: DayRange): Promise<TvPixelReport> {
@@ -1039,6 +1059,29 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
              group by viewer_hash) v
       group by 1`)) as unknown as { band: TvPixelReport["frequency"][number]["band"]; devices: number }[];
   const bands = new Map(freq.map((f) => [f.band, Number(f.devices)]));
+  const [acct] = (await db.execute(sql`
+    select count(distinct account_hash)::int as households, count(distinct viewer_hash)::int as profiles,
+           coalesce(sum(impressions), 0)::int as impressions,
+           count(distinct viewer_hash) filter (where child)::int as child_profiles,
+           coalesce(sum(impressions) filter (where child), 0)::int as child_impressions
+      from tv_viewers
+     where slug = ${slug} and day between ${range.from}::date and ${range.to}::date
+       and account_hash is not null`)) as unknown as {
+    households: number;
+    profiles: number;
+    impressions: number;
+    child_profiles: number;
+    child_impressions: number;
+  }[];
+  const acctFreq = (await db.execute(sql`
+    select case when n = 1 then '1' when n = 2 then '2' when n <= 4 then '3-4' else '5+' end as band,
+           count(*)::int as households
+      from (select account_hash, sum(impressions) as n from tv_viewers
+             where slug = ${slug} and day between ${range.from}::date and ${range.to}::date
+               and account_hash is not null
+             group by account_hash) v
+      group by 1`)) as unknown as { band: TvPixelReport["frequency"][number]["band"]; households: number }[];
+  const acctBands = new Map(acctFreq.map((f) => [f.band, Number(f.households)]));
   return {
     days,
     dims: {
@@ -1064,6 +1107,19 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       channel: list(decoded.channel),
     },
     frequency: (["1", "2", "3-4", "5+"] as const).map((band) => ({ band, devices: bands.get(band) ?? 0 })),
+    accounts: Number(acct?.households)
+      ? {
+          households: Number(acct!.households),
+          profiles: Number(acct!.profiles),
+          impressions: Number(acct!.impressions),
+          childProfiles: Number(acct!.child_profiles),
+          childImpressions: Number(acct!.child_impressions),
+          frequency: (["1", "2", "3-4", "5+"] as const).map((band) => ({
+            band,
+            households: acctBands.get(band) ?? 0,
+          })),
+        }
+      : null,
   };
 }
 

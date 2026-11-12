@@ -963,8 +963,15 @@ export const tvViewers = pgTable(
     viewerHash: text("viewer_hash").notNull(),
     /** Impressions of this device that day: the frequency distribution (docs/TV_PIXEL_BEST_PRACTICE.md §2.4). */
     impressions: integer("impressions").notNull().default(1),
+    /** Go3's subscription behind this profile, hashed per campaign: the household (parseGo3Viewer). */
+    accountHash: text("account_hash"),
+    /** A child's profile ("C" in Go3's viewer id). Null when the id has no profile type. */
+    child: boolean("child"),
   },
-  (t) => [primaryKey({ columns: [t.slug, t.day, t.viewerHash] })],
+  (t) => [
+    primaryKey({ columns: [t.slug, t.day, t.viewerHash] }),
+    index("tv_viewers_account_idx").on(t.slug, t.accountHash),
+  ],
 );
 
 /**

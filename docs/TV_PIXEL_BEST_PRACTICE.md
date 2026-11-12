@@ -249,3 +249,22 @@ creative id. Without the IP macro, the pixel can only ever count.
 - [Causality Engine: CTV attribution without cookies](https://www.causalityengine.ai/resources/connected-tv-attribution)
 - [IAB Europe CTV measurement framework (draft)](https://iabeurope.eu/wp-content/uploads/For-public-comment_CTV-MEASUREMENT-FRAMEWORK.pdf)
 - [C21: TV3 Group's addressable advertising on Go3 since 2023](https://www.c21media.net/department/cee100/tv3-eyes-new-ad-models-and-backs-local-content/)
+
+## 6. Households by Go3 subscription (12 Nov 2026)
+
+Go3's viewer id is `{customer_id}-{profile_id}-{profile_type}`, for example
+`3205728-344371-M` (M a main profile, C a child's). The customer is the
+subscription, so the household.
+
+- `parseGo3Viewer` (`src/domain/growth/tv.ts`) splits the id; any other shape
+  (another platform's device id, a GUID) gives no household.
+- `tv_viewers.account_hash` keeps the customer part hashed with the campaign's
+  salt, and `child` the profile type. The numbers themselves are never stored,
+  and a household cannot be followed from one campaign to another.
+- The pixel report (`pixel.accounts`, the TV page's table) shows households and
+  profiles reached, impressions per household, impressions on child profiles
+  and the frequency bands per household. Counted from the first day the split
+  is deployed.
+- Go3 plans a `_fw_vcid2_hashed` field (the id plus the client address,
+  SHA-256, as a GUID). That value changes with the address and cannot be split,
+  so the tracker must keep the plain `_fw_vcid2` for household figures.
