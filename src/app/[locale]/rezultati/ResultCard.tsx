@@ -150,9 +150,11 @@ export async function ResultCard({ card }: { card: CardModel }) {
   const t = await getTranslations("results");
   const over = card.overBudgetByCents > 0;
 
+  const hasPills = over || card.roles.length > 0 || card.recommended;
+
   return (
     <article
-      className={`flex min-w-0 max-w-full flex-[1_1_300px] flex-col gap-[14px] rounded-card bg-white sm:max-w-[560px] p-[22px] text-night scroll-mt-24 ${
+      className={`flex min-w-0 max-w-full flex-[1_1_300px] flex-col gap-4 rounded-card bg-white p-3 pb-[22px] text-night scroll-mt-24 sm:max-w-[560px] ${
         over ? "border-2 border-dashed border-over-border" : ""
       } ${card.recommended ? "shadow-[0_0_0_3px_var(--color-lime)]" : ""}`}
       aria-label={card.name}
@@ -161,186 +163,204 @@ export async function ResultCard({ card }: { card: CardModel }) {
       data-tier={card.tier ?? "none"}
       data-roles={card.roleIds.join(" ")}
     >
-      {over || card.roles.length || card.recommended ? (
-        <ul className="flex flex-wrap gap-1.5" aria-label={t("rolesLabel")}>
-          {over ? (
-            <li className={`${pill} bg-over-bg text-over-text`}>
-              {t("overBudget", { amount: formatEur(card.overBudgetByCents) })}
-            </li>
-          ) : null}
-          {card.roles.map((r) => (
-            <li key={r} className={`${pill} bg-card-pill text-night`} data-role-pill>
-              {r}
-            </li>
-          ))}
-          {card.recommended ? <li className={`${pill} bg-lime text-night`}>{t("recommended")}</li> : null}
-        </ul>
-      ) : null}
-
-      <ProductImage src={card.image.src} alt={card.name} fallback={card.image.fallback} size="card" />
-
-      <div>
-        <h3 className="font-body text-xl leading-tight font-bold tracking-normal" lang="lv">
-          {card.name}
-        </h3>
-        {card.specs ? <p className="mt-1 text-sm text-muted">{card.specs}</p> : null}
+      {/* The stage: the photo on a tinted panel, with why this card is here pinned to it.
+          The recommended card's stage is the lime tint, so the ring and the stage say one thing. */}
+      <div
+        className={`flex flex-col gap-1 rounded-[14px] p-[10px] ${card.recommended ? "bg-best" : "bg-card-soft"}`}
+        data-card-stage
+      >
+        {hasPills ? (
+          <ul className="flex flex-wrap gap-1.5" aria-label={t("rolesLabel")}>
+            {card.recommended ? <li className={`${pill} bg-lime text-night`}>{t("recommended")}</li> : null}
+            {over ? (
+              <li className={`${pill} bg-over-bg text-over-text`}>
+                {t("overBudget", { amount: formatEur(card.overBudgetByCents) })}
+              </li>
+            ) : null}
+            {card.roles.map((r) => (
+              <li key={r} className={`${pill} bg-white text-night`} data-role-pill>
+                {r}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <ProductImage src={card.image.src} alt={card.name} fallback={card.image.fallback} size="stage" />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <p className="flex flex-wrap items-baseline gap-x-[10px] gap-y-1">
-          <span
-            data-price-cents={card.best.priceCents}
-            className="font-heading text-[38px] leading-none font-bold tracking-[-0.02em]"
+      <div className="flex flex-col gap-4 px-[10px]">
+        <div>
+          <h3 className="font-heading text-[22px] leading-[1.15] font-bold tracking-[-0.01em]" lang="lv">
+            {card.name}
+          </h3>
+          {card.specs ? <p className="mt-1.5 text-sm text-muted">{card.specs}</p> : null}
+        </div>
+
+        {/* The price ledger: every shop's price in one right-hand column, the lowest first and
+            largest, so the comparison Trilio makes is the thing you see. */}
+        <div className="flex flex-col border-y border-card-line" data-price-ledger>
+          <div className="flex items-end justify-between gap-3 py-3">
+            <p className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-[15px] font-bold">{card.best.storeName}</span>
+              <span className="text-sm text-muted">
+                {card.best.stock === "in" ? t("stockIn") : t("stockSoon")}
+                {card.best.deliveryDate ? ` · ${t("delivery", { date: card.best.deliveryDate })}` : ""}
+                {card.best.deliveryDays !== null
+                  ? ` (${t("deliveryDays", { days: card.best.deliveryDays })})`
+                  : ""}
+              </span>
+            </p>
+            <span
+              data-price-cents={card.best.priceCents}
+              className="shrink-0 font-heading text-[40px] leading-[0.9] font-bold tracking-[-0.03em] tabular-nums"
+            >
+              {formatEur(card.best.priceCents)}
+            </span>
+          </div>
+          {card.otherOffers.length ? (
+            <div className="border-t border-card-line py-[10px] text-sm text-muted">
+              <p className="sr-only">{t("otherShops")}</p>
+              <ul className="flex flex-col gap-1.5">
+                {card.otherOffers.map((o) => (
+                  <li key={o.storeName} className="flex justify-between gap-3">
+                    <span>{o.storeName}</span>
+                    <span className="font-heading font-semibold tabular-nums">{formatEur(o.priceCents)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {card.priceNote || card.savingVsMaxCents || card.priceLine.kind !== "no_history" ? (
+            <div className="flex flex-col gap-0.5 border-t border-card-line py-[10px] text-sm">
+              {card.savingVsMaxCents ? (
+                <p className="font-semibold text-success">
+                  {t("savingVsMax", { amount: formatEur(card.savingVsMaxCents) })}
+                </p>
+              ) : null}
+              {card.priceNote ? (
+                <p className="text-muted" data-price-note>
+                  {card.priceNote}
+                </p>
+              ) : null}
+              {/* "Cenu vēsture vēl krājas" says nothing a shopper can act on (docs/UX_REVIEW_PLAN.md §4). */}
+              {card.priceLine.kind === "no_history" ? null : (
+                <p className="text-muted">
+                  {card.priceLine.kind === "lowest_now"
+                    ? t("lowest30Now")
+                    : card.priceLine.kind === "was_lower"
+                      ? t("lowest30Was", { amount: formatEur(card.priceLine.lowestCents) })
+                      : t("noHistory")}
+                </p>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* The product is the hero (owner, 1 Nov 2026): photo, name and price first, then why this one. */}
+        {card.verdict ? (
+          <p
+            className="font-heading text-[18px] leading-[1.3] font-semibold tracking-[-0.005em]"
+            data-verdict
           >
-            {formatEur(card.best.priceCents)}
-          </span>
-          <span className="text-[15px] font-semibold">{card.best.storeName}</span>
-          <span className="text-sm text-muted">
-            {card.best.stock === "in" ? t("stockIn") : t("stockSoon")}
-            {card.best.deliveryDate ? ` · ${t("delivery", { date: card.best.deliveryDate })}` : ""}
-            {card.best.deliveryDays !== null
-              ? ` (${t("deliveryDays", { days: card.best.deliveryDays })})`
-              : ""}
-          </span>
-        </p>
-        {card.priceNote ? (
-          <p className="text-sm font-semibold text-success" data-price-note>
-            {card.priceNote}
+            {card.verdict}
           </p>
         ) : null}
-        {/* "Cenu vēsture vēl krājas" says nothing a shopper can act on (docs/UX_REVIEW_PLAN.md §4). */}
-        {card.priceLine.kind === "no_history" ? null : (
-          <p className="text-sm text-muted">
-            {card.priceLine.kind === "lowest_now"
-              ? t("lowest30Now")
-              : card.priceLine.kind === "was_lower"
-                ? t("lowest30Was", { amount: formatEur(card.priceLine.lowestCents) })
-                : t("noHistory")}
+
+        {card.upgrade ? (
+          <div
+            className="flex flex-col gap-1 rounded-control bg-best px-3 py-[10px] text-sm leading-[1.45]"
+            data-upgrade-gains={card.upgrade.gains.length}
+          >
+            <strong className="font-bold">
+              {t("upgrade", {
+                amount: formatEurDelta(card.upgrade.priceDeltaCents),
+                tier: card.upgrade.tierLabel,
+              })}
+            </strong>
+            {card.upgrade.gains.length ? (
+              <span>{t("upgradeGains", { items: card.upgrade.gains.join(" · ") })}</span>
+            ) : null}
+            {card.upgrade.note ? <span>{card.upgrade.note}</span> : null}
+            {card.upgrade.other.length ? (
+              <span>{t("upgradeOther", { items: card.upgrade.other.join(" · ") })}</span>
+            ) : null}
+            {card.upgrade.tradeoffs.length ? (
+              <span className="text-muted">
+                {t("upgradeTradeoffs", { items: card.upgrade.tradeoffs.join(" · ") })}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
+        {card.catchLine ? (
+          <p className="text-sm leading-[1.45] text-over-text" data-catch>
+            {card.catchLine.before}
+            <a
+              href={card.catchLine.href}
+              className="font-semibold underline underline-offset-2"
+              lang="lv"
+              data-catch-link
+            >
+              {card.catchLine.name}
+            </a>
+            {card.catchLine.after}
           </p>
-        )}
+        ) : null}
+
+        {card.energyLabel ? <EnergyBadge label={card.energyLabel} /> : null}
+
+        {card.energy ? (
+          <p className="flex items-start gap-2 text-sm">
+            <BoltIcon />
+            <span>
+              {t("energy10y", {
+                energy: formatEur(card.energy.cost10yCents),
+                total: formatEur(card.energy.totalCents),
+              })}
+            </span>
+          </p>
+        ) : null}
+
+        {card.whyFits.length || card.facts.length ? (
+          <div className="flex flex-col gap-1.5">
+            <p className="sr-only">{t("whyFits")}</p>
+            <ul className="flex flex-col gap-1.5 text-[15px]" data-proofs>
+              {[...card.whyFits, ...card.facts].map((w) => (
+                <li key={w} className="flex gap-2">
+                  <CheckIcon className="text-success" />
+                  <span>{w}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {card.caveats?.length ? (
+          <ul className="flex flex-col gap-1 text-sm text-muted" data-caveats>
+            {card.caveats.map((c) => (
+              <li key={c} className="flex gap-2">
+                <span aria-hidden="true">–</span>
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {card.unconfirmed.length ? (
+          <p className="text-sm text-muted">{t("unconfirmed", { items: card.unconfirmed.join(", ") })}</p>
+        ) : null}
+        {card.unknownData !== null ? (
+          <p className="text-sm font-semibold text-over-text">
+            {t("unknownData", { items: card.unknownData })}
+          </p>
+        ) : null}
+
+        {/* The model code and EAN are how the same product is matched across shops (CLAUDE.md rule 3):
+          kept on the card, small, under the facts rather than under the name (docs/UX_REVIEW_PLAN.md §4). */}
+        <p className="text-xs text-muted" data-card-ean>
+          {t("model", { code: card.modelCode, ean: card.ean ?? "—" })}
+        </p>
       </div>
 
-      {/* The product is the hero (owner, 1 Nov 2026): photo, name and price first, then why this one. */}
-      {card.verdict ? (
-        <p className="text-[17px] leading-snug font-semibold" data-verdict>
-          {card.verdict}
-        </p>
-      ) : null}
-
-      {card.upgrade ? (
-        <div
-          className="flex flex-col gap-1 rounded-control bg-best px-3 py-[10px] text-sm leading-[1.45]"
-          data-upgrade-gains={card.upgrade.gains.length}
-        >
-          <strong className="font-bold">
-            {t("upgrade", {
-              amount: formatEurDelta(card.upgrade.priceDeltaCents),
-              tier: card.upgrade.tierLabel,
-            })}
-          </strong>
-          {card.upgrade.gains.length ? (
-            <span>{t("upgradeGains", { items: card.upgrade.gains.join(" · ") })}</span>
-          ) : null}
-          {card.upgrade.note ? <span>{card.upgrade.note}</span> : null}
-          {card.upgrade.other.length ? (
-            <span>{t("upgradeOther", { items: card.upgrade.other.join(" · ") })}</span>
-          ) : null}
-          {card.upgrade.tradeoffs.length ? (
-            <span className="text-muted">
-              {t("upgradeTradeoffs", { items: card.upgrade.tradeoffs.join(" · ") })}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
-      {card.catchLine ? (
-        <p className="text-sm leading-[1.45] text-over-text" data-catch>
-          {card.catchLine.before}
-          <a
-            href={card.catchLine.href}
-            className="font-semibold underline underline-offset-2"
-            lang="lv"
-            data-catch-link
-          >
-            {card.catchLine.name}
-          </a>
-          {card.catchLine.after}
-        </p>
-      ) : null}
-
-      {card.energyLabel ? <EnergyBadge label={card.energyLabel} /> : null}
-
-      {card.energy ? (
-        <p className="flex items-start gap-2 text-sm">
-          <BoltIcon />
-          <span>
-            {t("energy10y", {
-              energy: formatEur(card.energy.cost10yCents),
-              total: formatEur(card.energy.totalCents),
-            })}
-          </span>
-        </p>
-      ) : null}
-
-      {card.whyFits.length || card.facts.length ? (
-        <div className="flex flex-col gap-1.5">
-          <p className="sr-only">{t("whyFits")}</p>
-          <ul className="flex flex-col gap-1.5 text-[15px]" data-proofs>
-            {[...card.whyFits, ...card.facts].map((w) => (
-              <li key={w} className="flex gap-2">
-                <CheckIcon className="text-success" />
-                <span>{w}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      {card.caveats?.length ? (
-        <ul className="flex flex-col gap-1 text-sm text-muted" data-caveats>
-          {card.caveats.map((c) => (
-            <li key={c} className="flex gap-2">
-              <span aria-hidden="true">–</span>
-              <span>{c}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {card.unconfirmed.length ? (
-        <p className="text-sm text-muted">{t("unconfirmed", { items: card.unconfirmed.join(", ") })}</p>
-      ) : null}
-      {card.unknownData !== null ? (
-        <p className="text-sm font-semibold text-over-text">
-          {t("unknownData", { items: card.unknownData })}
-        </p>
-      ) : null}
-
-      {card.otherOffers.length ? (
-        <div className="flex flex-col gap-1 border-t border-card-line pt-[10px] text-sm text-muted">
-          <p className="font-semibold">{t("otherShops")}</p>
-          <ul className="flex flex-col gap-1">
-            {card.otherOffers.map((o) => (
-              <li key={o.storeName} className="flex justify-between gap-2">
-                <span>{o.storeName}</span>
-                <span>{formatEur(o.priceCents)}</span>
-              </li>
-            ))}
-          </ul>
-          {card.savingVsMaxCents ? (
-            <p className="font-semibold text-success">
-              {t("savingVsMax", { amount: formatEur(card.savingVsMaxCents) })}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* The model code and EAN are how the same product is matched across shops (CLAUDE.md rule 3):
-          kept on the card, small, under the facts rather than under the name (docs/UX_REVIEW_PLAN.md §4). */}
-      <p className="text-xs text-muted" data-card-ean>
-        {t("model", { code: card.modelCode, ean: card.ean ?? "—" })}
-      </p>
-
-      <div className="mt-auto flex flex-col gap-2 pt-1">
+      <div className="mt-auto flex flex-col gap-2 px-[10px] pt-1">
         {/* The request first and lime, the shop second and outlined (docs/UX_REVIEW_PLAN.md §4). */}
         <SaveButton
           target={{ kind: "product", productId: card.productId }}

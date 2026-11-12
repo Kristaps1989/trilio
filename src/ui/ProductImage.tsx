@@ -14,14 +14,20 @@ type Props = {
   alt: string;
   /** Subcategory drawing (src/ui/illustrations) used when there is no photo. */
   fallback: string | null;
-  size: "card" | "thumb";
+  /** "stage": on a tinted panel; the photo's white ground takes the panel's tint. */
+  size: "card" | "thumb" | "stage";
 };
 
 const BOX = {
   card: "h-40 w-full",
   thumb: "h-[72px] w-[72px] shrink-0",
+  stage: "h-[132px] w-full sm:h-[148px]",
 };
-const SIZES = { card: "(max-width: 640px) 90vw, 320px", thumb: "72px" };
+const SIZES = {
+  card: "(max-width: 640px) 90vw, 320px",
+  thumb: "72px",
+  stage: "(max-width: 640px) 90vw, 320px",
+};
 
 export function ProductImage({ src, alt, fallback, size }: Props) {
   // The failed URL, not a flag: a new src (another product) gets its own try.
@@ -29,7 +35,7 @@ export function ProductImage({ src, alt, fallback, size }: Props) {
   const photo = src && failed !== src ? src : null;
   return (
     <div
-      className={`relative flex items-center justify-center overflow-hidden rounded-control bg-white ${BOX[size]}`}
+      className={`relative flex items-center justify-center overflow-hidden rounded-control ${size === "stage" ? "" : "bg-white"} ${BOX[size]}`}
       data-photo={photo ? "yes" : "no"}
     >
       {photo ? (
@@ -38,13 +44,13 @@ export function ProductImage({ src, alt, fallback, size }: Props) {
           alt={alt}
           fill
           sizes={SIZES[size]}
-          className="object-contain p-2"
+          className={`object-contain p-2 ${size === "stage" ? "mix-blend-multiply" : ""}`}
           onError={() => setFailed(photo)}
         />
       ) : fallback ? (
         <Illustration
           name={fallback}
-          className={size === "card" ? "h-24 w-24 text-card-line" : "h-12 w-12 text-card-line"}
+          className={size === "thumb" ? "h-12 w-12 text-card-line" : "h-24 w-24 text-card-line"}
         />
       ) : null}
     </div>
