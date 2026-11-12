@@ -123,6 +123,7 @@ test("the owner builds, syncs, runs the optimiser and decides", async ({ page })
 
   await page.getByRole("link", { name: "Kampaņas", exact: true }).click();
   await expect(page.locator('[data-campaign="Search · Konkurenti"]')).toBeVisible();
+  await expect(page.locator('[data-campaign="Search · Trilio zīmols"]')).toBeVisible();
   await expect(page.locator('[data-campaign="Search · Ledusskapji un saldētavas"]')).toBeVisible();
   // Google's "Ad strength": every ad group gets a fresh template ad, the old one is paused.
   await page.getByRole("button", { name: "Atjaunot reklāmu tekstus" }).click();

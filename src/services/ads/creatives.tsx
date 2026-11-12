@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { Db } from "@/db/client";
 import { adCampaigns, adCreatives, adKeywords, type AdCreative } from "@/db/schema";
 import { loadCandidates } from "@/db/queries/catalog";
-import { COMPETITOR_GROUP } from "@/domain/ads/plan";
+import { BRAND_GROUP, COMPETITOR_GROUP } from "@/domain/ads/plan";
 import { lintAdText } from "@/domain/ads/honesty";
 import { eligibleOffers } from "@/domain/ranking/filters";
 import { getGroupOfSubcategory, getSubcategory } from "@/domain/questions/catalog";
@@ -525,6 +525,7 @@ export async function createPmax(
   budgetCents: number,
 ): Promise<{ ok: boolean; error?: string }> {
   if (groupId === COMPETITOR_GROUP) return { ok: false, error: "not for the competitor campaign" };
+  if (groupId === BRAND_GROUP) return { ok: false, error: "not for the brand campaign" };
   const group = getGroupOfSubcategory(
     Object.keys(seed.subcategories).find((s) => getGroupOfSubcategory(s)?.id === groupId) ?? "",
   );

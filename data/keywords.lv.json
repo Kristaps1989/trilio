@@ -412,5 +412,30 @@
     ],
     "landingPath": "/izvelies",
     "short": "Trilio"
+  },
+  "brand": {
+    "note": "Owner request, 12 Nov 2026: Trilio's own name, so trilio.lv is the first result for it in Latvia. The landing address carries utm_term=trilio, which the TV report reads as a brand search (docs/TV_ANALYTICS_PLAN.md §8). The negatives keep out searches for the backup-software company of the same name.",
+    "keywords": [
+      "trilio",
+      "trilio.lv",
+      "trilio lv",
+      "trilio latvija",
+      "trilio tehnika",
+      "trilio sadzīves tehnika",
+      "trilio ledusskapji",
+      "trilio atsauksmes"
+    ],
+    "negatives": [
+      "kubernetes",
+      "openstack",
+      "openshift",
+      "backup",
+      "triliovault",
+      "trilio.io",
+      "data protection",
+      "careers",
+      "twilio"
+    ],
+    "landingPath": "/?utm_source=google&utm_medium=cpc&utm_term=trilio"
   }
 }
