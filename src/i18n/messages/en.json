@@ -34,7 +34,7 @@
     "knowModel": "I already know the model",
     "kicker": "Shopping helper · home appliances",
     "lead": "Answer a few questions. We compare partner shops' prices by barcode and ask the distributor for a lower price. Free.",
-    "meta": "Takes about a minute · no sign-up · new and refurbished products are never mixed"
+    "meta": "Takes about a minute, no sign-up. New and refurbished products are never mixed."
   },
   "flow": {
     "progress": "Question {n} of {m}",

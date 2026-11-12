@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { catalogIn } from "@/domain/questions/catalog";
-import { ButtonLink } from "@/ui/Button";
-import { Container, Kicker, Lead, PageTitle, SectionTitle } from "@/ui/layout";
+import { Container, Lead, PageTitle, SectionTitle } from "@/ui/layout";
 import { TileIcon } from "@/ui/Tile";
 import { pageMetadata, withSharePreview } from "./seo";
 import { activeLocale } from "@/i18n/active";
@@ -31,34 +30,63 @@ export async function generateMetadata({
 
 export default async function WelcomePage() {
   const t = await getTranslations();
-  const groups = catalogIn(activeLocale()).groups.filter((g) => g.id !== "other");
+  const startGroups = catalogIn(activeLocale()).groups;
+  const groups = startGroups.filter((g) => g.id !== "other");
   const steps = [t("home.how1"), t("home.how2"), t("home.how3")];
   const proof = await savingsProofText(db);
   return (
     <>
-      <section className="flex min-h-[calc(100dvh-200px)] items-center justify-center pt-2 pb-10">
-        <Container size="text" className="flex flex-col gap-6">
-          <Kicker>{t("welcome.kicker")}</Kicker>
-          <PageTitle scale="hero">{t("welcome.headline")}</PageTitle>
-          <Lead className="max-w-[600px]">{t("welcome.lead")}</Lead>
-          {/* One primary action (docs/UX_REVIEW_PLAN.md §2); the model check stays one tap away as a link. */}
-          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <ButtonLink href="/izvelies" size="lg">
-              {t("welcome.help")}
-            </ButtonLink>
+      {/* The first question is on the home page (docs/UX_REVIEW_PLAN.md §8): the promise and the
+          proof on one side, "Ko tu meklē?" with the groups on the other, so choosing starts here. */}
+      <section className="pt-4 pb-12 lg:pt-10">
+        <Container size="wide" className="grid gap-x-12 gap-y-7 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+          <div className="flex flex-col gap-4 lg:gap-5">
+            <PageTitle scale="hero">{t("welcome.headline")}</PageTitle>
+            {proof ? (
+              <p className="max-w-[520px] text-[15px] font-semibold text-lime" data-home-proof>
+                {proof}
+              </p>
+            ) : null}
+            <Lead className="hidden max-w-[520px] lg:block">{t("welcome.lead")}</Lead>
+            <p className="hidden max-w-[520px] text-sm text-stone lg:block">{t("welcome.meta")}</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <h2 className="font-heading text-[22px] font-semibold text-mist" id="start-title">
+              {t("flow.chooseGroup")}
+            </h2>
+            <ul
+              aria-labelledby="start-title"
+              className="grid grid-cols-2 gap-[10px] sm:grid-cols-3"
+              data-home-start
+            >
+              {startGroups.map((g) => {
+                const other = g.id === "other";
+                return (
+                  <li key={g.id} className={other ? "col-span-full" : ""}>
+                    <Link
+                      href={other ? "/cits" : `/izvelies/${g.id}`}
+                      className={`flex h-full gap-2.5 rounded-[14px] border-[1.5px] border-mist-32 bg-white-5 p-3.5 text-[15px] leading-[1.25] font-semibold text-mist transition-colors hover:border-lime hover:bg-lime-18 ${
+                        other ? "min-h-[52px] items-center" : "min-h-[96px] flex-col justify-between"
+                      }`}
+                    >
+                      <TileIcon path={g.icon_svg_path} />
+                      <span>{g.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
             <Link
               href="/modelis"
-              className="inline-flex min-h-11 items-center text-base text-mist underline underline-offset-4"
+              className="inline-flex min-h-11 items-center self-start text-base text-mist underline underline-offset-4"
             >
               {t("welcome.knowModel")}
             </Link>
           </div>
-          <p className="text-sm text-stone">{t("welcome.meta")}</p>
-          {proof ? (
-            <p className="max-w-[600px] text-[15px] font-semibold text-lime" data-home-proof>
-              {proof}
-            </p>
-          ) : null}
+          <div className="flex flex-col gap-3 lg:hidden">
+            <Lead>{t("welcome.lead")}</Lead>
+            <p className="text-sm text-stone">{t("welcome.meta")}</p>
+          </div>
         </Container>
       </section>
 
