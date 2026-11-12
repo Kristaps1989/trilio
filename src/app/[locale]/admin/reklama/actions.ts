@@ -22,7 +22,14 @@ import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { decideProposal } from "@/services/ads/optimiser";
 import { createCaller } from "@/services/llm/client";
 import { markSeoDone } from "@/services/seo/search-console";
-import { createTvCampaign, deleteTvCampaign, getTvCampaign, recomputeTvBaseline } from "@/services/growth/tv";
+import {
+  createTvCampaign,
+  deleteTvCampaign,
+  getTvCampaign,
+  linkFlight,
+  recomputeTvBaseline,
+  unlinkFlight,
+} from "@/services/growth/tv";
 import { adminOrNull, type Admin } from "../guard";
 
 // Every write in Reklāma (docs/GROWTH_PLAN.md §6): admin-gated, logged in
@@ -282,9 +289,11 @@ export async function createTvCampaignAction(formData: FormData): Promise<void> 
     name,
     slug: String(formData.get("slug") ?? ""),
     landingPath: String(formData.get("landingPath") ?? ""),
+    kind: String(formData.get("kind") ?? "tv"),
+    source: String(formData.get("source") ?? ""),
   });
   if (!r.ok) back("/admin/reklama/tv", { err: r.error });
-  await log(a, "ads.tv_create", r.ok ? r.slug : "", { name });
+  await log(a, "ads.tv_create", r.ok ? r.slug : "", { name, kind: String(formData.get("kind") ?? "tv") });
   back("/admin/reklama/tv", { ok: "created" });
 }
 
@@ -294,6 +303,25 @@ export async function deleteTvCampaignAction(formData: FormData): Promise<void> 
   await deleteTvCampaign(db, slug);
   await log(a, "ads.tv_delete", slug);
   back("/admin/reklama/tv", { ok: "deleted" });
+}
+
+/** Reklāma → TV: a TV campaign and a display campaign measured as one flight (docs/DISPLAY_PLAN.md §3). */
+export async function linkFlightAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const slug = z.string().min(1).max(48).parse(formData.get("slug"));
+  const partner = z.string().min(1).max(48).parse(formData.get("partner"));
+  const r = await linkFlight(db, slug, partner);
+  if (!r.ok) back("/admin/reklama/tv", { err: r.error });
+  await log(a, "ads.tv_flight_link", slug, { partner });
+  back("/admin/reklama/tv", { ok: "flight" });
+}
+
+export async function unlinkFlightAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const slug = z.string().min(1).max(48).parse(formData.get("slug"));
+  await unlinkFlight(db, slug);
+  await log(a, "ads.tv_flight_unlink", slug);
+  back("/admin/reklama/tv", { ok: "unflight" });
 }
 
 /** Reklāma → TV: the baseline drawn again without the visitor days left out since (docs/CLICK_QUALITY_PLAN.md §6). */

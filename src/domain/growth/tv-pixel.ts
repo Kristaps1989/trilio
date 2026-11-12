@@ -48,7 +48,9 @@ export type PixelParams = {
  * An unfilled macro counts as absent: FreeWheel's "#{…}" and its encoded forms
  * "#e{…}", "#s{…}", "#2{…}", and other servers' "${…}", "[…]", "%%…%%", "{…}".
  */
-const UNFILLED = /#[es2]?\{|\$\{|^\[.*\]$|%%|^\{.*\}$/;
+// Ad Manager's own %ecid! and %eaid! arrive percent-decoded when unfilled: "%ec" is not valid
+// UTF-8, so the value reads as U+FFFD followed by "id!".
+const UNFILLED = /#[es2]?\{|\$\{|^\[.*\]$|%%|^\{.*\}$|%e[a-z]{3}!|\uFFFD/;
 
 /** A short label for a creative, channel or position: letters, digits and a little punctuation, at most 60 characters. */
 export function cleanValue(raw: string | null | undefined, max = 60): string | null {
@@ -191,7 +193,8 @@ export function forwardedChain(xff: string | null | undefined): string[] {
     .slice(0, 10);
 }
 
-export type AddressSource = "macro" | "header" | "forwarded";
+/** "client": the request's own address, for a tracker the visitor's browser calls (display). */
+export type AddressSource = "macro" | "header" | "forwarded" | "client";
 
 /**
  * The household's address for this impression, and where it came from: the
@@ -371,10 +374,11 @@ export function holdoutLift(
  */
 export function usableSource(diag: {
   reach: number;
-  distinct: Partial<Record<"macro" | "device" | "xff0", number>>;
+  distinct: Partial<Record<"macro" | "device" | "xff0" | "client", number>>;
   forwarded: number;
   impressions: number;
-}): { source: AddressSource | null; reason: "macro" | "header" | "forwarded" | "few" | "none" } {
+}): { source: AddressSource | null; reason: "macro" | "header" | "forwarded" | "client" | "few" | "none" } {
+  if ((diag.distinct.client ?? 0) > 0) return { source: "client", reason: "client" };
   if ((diag.distinct.macro ?? 0) > 0) return { source: "macro", reason: "macro" };
   if ((diag.distinct.device ?? 0) > 0) return { source: "header", reason: "header" };
   if (diag.forwarded > 0) {

@@ -10,7 +10,7 @@ import {
   suspectClickDetail,
   visitStats,
 } from "@/services/admin/stats";
-import { householdSummary, tvPixelReport, tvReport, tvStats } from "@/services/growth/tv";
+import { flightOverlap, householdSummary, tvPixelReport, tvReport, tvStats } from "@/services/growth/tv";
 import { notifyFunnel } from "@/services/notify/events";
 import { botStats, clientStats } from "@/services/visits/visits";
 
@@ -45,9 +45,17 @@ export async function tvStatsJson(db: Db, rawPeriod: string | null, now = new Da
       campaigns.map(async (c) => {
         const report = await tvReport(db, c.campaign.slug, now, range);
         const pixel = await tvPixelReport(db, c.campaign.slug, range);
+        const overlap = await flightOverlap(db, c.campaign.slug);
         return {
           slug: c.campaign.slug,
           name: c.campaign.name,
+          // "tv": Go3's ad server calls the tracker. "display": a banner; totals.shortLink* are its clicks.
+          kind: c.campaign.kind,
+          source: c.campaign.source,
+          // A TV campaign and a display campaign measured together: households that saw one or both.
+          flight: overlap
+            ? { partner: overlap.partner.slug, since: overlap.since.toISOString(), groups: overlap.groups }
+            : null,
           landingPath: c.campaign.landingPath,
           totals: {
             impressions: c.impressions,

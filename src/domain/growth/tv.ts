@@ -76,9 +76,31 @@ export function shortLinkUrl(base: string, slug: string): string {
 }
 
 /** Where the short link leads, with the campaign tags Trilio's attribution reads. */
-export function landingWithTags(landingPath: string, slug: string): string {
+export function landingWithTags(
+  landingPath: string,
+  slug: string,
+  campaign: { kind?: string | null; source?: string | null } = {},
+): string {
   const sep = landingPath.includes("?") ? "&" : "?";
-  return `${landingPath}${sep}utm_source=go3&utm_medium=tv&utm_campaign=${encodeURIComponent(slug)}`;
+  const display = campaign.kind === "display";
+  const source = encodeURIComponent(campaign.source?.trim() || (display ? "display" : "go3"));
+  return `${landingPath}${sep}utm_source=${source}&utm_medium=${display ? "display" : "tv"}&utm_campaign=${encodeURIComponent(slug)}`;
+}
+
+export const CAMPAIGN_KINDS = ["tv", "display"] as const;
+export type CampaignKind = (typeof CAMPAIGN_KINDS)[number];
+
+/** The publisher's name for utm_source: a host or a short word, e.g. "tv3.lv". */
+export const SOURCE = /^[a-z0-9][a-z0-9.-]{1,39}$/;
+
+/**
+ * The impression tracker for a banner trafficked in Google Ad Manager
+ * (docs/DISPLAY_PLAN.md §1): the visitor's browser requests it, so the request's own
+ * address is the household's. Ad Manager's macros add a cache-buster, the creative and
+ * line item ids, the page's site and the banner's size.
+ */
+export function displayPixelUrl(base: string, slug: string): string {
+  return `${base}/px/${slug}?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%eaid!&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%`;
 }
 
 /**

@@ -33,8 +33,8 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
   await form.getByLabel("Nosaukums", { exact: true }).fill("E2E Go3 ledusskapji");
   await form.getByLabel("Īsais nosaukums saitē (neobligāti)").fill(SLUG);
   await form.getByLabel("Lapa, uz kuru ved īsā saite").fill("/izvelies");
-  await form.getByRole("button", { name: "Izveidot TV kampaņu" }).click();
-  await expect(page.locator("[data-outcome=ok]")).toHaveText("TV kampaņa izveidota.");
+  await form.getByRole("button", { name: "Izveidot kampaņu" }).click();
+  await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņa izveidota.");
 
   const campaign = page.locator(`[data-tv-campaign="${SLUG}"]`);
   const pixel = await campaign.locator("[data-tv-pixel]").inputValue();
@@ -227,11 +227,82 @@ test("TV campaign: tracker for Go3, short link, impressions, reach and visits", 
     .locator(`[data-tv-campaign="${SLUG}"]`)
     .getByRole("button", { name: "Dzēst kampaņu un tās datus" })
     .click();
-  await expect(page.locator("[data-outcome=ok]")).toHaveText("TV kampaņa un tās dati dzēsti.");
+  await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņa un tās dati dzēsti.");
   await expect(page.locator(`[data-tv-campaign="${SLUG}"]`)).toHaveCount(0);
   // After deletion the short link leads home, and the pixel still answers.
   const res = await page.request.get(`/tv/${SLUG}`, { maxRedirects: 0 });
   expect(res.status()).toBe(302);
+});
+
+test("display campaign: Ad Manager tracker, click link tagged as display, and a flight with TV", async ({
+  page,
+  browser,
+}) => {
+  const banner = `${SLUG}-banner`;
+  const tv = `${SLUG}-flight`;
+  await signIn(page);
+  const create = async (name: string, slug: string, kind: "TV" | "Baneris") => {
+    const form = page.locator("[data-tv-new]");
+    await form.getByLabel("Nosaukums", { exact: true }).fill(name);
+    await form.getByLabel("Īsais nosaukums saitē (neobligāti)").fill(slug);
+    await form.getByLabel("Veids").selectOption({ label: kind });
+    if (kind === "Baneris") await form.getByLabel("Vietne, kurā rādīs baneri (tikai banerim)").fill("tv3.lv");
+    await form.getByRole("button", { name: "Izveidot kampaņu" }).click();
+    await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņa izveidota.");
+  };
+  await create("E2E baneris", banner, "Baneris");
+  await create("E2E TV pāris", tv, "TV");
+
+  const card = page.locator(`[data-tv-campaign="${banner}"]`);
+  await expect(card).toHaveAttribute("data-tv-kind", "display");
+  expect(await card.locator("[data-tv-pixel]").inputValue()).toMatch(
+    new RegExp(
+      `/px/${banner}\\?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%eaid!&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%$`,
+    ),
+  );
+  // No TV effect or Go3 macros on a banner's card.
+  await expect(card.locator("[data-tv-effect]")).toHaveCount(0);
+  await expect(card.locator("[data-tv-pixel-extended]")).toHaveCount(0);
+
+  // A person's browser loads the banner, then clicks it.
+  const viewer = await (
+    await browser.newContext({
+      userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 e2e-banner/${Date.now()}`,
+    })
+  ).newPage();
+  expect((await viewer.request.get(`/px/${banner}?ord=1&ch=tv3.lv&pos=300x250`)).status()).toBe(200);
+  await viewer.goto(`/tv/${banner}`);
+  await expect(viewer).toHaveURL(
+    new RegExp(`/izvelies\\?utm_source=tv3\\.lv&utm_medium=display&utm_campaign=${banner}$`),
+  );
+  await viewer.context().close();
+  await expect(async () => {
+    await page.reload();
+    await expect(page.locator(`[data-tv-campaign="${banner}"]`)).toHaveAttribute("data-tv-impressions", "1");
+    await expect(page.locator(`[data-tv-campaign="${banner}"]`)).toHaveAttribute("data-tv-links", "1");
+  }).toPass({ timeout: 15_000 });
+
+  // The flight: linked from the banner's card, the overlap table appears on both.
+  const link = page.locator(`[data-tv-campaign="${banner}"] [data-tv-flight-form]`);
+  await link.getByLabel("Mērīt kopā ar kampaņu").selectOption(tv);
+  await link.getByRole("button", { name: "Saistīt kampaņas" }).click();
+  await expect(page.locator("[data-outcome=ok]")).toHaveText(
+    "Kampaņas saistītas. Pārklāšanos skaitām no šī brīža.",
+  );
+  await expect(page.locator(`[data-tv-campaign="${banner}"] [data-tv-flight="${tv}"]`)).toBeVisible();
+  await expect(page.locator(`[data-tv-campaign="${tv}"] [data-tv-flight="${banner}"]`)).toBeVisible();
+  await expect(async () => {
+    const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+    expect(axe.violations).toEqual([]);
+  }).toPass({ timeout: 10_000 });
+
+  for (const slug of [banner, tv]) {
+    await page
+      .locator(`[data-tv-campaign="${slug}"]`)
+      .getByRole("button", { name: "Dzēst kampaņu un tās datus" })
+      .click();
+    await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņa un tās dati dzēsti.");
+  }
 });
 
 test("the tracker and the short link stay out of search engines", async ({ request }) => {
