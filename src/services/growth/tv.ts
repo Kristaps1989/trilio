@@ -152,6 +152,8 @@ export async function recordTvImpression(
   // A banner's tracker is called by browsers: crawlers and link previews that load the page
   // are not people who saw it. (A TV tracker is called by the ad server, never filtered.)
   if (campaign.kind === "display" && isBot(input.userAgent)) return true;
+  // The ad server's own preview of the creative is not an impression.
+  if (input.pixel?.params.preview) return true;
   const received = input.now ?? new Date();
   const p = input.pixel?.params;
   const now = eventTime(p?.ts ?? null, received) ?? received;

@@ -95,12 +95,15 @@ export const SOURCE = /^[a-z0-9][a-z0-9.-]{1,39}$/;
 
 /**
  * The impression tracker for a banner trafficked in Google Ad Manager
- * (docs/DISPLAY_PLAN.md §1): the visitor's browser requests it, so the request's own
- * address is the household's. Ad Manager's macros add a cache-buster, the creative and
- * line item ids, the page's site and the banner's size.
+ * (docs/DISPLAY_PLAN.md §1), with the macros of Ad Manager's own list
+ * (support.google.com/admanager/answer/2376981): a cache-buster, the creative's id, the ad
+ * unit's path, the page's site and the banner's size. In an app the device's advertising
+ * id, its type and the limit-ad-tracking flag are filled too; on the web they stay empty
+ * and the request's own address stands in. `tfua` (a user under the age of consent) is
+ * treated like an opt-out, and `pv` keeps Ad Manager's previews out of the counts.
  */
 export function displayPixelUrl(base: string, slug: string): string {
-  return `${base}/px/${slug}?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%eaid!&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%`;
+  return `${base}/px/${slug}?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%%ADUNIT%%&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%&vid=%%ADVERTISING_IDENTIFIER_PLAIN%%&idt=%%ADVERTISING_IDENTIFIER_TYPE%%&lat=%%ADVERTISING_IDENTIFIER_IS_LAT%%&tfua=%%TFUA%%&pv=%%PREVIEW_MODE%%`;
 }
 
 /**

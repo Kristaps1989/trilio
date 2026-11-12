@@ -11,11 +11,27 @@ one advertiser's flight.
 Reklāma → TV creates campaigns of two kinds (`tv_campaigns.kind`): `tv` and
 `display`. A display campaign has a publisher (`source`, e.g. `tv3.lv`).
 
-- **Impression tracker:** `/px/<slug>?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%eaid!&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%`,
-  added to the creative in Ad Manager as a third-party impression tracker. The
-  macros are Ad Manager's: cache-buster, creative id, line item id, the page's
-  site, the banner's size. They were written from memory of Ad Manager's macro
-  list, **not verified against tv3.lv's account**: ad ops should confirm them.
+- **Impression tracker:** `/px/<slug>` with Ad Manager's macros, added to the
+  creative as a third-party impression tracker. The macros are taken from
+  Google's own list (support.google.com/admanager/answer/2376981, read
+  12 Nov 2026); they have not been tried in the publisher's account yet.
+
+  | Field | Macro | What it gives |
+  | --- | --- | --- |
+  | `ord` | `%%CACHEBUSTER%%` | a random number, so no impression is served from a cache |
+  | `cr` | `%ecid!` | the creative's id: which banner version |
+  | `pl` | `%%ADUNIT%%` | the ad unit's path: where on the site it ran |
+  | `ch` | `%%SITE%%` | the page's domain (empty on anonymous Ad Exchange ads) |
+  | `pos` | `%%WIDTH%%x%%HEIGHT%%` | the banner's size |
+  | `vid`, `idt`, `lat` | `%%ADVERTISING_IDENTIFIER_PLAIN%%`, `…_TYPE%%`, `…_IS_LAT%%` | in an app only: the device's advertising id, its type and the limit-ad-tracking flag. Empty on the web |
+  | `tfua` | `%%TFUA%%` | 1 for a user under the age of consent: counted, never followed |
+  | `pv` | `%%PREVIEW_MODE%%` | `true` for Ad Manager's own previews: not counted |
+
+  Not used: `%%PATTERN:url%%` (the page's address would say what a person
+  read), the GDPR consent macros (Trilio is not a TCF vendor and sets no
+  cookie), and the order, advertiser and deal ids (one campaign is one line
+  item). `%%PATTERN:<key>%%` can pass a publisher's own key-value, which is the
+  way to an exact match with Go3 if the publisher has a shared sign-in id.
   An unfilled macro is never stored as a value.
 - **Who calls it:** the visitor's browser, not an ad server. So the request's
   own address is the household's (`source = client`), there is no device id

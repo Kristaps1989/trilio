@@ -257,7 +257,7 @@ test("display campaign: Ad Manager tracker, click link tagged as display, and a 
   await expect(card).toHaveAttribute("data-tv-kind", "display");
   expect(await card.locator("[data-tv-pixel]").inputValue()).toMatch(
     new RegExp(
-      `/px/${banner}\\?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%eaid!&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%$`,
+      `/px/${banner}\\?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%%ADUNIT%%&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%&vid=%%ADVERTISING_IDENTIFIER_PLAIN%%`,
     ),
   );
   // No TV effect or Go3 macros on a banner's card.

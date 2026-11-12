@@ -30,6 +30,8 @@ export type PixelParams = {
   country: string | null;
   /** The device opted out of ad tracking (`lat=1`, #{request.deviceOptOut}): counted, never followed. */
   optOut: boolean;
+  /** An ad server's own preview of the creative (`pv=true`, Ad Manager's %%PREVIEW_MODE%%): not an impression. */
+  preview: boolean;
   /** The spot's length in seconds (`dur`, #{ad.creative.rendition.duration}). */
   dur: string | null;
   /** The programme the spot ran in: the series (`pg`), else the asset title (`ast`). */
@@ -92,7 +94,9 @@ export function pixelParams(params: URLSearchParams): PixelParams {
     dt: cleanValue(params.get("dt"), 40),
     ua: raw("ua")?.slice(0, 400) ?? null,
     country: cleanValue(params.get("co"), 3)?.toUpperCase() ?? null,
-    optOut: raw("lat") === "1",
+    // Limit ad tracking, or (Ad Manager's %%TFUA%%) a user under the age of consent.
+    optOut: /^(1|true)$/i.test(raw("lat") ?? "") || raw("tfua") === "1",
+    preview: raw("pv") === "true",
     dur: /^\d{1,4}(\.\d+)?$/.test(raw("dur") ?? "") ? String(Math.round(Number(raw("dur")))) : null,
     program: cleanValue(params.get("pg"), 80) ?? cleanValue(params.get("ast"), 80),
     genre: cleanValue(params.get("gn"), 60),

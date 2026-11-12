@@ -2209,7 +2209,7 @@
         "slug": "Īsais nosaukums saitē (neobligāti)",
         "landing": "Lapa, uz kuru ved īsā saite",
         "create": "Izveidot kampaņu",
-        "howDisplay": "Banerim: pikseļa saiti pievieno radošajam materiālam Google Ad Manager kā trešās puses parādījumu izsekotāju, bet klikšķa saiti ieliec kā banera mērķa adresi. Pikseli izsauc apmeklētāja pārlūks, tāpēc sasniedzamība ir aptuvena (pēc interneta adreses un pārlūka), un robotu pieprasījumus neskaitām. Makrosu nosaukumus (%%CACHEBUSTER%%, %ecid!, %eaid!, %%SITE%%) pirms palaišanas pārbaudi ar vietnes reklāmas komandu.",
+        "howDisplay": "Banerim: pikseļa saiti pievieno radošajam materiālam Google Ad Manager kā trešās puses parādījumu izsekotāju, bet klikšķa saiti ieliec kā banera mērķa adresi. Pikseli izsauc apmeklētāja pārlūks, tāpēc sasniedzamība ir aptuvena (pēc interneta adreses un pārlūka), un robotu pieprasījumus neskaitām. Makrosi ir no Google Ad Manager palīdzības saraksta: radošā materiāla numurs, reklāmas vieta (ad unit), vietne un banera izmērs; lietotnē arī ierīces reklāmas identifikators. Ad Manager priekšskatījumus neskaitām, un nepilngadīgu lietotāju ierīces neizsekojam.",
         "how": "Pikseļa saiti iedod Go3 kā trešās puses parādījumu izsekotāju (impression tracker). Go3 reklāmas serveris to izsauc katram parādījumam un aizpilda ierīces identifikatoru; Trilio glabā tikai tā sajaukumu (hash) ar kampaņas sāli, ne pašu identifikatoru, IP vai pārlūku, un dzēš to pēc 90 dienām. Īso saiti rādi ekrānā vai QR kodā: apmeklējumi un klikšķi uz veikaliem pēc tās tiek pieskaitīti šai kampaņai.",
         "none": "Vēl nav nevienas kampaņas.",
         "impressions": "Parādījumi",

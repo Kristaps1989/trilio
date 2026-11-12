@@ -48,14 +48,31 @@ describe("display campaign addresses", () => {
     const u = new URL(displayPixelUrl("https://trilio.lv", "banner-1"));
     expect(u.pathname).toBe("/px/banner-1");
     const p = pixelParams(u.searchParams);
-    expect([p.cr, p.placement, p.ch, p.pos]).toEqual([null, null, null, null]);
-    const filled = pixelParams(new URLSearchParams("cr=138412345&pl=6123456&ch=tv3.lv&pos=300x250"));
-    expect([filled.cr, filled.placement, filled.ch, filled.pos]).toEqual([
+    expect([p.cr, p.placement, p.ch, p.pos, p.vid, p.idType]).toEqual([null, null, null, null, null, null]);
+    expect([p.optOut, p.preview]).toEqual([false, false]);
+    // On the web the app-only macros come empty; in an app they carry the advertising id.
+    const web = pixelParams(
+      new URLSearchParams(
+        "cr=138412345&pl=/123/tv3/news&ch=tv3.lv&pos=300x250&vid=&idt=&lat=&tfua=0&pv=false",
+      ),
+    );
+    expect([web.cr, web.placement, web.ch, web.pos, web.vid]).toEqual([
       "138412345",
-      "6123456",
+      "/123/tv3/news",
       "tv3.lv",
       "300x250",
+      null,
     ]);
+    const app = pixelParams(new URLSearchParams("vid=38400000-8cf0-11bd-b23e-10b96e40000d&idt=adid&lat=0"));
+    expect([app.vid, app.idType, app.optOut]).toEqual([
+      "38400000-8cf0-11bd-b23e-10b96e40000d",
+      "adid",
+      false,
+    ]);
+    // Limit ad tracking and a user under the age of consent: counted, never followed.
+    expect(pixelParams(new URLSearchParams("lat=1")).optOut).toBe(true);
+    expect(pixelParams(new URLSearchParams("tfua=1")).optOut).toBe(true);
+    expect(pixelParams(new URLSearchParams("pv=true")).preview).toBe(true);
   });
 });
 
