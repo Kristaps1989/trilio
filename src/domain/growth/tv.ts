@@ -54,6 +54,8 @@ export function extendedPixelUrl(base: string, slug: string): string {
     "co=#{request.country}",
     "lat=#{request.deviceOptOut}",
     'idt=#{request.deviceIdType("iab")}',
+    // The device's advertising id, for an exact match with a banner campaign in an app.
+    'did=#{request.keyValue("_fw_did")}',
     "dur=#{ad.creative.rendition.duration}",
     "pg=#e{series.title}",
     "ast=#e{asset.title}",
@@ -76,9 +78,34 @@ export function shortLinkUrl(base: string, slug: string): string {
 }
 
 /** Where the short link leads, with the campaign tags Trilio's attribution reads. */
-export function landingWithTags(landingPath: string, slug: string): string {
+export function landingWithTags(
+  landingPath: string,
+  slug: string,
+  campaign: { kind?: string | null; source?: string | null } = {},
+): string {
   const sep = landingPath.includes("?") ? "&" : "?";
-  return `${landingPath}${sep}utm_source=go3&utm_medium=tv&utm_campaign=${encodeURIComponent(slug)}`;
+  const display = campaign.kind === "display";
+  const source = encodeURIComponent(campaign.source?.trim() || (display ? "display" : "go3"));
+  return `${landingPath}${sep}utm_source=${source}&utm_medium=${display ? "display" : "tv"}&utm_campaign=${encodeURIComponent(slug)}`;
+}
+
+export const CAMPAIGN_KINDS = ["tv", "display"] as const;
+export type CampaignKind = (typeof CAMPAIGN_KINDS)[number];
+
+/** The publisher's name for utm_source: a host or a short word, e.g. "tv3.lv". */
+export const SOURCE = /^[a-z0-9][a-z0-9.-]{1,39}$/;
+
+/**
+ * The impression tracker for a banner trafficked in Google Ad Manager
+ * (docs/DISPLAY_PLAN.md §1), with the macros of Ad Manager's own list
+ * (support.google.com/admanager/answer/2376981): a cache-buster, the creative's id, the ad
+ * unit's path, the page's site and the banner's size. In an app the device's advertising
+ * id, its type and the limit-ad-tracking flag are filled too; on the web they stay empty
+ * and the request's own address stands in. `tfua` (a user under the age of consent) is
+ * treated like an opt-out, and `pv` keeps Ad Manager's previews out of the counts.
+ */
+export function displayPixelUrl(base: string, slug: string): string {
+  return `${base}/px/${slug}?ord=%%CACHEBUSTER%%&cr=%ecid!&pl=%%ADUNIT%%&ch=%%SITE%%&pos=%%WIDTH%%x%%HEIGHT%%&vid=%%ADVERTISING_IDENTIFIER_PLAIN%%&idt=%%ADVERTISING_IDENTIFIER_TYPE%%&lat=%%ADVERTISING_IDENTIFIER_IS_LAT%%&tfua=%%TFUA%%&pv=%%PREVIEW_MODE%%`;
 }
 
 /**
@@ -105,6 +132,26 @@ export function parseGo3Viewer(vid: string | null): { account: string; child: bo
 /** A subscription's hash for one campaign, salted like the viewer's; the customer id is not kept. */
 export function accountHash(salt: string, account: string): string {
   return createHash("sha256").update(`${salt}|acct:${account}`).digest("base64url").slice(0, 22);
+}
+
+const AD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * A device's advertising id (an Android, iOS or TV platform's resettable id), lower-cased and
+ * without a type prefix ("rida:…", "idfa:…"). Null for anything else, and for the all-zero id
+ * a device sends when tracking is limited.
+ */
+export function advertisingId(raw: string | null | undefined): string | null {
+  const v = (raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^[a-z_]{2,12}:/, "");
+  return AD_ID.test(v) && !/^[0-]+$/.test(v) ? v : null;
+}
+
+/** A device's hash inside one flight; the id itself is never kept. */
+export function deviceHash(flightSalt: string, id: string): string {
+  return createHash("sha256").update(`${flightSalt}|dev:${id}`).digest("base64url").slice(0, 22);
 }
 
 /** A viewer's hash for one campaign: the id (or IP and user agent) never leaves this function. */

@@ -30,6 +30,10 @@ export type PixelParams = {
   country: string | null;
   /** The device opted out of ad tracking (`lat=1`, #{request.deviceOptOut}): counted, never followed. */
   optOut: boolean;
+  /** The device's advertising id when the tracker carries it apart from the viewer id (`did`). */
+  did: string | null;
+  /** An ad server's own preview of the creative (`pv=true`, Ad Manager's %%PREVIEW_MODE%%): not an impression. */
+  preview: boolean;
   /** The spot's length in seconds (`dur`, #{ad.creative.rendition.duration}). */
   dur: string | null;
   /** The programme the spot ran in: the series (`pg`), else the asset title (`ast`). */
@@ -48,7 +52,9 @@ export type PixelParams = {
  * An unfilled macro counts as absent: FreeWheel's "#{…}" and its encoded forms
  * "#e{…}", "#s{…}", "#2{…}", and other servers' "${…}", "[…]", "%%…%%", "{…}".
  */
-const UNFILLED = /#[es2]?\{|\$\{|^\[.*\]$|%%|^\{.*\}$/;
+// Ad Manager's own %ecid! and %eaid! arrive percent-decoded when unfilled: "%ec" is not valid
+// UTF-8, so the value reads as U+FFFD followed by "id!".
+const UNFILLED = /#[es2]?\{|\$\{|^\[.*\]$|%%|^\{.*\}$|%e[a-z]{3}!|\uFFFD/;
 
 /** A short label for a creative, channel or position: letters, digits and a little punctuation, at most 60 characters. */
 export function cleanValue(raw: string | null | undefined, max = 60): string | null {
@@ -90,13 +96,16 @@ export function pixelParams(params: URLSearchParams): PixelParams {
     dt: cleanValue(params.get("dt"), 40),
     ua: raw("ua")?.slice(0, 400) ?? null,
     country: cleanValue(params.get("co"), 3)?.toUpperCase() ?? null,
-    optOut: raw("lat") === "1",
+    // Limit ad tracking, or (Ad Manager's %%TFUA%%) a user under the age of consent.
+    optOut: /^(1|true)$/i.test(raw("lat") ?? "") || raw("tfua") === "1",
+    preview: raw("pv") === "true",
     dur: /^\d{1,4}(\.\d+)?$/.test(raw("dur") ?? "") ? String(Math.round(Number(raw("dur")))) : null,
     program: cleanValue(params.get("pg"), 80) ?? cleanValue(params.get("ast"), 80),
     genre: cleanValue(params.get("gn"), 60),
     daypart: cleanValue(params.get("dp"), 40),
     placement: cleanValue(params.get("pl"), 80),
     idType: cleanValue(params.get("idt"), 20)?.toLowerCase() ?? null,
+    did: raw("did")?.slice(0, 80) ?? null,
     grp: grp === "control" || grp === "holdout" || grp === "psa" ? "control" : "ad",
   };
 }
@@ -191,7 +200,8 @@ export function forwardedChain(xff: string | null | undefined): string[] {
     .slice(0, 10);
 }
 
-export type AddressSource = "macro" | "header" | "forwarded";
+/** "client": the request's own address, for a tracker the visitor's browser calls (display). */
+export type AddressSource = "macro" | "header" | "forwarded" | "client";
 
 /**
  * The household's address for this impression, and where it came from: the
@@ -371,10 +381,11 @@ export function holdoutLift(
  */
 export function usableSource(diag: {
   reach: number;
-  distinct: Partial<Record<"macro" | "device" | "xff0", number>>;
+  distinct: Partial<Record<"macro" | "device" | "xff0" | "client", number>>;
   forwarded: number;
   impressions: number;
-}): { source: AddressSource | null; reason: "macro" | "header" | "forwarded" | "few" | "none" } {
+}): { source: AddressSource | null; reason: "macro" | "header" | "forwarded" | "client" | "few" | "none" } {
+  if ((diag.distinct.client ?? 0) > 0) return { source: "client", reason: "client" };
   if ((diag.distinct.macro ?? 0) > 0) return { source: "macro", reason: "macro" };
   if ((diag.distinct.device ?? 0) > 0) return { source: "header", reason: "header" };
   if (diag.forwarded > 0) {

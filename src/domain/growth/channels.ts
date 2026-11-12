@@ -4,7 +4,8 @@
 // organic visits, searches for the brand), never on visits another channel paid
 // for or sent (other Google Ads, Meta ads, social posts, e-mails, partners).
 
-export type Channel = "direct" | "tv" | "google_brand" | "google" | "meta_ads" | "social" | "email" | "other";
+export type Channel =
+  "direct" | "tv" | "google_brand" | "google" | "meta_ads" | "display" | "social" | "email" | "other";
 
 export const CHANNELS: Channel[] = [
   "direct",
@@ -12,6 +13,7 @@ export const CHANNELS: Channel[] = [
   "google_brand",
   "google",
   "meta_ads",
+  "display",
   "social",
   "email",
   "other",
@@ -45,6 +47,8 @@ export function landingChannel(l: LandingTags): Channel {
     return "other";
   }
   if (META.test(source)) return PAID.test(medium) ? "meta_ads" : "social";
+  // A banner on a publisher's site (Reklāma → TV, display campaigns): its own channel, not TV's.
+  if (medium === "display" || medium === "banner") return "display";
   if (medium === "social") return "social";
   return "other";
 }

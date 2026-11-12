@@ -902,6 +902,19 @@ export const tvCampaigns = pgTable("tv_campaigns", {
   /** Where the short link leads, e.g. "/izvelies" or "/kategorija/fridge". */
   landingPath: text("landing_path").notNull().default("/"),
   salt: text("salt").notNull(),
+  /** "tv": Go3's ad server calls the tracker. "display": a banner on a site; the visitor's browser does. */
+  kind: text("kind").notNull().default("tv"),
+  /** utm_source of the click link: the publisher, e.g. "tv3.lv". Null for TV ("go3"). */
+  source: text("source"),
+  /**
+   * Campaigns of one flight (a TV campaign and a display campaign) share this salt for
+   * household hashes, so their households can be compared (docs/DISPLAY_PLAN.md §3).
+   * Null: the campaign's own salt, and no comparison with any other campaign.
+   */
+  flightSalt: text("flight_salt"),
+  /** The partner campaign's slug, and since when the households are comparable. */
+  flightWith: text("flight_with"),
+  flightAt: timestamp("flight_at", { withTimezone: true }),
   /**
    * The sessions the site had per 10-minute bucket of the day before the
    * campaign's first impression (docs/TV_ANALYTICS_PLAN.md §2): the fixed
@@ -967,6 +980,11 @@ export const tvViewers = pgTable(
     accountHash: text("account_hash"),
     /** A child's profile ("C" in Go3's viewer id). Null when the id has no profile type. */
     child: boolean("child"),
+    /**
+     * The device's advertising id hashed with the flight's shared salt, only while the campaign
+     * is in a flight: the same phone in both campaigns is the same hash (docs/DISPLAY_PLAN.md §3).
+     */
+    deviceHash: text("device_hash"),
   },
   (t) => [
     primaryKey({ columns: [t.slug, t.day, t.viewerHash] }),

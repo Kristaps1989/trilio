@@ -22,8 +22,11 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
   const ua = request.headers.get("user-agent");
   if (!isBot(ua) && requestSuspicion(ua, signalsOf(request.headers), "page") === null)
     after(() => recordTvLinkOpen(db, campaign.slug).catch(() => undefined));
-  return NextResponse.redirect(`${appBaseUrl()}${landingWithTags(campaign.landingPath, campaign.slug)}`, {
-    status: 302,
-    headers: { "cache-control": "no-store" },
-  });
+  return NextResponse.redirect(
+    `${appBaseUrl()}${landingWithTags(campaign.landingPath, campaign.slug, campaign)}`,
+    {
+      status: 302,
+      headers: { "cache-control": "no-store" },
+    },
+  );
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "tv_viewers" ADD COLUMN "device_hash" text;

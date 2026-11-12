@@ -18,7 +18,7 @@ import {
   type TvBaseline,
   type TvHouseholdFigures,
 } from "@/db/schema";
-import { RAW_RETENTION_DAYS, rigaDay } from "@/domain/analytics/visits";
+import { isBot, RAW_RETENTION_DAYS, rigaDay } from "@/domain/analytics/visits";
 import { cleanVisitor } from "@/services/visits/suspects";
 import {
   CHANNELS,
@@ -31,7 +31,17 @@ import {
 
 /** The visitor filter the baseline and the uplift use now (docs/TV_ANALYTICS_PLAN.md §8). */
 export const CHANNEL_FILTER = "tv-eligible-v1";
-import { accountHash, parseGo3Viewer, SLUG, slugify, viewerHash, viewerId } from "@/domain/growth/tv";
+import {
+  accountHash,
+  advertisingId,
+  deviceHash,
+  parseGo3Viewer,
+  SLUG,
+  slugify,
+  SOURCE,
+  viewerHash,
+  viewerId,
+} from "@/domain/growth/tv";
 import { deviceLabel, parseSection } from "@/domain/growth/go3-section";
 import {
   addressHash,
@@ -72,12 +82,15 @@ export type TvCampaign = typeof tvCampaigns.$inferSelect;
 
 export async function createTvCampaign(
   db: Db,
-  input: { name: string; slug?: string; landingPath?: string },
-): Promise<{ ok: true; slug: string } | { ok: false; error: "slug" | "taken" | "landing" }> {
+  input: { name: string; slug?: string; landingPath?: string; kind?: string; source?: string },
+): Promise<{ ok: true; slug: string } | { ok: false; error: "slug" | "taken" | "landing" | "source" }> {
   const slug = (input.slug?.trim() || slugify(input.name)).toLowerCase();
   if (!SLUG.test(slug)) return { ok: false, error: "slug" };
   const landingPath = input.landingPath?.trim() || "/";
   if (!/^\/[^\s]*$/.test(landingPath) || landingPath.startsWith("//")) return { ok: false, error: "landing" };
+  const kind = input.kind === "display" ? "display" : "tv";
+  const source = input.source?.trim().toLowerCase() || null;
+  if (source && !SOURCE.test(source)) return { ok: false, error: "source" };
   const [row] = await db
     .insert(tvCampaigns)
     .values({
@@ -85,6 +98,8 @@ export async function createTvCampaign(
       name: input.name.trim().slice(0, 120) || slug,
       landingPath,
       salt: randomBytes(24).toString("base64url"),
+      kind,
+      source: kind === "display" ? source : null,
     })
     .onConflictDoNothing()
     .returning({ slug: tvCampaigns.slug });
@@ -98,7 +113,10 @@ export async function getTvCampaign(db: Db, slug: string): Promise<TvCampaign | 
 }
 
 export async function deleteTvCampaign(db: Db, slug: string): Promise<void> {
+  // Its flight ends with it: the partner goes back to its own salt.
+  await unlinkFlight(db, slug);
   await db.delete(tvCampaigns).where(eq(tvCampaigns.slug, slug));
+  activeCache = null;
 }
 
 async function bump(db: Db, slug: string, day: string, kind: "impression" | "link" | "control") {
@@ -142,6 +160,11 @@ export async function recordTvImpression(
 ): Promise<boolean> {
   const campaign = await getTvCampaign(db, input.slug);
   if (!campaign) return false;
+  // A banner's tracker is called by browsers: crawlers and link previews that load the page
+  // are not people who saw it. (A TV tracker is called by the ad server, never filtered.)
+  if (campaign.kind === "display" && isBot(input.userAgent)) return true;
+  // The ad server's own preview of the creative is not an impression.
+  if (input.pixel?.params.preview) return true;
   const received = input.now ?? new Date();
   const p = input.pixel?.params;
   const now = eventTime(p?.ts ?? null, received) ?? received;
@@ -167,6 +190,10 @@ export async function recordTvImpression(
           userAgent: input.userAgent,
         });
     const go3 = p?.optOut ? null : parseGo3Viewer(viewerId(input.vid));
+    // In a flight, the device's advertising id under the shared salt: the same phone in the
+    // TV app and in a banner's app is one hash. Never for an opted-out device.
+    const adId = p?.optOut ? null : (advertisingId(p?.did) ?? advertisingId(viewerId(input.vid)));
+    const device = campaign.flightSalt && adId ? deviceHash(campaign.flightSalt, adId) : null;
     if (hash)
       await db
         .insert(tvViewers)
@@ -177,10 +204,14 @@ export async function recordTvImpression(
           impressions: 1,
           accountHash: go3 ? accountHash(campaign.salt, go3.account) : null,
           child: go3 ? go3.child : null,
+          deviceHash: device,
         })
         .onConflictDoUpdate({
           target: [tvViewers.slug, tvViewers.day, tvViewers.viewerHash],
-          set: { impressions: sql`${tvViewers.impressions} + 1` },
+          set: {
+            impressions: sql`${tvViewers.impressions} + 1`,
+            deviceHash: sql`coalesce(excluded.device_hash, ${tvViewers.deviceHash})`,
+          },
         });
   }
   if (input.pixel) await recordPixelDetail(db, campaign, day, minute, input, input.pixel, received);
@@ -195,10 +226,11 @@ async function recordPixelDetail(
   campaign: TvCampaign,
   day: string,
   minute: Date,
-  input: { vid: string | null; userAgent: string | null },
+  input: { vid: string | null; userAgent: string | null; ip?: string | null },
   pixel: PixelRequest,
   received: Date,
 ) {
+  const display = campaign.kind === "display";
   const { params: p, headers: h } = pixel;
   const chain = forwardedChain(h["x-forwarded-for"]);
   const keys = new Set<string>(["total", `grp:${p.grp}`, `xff:${Math.min(chain.length, 3)}`]);
@@ -252,6 +284,8 @@ async function recordPixelDetail(
     ["xffn", chain.length > 1 ? chain[chain.length - 1] : null],
     ["device", h["x-device-ip"]],
     ["macro", p.ip],
+    // The browser's own address, for a banner (no ad server stands in between).
+    ["client", display ? input.ip : null],
   ];
   // An opted-out device leaves no address hash and no household exposure.
   if (p.optOut) return;
@@ -264,17 +298,22 @@ async function recordPixelDetail(
       addressHash: addressHash(campaign.salt, day, address.trim().toLowerCase()),
     }));
   if (rows.length) await db.insert(tvPixelAddresses).values(rows).onConflictDoNothing();
-  const household = householdAddress({
-    macroIp: p.ip,
-    deviceIp: h["x-device-ip"] ?? null,
-    xff: h["x-forwarded-for"] ?? null,
-  });
+  const clientKeyOf = display ? householdKey(input.ip) : null;
+  const household = clientKeyOf
+    ? { key: clientKeyOf, source: "client" as const }
+    : display
+      ? null
+      : householdAddress({
+          macroIp: p.ip,
+          deviceIp: h["x-device-ip"] ?? null,
+          xff: h["x-forwarded-for"] ?? null,
+        });
   if (household)
     await db
       .insert(tvExposures)
       .values({
         slug: campaign.slug,
-        household: householdHash(campaign.salt, household.key),
+        household: householdHash(householdSalt(campaign), household.key),
         minute,
         grp: p.grp,
         source: household.source,
@@ -286,6 +325,11 @@ async function recordPixelDetail(
       });
 }
 
+/** The salt of a campaign's household hashes: its flight's when it has one, else its own. */
+export function householdSalt(c: { salt: string; flightSalt?: string | null }): string {
+  return c.flightSalt ?? c.salt;
+}
+
 /** Campaigns with impressions (or holdout calls) in the last 8 days, read at most every 5 minutes. */
 let activeCache: { at: number; list: { slug: string; salt: string }[] } | null = null;
 
@@ -293,7 +337,10 @@ async function activeCampaigns(db: Db, now: Date): Promise<{ slug: string; salt:
   if (activeCache && now.getTime() - activeCache.at < 5 * 60_000) return activeCache.list;
   const since = rigaDay(new Date(now.getTime() - 8 * DAY_MS));
   const list = await db
-    .selectDistinct({ slug: tvCampaigns.slug, salt: tvCampaigns.salt })
+    .selectDistinct({
+      slug: tvCampaigns.slug,
+      salt: sql<string>`coalesce(${tvCampaigns.flightSalt}, ${tvCampaigns.salt})`,
+    })
     .from(tvCampaigns)
     .innerJoin(tvDaily, eq(tvDaily.slug, tvCampaigns.slug))
     .where(and(gte(tvDaily.day, since), inArray(tvDaily.kind, ["impression", "control"])));
@@ -321,18 +368,21 @@ export async function recordHouseholdVisit(
   const campaigns = await activeCampaigns(db, input.now);
   if (!campaigns.length) return 0;
   const minute = new Date(Math.floor(input.now.getTime() / 60_000) * 60_000);
-  await db
-    .insert(tvHouseholdVisits)
-    .values(
-      campaigns.map((c) => ({
-        slug: c.slug,
-        household: householdHash(c.salt, key),
-        minute,
-        day: input.day,
-        visitorHash: input.visitorHash,
-      })),
-    )
-    .onConflictDoNothing();
+  // Only for campaigns that still exist: the list is cached for five minutes, and one deleted
+  // meanwhile would fail the whole insert on its foreign key, losing every campaign's row.
+  const rows = sql.join(
+    campaigns.map(
+      (c) =>
+        sql`(${c.slug}, ${householdHash(c.salt, key)}, ${minute.toISOString()}::timestamptz, ${input.day}::date, ${input.visitorHash})`,
+    ),
+    sql`, `,
+  );
+  await db.execute(sql`
+    insert into tv_household_visits (slug, household, minute, day, visitor_hash)
+    select v.slug, v.household, v.minute, v.day, v.visitor_hash
+      from (values ${rows}) as v(slug, household, minute, day, visitor_hash)
+      join tv_campaigns c on c.slug = v.slug
+    on conflict do nothing`);
   return campaigns.length;
 }
 
@@ -377,7 +427,7 @@ export async function tvStats(db: Db, range?: DayRange): Promise<TvStats[]> {
         .from(tvViewers)
         .where(and(eq(tvViewers.slug, campaign.slug), ...within(tvViewers.day)));
       const fromTv = and(
-        eq(adLandings.utmMedium, "tv"),
+        eq(adLandings.utmMedium, campaign.kind === "display" ? "display" : "tv"),
         eq(adLandings.utmCampaign, campaign.slug),
         ...within(adLandings.day),
       );
@@ -1140,4 +1190,112 @@ export async function purgeTvHouseholds(db: Db, now = new Date()): Promise<numbe
     .where(lt(tvPixelAddresses.day, cutoffDay))
     .returning({ s: tvPixelAddresses.slug });
   return a.length + b.length + c.length;
+}
+
+/* ---------- TV and display in one flight (docs/DISPLAY_PLAN.md §3) ---------- */
+
+/**
+ * Links two campaigns into one flight: from now on both hash household addresses with one
+ * shared salt, so a household that saw the TV spot and the banner is the same hash in both.
+ * Exposures from before the link stay under each campaign's own salt and are not compared.
+ */
+export async function linkFlight(
+  db: Db,
+  a: string,
+  b: string,
+  now = new Date(),
+): Promise<{ ok: true } | { ok: false; error: "flight_same" | "flight_none" | "flight_taken" }> {
+  if (a === b) return { ok: false, error: "flight_same" };
+  const [ca, cb] = await Promise.all([getTvCampaign(db, a), getTvCampaign(db, b)]);
+  if (!ca || !cb) return { ok: false, error: "flight_none" };
+  if (ca.flightWith || cb.flightWith) return { ok: false, error: "flight_taken" };
+  const flightSalt = randomBytes(24).toString("base64url");
+  await db.transaction(async (tx) => {
+    await tx
+      .update(tvCampaigns)
+      .set({ flightSalt, flightWith: b, flightAt: now })
+      .where(eq(tvCampaigns.slug, a));
+    await tx
+      .update(tvCampaigns)
+      .set({ flightSalt, flightWith: a, flightAt: now })
+      .where(eq(tvCampaigns.slug, b));
+  });
+  activeCache = null;
+  return { ok: true };
+}
+
+/** Ends a flight: both campaigns go back to their own salt, and the shared one is forgotten. */
+export async function unlinkFlight(db: Db, slug: string): Promise<void> {
+  const c = await getTvCampaign(db, slug);
+  if (!c?.flightWith) return;
+  await db
+    .update(tvCampaigns)
+    .set({ flightSalt: null, flightWith: null, flightAt: null })
+    .where(inArray(tvCampaigns.slug, [c.slug, c.flightWith]));
+  // The shared salt is forgotten, so its device hashes mean nothing any more.
+  await db
+    .update(tvViewers)
+    .set({ deviceHash: null })
+    .where(inArray(tvViewers.slug, [c.slug, c.flightWith]));
+  activeCache = null;
+}
+
+export type FlightOverlap = {
+  partner: { slug: string; name: string; kind: string };
+  since: Date;
+  /** Households that saw only this campaign, only the partner, or both; and of each, those that came. */
+  groups: Record<"own" | "partner" | "both", { households: number; came: number }>;
+  /**
+   * The same split by device advertising id, exact where both trackers carry it (apps);
+   * null when neither campaign has received one since the link.
+   */
+  devices: Record<"own" | "partner" | "both", number> | null;
+};
+
+/**
+ * Households of a flight since it was linked (kept 21 days): which campaign each saw, and
+ * whether a person from that household opened Trilio after its first exposure.
+ */
+export async function flightOverlap(db: Db, slug: string): Promise<FlightOverlap | null> {
+  const c = await getTvCampaign(db, slug);
+  if (!c?.flightWith || !c.flightAt) return null;
+  const partner = await getTvCampaign(db, c.flightWith);
+  if (!partner) return null;
+  const since = c.flightAt.toISOString();
+  const rows = (await db.execute(sql`
+    with e as (
+      select household, min(minute) as first,
+             bool_or(slug = ${c.slug}) as own, bool_or(slug = ${partner.slug}) as partner
+        from tv_exposures
+       where slug in (${c.slug}, ${partner.slug}) and grp = 'ad' and minute >= ${since}::timestamptz
+       group by household
+    ), v as (
+      select distinct e.household
+        from e join tv_household_visits h
+          on h.household = e.household and h.slug in (${c.slug}, ${partner.slug}) and h.minute >= e.first
+    )
+    select case when e.own and e.partner then 'both' when e.own then 'own' else 'partner' end as grp,
+           count(*)::int as households, count(v.household)::int as came
+      from e left join v on v.household = e.household
+     group by 1`)) as unknown as { grp: "own" | "partner" | "both"; households: number; came: number }[];
+  const groups: FlightOverlap["groups"] = {
+    own: { households: 0, came: 0 },
+    partner: { households: 0, came: 0 },
+    both: { households: 0, came: 0 },
+  };
+  for (const r of rows) groups[r.grp] = { households: Number(r.households), came: Number(r.came) };
+  const dev = (await db.execute(sql`
+    select case when bool_or(slug = ${c.slug}) and bool_or(slug = ${partner.slug}) then 'both'
+                when bool_or(slug = ${c.slug}) then 'own' else 'partner' end as grp
+      from tv_viewers
+     where slug in (${c.slug}, ${partner.slug}) and device_hash is not null
+     group by device_hash`)) as unknown as { grp: "own" | "partner" | "both" }[];
+  const devices = dev.length ? { own: 0, partner: 0, both: 0 } : null;
+  for (const r of dev) devices![r.grp]++;
+  return {
+    partner: { slug: partner.slug, name: partner.name, kind: partner.kind },
+    since: c.flightAt,
+    groups,
+    devices,
+  };
 }
