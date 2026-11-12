@@ -54,18 +54,15 @@ test("after consent: page views carry the section, clicks and answers are tracke
   await expect.poll(async () => (await events(page)).some((e) => e.name === "page_view")).toBe(true);
   expect((await events(page)).find((e) => e.name === "page_view")?.params.section).toBe("home");
 
-  await page.locator("[data-home-start]").getByRole("link", { name: "Uzkopšana" }).click();
-  await expect(page).toHaveURL(/\/izvelies\/clean$/);
+  await page.locator("[data-home-start]").getByRole("link", { name: "Ledusskapji un saldētavas" }).click();
+  await expect(page).toHaveURL(/\/izvelies\/cool$/);
   await expect
     .poll(async () => (await events(page)).find((e) => e.name === "ui_click")?.params.label)
-    .toBe("Uzkopšana");
+    .toBe("Ledusskapji un saldētavas");
   await expect
     .poll(async () => (await events(page)).filter((e) => e.name === "page_view").at(-1)?.params.section)
     .toBe("choose");
 
-  await page.getByRole("link", { name: /Ledusskapji un saldētavas/ }).click();
-  // Wait for the group page, or the next click can hit the group link again.
-  await expect(page).toHaveURL(/\/izvelies\/cool$/);
   await page.getByRole("link", { name: /^Ledusskapji/ }).click();
   await expect(page).toHaveURL(/\/izvelies\/cool\/fridge/);
   await page.getByRole("radio").first().click();
