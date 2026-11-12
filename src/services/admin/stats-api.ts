@@ -80,6 +80,7 @@ export async function tvStatsJson(db: Db, rawPeriod: string | null, now = new Da
       "Sessions, the baseline and households leave out visitor days with a script's request or an admin's own browsing.",
       "Sessions and the baseline count only visitors TV can bring (direct/organic, the TV link, Google brand search); other paid, social and e-mail visitors are left out and shown in effect.channels.",
       "A bucket is 10 minutes; 'after TV' is a bucket with impressions or right after one (0–20 min).",
+      "pixel.accounts counts households by Go3 subscription (the customer part of the viewer id), with child-profile impressions; null before the first day that carries it.",
       "Household figures need a household address from the pixel (macro, X-Device-IP or many forwarded addresses); see pixel.days[].household.",
     ],
   };

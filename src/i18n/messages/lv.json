@@ -2323,6 +2323,17 @@
           "bandLabel": "{band}",
           "devices": "Ierīces",
           "frequencyMethod": "Parādījumi uz ierīci tiek skaitīti kopš 9. novembra; agrākās dienas skaitās kā viens.",
+          "accounts": {
+            "title": "Mājsaimniecības pēc Go3 abonementa",
+            "what": "Rādītājs",
+            "count": "Skaits",
+            "households": "Sasniegtās mājsaimniecības (abonementi)",
+            "profiles": "Sasniegtie profili",
+            "perHousehold": "Parādījumi uz mājsaimniecību",
+            "child": "Parādījumi bērnu profilos",
+            "band": "Mājsaimniecības ar {band} parādījumiem",
+            "method": "Go3 skatītāja identifikatorā ir abonements, profils un profila veids (galvenais vai bērna). Abonementu skaitām kā mājsaimniecību; pašu numuru neglabājam, tikai šai kampaņai sajauktu vērtību. Skaitām kopš 12. novembra; agrākās dienas šeit neietilpst."
+          },
           "dim": {
             "cr": "Radošais materiāls",
             "ch": "Kanāls",

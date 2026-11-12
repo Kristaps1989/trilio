@@ -218,6 +218,13 @@
       "when": 1794382950488,
       "tag": "0030_tv_channels",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794484643796,
+      "tag": "0031_tv_accounts",
+      "breakpoints": true
     }
   ]
 }

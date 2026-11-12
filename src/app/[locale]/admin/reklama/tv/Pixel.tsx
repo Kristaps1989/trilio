@@ -140,6 +140,33 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         rows={pixel.frequency.map((f) => [t("px.bandLabel", { band: f.band }), formatInt(f.devices)])}
       />
       <p className="max-w-3xl text-sm text-stone">{t("px.frequencyMethod")}</p>
+      {pixel.accounts ? (
+        <div className="flex flex-col gap-2" data-tv-accounts={pixel.accounts.households}>
+          <Table
+            caption={t("px.accounts.title")}
+            head={[t("px.accounts.what"), t("px.accounts.count")]}
+            rows={[
+              [t("px.accounts.households"), formatInt(pixel.accounts.households)],
+              [t("px.accounts.profiles"), formatInt(pixel.accounts.profiles)],
+              [
+                t("px.accounts.perHousehold"),
+                (pixel.accounts.impressions / pixel.accounts.households).toFixed(1).replace(".", ","),
+              ],
+              [
+                t("px.accounts.child"),
+                `${formatInt(pixel.accounts.childImpressions)} (${Math.round(
+                  (100 * pixel.accounts.childImpressions) / Math.max(1, pixel.accounts.impressions),
+                )} %)`,
+              ],
+              ...pixel.accounts.frequency.map((f) => [
+                t("px.accounts.band", { band: f.band }),
+                formatInt(f.households),
+              ]),
+            ]}
+          />
+          <p className="max-w-3xl text-sm text-stone">{t("px.accounts.method")}</p>
+        </div>
+      ) : null}
       {pixel.sections.type.length ? (
         <div className="grid gap-3 md:grid-cols-2" data-tv-sections={pixel.sections.type.length}>
           {(["screen", "type", "device", "channel"] as const).map((k) =>

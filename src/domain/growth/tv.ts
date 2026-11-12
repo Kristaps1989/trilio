@@ -92,6 +92,21 @@ export function viewerId(raw: string | null | undefined): string | null {
   return v;
 }
 
+/**
+ * Go3's viewer id is "<customer>-<profile>-<M|C>" (Go3's _fw_vcid2 note, 12 Nov 2026):
+ * the customer is the subscription, so the household; M is a main profile, C a child's.
+ * Null for any other shape (another platform's device id, or Go3's hashed variant).
+ */
+export function parseGo3Viewer(vid: string | null): { account: string; child: boolean } | null {
+  const m = /^(\d{1,12})-(\d{1,12})-([MC])$/.exec(vid ?? "");
+  return m ? { account: m[1]!, child: m[3] === "C" } : null;
+}
+
+/** A subscription's hash for one campaign, salted like the viewer's; the customer id is not kept. */
+export function accountHash(salt: string, account: string): string {
+  return createHash("sha256").update(`${salt}|acct:${account}`).digest("base64url").slice(0, 22);
+}
+
 /** A viewer's hash for one campaign: the id (or IP and user agent) never leaves this function. */
 export function viewerHash(
   salt: string,
