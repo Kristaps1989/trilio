@@ -12,9 +12,12 @@ export type KeywordSeed = {
   subcategories: Record<string, { short: string; keywords: string[] }>;
   /** Comparison sites' names as keywords (owner, 24 Oct 2026); never in ad text. */
   competitors?: { names: string[]; keywords: string[]; landingPath: string };
+  /** Trilio's own name (owner, 12 Nov 2026), with negatives for the software company of the same name. */
+  brand?: { keywords: string[]; negatives: string[]; landingPath: string };
 };
 
 export const COMPETITOR_GROUP = "competitors";
+export const BRAND_GROUP = "brand";
 
 /** Headlines every Trilio ad can use: what the service is, in the shopper's words (≤ 30 characters). */
 const GENERIC_HEADLINES = [
@@ -82,6 +85,39 @@ export function competitorAd(): AdText {
       RSA_LIMITS.descriptions,
     ),
     path1: "izvelies",
+  };
+}
+
+/** The ad for searches of Trilio's own name: what it is, where, and the two ways to buy. */
+export function brandAd(): AdText {
+  return {
+    headlines: keep(
+      [
+        "Trilio — oficiālā vietne",
+        "Trilio.lv: sadzīves tehnika",
+        "Daži jautājumi, 3 ieteikumi",
+        "Pērc uzreiz vai pajautā cenu",
+        "Pajautā zemāku cenu",
+        "Cenas partneru veikalos",
+        "Ledusskapji un veļas mašīnas",
+        "Bez konta un bez maksas",
+        "Secību nenosaka komisija",
+        "Redzi, kāpēc tieši šie",
+      ],
+      "headline",
+      RSA_LIMITS.headlines,
+    ),
+    descriptions: keep(
+      [
+        "Trilio palīdz izvēlēties sadzīves tehniku: dažas atbildes un 3 piemērotākie varianti.",
+        "Pērc veikalā uzreiz vai spied „Iegūt lētāk”: pajautāsim izplatītājam zemāku cenu.",
+        "Salīdzinām cenas partneru veikalos Latvijā. Padoms bez maksas, konts nav vajadzīgs.",
+        "Ledusskapji, veļas mašīnas, putekļsūcēji un cita tehnika: 3 varianti tavām vajadzībām.",
+      ],
+      "description",
+      RSA_LIMITS.descriptions,
+    ),
+    path1: "trilio",
   };
 }
 
@@ -216,6 +252,22 @@ export function buildCampaignPlan(
         },
       ],
       negatives: seed.negatives,
+    });
+  if (seed.brand?.keywords.length)
+    campaigns.push({
+      name: "Search · Trilio zīmols",
+      groupId: BRAND_GROUP,
+      budgetCents: 0,
+      adGroups: [
+        {
+          subcategoryId: BRAND_GROUP,
+          name: "Trilio",
+          landingPath: seed.brand.landingPath,
+          keywords: seed.brand.keywords,
+          ad: brandAd(),
+        },
+      ],
+      negatives: [...seed.negatives, ...seed.brand.negatives],
     });
   // Budget by keyword count, the best volume proxy before Keyword Planner data.
   const split = splitBudget(

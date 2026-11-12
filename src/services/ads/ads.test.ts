@@ -83,8 +83,8 @@ run("ads pipeline", { timeout: 60_000 }, () => {
 
   it("builds draft campaigns from the categories, with the competitor campaign, and syncs them paused", async () => {
     const built = await buildCampaigns(db);
-    expect(built.campaigns).toBe(10);
-    expect(built.adGroups).toBe(40);
+    expect(built.campaigns).toBe(11);
+    expect(built.adGroups).toBe(41);
     expect(await buildCampaigns(db)).toEqual({ campaigns: 0, adGroups: 0, keywords: 0 });
     const synced = await syncAccount(db, provider);
     expect(synced.failed).toBe(0);
@@ -410,9 +410,10 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     );
 
     const fridgeGroup = (await db.select().from(adCampaigns)).find(
-      (c) => c.groupId && c.groupId !== "competitors",
+      (c) => c.groupId && c.groupId !== "competitors" && c.groupId !== "brand",
     )!;
     expect((await createPmax(db, provider, "competitors", 500)).ok).toBe(false);
+    expect((await createPmax(db, provider, "brand", 500)).ok).toBe(false);
     expect((await createPmax(db, provider, "no-such-group", 500)).ok).toBe(false);
     expect((await createPmax(db, provider, fridgeGroup.groupId!, 500)).error).toMatch(/approve/);
 

@@ -1,3 +1,5 @@
+import { adParams } from "@/domain/growth/attribution";
+import { landingChannel } from "@/domain/growth/channels";
 import { describe, expect, it } from "vitest";
 import seed from "../../../data/keywords.lv.json";
 import { catalog } from "@/domain/questions/catalog";
@@ -34,14 +36,17 @@ describe("honesty lint", () => {
 describe("campaign plan", () => {
   const plan = buildCampaignPlan(catalog, seed, 1500);
   it("makes one campaign per group, one ad group per subcategory, with honest template ads", () => {
-    expect(plan.length).toBe(10);
+    expect(plan.length).toBe(11);
     const groups = plan.flatMap((c) => c.adGroups);
-    expect(groups.length).toBe(40);
+    expect(groups.length).toBe(41);
     const steps = new Map(
       catalog.groups.flatMap((g) => g.subcategories.map((s) => [s.id, s.budget_steps_eur] as const)),
     );
     for (const g of groups) {
-      expect(g.landingPath).toMatch(/^\/izvelies(\/[a-z]+\/[a-z]+)?$/);
+      // The flow, or the home page with the brand tag for Trilio's own name.
+      expect(g.landingPath).toMatch(
+        /^(\/izvelies(\/[a-z]+\/[a-z]+)?|\/\?utm_source=google&utm_medium=cpc&utm_term=trilio)$/,
+      );
       expect(g.keywords.length).toBeGreaterThan(0);
       // The budget-step headlines ("Ledusskapji līdz 500 €") quote the flow's own steps.
       expect(lintAd(g.ad, { allowedNumbers: steps.get(g.subcategoryId) ?? [] }), g.subcategoryId).toEqual([]);
@@ -50,6 +55,19 @@ describe("campaign plan", () => {
     }
     expect(plan.reduce((a, c) => a + c.budgetCents, 0)).toBe(1500);
     expect(plan.every((c) => c.budgetCents >= 100)).toBe(true);
+  });
+  it("has a campaign for Trilio's own name that the TV report reads as a brand search", () => {
+    const brand = plan.find((c) => c.groupId === "brand")!;
+    const g = brand.adGroups[0]!;
+    expect(brand.name).toBe("Search · Trilio zīmols");
+    expect(g.keywords).toEqual(expect.arrayContaining(["trilio", "trilio.lv"]));
+    // Not the backup-software company of the same name.
+    expect(brand.negatives).toEqual(expect.arrayContaining(["kubernetes", "openstack"]));
+    expect(lintAd(g.ad)).toEqual([]);
+    const tags = Object.fromEntries(new URLSearchParams(g.landingPath.split("?")[1]));
+    // With Google's own click id (auto-tagging) and without it.
+    expect(landingChannel({ ...adParams(tags)!, gclid: "Cj0KCQbrandclick" })).toBe("google_brand");
+    expect(landingChannel(adParams(tags)!)).toBe("google_brand");
   });
   it("bids on the comparison sites' names, which never appear in the ad", () => {
     const rivals = plan.find((c) => c.groupId === "competitors")!;

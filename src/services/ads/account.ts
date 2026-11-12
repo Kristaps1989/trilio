@@ -22,6 +22,8 @@ import { pacedBudget, splitBudget, type Performance } from "@/domain/ads/budget"
 import type { AccountState, Proposal } from "@/domain/ads/guardrails";
 import {
   buildCampaignPlan,
+  BRAND_GROUP,
+  brandAd,
   COMPETITOR_GROUP,
   competitorAd,
   displayPaths,
@@ -247,6 +249,7 @@ function shortOf(subcategoryId: string): string | null {
 /** The current template ad for an ad group: the category's keywords and budget steps, or the competitor ad. */
 export function adTextFor(subcategoryId: string): AdText {
   if (subcategoryId === COMPETITOR_GROUP) return competitorAd();
+  if (subcategoryId === BRAND_GROUP) return brandAd();
   const s = keywordSeed.subcategories[subcategoryId];
   return templateAd(
     s?.short ?? subcategoryId,
