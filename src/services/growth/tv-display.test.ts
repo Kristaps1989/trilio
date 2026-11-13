@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
-import { tvCampaigns, tvExposures, tvHouseholdVisits, tvViewers } from "@/db/schema";
+import { tvCampaigns, tvExposures, tvHouseholdVisits, tvViewers, visits } from "@/db/schema";
 import { adParams } from "@/domain/growth/attribution";
 import { landingChannel, TV_ELIGIBLE } from "@/domain/growth/channels";
 import { advertisingId, displayPixelUrl, landingWithTags } from "@/domain/growth/tv";
@@ -81,6 +81,7 @@ run("display campaigns and flights", { timeout: 60_000 }, () => {
   let end: () => Promise<void>;
   const wipe = async () => {
     await db.delete(tvCampaigns).where(sql`${tvCampaigns.slug} like 'flighttest-%'`);
+    await db.delete(visits).where(sql`${visits.visitorHash} like 'unit-flight-%'`);
     resetActiveTvCampaigns();
   };
   // The TV spot: Go3's ad server calls, the household's address comes in the macro.
@@ -168,6 +169,18 @@ run("display campaigns and flights", { timeout: 60_000 }, () => {
     await visit("198.51.100.11", at(40), "a");
     await visit("198.51.100.13", at(45), "b");
     await visit("198.51.100.12", at(6), "c");
+    // An admin's own browsing from a household that saw only TV is not a response (.12 stays at 0).
+    await visit("198.51.100.12", at(50), "admin");
+    await db.insert(visits).values({
+      day: "2032-06-10",
+      path: "/admin",
+      section: "admin",
+      subcategory: null,
+      visitorHash: "unit-flight-admin",
+      client: "Chrome Windows",
+      suspect: "admin",
+      createdAt: at(50),
+    });
     const o = (await flightOverlap(db, TV))!;
     expect(o.partner).toMatchObject({ slug: BANNER, kind: "display" });
     expect(o.groups).toEqual({

@@ -1273,6 +1273,8 @@ export async function flightOverlap(db: Db, slug: string): Promise<FlightOverlap
       select distinct e.household
         from e join tv_household_visits h
           on h.household = e.household and h.slug in (${c.slug}, ${partner.slug}) and h.minute >= e.first
+         -- Not scripts, and not the admins' own browsing: the same visitor days the site statistics leave out.
+         and ${cleanVisitor(sql`h.day`, sql`h.visitor_hash`)}
     )
     select case when e.own and e.partner then 'both' when e.own then 'own' else 'partner' end as grp,
            count(*)::int as households, count(v.household)::int as came
