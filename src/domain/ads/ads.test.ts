@@ -8,6 +8,7 @@ import { checkProposal, MAX_CHANGES_PER_DAY, type AccountState } from "./guardra
 import { lintAd, lintAdText } from "./honesty";
 import {
   buildCampaignPlan,
+  campaignExtensions,
   competitorAd,
   displayPaths,
   pathSlug,
@@ -94,6 +95,33 @@ describe("campaign plan", () => {
       expect(lintAdText(line, "headline")).toEqual([]);
     for (const line of sitelinks.flatMap((s) => [s.description1, s.description2]))
       expect(lintAdText(line, "description")).toEqual([]);
+  });
+  it("gives each campaign sitelinks to its own categories' best-of pages, then the general ones", () => {
+    const cool = catalog.groups.find((g) => g.id === "cool")!;
+    const own = campaignExtensions(cool).sitelinks;
+    expect(own).toHaveLength(4);
+    expect(own.slice(0, 2).map((s) => [s.text, s.path])).toEqual([
+      ["Ledusskapji", "/kategorija/fridge"],
+      ["Saldētavas", "/kategorija/freezer"],
+    ]);
+    // No duplicate link text or address, and none is an ad's own landing page (/izvelies/<group>/<sub>).
+    expect(new Set(own.map((s) => s.text)).size).toBe(4);
+    expect(new Set(own.map((s) => s.path)).size).toBe(4);
+    for (const g of catalog.groups) {
+      const links = campaignExtensions(g).sitelinks;
+      expect(links).toHaveLength(4);
+      for (const l of links) {
+        expect(l.text.length).toBeLessThanOrEqual(SITELINK_LIMITS.text);
+        expect(l.path).not.toMatch(/^\/izvelies\/[^/]+\/[^/]+/);
+      }
+    }
+    // The brand and competitor campaigns have no categories: the general four.
+    expect(campaignExtensions(null).sitelinks.map((s) => s.text)).toEqual([
+      "Pārbaudi savu modeli",
+      "Kā mēs izvēlamies",
+      "Ledusskapji",
+      "Veļas mašīnas",
+    ]);
   });
   it("bids on the comparison sites' names, which never appear in the ad", () => {
     const rivals = plan.find((c) => c.groupId === "competitors")!;

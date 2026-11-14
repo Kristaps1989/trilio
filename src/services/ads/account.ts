@@ -26,7 +26,7 @@ import {
   brandAd,
   COMPETITOR_GROUP,
   competitorAd,
-  searchExtensions,
+  campaignExtensions,
   displayPaths,
   templateAd,
   type AdText,
@@ -759,8 +759,9 @@ export async function applyProposal(
 }
 
 /**
- * Sets tomorrow's total by the pacing rule (code, not Claude) and scales every
- * synced campaign's budget to it, keeping their shares. Returns the new total.
+ * Sets tomorrow's total by the pacing rule (code, not Claude) and scales the budgets of the
+ * campaigns that are switched on, keeping their shares. A paused campaign keeps its budget
+ * and takes no share: money goes only where ads run. Returns the new total.
  */
 export async function paceBudgets(
   db: Db,
@@ -768,10 +769,7 @@ export async function paceBudgets(
   now = new Date(),
 ): Promise<{ cents: number; why: string }> {
   const settings = await getSettings(db);
-  const campaigns = await db
-    .select()
-    .from(adCampaigns)
-    .where(sql`${adCampaigns.status} <> 'removed'`);
+  const campaigns = await db.select().from(adCampaigns).where(eq(adCampaigns.status, "enabled"));
   if (campaigns.length === 0) return { cents: 0, why: "no campaigns" };
   const current = campaigns.reduce((a, c) => a + c.budgetCents, 0);
   const paced = pacedBudget(current, await performance(db, now), settings);
@@ -802,7 +800,6 @@ export async function tuneSearchCampaigns(
   provider: AdsProvider,
   now = new Date(),
 ): Promise<{ tuned: number; failed: number }> {
-  const { sitelinks, callouts } = searchExtensions();
   const rows = await db
     .select()
     .from(adCampaigns)
@@ -811,6 +808,7 @@ export async function tuneSearchCampaigns(
   let failed = 0;
   for (const c of rows) {
     if (!c.googleId) continue;
+    const { sitelinks, callouts } = campaignExtensions(catalog.groups.find((g) => g.id === c.groupId));
     const r = await send(db, provider, {
       op: "tune_search",
       campaign: c.googleId,
@@ -828,4 +826,22 @@ export async function tuneSearchCampaigns(
     } else failed++;
   }
   return { tuned, failed };
+}
+
+/** One campaign's daily budget, in Google first and then in Trilio's own record. */
+export async function setCampaignBudget(
+  db: Db,
+  provider: AdsProvider | null,
+  campaignId: string,
+  cents: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const [c] = await db.select().from(adCampaigns).where(eq(adCampaigns.id, campaignId));
+  if (!c) return { ok: false, error: "not_found" };
+  if (c.budgetGoogleId) {
+    if (!provider) return { ok: false, error: "no_provider" };
+    const r = await send(db, provider, { op: "set_budget", budget: c.budgetGoogleId, cents });
+    if (!r.ok) return { ok: false, error: r.error };
+  }
+  await db.update(adCampaigns).set({ budgetCents: cents }).where(eq(adCampaigns.id, c.id));
+  return { ok: true };
 }

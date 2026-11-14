@@ -137,6 +137,42 @@ test("the owner builds, syncs, runs the optimiser and decides", async ({ page })
     await expect(page.locator("[data-outcome=ok]")).toContainText("Iestatījumi piemēroti:");
   }
   await expect(page.locator("[data-untuned]")).toHaveAttribute("data-untuned", "0");
+  // Every campaign shows its own sitelinks; the fridge campaign's lead to its "best of" pages.
+  await expect(page.locator('[data-sitelinks="Search · Ledusskapji un saldētavas"]')).toContainText(
+    "Ledusskapji · Saldētavas",
+  );
+
+  // The owner sets the total daily budget here, and the recommendation is redrawn for it.
+  const daily = page.locator("[data-daily-budget]");
+  await daily.getByLabel("Dienas budžets kopā, €").fill("12");
+  await daily.getByRole("button", { name: "Saglabāt budžetu" }).click();
+  await expect(page.locator("[data-outcome=ok]")).toHaveText(
+    "Dienas budžets saglabāts. Ieteikums pārrēķināts.",
+  );
+  await expect(daily.getByLabel("Dienas budžets kopā, €")).toHaveValue("12,00");
+  await daily.getByLabel("Dienas budžets kopā, €").fill("0");
+  await daily.getByRole("button", { name: "Saglabāt budžetu" }).click();
+  await expect(page.locator("[data-outcome=error]")).toHaveText("Dienas budžetam jābūt no 1 līdz 500 €.");
+
+  // "Ieslēgt tagad" is a button: it sets the suggested budget and switches the campaign on.
+  const brand = "Search · Trilio zīmols";
+  const apply = page.locator(`[data-apply="${brand}"]`);
+  if (await apply.count()) {
+    await apply.click();
+    await expect(page.locator("[data-outcome=ok]")).toHaveText("Ieslēgtas: 1, izlaistas: 0.");
+  }
+  await expect(page.locator(`[data-priority="${brand}"]`).locator("xpath=ancestor::tr")).toContainText(
+    "Ieslēgta",
+  );
+  await expect(page.locator(`[data-budget="${brand}"] input[name=budget]`)).toHaveValue("1,00");
+
+  // One campaign's budget by hand.
+  const row = page.locator(`[data-budget="${brand}"]`);
+  await row.getByLabel(`Budžets dienā: ${brand}`).fill("1,50");
+  await row.getByRole("button", { name: "Saglabāt" }).click();
+  await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņas budžets saglabāts.");
+  await expect(page.locator(`[data-budget="${brand}"] input[name=budget]`)).toHaveValue("1,50");
+  await expectNoAxeViolations(page);
   await expect(page.locator('[data-campaign="Search · Ledusskapji un saldētavas"]')).toBeVisible();
   // Google's "Ad strength": every ad group gets a fresh template ad, the old one is paused.
   await page.getByRole("button", { name: "Atjaunot reklāmu tekstus" }).click();

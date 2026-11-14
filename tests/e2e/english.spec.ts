@@ -125,7 +125,7 @@ test("English category landing page and legal page with the binding Latvian text
 }) => {
   await page.goto("/en/kategorija/fridge");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(h1(page)).toHaveText("The best fridges");
+  await expect(h1(page)).toHaveText(`The best fridges of ${new Date().getFullYear()}`);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/en\/kategorija\/fridge$/);
   await expect(page.locator('link[rel="alternate"][hreflang="lv"]')).toHaveAttribute(
     "href",

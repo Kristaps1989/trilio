@@ -25,6 +25,7 @@ import { CardRow, ResultCard, type CardModel } from "../rezultati/ResultCard";
 import { factLines, roleLabel } from "../rezultati/confidence-text";
 import { reviewSummary, type Role } from "@/domain/confidence/confidence";
 import { activeLocale } from "@/i18n/active";
+import { knowledgeOf } from "@/domain/knowledge/knowledge";
 
 // Phase 3 SEO landing pages: "Labākie ledusskapji līdz 800 €". Server-rendered
 // from the same ranking as the guided flow, with no answers (stock + budget
@@ -128,6 +129,12 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
     budgetCents === null
       ? t("title", { category: label, gender })
       : t("titleBudget", { category: label, gender, budget: formatEur(budgetCents) });
+  // The page's own heading carries the year, as people search ("labākie ledusskapji 2026");
+  // the picks are today's, so the year is always the current one.
+  const heading =
+    budgetCents === null ? t("h1", { category: label, gender, year: now.getFullYear() }) : title;
+  const lang = activeLocale() === "en" ? "en" : "lv";
+  const choose = knowledgeOf(sub.id).decides.map((d) => d.why[lang]);
   const base = appBaseUrl();
   const path =
     budgetCents === null ? `/kategorija/${sub.id}` : `/kategorija/${sub.id}/lidz-${budgetCents / 100}`;
@@ -205,7 +212,7 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
       />
       <div className="flex flex-col gap-[10px]">
         <Kicker>{group?.label}</Kicker>
-        <PageTitle scale="results">{title}</PageTitle>
+        <PageTitle scale="results">{heading}</PageTitle>
         <p className="max-w-[760px] text-lg leading-[1.45] text-stone">
           {t("lead", { count: products.length, date: formatDateNominative(now) })}
           {ceilingCents !== null ? ` ${t("leadMainstream", { max: formatEur(ceilingCents) })}` : ""}
@@ -241,6 +248,21 @@ export async function LandingPage({ sub, budgetCents }: { sub: Subcategory; budg
           {t("noOffers")}
         </Panel>
       )}
+
+      {choose.length ? (
+        <section
+          aria-labelledby="choose-title"
+          className="flex max-w-[760px] flex-col gap-3"
+          data-landing-choose
+        >
+          <SectionTitle id="choose-title">{t("chooseTitle")}</SectionTitle>
+          <ul className="flex list-disc flex-col gap-2 pl-5 text-[17px] leading-[1.5] text-mist">
+            {choose.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <section aria-labelledby="faq-title" className="flex flex-col gap-3">
