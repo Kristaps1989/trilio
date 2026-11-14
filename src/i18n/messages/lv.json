@@ -2512,6 +2512,55 @@
         "honesty": "Pieaugums ir novērtējums: tajās pašās minūtēs darbojas arī citi kanāli (Meta, Google, publikācijas). Augsta korelācija kopā ar pieaugumu liecina par kampaņas ietekmi; pieaugums bez korelācijas — par citu cēloni. Dati ir Trilio paša sīkdatņu neizmantojošā statistika: nav ierīču identifikatoru, nav personu.",
         "generated": "Sagatavots {date} no trilio.lv datiem.",
         "period": "Periods"
+      },
+      "control": {
+        "title": "Google konta kontrole",
+        "intro": "Trilio iestatījumus nosūta uz Google Ads, bet tos pēc tam var mainīt arī Google Ads kontā: cilvēks ar piekļuvi vai Google ieteikumi, kas piemēroti automātiski. Šeit redzi, kur konts atšķiras no Trilio noteiktā, un vari to atjaunot.",
+        "check": "Pārbaudīt Google kontu",
+        "never": "Konts vēl nav pārbaudīts.",
+        "checkedAt": "Pēdējā pārbaude: {when}.",
+        "allGood": "{count, plural, =0 {Trilio kampaņu Google kontā vēl nav.} one {# Trilio kampaņa sakrīt ar Trilio noteikto.} other {Visas # Trilio kampaņas sakrīt ar Trilio noteikto.}}",
+        "differ": "{count, plural, one {# kampaņa atšķiras no Trilio noteiktā} other {# kampaņas atšķiras no Trilio noteiktā}}",
+        "colCampaign": "Kampaņa",
+        "colDiffers": "Kas atšķiras",
+        "colAction": "Darbība",
+        "fix": "Atjaunot Trilio iestatījumus",
+        "fixAll": "Atjaunot visas",
+        "fixNote": "Atjaunošana Meklēšanas kampaņai piešķir pašai savu budžetu un solīšanu „Maksimāli klikšķi” ar klikšķa cenas griestiem, un ieslēdz vai aptur to tā, kā ir Trilio.",
+        "manual": "Jālabo Google Ads kontā",
+        "issue": {
+          "missing": "Google Ads kontā kampaņas vairs nav.",
+          "status": "Google kontā {google}, Trilio — {trilio}.",
+          "budget": "Budžets Google kontā {google} dienā, Trilio — {trilio}.",
+          "shared_budget": "Kopīgs budžets ar citām kampaņām ({google} dienā): Trilio budžets uz šo kampaņu neattiecas.",
+          "bidding": "Solīšana Google kontā: {google}{portfolio, select, yes { (kopīga stratēģija)} other {}}. Trilio: {trilio}.",
+          "cpc_cap": "Klikšķa cenas griesti Google kontā: {google}. Trilio: {trilio}.",
+          "noCap": "nav"
+        },
+        "state": {
+          "enabled": "ieslēgta",
+          "paused": "apturēta",
+          "removed": "dzēsta"
+        },
+        "bidding": {
+          "maximize_clicks": "Maksimāli klikšķi",
+          "maximize_conversions": "Maksimāli konversijas",
+          "maximize_conversion_value": "Maksimāla konversiju vērtība",
+          "target_impression_share": "Mērķa rādījumu daļa",
+          "manual_cpc": "Manuāla klikšķa cena",
+          "other": "cita"
+        },
+        "foreignTitle": "Kampaņas, kuras Trilio nepārvalda",
+        "foreignNote": "Šīs kampaņas izveidotas Google Ads kontā, nevis Trilio. Trilio tās nemaina, to budžets nav Trilio dienas budžetā, un optimizētājs tās neredz.",
+        "colState": "Stāvoklis",
+        "colBudget": "Budžets dienā",
+        "colBidding": "Solīšana",
+        "pause": "Apturēt",
+        "pauseOf": "Apturēt: {name}",
+        "checked": "Google konts pārbaudīts.",
+        "reconciled": "Atjaunots: {fixed}. Neizdevās: {failed}. Vēl atšķiras: {left}.",
+        "foreignPaused": "Kampaņa apturēta Google kontā.",
+        "failed": "Google kontu neizdevās nolasīt vai mainīt. Skaties „Priekšlikumi” vēsturē, kāpēc."
       }
     },
     "crm": {

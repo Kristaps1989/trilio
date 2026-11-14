@@ -2,6 +2,8 @@
 // changes in Google Ads is one of these operations, logged in ad_changes; the
 // mock provider answers the same calls for tests and local runs.
 
+import type { CampaignState, Expected } from "@/domain/ads/drift";
+
 export type Match = "exact" | "phrase" | "broad";
 
 export type AdsChange =
@@ -24,6 +26,17 @@ export type AdsChange =
   | { op: "set_budget"; budget: string; cents: number }
   | { op: "set_cpc"; adGroup: string; cents: number }
   | { op: "set_campaign_status"; campaign: string; status: "enabled" | "paused" }
+  | {
+      /**
+       * Puts a Search campaign back on Trilio's terms: a budget of its own (not a shared one) and
+       * Maximise clicks under a price cap (not a portfolio strategy). Returns the new budget.
+       */
+      op: "restore_search";
+      campaign: string;
+      name: string;
+      budgetCents: number;
+      cpcCapCents: number;
+    }
   | { op: "upload_image"; name: string; pngBase64: string }
   | {
       /**
@@ -87,4 +100,9 @@ export interface AdsProvider {
   readonly name: "google" | "mock";
   report(from: string, to: string, known: Known): Promise<{ stats: StatRow[]; terms: TermRow[] }>;
   apply(change: AdsChange): Promise<ApplyResult>;
+  /**
+   * Every campaign in the account as the platform has it now, Trilio's or not. `known` is what
+   * Trilio expects, so a mock can answer; a real platform ignores it.
+   */
+  inspect(known: Expected[]): Promise<CampaignState[]>;
 }

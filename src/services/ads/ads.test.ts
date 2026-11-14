@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import {
+  adAccountChecks,
   adAds,
   adAgentRuns,
   adCampaigns,
@@ -42,6 +43,9 @@ import { approveCreative, createCreatives, createPmax, templateCopy, writeCopy }
 import type { AdsProvider } from "./provider";
 import type { Proposal } from "@/domain/ads/guardrails";
 import { mockProvider } from "./mock";
+import { accountControl, checkAccount, pauseForeignCampaign, reconcileAccount } from "./control";
+import type { CampaignState, Expected } from "@/domain/ads/drift";
+import type { AdsChange } from "./provider";
 import { decideProposal, EMPTY_PROPOSAL_FIELDS, OptimiserOutput, runDaily } from "./optimiser";
 
 // The ads pipeline end to end against the database (docs/GROWTH_PLAN.md):
@@ -52,6 +56,7 @@ const run = url ? describe : describe.skip;
 
 async function wipe(db: Db) {
   for (const t of [
+    adAccountChecks,
     adChanges,
     adAds,
     adProposals,
@@ -534,5 +539,137 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     expect(has("google", null)).toBe(true);
     expect(has("google", "23001")).toBe(true);
     expect(has("meta", "120250227220820296")).toBe(true);
+  });
+
+  it("finds where the Google account differs from Trilio's record and puts it back", async () => {
+    // An account that starts as Trilio set it and remembers what is changed in it.
+    const account = new Map<string, CampaignState>();
+    const sent: AdsChange[] = [];
+    let broken = false;
+    const p: AdsProvider = {
+      ...provider,
+      async inspect(known: Expected[]) {
+        if (broken) throw new Error("google ads 500");
+        for (const e of known)
+          if (!account.has(e.resource))
+            account.set(e.resource, {
+              resource: e.resource,
+              name: e.name,
+              status: e.status,
+              kind: e.kind,
+              bidding: e.kind === "search" ? "maximize_clicks" : "maximize_conversions",
+              portfolio: false,
+              budget: e.budget ?? "",
+              budgetCents: e.budgetCents,
+              sharedBudget: false,
+              cpcCapCents: e.kind === "search" ? e.cpcCapCents : null,
+            });
+        return [...account.values()];
+      },
+      async apply(change) {
+        sent.push(change);
+        if (change.op === "restore_search") {
+          const g = account.get(change.campaign)!;
+          const budget = `test/budget/${sent.length}`;
+          account.set(change.campaign, {
+            ...g,
+            bidding: "maximize_clicks",
+            portfolio: false,
+            sharedBudget: false,
+            budget,
+            budgetCents: change.budgetCents,
+            cpcCapCents: change.cpcCapCents,
+          });
+          return { ok: true, id: change.campaign, budget };
+        }
+        if (change.op === "set_budget") {
+          for (const [k, g] of account)
+            if (g.budget === change.budget) account.set(k, { ...g, budgetCents: change.cents });
+          return { ok: true, id: change.budget };
+        }
+        if (change.op === "set_campaign_status") {
+          account.set(change.campaign, { ...account.get(change.campaign)!, status: change.status });
+          return { ok: true, id: change.campaign };
+        }
+        return provider.apply(change);
+      },
+    };
+
+    const first = await checkAccount(db, p);
+    expect(first.ok && first.drift.campaigns).toEqual([]);
+    expect(first.ok && first.drift.matching).toBeGreaterThan(1);
+
+    // Someone moves one campaign to a shared budget with conversion bidding, switches another
+    // on with a different budget, and creates a campaign of their own.
+    const search = await db
+      .select()
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.kind} = 'search'`);
+    const [a, b] = search.filter((c) => c.googleId && c.budgetGoogleId);
+    await db
+      .update(adCampaigns)
+      .set({ status: "paused" })
+      .where(sql`${adCampaigns.id} = ${b!.id}`);
+    account.set(a!.googleId!, {
+      ...account.get(a!.googleId!)!,
+      bidding: "maximize_conversions",
+      portfolio: true,
+      sharedBudget: true,
+      budget: "test/budget/shared",
+      budgetCents: 500,
+      cpcCapCents: null,
+    });
+    account.set(b!.googleId!, {
+      ...account.get(b!.googleId!)!,
+      status: "enabled",
+      budgetCents: b!.budgetCents + 77,
+    });
+    account.set("test/campaigns/foreign", {
+      resource: "test/campaigns/foreign",
+      name: "Zīmols — ne Trilio",
+      status: "enabled",
+      kind: "search",
+      bidding: "target_impression_share",
+      portfolio: false,
+      budget: "test/budget/foreign",
+      budgetCents: 500,
+      sharedBudget: false,
+      cpcCapCents: null,
+    });
+
+    const second = await checkAccount(db, p);
+    if (!second.ok) throw new Error("check failed");
+    const kinds = (id: string) => second.drift.campaigns.find((c) => c.id === id)?.issues.map((i) => i.kind);
+    expect(kinds(a!.id)).toEqual(["shared_budget", "bidding"]);
+    expect(kinds(b!.id)).toEqual(["status", "budget"]);
+    expect(second.drift.foreign.map((f) => f.name)).toEqual(["Zīmols — ne Trilio"]);
+    expect((await accountControl(db))?.drift.campaigns).toHaveLength(2);
+    // Only the latest check is kept.
+    expect(await db.select().from(adAccountChecks)).toHaveLength(1);
+
+    // A failed read changes nothing and keeps the last check.
+    broken = true;
+    expect(await reconcileAccount(db, p)).toEqual({ ok: false, error: "google ads 500" });
+    expect((await accountControl(db))?.drift.campaigns).toHaveLength(2);
+    broken = false;
+
+    sent.length = 0;
+    expect(await reconcileAccount(db, p)).toEqual({ ok: true, fixed: 2, failed: 0, left: 0 });
+    expect(sent.map((c) => c.op)).toEqual(["restore_search", "set_budget", "set_campaign_status"]);
+    expect(sent[0]).toMatchObject({ campaign: a!.googleId, budgetCents: a!.budgetCents, cpcCapCents: 30 });
+    expect(sent[2]).toMatchObject({ campaign: b!.googleId, status: "paused" });
+    // Trilio now knows the campaign's own new budget, so later budget edits reach it.
+    const [after] = await db
+      .select()
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.id} = ${a!.id}`);
+    expect(after!.budgetGoogleId).toBe(account.get(a!.googleId!)!.budget);
+    expect(after!.budgetGoogleId).not.toBe("test/budget/shared");
+
+    // A foreign campaign is paused only if the last check listed it as running.
+    expect(await pauseForeignCampaign(db, p, a!.googleId!)).toEqual({ ok: false, error: "not_found" });
+    expect(await pauseForeignCampaign(db, p, "test/campaigns/foreign")).toEqual({ ok: true });
+    expect(account.get("test/campaigns/foreign")!.status).toBe("paused");
+    expect((await accountControl(db))?.drift.foreign[0]?.status).toBe("paused");
   });
 });

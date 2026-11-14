@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { expectedBidding, type CampaignState, type Expected } from "@/domain/ads/drift";
 import type { AdsProvider, AdsChange, ApplyResult, Known, StatRow, TermRow } from "./provider";
 
 // A stand-in for Google Ads (ADS_PROVIDER=mock): every change succeeds with a
@@ -23,9 +24,56 @@ function days(from: string, to: string): string[] {
 
 const NOISE = ["remonts", "rezerves daļas", "lietots"];
 
+// What the stand-in account "remembers" between calls, as a real account would: the campaigns
+// put back on Trilio's terms and the foreign campaign once it is paused.
+const restored = new Set<string>();
+const pausedForeign = new Set<string>();
+const FOREIGN = "mock/campaign/foreign";
+
+/**
+ * The account as a real one drifts: the first Search campaign has been moved to a shared budget
+ * and conversion bidding, and there is one campaign Trilio did not create.
+ */
+function mockInspect(known: Expected[]): CampaignState[] {
+  const drifted = [...known]
+    .filter((e) => e.kind === "search")
+    .sort((a, b) => a.name.localeCompare(b.name))[0];
+  const out: CampaignState[] = known.map((e) => {
+    const moved = e.resource === drifted?.resource && !restored.has(e.resource);
+    return {
+      resource: e.resource,
+      name: e.name,
+      status: e.status,
+      kind: e.kind,
+      bidding: moved ? "maximize_conversions" : expectedBidding(e.kind),
+      portfolio: moved,
+      budget: moved ? "mock/budget/shared" : (e.budget ?? ""),
+      budgetCents: moved ? 500 : e.budgetCents,
+      sharedBudget: moved,
+      cpcCapCents: moved || e.kind === "pmax" ? null : e.cpcCapCents,
+    };
+  });
+  out.push({
+    resource: FOREIGN,
+    name: "Zīmols (izveidots Google Ads)",
+    status: pausedForeign.has(FOREIGN) ? "paused" : "enabled",
+    kind: "search",
+    bidding: "target_impression_share",
+    portfolio: false,
+    budget: "mock/budget/foreign",
+    budgetCents: 500,
+    sharedBudget: false,
+    cpcCapCents: null,
+  });
+  return out;
+}
+
 export function mockProvider(): AdsProvider {
   return {
     name: "mock",
+    async inspect(known: Expected[]) {
+      return mockInspect(known);
+    },
     async report(from: string, to: string, known: Known) {
       const stats: StatRow[] = [];
       const terms: TermRow[] = [];
@@ -72,6 +120,15 @@ export function mockProvider(): AdsProvider {
       return { stats, terms };
     },
     async apply(change: AdsChange): Promise<ApplyResult> {
+      if (change.op === "restore_search") {
+        restored.add(change.campaign);
+        return { ok: true, id: change.campaign, budget: `mock/budget/${randomUUID().slice(0, 8)}` };
+      }
+      if (change.op === "set_campaign_status" && change.campaign === FOREIGN) {
+        if (change.status === "paused") pausedForeign.add(FOREIGN);
+        else pausedForeign.delete(FOREIGN);
+        return { ok: true, id: FOREIGN };
+      }
       const id = `mock/${change.op}/${randomUUID().slice(0, 8)}`;
       if (change.op === "create_campaign" || change.op === "create_pmax")
         return { ok: true, id, budget: `mock/budget/${randomUUID().slice(0, 8)}` };

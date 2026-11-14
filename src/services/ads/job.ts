@@ -2,6 +2,7 @@ import type { Db } from "@/db/client";
 import { createCaller } from "@/services/llm/client";
 import { searchConsoleFromEnv } from "@/services/seo/search-console";
 import { syncReports } from "./account";
+import { checkAccount } from "./control";
 import { adsProvider } from "./index";
 import { runDaily } from "./optimiser";
 
@@ -22,5 +23,9 @@ export async function runAdsJob(db: Db, opts: { force?: boolean; now?: Date } = 
 export async function runAdsReportSync(db: Db, opts: { force?: boolean; now?: Date } = {}) {
   const provider = adsProvider();
   if (!provider) return null;
-  return syncReports(db, provider, opts);
+  const synced = await syncReports(db, provider, opts);
+  // With fresh numbers, also what the account's settings are now, so the page shows drift
+  // without anyone pressing "check". A failed read leaves the last check in place.
+  if (synced.ok && !("skipped" in synced)) await checkAccount(db, provider, opts.now);
+  return synced;
 }
