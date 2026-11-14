@@ -1,0 +1,1 @@
+ALTER TABLE "ad_campaigns" ADD COLUMN "tuned_at" timestamp with time zone;

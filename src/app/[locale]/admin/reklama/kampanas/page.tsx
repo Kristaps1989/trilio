@@ -8,7 +8,9 @@ import { dayOffset } from "@/services/ads/account";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, inputClass, labelClass, Section, Table } from "../../ui";
-import { createPmaxAction, refreshAdsAction, setCampaignStatusAction } from "../actions";
+import { campaignPriorities } from "@/services/ads/priorities";
+import type { Recommendation } from "@/domain/ads/priority";
+import { createPmaxAction, refreshAdsAction, setCampaignStatusAction, tuneSearchAction } from "../actions";
 import { AdsNav, eurFromCents, eurFromMicros, Outcome } from "../shared";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +39,16 @@ export default async function AdsCampaigns({ searchParams }: Props) {
   const st = new Map(stats.map((s) => [s.id, s]));
   const tone = (s: string) => (s === "enabled" ? "lime" : s === "paused" ? "warning" : "neutral");
   const refreshed = sp.refreshed?.split("/").map(Number) ?? [];
+  const tuned = sp.tuned?.split("/").map(Number) ?? [];
+  const priorities = await campaignPriorities(db);
+  const untuned = campaigns.filter((c) => c.kind === "search" && c.googleId && !c.tunedAt).length;
+  const why = (r: Recommendation) =>
+    t(`priority.reason.${r.reason}` as "priority.reason.brand", {
+      searches: r.facts.siteSearches,
+      clicks: r.facts.adClicks,
+      outcomes: r.facts.outcomes,
+      have: priorities.conversions30d,
+    });
   const ok =
     sp.ok === "pmax"
       ? t("pmaxDone")
@@ -44,13 +56,66 @@ export default async function AdsCampaigns({ searchParams }: Props) {
         ? t("enabled", { count: sp.enabled })
         : refreshed.length === 3
           ? t("adsRefreshed", { created: refreshed[0]!, paused: refreshed[1]!, failed: refreshed[2]! })
-          : null;
+          : tuned.length === 2
+            ? t("priority.tuned", { tuned: tuned[0]!, failed: tuned[1]! })
+            : null;
 
   return (
     <>
       <AdminTitle title={t("campaignsTitle")} />
       <AdsNav active="campaigns" />
       <Outcome ok={ok} err={sp.err ? t("pmaxFailed", { reason: sp.err }) : null} />
+      <Section title={t("priority.title")} id="priority">
+        <p className="max-w-3xl text-[15px] text-stone">
+          {t("priority.intro", { budget: eurFromCents(priorities.dailyBudgetCents) })}
+        </p>
+        <Table
+          caption={t("priority.title")}
+          head={[
+            t("priority.rank"),
+            t("colCampaign"),
+            t("priority.advice"),
+            t("priority.why"),
+            t("priority.budget"),
+            t("colStatus"),
+          ]}
+          empty={t("noRun")}
+          rows={priorities.recommendations.map((r) => [
+            r.rank ?? "—",
+            <span key="n" data-priority={r.name} data-priority-tier={r.tier}>
+              {r.name}
+            </span>,
+            <Chip key="t" tone={r.tier === "now" ? "lime" : r.tier === "next" ? "neutral" : "warning"}>
+              {t(`priority.tier.${r.tier}` as "priority.tier.now")}
+            </Chip>,
+            why(r),
+            r.budgetCents === null ? "—" : eurFromCents(r.budgetCents),
+            <Chip key="s" tone={tone(r.facts.status)}>
+              {t(`status_${r.facts.status}` as "status_draft")}
+            </Chip>,
+          ])}
+        />
+        <p className="max-w-3xl text-sm text-stone">{t("priority.method")}</p>
+      </Section>
+
+      <Section title={t("priority.practiceTitle")} id="practice">
+        <ul className="max-w-3xl list-disc space-y-1 pl-5 text-[15px] text-stone">
+          {(
+            ["network", "geo", "languages", "match", "ads", "extensions", "negatives", "bidding"] as const
+          ).map((k) => (
+            <li key={k}>{t(`priority.practice.${k}`)}</li>
+          ))}
+        </ul>
+        <form action={tuneSearchAction} className="flex flex-wrap items-center gap-3">
+          <Button type="submit" variant="outline" size="sm" disabled={untuned === 0}>
+            {t("priority.tune")}
+          </Button>
+          <span className="text-sm text-stone" data-untuned={untuned}>
+            {t("priority.tuneHint", { count: untuned })}
+          </span>
+        </form>
+      </Section>
+
       <Table
         caption={t("campaignsTitle")}
         head={[

@@ -116,6 +116,53 @@ describe("Google Ads client", () => {
     expect(calls.filter((c) => c.url.includes("oauth2"))).toHaveLength(1);
   });
 
+  it("applies the Search best-practice settings: presence only, more languages, sitelinks and callouts", async () => {
+    const { calls, fetchImpl } = fake();
+    const p = googleAdsProvider(cfg, fetchImpl);
+    const r = await p.apply({
+      op: "tune_search",
+      campaign: "customers/1/campaigns/9",
+      sitelinks: [
+        {
+          text: "Ledusskapji",
+          description1: "3 piemērotākie varianti",
+          description2: "Cenas partneru veikalos",
+          finalUrl: "https://trilio.lv/izvelies/cool",
+        },
+      ],
+      callouts: ["Pajautā zemāku cenu"],
+    });
+    expect(r).toEqual({ ok: true, id: "customers/1/campaigns/9" });
+    const update = calls.find((c) => c.url.endsWith("/campaigns:mutate"))!.body as {
+      operations: { update: Record<string, unknown>; updateMask: string }[];
+    };
+    expect(update.operations[0]).toMatchObject({
+      update: {
+        resourceName: "customers/1/campaigns/9",
+        geoTargetTypeSetting: { positiveGeoTargetType: "PRESENCE" },
+      },
+      updateMask: "geo_target_type_setting.positive_geo_target_type",
+    });
+    expect(
+      calls.some(
+        (c) => c.url.endsWith("googleAds:search") && JSON.stringify(c.body).includes("('ru', 'en')"),
+      ),
+    ).toBe(true);
+    const assets = calls.filter((c) => c.url.includes("/assets:mutate")).map((c) => JSON.stringify(c.body));
+    expect(assets).toHaveLength(2);
+    expect(assets[0]).toContain('"linkText":"Ledusskapji"');
+    expect(assets[0]).toContain('"finalUrls":["https://trilio.lv/izvelies/cool"]');
+    expect(assets[1]).toContain('"calloutText":"Pajautā zemāku cenu"');
+    const links = calls
+      .filter((c) => c.url.includes("campaignAssets:mutate"))
+      .map((c) => JSON.stringify(c.body));
+    expect(links.map((l) => /"fieldType":"(\w+)"/.exec(l)![1])).toEqual(["SITELINK", "CALLOUT"]);
+    // A new campaign is created presence-only from the start.
+    await p.apply({ op: "create_campaign", name: "Search · Test", budgetCents: 500, cpcCapCents: 30 });
+    const created = calls.filter((c) => c.url.endsWith("/campaigns:mutate")).at(-1)!.body;
+    expect(JSON.stringify(created)).toContain('"positiveGeoTargetType":"PRESENCE"');
+  });
+
   it("creates Performance Max with the business name and logo linked to the campaign (brand guidelines)", async () => {
     const { calls, fetchImpl } = fake();
     const p = googleAdsProvider(cfg, fetchImpl);

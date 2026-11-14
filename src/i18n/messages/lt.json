@@ -2074,6 +2074,45 @@
       "saveSettings": "Saglabāt iestatījumus",
       "saved": "Saglabāts.",
       "steps": "Darbības",
+      "priority": {
+        "title": "Ko ieslēgt vispirms",
+        "intro": "Ieteikums pēc datiem: Google skaitļi par 28 dienām, ko reklāmas apmeklētāji izdarīja Trilio, un ko cilvēki vietnē meklē. Dienas budžets kopā: {budget}. Labāk dažas kampaņas ar pietiekamu budžetu nekā visas ar dažiem centiem dienā.",
+        "rank": "Nr.",
+        "advice": "Ieteikums",
+        "why": "Kāpēc",
+        "budget": "Budžets dienā",
+        "tier": {
+          "now": "Ieslēgt tagad",
+          "next": "Pēc tam",
+          "wait": "Pagaidīt"
+        },
+        "reason": {
+          "brand": "Lēti klikšķi no cilvēkiem, kas jau meklē „trilio” (arī pēc TV reklāmas).",
+          "proven": "Reklāmas apmeklētāji te jau rīkojās: {outcomes} klikšķi uz veikaliem vai pieprasījumi no {clicks} reklāmas klikšķiem.",
+          "sourced_demand": "Vietnē meklēts {searches} reizes 30 dienās, un šīs preces Trilio pats var piedāvāt lētāk.",
+          "demand": "Vietnē meklēts {searches} reizes 30 dienās.",
+          "no_budget": "Ir pieprasījums ({searches} meklējumi), bet ar pašreizējo budžetu tai nepietiktu vismaz 2 € dienā. Palielini kopējo budžetu vai ieslēdz vēlāk.",
+          "low_demand": "Pagaidām nav ne meklējumu vietnē, ne reklāmas rezultātu.",
+          "competitor": "Dārgāki un mazāk droši klikšķi; izmēģini, kad kategoriju kampaņas jau strādā.",
+          "pmax_needs_conversions": "Performance Max vada sevi pēc rezultātiem un tam vajag ap 30 mēnesī; pašlaik ir {have}. Bez tiem tas pērk lētākos, nevis labākos klikšķus.",
+          "pmax_ready": "Rezultātu ir pietiekami ({have} 30 dienās), lai Performance Max varētu mācīties."
+        },
+        "method": "Vērtējums: reklāmas apmeklētāju rīcība Trilio sver visvairāk, tad reklāmas klikšķi, tad meklējumi vietnē; papildu svars, ja Trilio preci var piedāvāt pats. Ieteiktais budžets sadala kopējo dienas budžetu: zīmola kampaņai 1 €, pārējām vismaz 2 € un vairāk tām, kam vērtējums augstāks. Kopējo budžetu maini sadaļā „Reklāma”.",
+        "practiceTitle": "Meklēšanas kampaņu iestatījumi",
+        "practice": {
+          "network": "Tikai Google meklēšana: bez meklēšanas partneriem un bez reklāmas tīkla, kur klikšķi ir lētāki, bet vājāki.",
+          "geo": "Tikai cilvēkiem, kas atrodas Latvijā (nevis tiem, kas par Latviju interesējas no citurienes).",
+          "languages": "Latviešu, krievu un angļu valodas pārlūkiem: atslēgvārdi ir latviski, bet daudziem Latvijā pārlūks ir citā valodā.",
+          "match": "Atslēgvārdi frāzes atbilstībā: reklāma parādās, kad meklējumā ir šī frāze, nevis jebkas līdzīgs.",
+          "ads": "Katrā grupā viena adaptīvā reklāma ar līdz 15 virsrakstiem un 4 aprakstiem, kurā ir grupas atslēgvārdi.",
+          "extensions": "Zem reklāmas 4 papildu saites un 4 īsie teksti: reklāma ir lielāka, un uz to klikšķina biežāk.",
+          "negatives": "Izslēgti meklējumi par remontu, rezerves daļām, instrukcijām, darbu, nomu un lietotām precēm.",
+          "bidding": "Solīšana „pēc iespējas vairāk klikšķu” ar cenas griestiem, kamēr rezultātu vēl ir par maz automātiskai solīšanai pēc rezultātiem."
+        },
+        "tune": "Piemērot iestatījumus Google kontā",
+        "tuneHint": "{count, plural, =0 {Visām kampaņām iestatījumi jau piemēroti.} one {# kampaņai vēl jāpiemēro: tikai Latvijā esošie, papildu valodas, papildu saites un īsie teksti.} other {# kampaņām vēl jāpiemēro: tikai Latvijā esošie, papildu valodas, papildu saites un īsie teksti.}}",
+        "tuned": "Iestatījumi piemēroti: {tuned}, neizdevās: {failed}."
+      },
       "build": "Izveidot kampaņas no kategorijām",
       "built": "Izveidotas {campaigns} kampaņas, {groups} reklāmu grupas, {keywords} atslēgvārdi (melnraksts).",
       "sync": "Nosūtīt uz Google (apturētas)",

@@ -1162,6 +1162,8 @@ export const adCampaigns = pgTable("ad_campaigns", {
   status: adStatusEnum("status").notNull().default("draft"),
   budgetCents: integer("budget_cents").notNull().default(0),
   syncedAt: timestamp("synced_at", { withTimezone: true }),
+  /** When the best-practice settings (presence-only, languages, sitelinks, callouts) were applied. */
+  tunedAt: timestamp("tuned_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
