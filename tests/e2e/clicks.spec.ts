@@ -24,7 +24,7 @@ test("without JavaScript a card's shop link asks the question first; the answer 
   const page = await context.newPage();
   // The shop itself is not part of the test; reaching its address is (route() does not see redirect targets).
   const toShopRequest = () => page.waitForRequest((r) => r.url().startsWith("https://example.invalid/"));
-  await page.goto("/rezultati?sub=kettle");
+  await page.goto("/rezultati?sub=washer");
   const buy = picks(page)
     .first()
     .getByRole("link", { name: /^Pirkt — / });
@@ -57,7 +57,7 @@ test("without JavaScript a card's shop link asks the question first; the answer 
 });
 
 test("the question page works with JavaScript too: the request, the shop link, axe", async ({ page }) => {
-  await page.goto("/rezultati?sub=kettle");
+  await page.goto("/rezultati?sub=washer");
   const href = await picks(page)
     .first()
     .getByRole("link", { name: /^Pirkt — / })

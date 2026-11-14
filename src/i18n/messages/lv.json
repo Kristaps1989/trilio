@@ -1690,7 +1690,8 @@
       "suspectVisitors": "Apmeklētāji",
       "suspectWhen": "Pirmais – pēdējais",
       "suspectSignals": "Atsauce · valoda",
-      "suspectWhoMethod": "Apmeklētājs ir dienas anonīmais identifikators (adrese un pārlūks), tāpēc viens skripts no daudzām adresēm parādās kā daudzi apmeklētāji. „Atsauce” ir lapas, no kuras atvērta saite, domēns; skriptam tās parasti nav. Pārlūka nosaukumu skripts var uzdot jebkuru; pārlūka saime pirms 9. novembra nav saglabāta (—)."
+      "suspectWhoMethod": "Apmeklētājs ir dienas anonīmais identifikators (adrese un pārlūks), tāpēc viens skripts no daudzām adresēm parādās kā daudzi apmeklētāji. „Atsauce” ir lapas, no kuras atvērta saite, domēns; skriptam tās parasti nav. Pārlūka nosaukumu skripts var uzdot jebkuru; pārlūka saime pirms 9. novembra nav saglabāta (—).",
+      "askWhy": "Kas atturēja no pieprasījuma (atbildes pēc formas aizvēršanas): vajag ātrāk — {slow}; nav skaidrs, kas pārdod — {trust}; ietaupījums par mazu — {small}; vēl tikai skatās — {later}."
     },
     "users": {
       "title": "Lietotāji",
@@ -2914,7 +2915,17 @@
     "signer": "Pieprasījumu izskata {name} no Trilio.",
     "how": "Kā tas strādā?",
     "sendRequest": "Sūtīt pieprasījumu",
-    "upToShort": "līdz −{amount}"
+    "upToShort": "līdz −{amount}",
+    "trust": "Ja piedāvāsim zemāku cenu, pārdevējs būs Trilio: 2 gadu garantija, 14 dienu atteikuma tiesības, piegāde visā Latvijā. E-pastu izmantojam tikai šim pieprasījumam un cenas paziņojumiem.",
+    "trustTerms": "Pirkuma noteikumi",
+    "why": {
+      "title": "Kas atturēja no pieprasījuma?",
+      "slow": "Vajag ātrāk nekā 2 darba dienās",
+      "trust": "Nav skaidrs, kas pārdod",
+      "small": "Ietaupījums par mazu",
+      "later": "Vēl tikai skatos",
+      "thanks": "Paldies, ņemsim vērā."
+    }
   },
   "about": {
     "title": "Par Trilio",

@@ -41,10 +41,8 @@ const picks = (page: Page) => page.getByRole("region", { name: "Ieteiktie varian
 test.setTimeout(120_000);
 
 async function ask(page: Page, email: string): Promise<string> {
-  await page.goto("/izvelies/kitchensmall/kettle");
-  await page.getByRole("button", { name: "Tālāk", exact: true }).click();
-  await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
-  await expect(page).toHaveURL(/\/rezultati\?sub=kettle/);
+  // A dryer: from 200 € the card's button is the request for a lower price.
+  await page.goto("/rezultati?sub=dryer");
   const first = picks(page).first();
   const productId = ((await first.getAttribute("id")) ?? "").replace(/^p-/, "");
   await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();

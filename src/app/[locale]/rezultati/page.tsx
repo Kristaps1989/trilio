@@ -90,7 +90,7 @@ import { SWIPE_ROW } from "@/ui/swipeRow";
 import { withSource } from "@/domain/analytics/click-source";
 import { HowWeRank } from "./HowWeRank";
 import { cardMedia } from "./card-media";
-import { trilioSources } from "@/domain/offers/sourcing";
+import { trilioSources, worthAsking } from "@/domain/offers/sourcing";
 import { CardRow, ResultCard, type CardModel, type CardOffer } from "./ResultCard";
 import { activeLocale } from "@/i18n/active";
 
@@ -408,7 +408,7 @@ export default async function ResultsPage({ searchParams }: Props) {
       refurbished: null,
       sessionId,
       saved: saved.has(productKey(pick.product.id)),
-      trilioOffer: trilioSources(sub!.id),
+      trilioOffer: worthAsking(sub!.id, pick.offer.priceCents),
       signedIn: !!userId,
       proof,
       score: pick.score,
@@ -1079,7 +1079,8 @@ export default async function ResultsPage({ searchParams }: Props) {
           <h2 id="picks-title" className="sr-only">
             {t("picksLabel")}
           </h2>
-          {trilioSources(sub.id) ? (
+          {/* Only where a pick is worth a request: under 200 € the button is the price alert. */}
+          {cards.some((c) => c.trilioOffer) ? (
             <p className="mb-3 flex items-start gap-2 text-[15px] font-semibold text-lime" data-trilio-offer>
               <svg
                 width="18"

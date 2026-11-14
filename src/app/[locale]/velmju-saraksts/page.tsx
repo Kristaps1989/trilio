@@ -11,7 +11,7 @@ import { loadCandidates, loadProducts } from "@/db/queries/catalog";
 import { listSaved, priceHistory } from "@/db/queries/wishlist";
 import type { ProductView } from "@/domain/catalog/types";
 import { decodeState } from "@/domain/flow/state";
-import { trilioSources } from "@/domain/offers/sourcing";
+import { trilioSources, worthAsking } from "@/domain/offers/sourcing";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer, searchProposal } from "@/domain/wishlist/wishlist";
 import { formatEur } from "@/i18n/format";
@@ -223,7 +223,7 @@ export default async function WishlistPage() {
                         saved
                         name={name}
                         variant="icon"
-                        offers={trilioSources(product.subcategoryId)}
+                        offers={worthAsking(product.subcategoryId, offer?.priceCents ?? null)}
                       />
                     </div>
                     {offer ? (

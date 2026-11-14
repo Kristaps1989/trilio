@@ -53,7 +53,7 @@ test("a lead from a saved product: found by EAN, marked for a partner, noted, of
   await test.step("a shopper asks to hear about a product", async () => {
     await devLogin(page, shopper, "/");
     // Its own category per screen size, which no other test saves from, so parallel runs never meet.
-    const sub = test.info().project.name === "desktop" ? "micro" : "toaster";
+    const sub = test.info().project.name === "desktop" ? "oven" : "hob";
     await page.goto(`/rezultati?sub=${sub}`);
     const cards = page.locator('main article[id^="p-"]');
     await expect(cards.first()).toBeVisible();

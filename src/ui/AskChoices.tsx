@@ -5,7 +5,7 @@ import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { rememberAnswer } from "./askAnswer";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
-import { AskPromise, HowItWorks, OfferPitch } from "./OfferPitch";
+import { AskPromise, AskTrust, HowItWorks, OfferPitch } from "./OfferPitch";
 import { SavedAlertNote } from "./SavedAlertNote";
 import type { useRequest } from "./useRequest";
 
@@ -107,13 +107,19 @@ export function AskChoices({
       {offers ? (
         <>
           <OfferPitch priceCents={priceCents} steps={false} />
-          <AskPromise signer={signer} proof={proof} />
         </>
       ) : (
         <p className="text-[15px] leading-snug">{t("bodyPlain")}</p>
       )}
+      {/* The field straight after the saving: what to do comes before the explanation. */}
       {form}
-      {offers ? <HowItWorks /> : null}
+      {offers ? (
+        <>
+          <AskPromise signer={signer} proof={proof} />
+          <AskTrust />
+          <HowItWorks />
+        </>
+      ) : null}
       {toShop}
     </>
   );

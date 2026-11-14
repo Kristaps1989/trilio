@@ -11,7 +11,7 @@ import {
   safeReturnPath,
   type NotifyKind,
 } from "@/domain/notify/notify";
-import { trilioSources, type Sourcing } from "@/domain/offers/sourcing";
+import { trilioSources, worthAsking, type Sourcing } from "@/domain/offers/sourcing";
 import type { EmailSender } from "@/services/notify/email";
 import { token } from "@/services/offers/offers";
 import { ensureAlertsToken } from "@/services/wishlist/alerts";
@@ -82,7 +82,12 @@ export async function requestNotify(db: Db, input: RequestInput, deps: RequestDe
     return { ok: false, reason: "too_many" };
 
   const t = input.target;
-  const consent = consentFor(t.kind as NotifyKind, trilioSources(t.subcategoryId, deps.sourcing));
+  // A product too cheap to be worth a request gets the plain price alert and its consent text.
+  const sourced =
+    t.kind === "product"
+      ? worthAsking(t.subcategoryId, t.priceCents, deps.sourcing)
+      : trilioSources(t.subcategoryId, deps.sourcing);
+  const consent = consentFor(t.kind as NotifyKind, sourced);
   const value = token();
   const [row] = await db
     .insert(notifyRequests)

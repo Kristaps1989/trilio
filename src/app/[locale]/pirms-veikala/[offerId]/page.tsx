@@ -15,7 +15,7 @@ import { clickSuspicion, signalsOf } from "@/domain/analytics/click-quality";
 import { withSource } from "@/domain/analytics/click-source";
 import { isBot } from "@/domain/analytics/visits";
 import { displayName } from "@/domain/catalog/naming";
-import { trilioSources } from "@/domain/offers/sourcing";
+import { worthAsking } from "@/domain/offers/sourcing";
 import { productKey } from "@/domain/wishlist/wishlist";
 import { formatEur } from "@/i18n/format";
 import { recordUiEvent } from "@/services/notify/events";
@@ -68,7 +68,7 @@ export default async function BeforeShopPage({ params, searchParams }: Props) {
   const userId = await currentUserId();
   const saved = (await savedKeys(db, userId, [productKey(product.id)])).has(productKey(product.id));
   const proof = await savingsProofText(db);
-  const sourced = trilioSources(product.subcategoryId);
+  const sourced = worthAsking(product.subcategoryId, offer.priceCents);
 
   // Shown to a shopper: counted as the question shown, as the sheet counts it. Bots and suspect requests are not.
   const h = await headers();

@@ -13,7 +13,7 @@ import {
   shopStats,
   visitStats,
 } from "@/services/admin/stats";
-import { notifyFunnel } from "@/services/notify/events";
+import { notifyFunnel, askWhyCounts } from "@/services/notify/events";
 import { botStats, clientStats } from "@/services/visits/visits";
 import { buttonClass } from "@/ui/Button";
 import { requireAdmin } from "../guard";
@@ -60,6 +60,7 @@ export default async function AdminStats({ searchParams }: Props) {
     suspectClickDetail(db, r.from, r.to),
     leftOutVisitors(db, r.from, r.to),
   ]);
+  const askWhy = await askWhyCounts(db, r.from, r.to);
   const funnelTotal = funnel.reduce(
     (a, f) => ({
       results: a.results + f.resultsVisitors,
@@ -157,6 +158,14 @@ export default async function AdminStats({ searchParams }: Props) {
           <Stat label={t("funnelAskShown")} value={formatInt(funnelTotal.askShown)} />
           <Stat label={t("funnelAskShop")} value={formatInt(funnelTotal.askShop)} />
         </Stats>
+        <p className="text-[15px] text-stone" data-ask-why-stats>
+          {t("askWhy", {
+            slow: askWhy.slow,
+            trust: askWhy.trust,
+            small: askWhy.small,
+            later: askWhy.later,
+          })}
+        </p>
         <Table
           caption={t("notifyFunnel")}
           head={[

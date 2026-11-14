@@ -17,11 +17,11 @@ import { getLocale } from "next-intl/server";
 import { loadProduct } from "@/db/queries/catalog";
 import { IMAGE_HOSTS } from "@/db/stores";
 import { imageSrc } from "@/domain/catalog/media";
-import { trilioSources } from "@/domain/offers/sourcing";
+import { worthAsking } from "@/domain/offers/sourcing";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { currentOffer } from "@/domain/wishlist/wishlist";
 import { isUiLocale } from "@/i18n/routing";
-import { recordUiEvent, visitorOf } from "@/services/notify/events";
+import { recordUiEvent, visitorOf, WHY_REASONS } from "@/services/notify/events";
 import { judgeRequest } from "@/services/visits/judge";
 import { requestNotify, type NotifyTarget } from "@/services/notify/requests";
 import { offerMailDeps } from "@/services/offers/deps";
@@ -97,9 +97,18 @@ async function who() {
 
 /** The subcategory a target belongs to (a product's own, or the search's). */
 async function subcategoryOf(target: SaveTarget): Promise<string | null> {
-  if (target.kind === "search") return target.subcategoryId;
+  return (await askOf(target)).sub;
+}
+
+/** The item's subcategory, and whether saving it is a request for a lower price (not a plain price alert). */
+async function askOf(target: SaveTarget): Promise<{ sub: string | null; request: boolean }> {
+  if (target.kind === "search") return { sub: target.subcategoryId, request: false };
   const product = await loadProduct(db, target.productId);
-  return product?.subcategoryId ?? null;
+  if (!product) return { sub: null, request: false };
+  return {
+    sub: product.subcategoryId,
+    request: worthAsking(product.subcategoryId, currentOffer(product)?.priceCents ?? null),
+  };
 }
 
 export type ToggleResult =
@@ -122,7 +131,8 @@ export async function toggleSavedAction(
 ): Promise<ToggleResult> {
   const target = Target.safeParse(raw);
   if (!target.success) return { ok: false, reason: "invalid" };
-  const sub = save ? await subcategoryOf(target.data) : null;
+  const of = save ? await askOf(target.data) : { sub: null, request: false };
+  const sub = of.sub;
   if (save) await recordUiEvent(db, await who(), "notify_tap", sub).catch(() => undefined);
   const userId = await currentUserId();
   if (!userId) return { ok: false, reason: "auth" };
@@ -135,7 +145,7 @@ export async function toggleSavedAction(
     // Only a product is a request to a partner; a saved search is a watch and asks nothing.
     // Pressing "Iegūt lētāk" is asking for a lower price (owner, 9 Nov 2026): whoever has offers off
     // sees the one sentence again, even after an earlier "no", and its yes turns them on.
-    const ask = target.data.kind === "product" && !!sub && trilioSources(sub) && !user.optIn;
+    const ask = of.request && !user.optIn;
     if (ask && !consent) return { ok: false, reason: "consent", email: user.email };
     if (!(await saveTarget(userId, target.data))) return { ok: false, reason: "invalid" };
     await creditAdLanding(userId, keyOf(target.data)).catch(() => undefined);
@@ -151,8 +161,8 @@ export async function toggleSavedAction(
   }
   revalidatePath("/velmju-saraksts");
   const alerts = save ? await priceAlertsOn(db, userId) : false;
-  const request = save && target.data.kind === "product" && !!sub && trilioSources(sub);
-  const lead = request ? await metaLead(user.email, sub, null).catch(() => undefined) : undefined;
+  const request = save && of.request;
+  const lead = request && sub ? await metaLead(user.email, sub, null).catch(() => undefined) : undefined;
   return { ok: true, saved: save, alerts, email: user.email, ...(lead ? { lead } : {}) };
 }
 
@@ -168,6 +178,16 @@ export async function askShownAction(raw: SaveTarget): Promise<void> {
   if (isAdminEmail((await auth().catch(() => null))?.user?.email ?? "")) return;
   const sub = await subcategoryOf(target.data);
   await recordUiEvent(db, await who(), "ask_shown", sub).catch(() => undefined);
+}
+
+/** "Kas atturēja?": the one optional answer after closing the request unsent; people only, no cookie. */
+export async function askWhyAction(raw: SaveTarget, reason: string): Promise<void> {
+  const target = Target.safeParse(raw);
+  const why = z.enum(WHY_REASONS).safeParse(reason);
+  if (!target.success || !why.success) return;
+  if (isAdminEmail((await auth().catch(() => null))?.user?.email ?? "")) return;
+  const sub = await subcategoryOf(target.data);
+  await recordUiEvent(db, await who(), `ask_why_${why.data}`, sub).catch(() => undefined);
 }
 
 /** The e-mail field on a card, signed out: one confirmation e-mail, nothing else until it is clicked. */
@@ -214,7 +234,7 @@ export async function requestNotifyAction(
   if (!r.ok) return r;
   await recordUiEvent(db, w, "notify_sent", target.subcategoryId).catch(() => undefined);
   const lead =
-    target.kind === "product" && trilioSources(target.subcategoryId)
+    target.kind === "product" && worthAsking(target.subcategoryId, target.priceCents)
       ? await metaLead(r.email, target.subcategoryId, returnPath).catch(() => undefined)
       : undefined;
   return { ok: true, email: r.email, ...(lead ? { lead } : {}) };

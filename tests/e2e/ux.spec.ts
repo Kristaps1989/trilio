@@ -55,7 +55,7 @@ test("the home page says what Trilio does and starts the choice", async ({ page 
 test("the card: the request first and lime with its worth in euro, the shop second and outlined", async ({
   page,
 }) => {
-  await page.goto("/rezultati?sub=kettle");
+  await page.goto("/rezultati?sub=washer");
   const card = picks(page).first();
   const ask = card.getByRole("button", { name: "Iegūt lētāk", exact: true });
   await expect(ask).toBeVisible();
@@ -66,6 +66,73 @@ test("the card: the request first and lime with its worth in euro, the shop seco
   expect(bg).toBe("rgb(255, 255, 255)");
   // The model code and EAN stay on the card, below the facts.
   await expect(card.locator("[data-card-ean]")).toContainText("Modelis");
+});
+
+// The 14 Nov 2026 panel (docs/UX_REVIEW_PLAN.md §9): of 25 people who saw the request form, 2 sent it.
+test("the request form: the e-mail field in view straight after the tap, who sells, and one question on closing", async ({
+  page,
+}) => {
+  await page.goto("/rezultati?sub=washer");
+  const card = picks(page).first();
+  await card.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
+  const pitch = card.locator("[data-offer-pitch]");
+  const field = pitch.getByLabel("E-pasts");
+  // No scrolling to find it, on a 360 px phone too.
+  await expect(field).toBeInViewport();
+  // What to do comes before the explanation: the field precedes the promise and the terms.
+  const order = await pitch.evaluate((el) => {
+    const pos = (sel: string) => el.querySelector(sel)!.getBoundingClientRect().top;
+    return [
+      pos("[data-ask-discount]"),
+      pos("[data-notify-panel]"),
+      pos("[data-ask-promise]"),
+      pos("[data-ask-trust]"),
+    ];
+  });
+  expect([...order].sort((a, b) => a - b)).toEqual(order);
+  // Who sells and on what terms, and what the e-mail is for; nothing the purchase terms do not say.
+  const trust = pitch.locator("[data-ask-trust]");
+  await expect(trust).toContainText(
+    "Ja piedāvāsim zemāku cenu, pārdevējs būs Trilio: 2 gadu garantija, 14 dienu atteikuma tiesības, piegāde visā Latvijā.",
+  );
+  await expect(trust).toContainText("E-pastu izmantojam tikai šim pieprasījumam un cenas paziņojumiem.");
+  await expect(trust.getByRole("link", { name: "Pirkuma noteikumi" })).toHaveAttribute(
+    "href",
+    "/pirkuma-noteikumi",
+  );
+  await noAxe(page);
+
+  // Closed without sending: one optional question, answered with one tap, asked once.
+  await pitch.getByRole("button", { name: "Aizvērt" }).click();
+  const why = card.getByRole("group", { name: "Kas atturēja no pieprasījuma?" });
+  await expect(why.getByRole("button")).toHaveText([
+    "Vajag ātrāk nekā 2 darba dienās",
+    "Nav skaidrs, kas pārdod",
+    "Ietaupījums par mazu",
+    "Vēl tikai skatos",
+  ]);
+  await noAxe(page);
+  await why.getByRole("button", { name: "Nav skaidrs, kas pārdod" }).click();
+  await expect(card.locator('[data-ask-why="done"]')).toHaveText("Paldies, ņemsim vērā.");
+  // Opening and closing again does not ask a second time.
+  await card.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
+  await card.locator("[data-offer-pitch]").getByRole("button", { name: "Aizvērt" }).click();
+  await expect(card.getByRole("group", { name: "Kas atturēja no pieprasījuma?" })).toHaveCount(0);
+});
+
+test("under 200 € the card offers the free price alert, not a request worth a few euro", async ({ page }) => {
+  await page.goto("/rezultati?sub=kettle");
+  const card = picks(page).first();
+  await expect(
+    card.getByRole("button", { name: "Paziņot, kad cena samazināsies", exact: true }),
+  ).toBeVisible();
+  await expect(card.getByRole("button", { name: "Iegūt lētāk", exact: true })).toHaveCount(0);
+  await expect(card.locator("[data-notify-saving]")).toHaveCount(0);
+  // The page does not promise a lower price where no card asks for one.
+  await expect(page.locator("[data-trilio-offer]")).toHaveCount(0);
+  // The question before the shop is the price alert too.
+  await card.getByRole("link", { name: /^Pirkt — / }).click();
+  await expect(page.getByRole("dialog", { name: "Paziņot, kad cena samazināsies?" })).toBeVisible();
 });
 
 test.describe("anonymous proof from a real saving", () => {
@@ -110,7 +177,7 @@ test.describe("anonymous proof from a real saving", () => {
     for (const secret of [SHOPPER, PRODUCT, "E2E Veikals", "e2e-proof"])
       await expect(home).not.toContainText(secret);
 
-    await page.goto("/rezultati?sub=kettle");
+    await page.goto("/rezultati?sub=washer");
     await picks(page)
       .first()
       .getByRole("link", { name: /^Pirkt — / })

@@ -4,7 +4,7 @@ import { createDb, type Db } from "@/db/client";
 import { notifyRequests, uiEvents, users, products, visits } from "@/db/schema";
 import { memoryEmailSender } from "@/services/notify/email";
 import { CONSENT_VERSION } from "@/domain/notify/notify";
-import { notifyFunnel, purgeUiEvents } from "./events";
+import { notifyFunnel, purgeUiEvents, askWhyCounts } from "./events";
 import {
   confirmNotify,
   notifySignIn,
@@ -152,6 +152,30 @@ run("notify requests", () => {
       .from(users)
       .where(eq(users.email, `jon@${DOMAIN}`));
     expect(u).toMatchObject({ priceAlerts: true, offersOptIn: true });
+  });
+
+  it("a product under 200 € is a plain price alert: its consent does not cover Trilio's offers", async () => {
+    await requestNotify(
+      db,
+      {
+        email: `cheap@${DOMAIN}`,
+        target: { ...(await productTarget()), priceCents: 4_900 } as NotifyTarget,
+        returnPath: "/",
+        locale: "lv",
+        visitorHash: null,
+        adLandingId: null,
+      },
+      deps,
+    );
+    expect(await requestByToken(db, tokenOf())).toMatchObject({
+      offers: false,
+      consent: `notify.bodyPlain@${CONSENT_VERSION}`,
+    });
+    const [u] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, `cheap@${DOMAIN}`));
+    expect(u).toMatchObject({ priceAlerts: true, offersOptIn: false });
   });
 
   it("where the file leaves a category out, the consent covers price e-mails only", async () => {
@@ -350,6 +374,17 @@ run("notify requests", () => {
       { day, path: "/rezultati", section: "results", subcategory: "fridge", visitorHash: "notify-test-a" },
       { day, path: "/rezultati", section: "results", subcategory: "fridge", visitorHash: "notify-test-b" },
     ]);
+    // "Kas atturēja?": one answer per visitor and reason; an unknown reason is not counted.
+    await db.insert(uiEvents).values([
+      { day, visitorHash: "notify-test-a", event: "ask_why_slow", subcategoryId: "fridge" },
+      { day, visitorHash: "notify-test-a", event: "ask_why_slow", subcategoryId: "fridge" },
+      { day, visitorHash: "notify-test-b", event: "ask_why_trust", subcategoryId: "fridge" },
+      { day, visitorHash: "notify-test-b", event: "ask_why_bogus", subcategoryId: "fridge" },
+    ]);
+    const why = await askWhyCounts(db, day, day);
+    expect(why.slow).toBeGreaterThanOrEqual(1);
+    expect(why.trust).toBeGreaterThanOrEqual(1);
+    expect(Object.keys(why).sort()).toEqual(["later", "slow", "small", "trust"]);
     const rows = await notifyFunnel(db, day, day);
     const f = rows.find((r) => r.subcategoryId === "fridge")!;
     expect(f.taps).toBeGreaterThanOrEqual(2);
