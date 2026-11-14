@@ -246,6 +246,13 @@
       "when": 1794637991892,
       "tag": "0034_ad_tuned",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794650800810,
+      "tag": "0035_ad_account_checks",
+      "breakpoints": true
     }
   ]
 }

@@ -173,6 +173,39 @@ test("the owner builds, syncs, runs the optimiser and decides", async ({ page })
   await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņas budžets saglabāts.");
   await expect(page.locator(`[data-budget="${brand}"] input[name=budget]`)).toHaveValue("1,50");
   await expectNoAxeViolations(page);
+
+  // Account control: Trilio reads the real settings from the ads account. The stand-in account
+  // has one campaign moved to a shared budget with conversion bidding, and one campaign Trilio
+  // did not create; within one server run it stays fixed once it is put back.
+  await page.locator("[data-control-check]").click();
+  await expect(page.locator("[data-outcome=ok]")).toHaveText("Google konts pārbaudīts.");
+  await expect(page.locator("[data-control-checked]")).toHaveAttribute("data-control-checked", "yes");
+  const differs = page.locator("[data-control-state=differs]");
+  if (await differs.count()) {
+    await expect(differs).toHaveText("1 kampaņa atšķiras no Trilio noteiktā");
+    await expect(page.locator("[data-control-issue=shared_budget]")).toContainText(
+      "Kopīgs budžets ar citām kampaņām (5,00 € dienā)",
+    );
+    await expect(page.locator("[data-control-issue=bidding]")).toContainText(
+      "Maksimāli konversijas (kopīga stratēģija). Trilio: Maksimāli klikšķi.",
+    );
+    await expectNoAxeViolations(page);
+    await page.locator("[data-control-fix-all]").click();
+    await expect(page.locator("[data-outcome=ok]")).toHaveText(
+      "Atjaunots: 1. Neizdevās: 0. Vēl atšķiras: 0.",
+    );
+  }
+  await expect(page.locator("[data-control-state=ok]")).toContainText("sakrīt ar Trilio noteikto");
+  // The campaign Trilio does not manage is listed, and can be paused from here.
+  const foreign = "Zīmols (izveidots Google Ads)";
+  await expect(page.locator(`[data-control-foreign="${foreign}"]`)).toBeVisible();
+  const pause = page.locator(`[data-control-pause="${foreign}"]`);
+  if (await pause.count()) {
+    await pause.click();
+    await expect(page.locator("[data-outcome=ok]")).toHaveText("Kampaņa apturēta Google kontā.");
+  }
+  await expect(page.locator(`[data-control-pause="${foreign}"]`)).toHaveCount(0);
+  await expectNoAxeViolations(page);
   await expect(page.locator('[data-campaign="Search · Ledusskapji un saldētavas"]')).toBeVisible();
   // Google's "Ad strength": every ad group gets a fresh template ad, the old one is paused.
   await page.getByRole("button", { name: "Atjaunot reklāmu tekstus" }).click();

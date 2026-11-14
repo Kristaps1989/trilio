@@ -1,3 +1,4 @@
+import type { CampaignState } from "@/domain/ads/drift";
 import type { ClickSignals } from "@/domain/analytics/click-quality";
 import { sql } from "drizzle-orm";
 import type { ChannelMix } from "@/domain/growth/channels";
@@ -1339,6 +1340,16 @@ export const adChanges = pgTable("ad_changes", {
   ok: boolean("ok").notNull(),
   response: text("response"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * The ads account as Google reported it at one check (every campaign, Trilio's or not), so the
+ * admin page can show where it differs from what Trilio set. Only the latest rows are kept.
+ */
+export const adAccountChecks = pgTable("ad_account_checks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  campaigns: jsonb("campaigns").$type<CampaignState[]>().notNull(),
+  checkedAt: timestamp("checked_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 /** Search Console performance per day, query and page. */

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { adAgentRuns, adCampaigns, adCreatives, adKeywords, adProposals, db } from "@/db";
 import { audit } from "@/services/admin/audit";
 import { adsProvider } from "@/services/ads";
+import { checkAccount, pauseForeignCampaign, reconcileAccount } from "@/services/ads/control";
 import {
   buildCampaigns,
   getSettings,
@@ -384,4 +385,35 @@ export async function recomputeTvBaselineAction(formData: FormData): Promise<voi
   if (!r.ok) back("/admin/reklama/tv", { err: `baseline_${r.error}` });
   await log(a, "ads.tv_baseline", slug, r.ok ? { days: r.baseline.days, from: r.baseline.from } : {});
   back("/admin/reklama/tv", { ok: "baseline" });
+}
+
+/** Reklāma → Kampaņas: read the real settings from the ads account and store them. */
+export async function checkAccountAction(): Promise<void> {
+  const a = await admin();
+  const r = await checkAccount(db, provider());
+  await log(a, "ads.control.check", "account", r.ok ? { differ: r.drift.campaigns.length } : { ok: false });
+  if (!r.ok) back("/admin/reklama/kampanas", { berr: "control" });
+  back("/admin/reklama/kampanas", { ok: "checked" });
+}
+
+/** Reklāma → Kampaņas: put Trilio's campaigns back on Trilio's settings (one, or all). */
+export async function reconcileAccountAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const id = formData.get("campaignId");
+  const campaignId = id ? z.string().uuid().parse(id) : undefined;
+  const r = await reconcileAccount(db, provider(), campaignId);
+  await log(a, "ads.control.reconcile", campaignId ?? "all", r);
+  if (!r.ok) back("/admin/reklama/kampanas", { berr: "control" });
+  const done = r as { fixed: number; failed: number; left: number };
+  back("/admin/reklama/kampanas", { reconciled: `${done.fixed}/${done.failed}/${done.left}` });
+}
+
+/** Reklāma → Kampaņas: pause a campaign that Trilio did not create. */
+export async function pauseForeignAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const resource = z.string().min(1).max(200).parse(formData.get("resource"));
+  const r = await pauseForeignCampaign(db, provider(), resource);
+  await log(a, "ads.control.pause_foreign", resource, { ok: r.ok });
+  if (!r.ok) back("/admin/reklama/kampanas", { berr: "control" });
+  back("/admin/reklama/kampanas", { ok: "foreign" });
 }

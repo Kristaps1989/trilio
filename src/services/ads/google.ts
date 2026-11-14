@@ -1,4 +1,5 @@
 import { createSign } from "node:crypto";
+import type { Bidding, CampaignState } from "@/domain/ads/drift";
 import type { AdsChange, AdsProvider, ApplyResult, StatRow, TermRow } from "./provider";
 
 // Google Ads API over REST (docs/GROWTH_PLAN.md §7). Since 9 Sep 2026 access
@@ -149,6 +150,35 @@ const MATCH = { exact: "EXACT", phrase: "PHRASE", broad: "BROAD" } as const;
 const STATUS = { enabled: "ENABLED", paused: "PAUSED" } as const;
 
 type Row = Record<string, Record<string, unknown> | undefined>;
+
+const BIDDING: Record<string, Bidding> = {
+  TARGET_SPEND: "maximize_clicks",
+  MAXIMIZE_CONVERSIONS: "maximize_conversions",
+  MAXIMIZE_CONVERSION_VALUE: "maximize_conversion_value",
+  TARGET_IMPRESSION_SHARE: "target_impression_share",
+  MANUAL_CPC: "manual_cpc",
+};
+
+/** One row of the campaign settings query, in Trilio's terms. */
+export function campaignState(r: Row): CampaignState {
+  const c = r.campaign ?? {};
+  const b = r.campaignBudget ?? {};
+  const status = String(c.status ?? "");
+  const channel = String(c.advertisingChannelType ?? "");
+  const cap = (c.targetSpend as { cpcBidCeilingMicros?: string } | undefined)?.cpcBidCeilingMicros;
+  return {
+    resource: String(c.resourceName ?? ""),
+    name: String(c.name ?? ""),
+    status: status === "ENABLED" ? "enabled" : status === "REMOVED" ? "removed" : "paused",
+    kind: channel === "SEARCH" ? "search" : channel === "PERFORMANCE_MAX" ? "pmax" : "other",
+    bidding: BIDDING[String(c.biddingStrategyType ?? "")] ?? "other",
+    portfolio: Boolean(c.biddingStrategy),
+    budget: String(c.campaignBudget ?? ""),
+    budgetCents: Math.round(Number(b.amountMicros ?? 0) / 10_000),
+    sharedBudget: b.explicitlyShared === true,
+    cpcCapCents: cap ? Math.round(Number(cap) / 10_000) : null,
+  };
+}
 
 export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch): AdsProvider {
   const token = googleTokenSource(cfg.credentials, ADWORDS_SCOPE, fetchImpl);
@@ -375,6 +405,30 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
           },
         ]);
         return { ok: true, id: change.budget };
+      case "restore_search": {
+        const budget = await mutate("campaignBudgets", [
+          {
+            create: {
+              name: `${change.name} budget ${Date.now()}`,
+              amountMicros: micros(change.budgetCents),
+              deliveryMethod: "STANDARD",
+              explicitlyShared: false,
+            },
+          },
+        ]);
+        // Setting a standard strategy on the campaign takes it out of a portfolio one.
+        await mutate("campaigns", [
+          {
+            update: {
+              resourceName: change.campaign,
+              campaignBudget: budget,
+              targetSpend: { cpcBidCeilingMicros: micros(change.cpcCapCents) },
+            },
+            updateMask: "campaign_budget,target_spend.cpc_bid_ceiling_micros",
+          },
+        ]);
+        return { ok: true, id: change.campaign, budget };
+      }
       case "set_cpc":
         await mutate("adGroups", [
           {
@@ -482,8 +536,16 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
     return { ok: true, id: campaignName, budget: budgetName };
   }
 
+  async function inspect(): Promise<CampaignState[]> {
+    const rows = await search(
+      "SELECT campaign.resource_name, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.bidding_strategy_type, campaign.bidding_strategy, campaign.target_spend.cpc_bid_ceiling_micros, campaign.campaign_budget, campaign_budget.amount_micros, campaign_budget.explicitly_shared FROM campaign",
+    );
+    return rows.map((r) => campaignState(r));
+  }
+
   return {
     name: "google",
+    inspect,
     async report(from: string, to: string) {
       const where = `segments.date BETWEEN '${from}' AND '${to}'`;
       const m = "metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions";

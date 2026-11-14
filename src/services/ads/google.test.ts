@@ -7,6 +7,7 @@ import {
   googleAdsConfigFromEnv,
   googleAdsProvider,
   serviceAccountFromEnv,
+  campaignState,
 } from "./google";
 
 // The Google Ads REST client against a recorded fake: the right headers,
@@ -337,5 +338,95 @@ describe("Google Ads client", () => {
           )) as unknown as typeof fetch);
     const r = await refused.apply({ op: "set_cpc", adGroup: "customers/1/adGroups/3", cents: 40 });
     expect(r).toMatchObject({ ok: false, error: expect.stringMatching(/Explorer/) });
+  });
+
+  it("reads campaign settings in Trilio's terms", () => {
+    expect(
+      campaignState({
+        campaign: {
+          resourceName: "customers/1/campaigns/9",
+          name: "Search · Virtuves mazā tehnika",
+          status: "ENABLED",
+          advertisingChannelType: "SEARCH",
+          biddingStrategyType: "MAXIMIZE_CONVERSIONS",
+          biddingStrategy: "customers/1/biddingStrategies/4",
+          campaignBudget: "customers/1/campaignBudgets/7",
+        },
+        campaignBudget: { amountMicros: "5000000", explicitlyShared: true },
+      }),
+    ).toEqual({
+      resource: "customers/1/campaigns/9",
+      name: "Search · Virtuves mazā tehnika",
+      status: "enabled",
+      kind: "search",
+      bidding: "maximize_conversions",
+      portfolio: true,
+      budget: "customers/1/campaignBudgets/7",
+      budgetCents: 500,
+      sharedBudget: true,
+      cpcCapCents: null,
+    });
+    expect(
+      campaignState({
+        campaign: {
+          status: "PAUSED",
+          advertisingChannelType: "SEARCH",
+          biddingStrategyType: "TARGET_SPEND",
+          targetSpend: { cpcBidCeilingMicros: "300000" },
+        },
+        campaignBudget: { amountMicros: "410000" },
+      }),
+    ).toMatchObject({
+      status: "paused",
+      bidding: "maximize_clicks",
+      portfolio: false,
+      budgetCents: 41,
+      cpcCapCents: 30,
+    });
+    expect(
+      campaignState({ campaign: { status: "REMOVED", advertisingChannelType: "PERFORMANCE_MAX" } }),
+    ).toMatchObject({
+      status: "removed",
+      kind: "pmax",
+      bidding: "other",
+    });
+  });
+
+  it("asks for every campaign's settings, and restores a campaign's own budget and click bidding", async () => {
+    const { calls, fetchImpl } = fake();
+    const p = googleAdsProvider(cfg, fetchImpl);
+    await p.inspect([]);
+    const q = (calls.find((c) => c.url.endsWith("googleAds:search"))!.body as { query: string }).query;
+    for (const field of [
+      "campaign.bidding_strategy_type",
+      "campaign.bidding_strategy",
+      "campaign.target_spend.cpc_bid_ceiling_micros",
+      "campaign_budget.amount_micros",
+      "campaign_budget.explicitly_shared",
+    ])
+      expect(q).toContain(field);
+
+    const r = await p.apply({
+      op: "restore_search",
+      campaign: "customers/1/campaigns/9",
+      name: "Search · Virtuves mazā tehnika",
+      budgetCents: 200,
+      cpcCapCents: 30,
+    });
+    expect(r).toEqual({ ok: true, id: "customers/1/campaigns/9", budget: "customers/1/campaignBudgets/5" });
+    const budget = calls.find((c) => c.url.includes("campaignBudgets:mutate"))!.body;
+    expect(JSON.stringify(budget)).toContain('"amountMicros":"2000000"');
+    expect(JSON.stringify(budget)).toContain('"explicitlyShared":false');
+    const update = calls.find((c) => c.url.endsWith("/campaigns:mutate"))!.body as {
+      operations: { update: Record<string, unknown>; updateMask: string }[];
+    };
+    expect(update.operations[0]).toEqual({
+      update: {
+        resourceName: "customers/1/campaigns/9",
+        campaignBudget: "customers/1/campaignBudgets/5",
+        targetSpend: { cpcBidCeilingMicros: "300000" },
+      },
+      updateMask: "campaign_budget,target_spend.cpc_bid_ceiling_micros",
+    });
   });
 });
