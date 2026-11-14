@@ -15,6 +15,7 @@ import {
   searchExtensions,
   SITELINK_LIMITS,
   templateAd,
+  adLandingPath,
 } from "./plan";
 
 describe("honesty lint", () => {
@@ -52,10 +53,12 @@ describe("campaign plan", () => {
       catalog.groups.flatMap((g) => g.subcategories.map((s) => [s.id, s.budget_steps_eur] as const)),
     );
     for (const g of groups) {
-      // The flow, or the home page with the brand tag for Trilio's own name.
+      // A category lands on its three products at typical prices (never the first question); the
+      // competitor group on the start of the flow; Trilio's own name on the home page with the brand tag.
       expect(g.landingPath).toMatch(
-        /^(\/izvelies(\/[a-z]+\/[a-z]+)?|\/\?utm_source=google&utm_medium=cpc&utm_term=trilio)$/,
+        /^(\/rezultati\?sub=[a-z]+&cena=tipiska|\/izvelies|\/\?utm_source=google&utm_medium=cpc&utm_term=trilio)$/,
       );
+      if (steps.has(g.subcategoryId)) expect(g.landingPath).toBe(adLandingPath(g.subcategoryId));
       expect(g.keywords.length).toBeGreaterThan(0);
       // The budget-step headlines ("Ledusskapji līdz 500 €") quote the flow's own steps.
       expect(lintAd(g.ad, { allowedNumbers: steps.get(g.subcategoryId) ?? [] }), g.subcategoryId).toEqual([]);
@@ -104,7 +107,7 @@ describe("campaign plan", () => {
       ["Ledusskapji", "/kategorija/fridge"],
       ["Saldētavas", "/kategorija/freezer"],
     ]);
-    // No duplicate link text or address, and none is an ad's own landing page (/izvelies/<group>/<sub>).
+    // No duplicate link text or address, and none is an ad's own landing page (/rezultati?sub=…).
     expect(new Set(own.map((s) => s.text)).size).toBe(4);
     expect(new Set(own.map((s) => s.path)).size).toBe(4);
     for (const g of catalog.groups) {
@@ -112,7 +115,7 @@ describe("campaign plan", () => {
       expect(links).toHaveLength(4);
       for (const l of links) {
         expect(l.text.length).toBeLessThanOrEqual(SITELINK_LIMITS.text);
-        expect(l.path).not.toMatch(/^\/izvelies\/[^/]+\/[^/]+/);
+        expect(l.path).not.toMatch(/^\/rezultati/);
       }
     }
     // The brand and competitor campaigns have no categories: the general four.

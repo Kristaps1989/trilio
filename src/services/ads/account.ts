@@ -30,6 +30,7 @@ import {
   displayPaths,
   templateAd,
   type AdText,
+  adLandingPath,
 } from "@/domain/ads/plan";
 import { getSubcategory } from "@/domain/questions/catalog";
 import { catalog } from "@/domain/questions/catalog";
@@ -270,6 +271,13 @@ export async function refreshAds(
   provider: AdsProvider,
 ): Promise<{ created: number; paused: number; failed: number }> {
   const out = { created: 0, paused: 0, failed: 0 };
+  // A category's ad group lands where the plan says now (its results, not the first question).
+  for (const g of await db.select().from(adGroups)) {
+    if (!(g.subcategoryId in keywordSeed.subcategories)) continue;
+    const path = adLandingPath(g.subcategoryId);
+    if (g.landingPath !== path)
+      await db.update(adGroups).set({ landingPath: path }).where(eq(adGroups.id, g.id));
+  }
   const groups = await db.select().from(adGroups).where(isNotNull(adGroups.googleId));
   for (const g of groups) {
     const ad = adTextFor(g.subcategoryId);

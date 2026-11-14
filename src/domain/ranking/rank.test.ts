@@ -379,6 +379,21 @@ describe("no budget: the usual price range, three brands where they qualify (doc
       combi(`${brands[i % brands.length]} M${i}`, eur, 180, { volume_l: 200 + i * 15 }),
     );
 
+  it("an ad landing keeps the first three at or under the median, and says which price that is", () => {
+    const products = lineUp(["Bosch", "Miele", "Beko", "LG"]);
+    const prices = products.map((p) => p.offers[0]!.priceCents);
+    const r = rank({ ...input(products), priceCeiling: "typical" });
+    // 13 prices: the median is the 7th, 660 €; the usual rule would allow up to 840 €.
+    expect(r.ceilingCents).toBe(66_000);
+    expect(r.picks.length).toBe(3);
+    for (const p of r.picks) expect(p.price).toBeLessThanOrEqual(66_000);
+    expect(rank(input(products)).ceilingCents).toBe(mainstreamCeilingCents(prices));
+    // A budget with an upper limit is the shopper's own: no ceiling is added to it.
+    expect(rank({ ...input(products), budget: 300_000, priceCeiling: "typical" }).ceilingCents).toBeNull();
+    // Every matching product still counts.
+    expect(r.matchingCount).toBe(products.length);
+  });
+
   it("never picks above the 75th percentile when no upper limit is given", () => {
     const products = lineUp(["Bosch", "Miele", "Beko", "LG"]);
     const prices = products.map((p) => p.offers[0]!.priceCents);

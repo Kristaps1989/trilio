@@ -223,7 +223,9 @@ export function buildCampaignPlan(
       adGroups.push({
         subcategoryId: sub.id,
         name: sub.label,
-        landingPath: `/izvelies/${group.id}/${sub.id}`,
+        // Three products at once, at what most people pay; the questions refine from there
+        // (owner, 14 Nov 2026: a searcher expects products, not a questionnaire).
+        landingPath: adLandingPath(sub.id),
         keywords: s.keywords,
         ad: templateAd(s.short, s.keywords, sub.budget_steps_eur ?? []),
       });
@@ -352,4 +354,9 @@ export function campaignExtensions(
     ...general.filter((s) => s.path.startsWith("/izvelies")),
   ];
   return { sitelinks: [...own, ...ordered].slice(0, 4), callouts: CALLOUTS };
+}
+
+/** Where a category's ad lands: its results before any answer, kept to typical prices. */
+export function adLandingPath(subcategoryId: string): string {
+  return `/rezultati?sub=${subcategoryId}&cena=tipiska`;
 }

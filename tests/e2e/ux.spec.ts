@@ -120,6 +120,35 @@ test("the request form: the e-mail field in view straight after the tap, who sel
   await expect(card.getByRole("group", { name: "Kas atturēja no pieprasījuma?" })).toHaveCount(0);
 });
 
+// Where the ads land (14 Nov 2026): three products before any question, none of them a premium outlier.
+test("an ad lands on three picks at typical prices, with the questions one tap away", async ({ page }) => {
+  const prices = async () =>
+    (await picks(page)
+      .locator("[data-price-cents]")
+      .evaluateAll((els) => els.map((e) => Number(e.getAttribute("data-price-cents"))))) as number[];
+  await page.goto("/rezultati?sub=fridge&cena=tipiska");
+  const note = page.locator("[data-typical-note]");
+  // The space before € is a non-breaking one, which \s covers.
+  await expect(note).toContainText(
+    /^Trīs varianti līdz [\d\s]+€: tik vai mazāk maksā puse atbilstošo preču\./,
+  );
+  await expect(note.getByRole("link")).toHaveText("Atbildi uz dažiem jautājumiem, lai atlasītu tieši tev");
+  const ceiling =
+    Number(((await note.textContent()) ?? "").match(/līdz ([\d\s]+)€/)![1]!.replace(/\D/g, "")) * 100;
+  const typical = await prices();
+  expect(typical).toHaveLength(3);
+  for (const cents of typical) expect(cents).toBeLessThanOrEqual(ceiling);
+  // The plain results allow dearer picks (up to the 75th percentile): this view is the stricter one.
+  await page.goto("/rezultati?sub=fridge");
+  await expect(page.locator("[data-typical-note]")).toHaveCount(0);
+  expect(Math.max(...(await prices()))).toBeGreaterThanOrEqual(Math.max(...typical));
+  // The questions are one tap away, at the first one.
+  await page.goto("/rezultati?sub=fridge&cena=tipiska");
+  await noAxe(page);
+  await page.locator("[data-typical-note]").getByRole("link").click();
+  await expect(page).toHaveURL(/\/izvelies\/[a-z]+\/fridge$/);
+});
+
 test("under 200 € the card offers the free price alert, not a request worth a few euro", async ({ page }) => {
   await page.goto("/rezultati?sub=kettle");
   const card = picks(page).first();

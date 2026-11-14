@@ -56,6 +56,12 @@ export type RankInput = {
   brandsOnly?: boolean;
   /** Include products whose fit-critical data is missing (marked on the card). */
   showUnknown?: boolean;
+  /**
+   * Without an upper price limit, how far up the picks may go: "usual" (default) is the 75th
+   * percentile; "typical" is the median, for a visitor who has answered nothing yet (an ad
+   * landing), so the first three are what most people pay and no premium outlier shows.
+   */
+  priceCeiling?: "usual" | "typical";
 };
 
 export type RankResult = {
@@ -64,6 +70,8 @@ export type RankResult = {
   refurbished: RefurbishedPick[];
   /** Products that passed stock + hard filters + price (the "N matching" number in the lead). */
   matchingCount: number;
+  /** The price the picks were kept under when no upper limit was set; null when none applied. */
+  ceilingCents: number | null;
   /** Products that passed stock + hard filters regardless of price. */
   eligibleCount: number;
   /** In-range products left out because the shop does not state a fit-critical value. */
@@ -296,7 +304,13 @@ export function rank(input: RankInput): RankResult {
     : pool.candidates.filter((c) => c.fitUnknown && withinBudget(c.price, range)).length;
   // Without an upper limit, pick within the usual price range (the 75th percentile, as the category
   // pages do), so a shopper who skipped the budget does not see only the premium end (docs/UX_REVIEW_PLAN.md §5).
-  const ceiling = range?.max === undefined ? mainstreamCeilingCents(inBudget.map((c) => c.price)) : null;
+  const ceiling =
+    range?.max === undefined
+      ? priceCeilingCents(
+          inBudget.map((c) => c.price),
+          input.priceCeiling === "typical" ? TYPICAL_PERCENTILE : MAINSTREAM_PERCENTILE,
+        )
+      : null;
   const usual = ceiling === null ? inBudget : inBudget.filter((c) => c.price <= ceiling);
   const { picks, meaningful } = assignTiers(pickThree(usual.length >= 3 ? usual : inBudget), input.sub);
 
@@ -338,6 +352,7 @@ export function rank(input: RankInput): RankResult {
     hiddenUnknownCount,
     excludedBy: pool.excludedBy,
     tiersMeaningful: meaningful,
+    ceilingCents: usual.length >= 3 ? ceiling : null,
     more: byValue(inBudget).filter((c) => !picks.some((p) => p.product.id === c.product.id)),
   };
 }

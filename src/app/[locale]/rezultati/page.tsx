@@ -96,7 +96,7 @@ import { activeLocale } from "@/i18n/active";
 
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<{ sub?: string; a?: string; vairak?: string }> };
+type Props = { searchParams: Promise<{ sub?: string; a?: string; vairak?: string; cena?: string }> };
 
 /** Deeper facts shown in the compare table when a product states them (docs/CONFIDENCE_PLAN.md C2, C3). */
 const DETAIL_ROWS = [
@@ -152,7 +152,7 @@ function cardOffer(o: OfferView, now: Date): CardOffer {
 const href = (sub: Subcategory, state: FlowState) => `/rezultati?sub=${sub.id}&a=${encodeState(state)}`;
 
 export default async function ResultsPage({ searchParams }: Props) {
-  const { sub: subId, a, vairak } = await searchParams;
+  const { sub: subId, a, vairak, cena } = await searchParams;
   const sub = subId ? getSubcategory(subId, activeLocale()) : undefined;
   const group = sub ? getGroupOfSubcategory(sub.id, activeLocale()) : undefined;
   if (!sub || !group) notFound();
@@ -184,6 +184,8 @@ export default async function ResultsPage({ searchParams }: Props) {
     brands: state.trailing.brands,
     brandsOnly: state.trailing.brandsOnly,
     showUnknown: state.trailing.showUnknown,
+    // An ad lands here before any answer (?cena=tipiska): the first three stay at what most people pay.
+    priceCeiling: cena === "tipiska" ? ("typical" as const) : ("usual" as const),
   };
   const result = rank({ ...input, includeRefurbished: state.trailing.refurbished !== "no" });
 
@@ -1079,6 +1081,15 @@ export default async function ResultsPage({ searchParams }: Props) {
           <h2 id="picks-title" className="sr-only">
             {t("picksLabel")}
           </h2>
+          {/* From an ad, before any answer: say what the three are and offer the questions. */}
+          {cena === "tipiska" && result.ceilingCents !== null ? (
+            <p className="mb-3 text-[15px] text-mist" data-typical-note>
+              {t("typicalNote", { price: formatEur(result.ceilingCents) })}{" "}
+              <Link href={basePath} className="font-semibold text-lime underline underline-offset-2">
+                {t("typicalRefine")}
+              </Link>
+            </p>
+          ) : null}
           {/* Only where a pick is worth a request: under 200 € the button is the price alert. */}
           {cards.some((c) => c.trilioOffer) ? (
             <p className="mb-3 flex items-start gap-2 text-[15px] font-semibold text-lime" data-trilio-offer>
