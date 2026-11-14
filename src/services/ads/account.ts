@@ -26,6 +26,7 @@ import {
   brandAd,
   COMPETITOR_GROUP,
   competitorAd,
+  searchExtensions,
   displayPaths,
   templateAd,
   type AdText,
@@ -789,4 +790,42 @@ export async function paceBudgets(
     await db.update(adCampaigns).set({ budgetCents: cents }).where(eq(adCampaigns.id, c.id));
   }
   return paced;
+}
+
+/**
+ * Applies the Search best-practice settings to every synced Search campaign that has not had
+ * them yet (docs/GROWTH_PLAN.md, "Search best practice"): people in Latvia only, Russian and
+ * English browsers too, four sitelinks and four callouts.
+ */
+export async function tuneSearchCampaigns(
+  db: Db,
+  provider: AdsProvider,
+  now = new Date(),
+): Promise<{ tuned: number; failed: number }> {
+  const { sitelinks, callouts } = searchExtensions();
+  const rows = await db
+    .select()
+    .from(adCampaigns)
+    .where(and(eq(adCampaigns.kind, "search"), isNull(adCampaigns.tunedAt)));
+  let tuned = 0;
+  let failed = 0;
+  for (const c of rows) {
+    if (!c.googleId) continue;
+    const r = await send(db, provider, {
+      op: "tune_search",
+      campaign: c.googleId,
+      sitelinks: sitelinks.map((s) => ({
+        text: s.text,
+        description1: s.description1,
+        description2: s.description2,
+        finalUrl: `${siteUrl()}${s.path}`,
+      })),
+      callouts,
+    });
+    if (r.ok) {
+      await db.update(adCampaigns).set({ tunedAt: now }).where(eq(adCampaigns.id, c.id));
+      tuned++;
+    } else failed++;
+  }
+  return { tuned, failed };
 }

@@ -124,6 +124,19 @@ test("the owner builds, syncs, runs the optimiser and decides", async ({ page })
   await page.getByRole("link", { name: "Kampaņas", exact: true }).click();
   await expect(page.locator('[data-campaign="Search · Konkurenti"]')).toBeVisible();
   await expect(page.locator('[data-campaign="Search · Trilio zīmols"]')).toBeVisible();
+  // What to switch on first: the brand campaign leads, Performance Max waits for conversions.
+  await expect(page.locator('[data-priority="Search · Trilio zīmols"]')).toHaveAttribute(
+    "data-priority-tier",
+    "now",
+  );
+  await expect(page.getByRole("heading", { name: "Meklēšanas kampaņu iestatījumi" })).toBeVisible();
+  // Applied once per campaign: on a database that has run this before, nothing is left to apply.
+  const tune = page.getByRole("button", { name: "Piemērot iestatījumus Google kontā" });
+  if (await tune.isEnabled()) {
+    await tune.click();
+    await expect(page.locator("[data-outcome=ok]")).toContainText("Iestatījumi piemēroti:");
+  }
+  await expect(page.locator("[data-untuned]")).toHaveAttribute("data-untuned", "0");
   await expect(page.locator('[data-campaign="Search · Ledusskapji un saldētavas"]')).toBeVisible();
   // Google's "Ad strength": every ad group gets a fresh template ad, the old one is paused.
   await page.getByRole("button", { name: "Atjaunot reklāmu tekstus" }).click();

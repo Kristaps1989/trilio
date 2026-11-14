@@ -26,6 +26,16 @@ export type AdsChange =
   | { op: "set_campaign_status"; campaign: string; status: "enabled" | "paused" }
   | { op: "upload_image"; name: string; pngBase64: string }
   | {
+      /**
+       * A Search campaign's best-practice settings: people in the country only (not those merely
+       * interested in it), every language spoken there, and sitelinks and callouts under the ad.
+       */
+      op: "tune_search";
+      campaign: string;
+      sitelinks: { text: string; description1: string; description2: string; finalUrl: string }[];
+      callouts: string[];
+    }
+  | {
       op: "create_pmax";
       name: string;
       budgetCents: number;

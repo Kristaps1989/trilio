@@ -277,3 +277,50 @@ export function buildCampaignPlan(
   for (const c of campaigns) c.budgetCents = split[c.name] ?? 0;
   return campaigns;
 }
+
+/* ---------- extensions every Search campaign carries (owner, 14 Nov 2026) ---------- */
+
+/** Google's limits: a sitelink's text is at most 25 characters, each description line 35. */
+export const SITELINK_LIMITS = { text: 25, description: 35, callout: 25 } as const;
+
+export type Sitelink = { text: string; description1: string; description2: string; path: string };
+
+/**
+ * Four sitelinks and four callouts for every Search campaign: Google shows them under the ad,
+ * which makes it larger and lifts its click rate. Each sitelink leads to a different page.
+ */
+export function searchExtensions(): { sitelinks: Sitelink[]; callouts: string[] } {
+  const sitelinks: Sitelink[] = [
+    {
+      text: "Ledusskapji",
+      description1: "3 piemērotākie varianti",
+      description2: "Cenas partneru veikalos",
+      path: "/izvelies/cool",
+    },
+    {
+      text: "Veļas mašīnas",
+      description1: "Atbildi uz dažiem jautājumiem",
+      description2: "Redzi, kāpēc tieši šie",
+      path: "/izvelies/laundry",
+    },
+    {
+      text: "Pārbaudi savu modeli",
+      description1: "Ievadi modeli vai veikala saiti",
+      description2: "Salīdzini cenu veikalos",
+      path: "/modelis",
+    },
+    {
+      text: "Kā mēs izvēlamies",
+      description1: "Kā izvēlamies un ranžējam",
+      description2: "Secību nenosaka komisija",
+      path: "/par-trilio",
+    },
+  ];
+  const callouts = [
+    "Bez konta un bez maksas",
+    "Pajautā zemāku cenu",
+    "Secību nenosaka komisija",
+    "Cenas partneru veikalos",
+  ];
+  return { sitelinks, callouts };
+}

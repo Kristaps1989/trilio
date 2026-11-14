@@ -231,6 +231,8 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
               advertisingChannelType: "SEARCH",
               campaignBudget: budget,
               targetSpend: { cpcBidCeilingMicros: micros(change.cpcCapCents) },
+              // People who are in Latvia, not people elsewhere who show interest in it.
+              geoTargetTypeSetting: { positiveGeoTargetType: "PRESENCE" },
               networkSettings: {
                 targetGoogleSearch: true,
                 targetSearchNetwork: false,
@@ -247,6 +249,51 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
           ...(t.language ? [{ create: { campaign, language: { languageConstant: t.language } } }] : []),
         ]);
         return { ok: true, id: campaign, budget };
+      }
+      case "tune_search": {
+        await mutate("campaigns", [
+          {
+            update: {
+              resourceName: change.campaign,
+              geoTargetTypeSetting: { positiveGeoTargetType: "PRESENCE" },
+            },
+            updateMask: "geo_target_type_setting.positive_geo_target_type",
+          },
+        ]);
+        // Latvian keywords are searched from browsers set to Russian or English too.
+        const langs = await search(
+          "SELECT language_constant.resource_name FROM language_constant WHERE language_constant.code IN ('ru', 'en')",
+        );
+        for (const l of langs) {
+          const languageConstant = String(l.languageConstant?.resourceName ?? "");
+          if (!languageConstant) continue;
+          // Already there on a second run: Google refuses the duplicate, which is fine.
+          await mutate("campaignCriteria", [
+            { create: { campaign: change.campaign, language: { languageConstant } } },
+          ]).catch(() => undefined);
+        }
+        const link = async (asset: string, fieldType: "SITELINK" | "CALLOUT") =>
+          mutate("campaignAssets", [{ create: { campaign: change.campaign, asset, fieldType } }]);
+        for (const s of change.sitelinks) {
+          const asset = await mutate("assets", [
+            {
+              create: {
+                sitelinkAsset: {
+                  linkText: s.text,
+                  description1: s.description1,
+                  description2: s.description2,
+                },
+                finalUrls: [s.finalUrl],
+              },
+            },
+          ]);
+          await link(asset, "SITELINK");
+        }
+        for (const text of change.callouts) {
+          const asset = await mutate("assets", [{ create: { calloutAsset: { calloutText: text } } }]);
+          await link(asset, "CALLOUT");
+        }
+        return { ok: true, id: change.campaign };
       }
       case "create_ad_group":
         return {

@@ -6,7 +6,15 @@ import { catalog } from "@/domain/questions/catalog";
 import { costPerConversion, pacedBudget, splitBudget, weightedConversions } from "./budget";
 import { checkProposal, MAX_CHANGES_PER_DAY, type AccountState } from "./guardrails";
 import { lintAd, lintAdText } from "./honesty";
-import { buildCampaignPlan, competitorAd, displayPaths, pathSlug, templateAd } from "./plan";
+import {
+  buildCampaignPlan,
+  competitorAd,
+  displayPaths,
+  pathSlug,
+  searchExtensions,
+  SITELINK_LIMITS,
+  templateAd,
+} from "./plan";
 
 describe("honesty lint", () => {
   it("blocks urgency, discounts, guarantees, superlatives, shouting and numbers not in the data", () => {
@@ -68,6 +76,24 @@ describe("campaign plan", () => {
     // With Google's own click id (auto-tagging) and without it.
     expect(landingChannel({ ...adParams(tags)!, gclid: "Cj0KCQbrandclick" })).toBe("google_brand");
     expect(landingChannel(adParams(tags)!)).toBe("google_brand");
+  });
+  it("has four sitelinks and four callouts within Google's limits, honest, each to its own page", () => {
+    const { sitelinks, callouts } = searchExtensions();
+    expect(sitelinks).toHaveLength(4);
+    expect(callouts).toHaveLength(4);
+    expect(new Set(sitelinks.map((s) => s.path)).size).toBe(4);
+    for (const s of sitelinks) {
+      expect(s.text.length).toBeLessThanOrEqual(SITELINK_LIMITS.text);
+      expect(s.description1.length).toBeLessThanOrEqual(SITELINK_LIMITS.description);
+      expect(s.description2.length).toBeLessThanOrEqual(SITELINK_LIMITS.description);
+      expect(s.path).toMatch(/^\/[a-z/-]+$/);
+    }
+    for (const c of callouts) expect(c.length).toBeLessThanOrEqual(SITELINK_LIMITS.callout);
+    // Every line passes the honesty lint on its own (no banned phrases, no invented numbers).
+    for (const line of [...sitelinks.map((s) => s.text), ...callouts])
+      expect(lintAdText(line, "headline")).toEqual([]);
+    for (const line of sitelinks.flatMap((s) => [s.description1, s.description2]))
+      expect(lintAdText(line, "description")).toEqual([]);
   });
   it("bids on the comparison sites' names, which never appear in the ad", () => {
     const rivals = plan.find((c) => c.groupId === "competitors")!;

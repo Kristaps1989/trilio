@@ -15,6 +15,7 @@ import {
   send,
   setCampaignsStatus,
   syncAccount,
+  tuneSearchCampaigns,
   updateSettings,
 } from "@/services/ads/account";
 import { approveCreative, createCreatives, createPmax, writeCopy } from "@/services/ads/creatives";
@@ -127,6 +128,14 @@ export async function refreshAdsAction(): Promise<void> {
   const r = await refreshAds(db, provider());
   await log(a, "ads.refresh", "ads", r);
   back("/admin/reklama/kampanas", { refreshed: `${r.created}/${r.paused}/${r.failed}` });
+}
+
+/** Reklāma → Kampaņas: presence-only targeting, more languages, sitelinks and callouts on every Search campaign. */
+export async function tuneSearchAction(): Promise<void> {
+  const a = await admin();
+  const r = await tuneSearchCampaigns(db, provider());
+  await log(a, "ads.tune_search", "campaigns", r);
+  back("/admin/reklama/kampanas", { tuned: `${r.tuned}/${r.failed}` });
 }
 
 export async function setCampaignStatusAction(formData: FormData): Promise<void> {
