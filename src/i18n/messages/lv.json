@@ -313,7 +313,9 @@
     "glossaryLabel": "Kas tas ir?",
     "trilioCanOffer": "Spied „Iegūt lētāk”: sazināsimies ar izplatītāju un uzrakstīsim, ja varēsim piedāvāt zemāku cenu nekā veikali.",
     "notifySearchTitle": "Paziņot, kad šajā meklējumā parādīsies lētāks variants?",
-    "notifySearchSub": "Viens e-pasts, ne biežāk kā reizi dienā."
+    "notifySearchSub": "Viens e-pasts, ne biežāk kā reizi dienā.",
+    "typicalNote": "Trīs varianti līdz {price}: tik vai mazāk maksā puse atbilstošo preču.",
+    "typicalRefine": "Atbildi uz dažiem jautājumiem, lai atlasītu tieši tev"
   },
   "waitlist": {
     "outOfScope": "Pagaidām palīdzam izvēlēties tikai sadzīves tehniku",

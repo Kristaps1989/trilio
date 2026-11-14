@@ -313,7 +313,9 @@
     "glossaryLabel": "What is it?",
     "trilioCanOffer": "Tap “Get it cheaper”: we'll contact the distributor and write if we can offer a lower price than the shops.",
     "notifySearchTitle": "Want to hear when a cheaper option appears in this search?",
-    "notifySearchSub": "One e-mail, at most once a day."
+    "notifySearchSub": "One e-mail, at most once a day.",
+    "typicalNote": "Three options up to {price}: half of the matching products cost that or less.",
+    "typicalRefine": "Answer a few questions to pick for you"
   },
   "waitlist": {
     "outOfScope": "For now we only help choose home appliances",

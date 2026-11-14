@@ -109,8 +109,29 @@ run("ads pipeline", { timeout: 60_000 }, () => {
   it("refreshes every ad group's ad from the template and pauses the old one", async () => {
     const before = await db.select().from(adAds);
     expect(before.every((a) => a.status === "enabled")).toBe(true);
+    // An ad group synced earlier still points at the first question: the refresh moves it to results.
+    const [fridge] = await db
+      .select()
+      .from(adGroups)
+      .where(sql`${adGroups.subcategoryId} = 'fridge'`);
+    await db
+      .update(adGroups)
+      .set({ landingPath: "/izvelies/cool/fridge" })
+      .where(sql`${adGroups.id} = ${fridge!.id}`);
     const r = await refreshAds(db, provider);
     expect(r).toEqual({ created: before.length, paused: before.length, failed: 0 });
+    const [moved] = await db
+      .select()
+      .from(adGroups)
+      .where(sql`${adGroups.id} = ${fridge!.id}`);
+    expect(moved!.landingPath).toBe("/rezultati?sub=fridge&cena=tipiska");
+    const urls = await db
+      .select({ url: sql<string>`${adChanges.operation}->>'finalUrl'` })
+      .from(adChanges)
+      .where(
+        sql`${adChanges.operation}->>'op' = 'create_ad' and ${adChanges.operation}->>'adGroup' = ${fridge!.googleId}`,
+      );
+    expect(urls.at(-1)!.url).toMatch(/\/rezultati\?sub=fridge&cena=tipiska$/);
     const after = await db.select().from(adAds);
     expect(
       after
