@@ -1632,7 +1632,17 @@
     "signer": "Your request is handled by {name} at Trilio.",
     "how": "How does it work?",
     "sendRequest": "Send request",
-    "upToShort": "up to −{amount}"
+    "upToShort": "up to −{amount}",
+    "trust": "If we can offer a lower price, the seller is Trilio: 2-year warranty, 14-day right of withdrawal, delivery across Latvia. We use your e-mail only for this request and price alerts.",
+    "trustTerms": "Purchase terms",
+    "why": {
+      "title": "What held you back?",
+      "slow": "I need it sooner than 2 working days",
+      "trust": "Not clear who sells it",
+      "small": "The saving is too small",
+      "later": "Just looking for now",
+      "thanks": "Thanks, noted."
+    }
   },
   "about": {
     "title": "About Trilio",

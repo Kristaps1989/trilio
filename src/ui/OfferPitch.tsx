@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { OFFER_DISCOUNT_UP_TO_PCT, maxOfferSavingCents } from "@/domain/offers/discount";
 import { formatEur } from "@/i18n/format";
 import type { UiLocale } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 
 // What leaving an e-mail is worth, where Trilio sources (docs/PRICE_NOTIFY_PLAN.md
 // §8.7): the lime "līdz −10 %" strip with the saving in euro for this product,
@@ -92,6 +93,22 @@ export function AskPromise({ signer, proof }: { signer?: string | null; proof?: 
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Who sells and on what terms, and what the e-mail is for (panel, 14 Nov 2026: the most common
+ * reason not to send was not knowing this). Says only what the purchase terms promise.
+ */
+export function AskTrust() {
+  const t = useTranslations("ask");
+  return (
+    <p className="text-[14px] leading-snug text-muted" data-ask-trust>
+      {t("trust")}{" "}
+      <Link href="/pirkuma-noteikumi" className="font-semibold underline underline-offset-2">
+        {t("trustTerms")}
+      </Link>
+    </p>
   );
 }
 

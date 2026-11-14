@@ -185,7 +185,7 @@ test.describe("Meta Pixel", () => {
     const email = `meta-lead-${test.info().project.name}-${Date.now()}@example.invalid`;
     await page.goto("/");
     await banner(page).getByRole("button", { name: "Atļaut", exact: true }).click();
-    await page.goto(`/ienakt?callbackUrl=${encodeURIComponent("/rezultati?sub=blender")}`);
+    await page.goto(`/ienakt?callbackUrl=${encodeURIComponent("/rezultati?sub=freezer")}`);
     await page.getByLabel("E-pasts").last().fill(email);
     await page.getByRole("button", { name: "Ienākt bez paroles" }).click();
     await page.waitForURL((u) => !u.pathname.startsWith("/ienakt"));

@@ -51,6 +51,12 @@ async function confirmationLink(page: Page, email: string): Promise<string> {
   return link;
 }
 
+/** Results where every product costs 200 € or more, so the card's button is the request for a lower price. */
+async function requestResults(page: Page) {
+  await page.goto("/rezultati?sub=washer");
+  await expect(picks(page).first()).toBeVisible();
+}
+
 async function kettleResults(page: Page) {
   await page.goto("/izvelies/kitchensmall/kettle");
   await page.getByRole("button", { name: "Tālāk", exact: true }).click();
@@ -96,7 +102,7 @@ test("signed out: one e-mail field on the card starts it; the receipt can unsubs
     ),
   ).toBeVisible();
 
-  await kettleResults(page);
+  await requestResults(page);
   const url = page.url();
   const first = picks(page).first();
   const name = (await first.getAttribute("aria-label")) ?? "";
@@ -176,12 +182,13 @@ test("signed out: one e-mail field on the card starts it; the receipt can unsubs
   await expect(page.getByRole("status")).toHaveText(/vairs nav derīga|Pajautāts/);
 });
 
-test("fridges: Trilio's own offer is promised, and one yes on the card covers both e-mails", async ({
+test("from 200 €: Trilio's own offer is promised, and one yes on the card covers both e-mails", async ({
   page,
 }) => {
   const email = `e2e-fridge-${Date.now()}@example.invalid`;
   await devLogin(page, email, "/");
-  await fridgeResults(page);
+  // Washing machines: every one costs 200 € or more, so each card asks for a lower price.
+  await requestResults(page);
   await expect(page.locator("[data-trilio-offer]")).toHaveText(
     "Spied „Iegūt lētāk”: sazināsimies ar izplatītāju un uzrakstīsim, ja varēsim piedāvāt zemāku cenu nekā veikali.",
   );
@@ -235,7 +242,7 @@ test("Turpināt ar Google: one tap, back on the same results, that product reque
   // (requestWithGoogleAction), so one project runs it: two in parallel would share that account.
   test.skip(test.info().project.name !== "mobile-360", "one shared test account");
   const email = "google-e2e@example.invalid";
-  await kettleResults(page);
+  await requestResults(page);
   const url = page.url();
   const card = picks(page).nth(1);
   const productId = ((await card.getAttribute("id")) ?? "").replace(/^p-/, "");
@@ -267,7 +274,7 @@ test("the question before the shop: one sheet on the first shop click, two equal
 }) => {
   test.slow(); // a server action, a mail, an axe scan and a second tab
   const email = `e2e-ask-${Date.now()}@example.invalid`;
-  await kettleResults(page);
+  await requestResults(page);
   const url = page.url();
   const first = picks(page).first();
   const buy = first.getByRole("link", { name: /^Pirkt — / });
@@ -351,6 +358,8 @@ test("wishlist: save a search and a product, see today's offer, remove, switch p
   await search.getByRole("button", { name: "Paziņot par lētāku variantu" }).click();
   await expect(search.getByRole("button", { name: "Paziņosim par lētāku variantu" })).toBeVisible();
   await expect(search.locator("[data-notify-panel]")).toHaveCount(0);
+  // The product: a washing machine, where the button is the request (a kettle gets the price alert).
+  await requestResults(page);
   const product = picks(page).first();
   const productName = (await product.getAttribute("aria-label")) ?? "";
   await product.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
@@ -486,7 +495,7 @@ test("after signing in, one question asks about offers; a no is remembered, and 
   await expect(offers).not.toBeChecked();
 
   // Pressing „Iegūt lētāk” is asking for a lower price: the sentence shows again, and its yes turns offers on.
-  await kettleResults(page);
+  await requestResults(page);
   const first = picks(page).first();
   await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
   const panel = first.getByRole("group", { name: `Sūtīt piedāvājumu uz ${email}?` });

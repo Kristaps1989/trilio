@@ -11,7 +11,7 @@ import {
   visitStats,
 } from "@/services/admin/stats";
 import { flightOverlap, householdSummary, tvPixelReport, tvReport, tvStats } from "@/services/growth/tv";
-import { notifyFunnel } from "@/services/notify/events";
+import { notifyFunnel, askWhyCounts } from "@/services/notify/events";
 import { botStats, clientStats } from "@/services/visits/visits";
 
 // Read-only statistics for the owner's assistant (owner, 8 Nov 2026: "all TV
@@ -115,6 +115,7 @@ export async function siteStatsJson(db: Db, rawPeriod: string | null, now = new 
       notifyFunnel(db, p.from, p.to),
       confidenceStats(db, p.from, p.to),
     ]);
+  const askWhy = await askWhyCounts(db, p.from, p.to);
   return {
     period: { key: p.key, from: p.from, to: p.to, previous: { from: p.prevFrom, to: p.prevTo } },
     visitors: visits.total.visitors,
@@ -138,6 +139,8 @@ export async function siteStatsJson(db: Db, rawPeriod: string | null, now = new 
       filteredBots: bots,
     },
     notifyFunnel: funnel,
+    // "Kas atturēja?": visitors per reason given after closing the request unsent.
+    askWhy,
     confidence: { ...confidence, notes: undefined },
   };
 }

@@ -79,3 +79,35 @@ date or place. Nothing is shown until there is a saving of at least 1 €.
 
 Two weeks after the deploy, with the bot filter in place (docs/CLICK_QUALITY_PLAN.md): results views →
 sheet opened → e-mail sent → confirmed, in Statistika's „Ceļš līdz paziņojumam”.
+
+## 9. The request form after the panel (14 Nov 2026)
+
+Evidence: in 30 days 271 people saw results, 28 tapped "Iegūt lētāk", 25 saw the
+form and 2 sent it; 6 went to the shop from the form. A simulated panel of 100
+shoppers (built from Latvian demographics and Trilio's traffic mix, walked
+through the live screens) gave the reasons; it is a source of reasons, not of
+rates, since it was about four times more willing than real visitors.
+
+What changed:
+
+1. **The field first.** After the tap the card shows the saving, then the
+   e-mail field at once; the promise, the proof and the steps follow it. The
+   form scrolls into view, clear of the cookie bar.
+2. **Who sells.** One line under the form: the seller is Trilio, 2-year
+   warranty, 14-day withdrawal, delivery across Latvia, and what the e-mail is
+   used for, with a link to the purchase terms. It states only what
+   `/pirkuma-noteikumi` promises; change both together.
+3. **Under 200 € the button is the price alert** (`worthAsking`,
+   `OFFER_ASK_MIN_PRICE_CENTS`): at most 10 % of a kettle is not worth a
+   request, and nobody asked for one. The consent stored for such a product is
+   the plain price-alert text, on the card, the question before the shop, the
+   wishlist and the server alike. The line above the picks shows only when a
+   pick asks.
+4. **"Kas atturēja no pieprasījuma?"** One optional question when the form is
+   closed unsent, once per card, four answers (needs it sooner, unclear who
+   sells, saving too small, only looking). Stored as `ask_why_<reason>` in
+   `ui_events` with the day's anonymous visitor hash; shown in Admin →
+   Statistika and in `/api/stats/site` (`askWhy`).
+
+Not done, owner's decisions: a faster answer than two working days (the most
+common reason among urgent buyers), and one request for a whole shortlist.

@@ -18,7 +18,14 @@ export const NOTIFY_EVENTS = [
   "ask_shown",
   "ask_shop",
 ] as const;
-export type NotifyEvent = (typeof NOTIFY_EVENTS)[number];
+/**
+ * "Kas atturēja?" (14 Nov 2026): the reasons a shopper can give after closing the request
+ * unsent. Stored as the event "ask_why_<reason>".
+ */
+export const WHY_REASONS = ["slow", "trust", "small", "later"] as const;
+export type WhyReason = (typeof WHY_REASONS)[number];
+
+export type NotifyEvent = (typeof NOTIFY_EVENTS)[number] | `ask_why_${WhyReason}`;
 
 export type Who = {
   ip: string;
@@ -139,6 +146,31 @@ export async function notifyFunnel(db: Db, from: string, to: string): Promise<Fu
   return [...rows.values()].sort(
     (a, b) => b.resultsVisitors - a.resultsVisitors || a.subcategoryId.localeCompare(b.subcategoryId),
   );
+}
+
+/** How many visitors gave each reason for not sending the request, between two Riga days. */
+export async function askWhyCounts(db: Db, from: string, to: string): Promise<Record<WhyReason, number>> {
+  const rows = await db
+    .select({
+      event: uiEvents.event,
+      n: sql<number>`count(distinct ${uiEvents.visitorHash} || ${uiEvents.day})::int`,
+    })
+    .from(uiEvents)
+    .where(
+      and(
+        gte(uiEvents.day, from),
+        lte(uiEvents.day, to),
+        sql`${uiEvents.event} like 'ask_why_%'`,
+        cleanVisitor(uiEvents.day, uiEvents.visitorHash),
+      ),
+    )
+    .groupBy(uiEvents.event);
+  const out: Record<WhyReason, number> = { slow: 0, trust: 0, small: 0, later: 0 };
+  for (const r of rows) {
+    const k = r.event.slice("ask_why_".length) as WhyReason;
+    if (k in out) out[k] = Number(r.n);
+  }
+  return out;
 }
 
 export const UI_EVENT_RETENTION_DAYS = 90;

@@ -1,14 +1,15 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { askWhyAction } from "@/app/[locale]/velmju-saraksts/actions";
 import type { SaveTarget } from "@/app/[locale]/velmju-saraksts/save";
 import { buttonClass } from "./Button";
 import { NotifyPanel } from "./NotifyPanel";
 import { maxOfferSavingCents } from "@/domain/offers/discount";
 import { formatEur } from "@/i18n/format";
 import type { UiLocale } from "@/i18n/routing";
-import { AskPromise, HowItWorks, OfferPitch } from "./OfferPitch";
+import { AskPromise, AskTrust, HowItWorks, OfferPitch } from "./OfferPitch";
 import { SavedAlertNote } from "./SavedAlertNote";
 import { useRequest } from "./useRequest";
 
@@ -88,6 +89,24 @@ export function SaveButton({
   const { saved, pending, note, panel, run, closePanel } = useRequest(target, initial, variant !== "icon");
   const search = target.kind === "search";
   const savingId = useId();
+  const request = offers && !search && variant !== "icon";
+  // The form opens under the button: bring it into view, clear of the cookie bar, so the
+  // e-mail field is seen without scrolling (panel, 14 Nov 2026: some took the tap for a dud).
+  const formRef = useRef<HTMLDivElement>(null);
+  const open = !!panel;
+  useEffect(() => {
+    if (open) formRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [open]);
+  // Closed unsent: one optional question, asked once per card.
+  const [why, setWhy] = useState<"ask" | "done" | null>(null);
+  const closeUnsent = () => {
+    closePanel();
+    if (request && !saved && why === null) setWhy("ask");
+  };
+  const answerWhy = (reason: string) => {
+    setWhy("done");
+    void askWhyAction(target, reason);
+  };
   const showSaving =
     variant === "card" &&
     offers &&
@@ -114,7 +133,7 @@ export function SaveButton({
       aria-expanded={panel ? true : undefined}
       aria-describedby={showSaving ? savingId : undefined}
       disabled={pending}
-      onClick={() => (panel ? closePanel() : run(!saved))}
+      onClick={() => (panel ? closeUnsent() : run(!saved))}
       className={`${className} ${saved && variant !== "card" ? "text-lime" : ""}`}
       data-notify-button
     >
@@ -135,24 +154,70 @@ export function SaveButton({
       ) : null}
     </button>
   );
-  if (!panel && !(note && saved)) return button;
+  const whyBlock =
+    why && !panel && !saved ? (
+      why === "done" ? (
+        <p role="status" className="text-[14px] text-muted" data-ask-why="done">
+          {ta("why.thanks")}
+        </p>
+      ) : (
+        <div
+          role="group"
+          aria-labelledby={`${savingId}-why`}
+          className="flex flex-col gap-2 text-night"
+          data-ask-why="ask"
+        >
+          <p id={`${savingId}-why`} className="text-[14px] font-semibold">
+            {ta("why.title")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(["slow", "trust", "small", "later"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => answerWhy(k)}
+                className={buttonClass({ variant: "card", size: "sm" })}
+                data-ask-why-option={k}
+              >
+                {ta(`why.${k}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    ) : null;
+  if (!panel && !(note && saved))
+    return whyBlock ? (
+      <div className="flex w-full flex-col gap-2">
+        {button}
+        {whyBlock}
+      </div>
+    ) : (
+      button
+    );
   return (
     <div className="flex w-full flex-col gap-2">
       {button}
       {panel ? (
         // Where Trilio sources, the same screen as the question before the shop (owner, 4 Nov 2026): the discount and the steps first.
-        offers && !search && variant !== "icon" ? (
-          <div className="flex flex-col gap-3 text-night" data-offer-pitch>
+        request ? (
+          <div
+            ref={formRef}
+            className="flex scroll-mt-24 scroll-mb-[calc(var(--consent-bar-h,0px)+16px)] flex-col gap-3 text-night"
+            data-offer-pitch
+          >
             <OfferPitch priceCents={priceCents} steps={false} />
-            <AskPromise signer={signer} proof={proof} />
+            {/* The field straight after the saving; who sells and the promise follow it. */}
             <NotifyPanel
               target={target}
               email={panel.email}
               offers
               onConsent={() => run(true, true)}
-              onClose={closePanel}
+              onClose={closeUnsent}
               compact={!panel.email}
             />
+            <AskPromise signer={signer} proof={proof} />
+            <AskTrust />
             <HowItWorks />
           </div>
         ) : (

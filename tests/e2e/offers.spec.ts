@@ -74,10 +74,16 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
 
   await test.step("the shopper asks to hear about a kettle; the one yes covers Trilio's offers", async () => {
     await devLogin(page, shopper, "/");
-    await page.goto("/izvelies/kitchensmall/kettle");
-    await page.getByRole("button", { name: "Tālāk", exact: true }).click();
-    await page.getByRole("button", { name: "Budžets nav noteikts" }).click();
-    const first = page.getByRole("region", { name: "Ieteiktie varianti" }).getByRole("article").first();
+    // A coffee machine of 200 € or more: there the card's button is the request for a lower price,
+    // and it is a parcel, as the checkout below expects.
+    await page.goto("/rezultati?sub=coffee");
+    const askable = page
+      .getByRole("region", { name: "Ieteiktie varianti" })
+      .getByRole("article")
+      .filter({ has: page.getByRole("button", { name: "Iegūt lētāk", exact: true }) })
+      .first();
+    // Pinned by its id: the button's label changes once the request is sent.
+    const first = page.locator(`[id="${await askable.getAttribute("id")}"]`);
     product = (await first.getAttribute("aria-label")) ?? "";
     await first.getByRole("button", { name: "Iegūt lētāk", exact: true }).click();
     // One yes on the card covers price e-mails and Trilio's own offers.
