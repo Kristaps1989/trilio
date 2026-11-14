@@ -94,3 +94,15 @@ The 59 pages with fewer than three picks are a catalogue question, not an SEO on
   the lower-price request), so the indexed text matches the product.
 - `/llms.txt` describes the lower-price request, the 90-day price watch and
   the About page, and says "Latvia", not "the Baltics".
+
+## "Best … <year>" searches (14 Nov 2026)
+
+- Every category has a page for this search: `/kategorija/<sub>`, titled
+  "Labākie ledusskapji 2026: cenas un salīdzinājums". Its heading now carries
+  the year too ("Labākie ledusskapji 2026"); the year is always the current
+  one, since the picks are today's.
+- The page has a "Kā izvēlēties: kas ir svarīgākais" section from the
+  category's own knowledge (`data/knowledge.json`, `decides[].why`), for
+  "how to choose" searches. Categories without reviewed knowledge have none.
+- Search volume for these Latvian queries is not known: no keyword tool is
+  connected, and Search Console has no data yet.

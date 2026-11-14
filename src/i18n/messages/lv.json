@@ -756,6 +756,8 @@
   },
   "landing": {
     "title": "{gender, select, f {Labākās} other {Labākie}} {category}",
+    "h1": "{gender, select, f {Labākās} other {Labākie}} {category} {year}",
+    "chooseTitle": "Kā izvēlēties: kas ir svarīgākais",
     "titleBudget": "{gender, select, f {Labākās} other {Labākie}} {category} līdz {budget}",
     "metaTitle": "{gender, select, f {Labākās} other {Labākie}} {category} {year}: cenas un salīdzinājums",
     "metaTitleBudget": "{gender, select, f {Labākās} other {Labākie}} {category} līdz {budget} ({year})",
@@ -2108,6 +2110,28 @@
           "negatives": "Izslēgti meklējumi par remontu, rezerves daļām, instrukcijām, darbu, nomu un lietotām precēm.",
           "bidding": "Solīšana „pēc iespējas vairāk klikšķu” ar cenas griestiem, kamēr rezultātu vēl ir par maz automātiskai solīšanai pēc rezultātiem."
         },
+        "daily": "Dienas budžets kopā, €",
+        "saveDaily": "Saglabāt budžetu",
+        "applyAll": "{count, plural, =0 {Ieteikums jau piemērots} one {Piemērot ieteikumu # kampaņai} other {Piemērot ieteikumu # kampaņām}}",
+        "running": "Ieslēgta",
+        "applyBudget": "Piemērot budžetu",
+        "sendFirst": "Vispirms nosūti uz Google",
+        "applied": "Ieslēgtas: {enabled}, izlaistas: {skipped}.",
+        "dailySaved": "Dienas budžets saglabāts. Ieteikums pārrēķināts.",
+        "budgetSaved": "Kampaņas budžets saglabāts.",
+        "budgetOf": "Budžets dienā: {name}",
+        "saveBudget": "Saglabāt",
+        "err": {
+          "daily": "Dienas budžetam jābūt no 1 līdz 500 €.",
+          "campaign": "Kampaņas budžetam jābūt no 0,50 līdz 200 € dienā.",
+          "google": "Google budžetu nepieņēma. Skaties „Priekšlikumi” vēsturē, kāpēc."
+        },
+        "linksTitle": "Papildu saites katrai kampaņai",
+        "links": "Papildu saites",
+        "linksStatus": "Google kontā",
+        "linksOn": "piemērotas {date}",
+        "linksOff": "vēl nav piemērotas",
+        "linksNote": "Katrai kampaņai vispirms ir saites uz tās pašas kategorijas „labāko” lapām, tad vispārīgās. Saites un īsie teksti tiek nosūtīti uz Google vienreiz, ar pogu zemāk; pēc tam tos var labot Google Ads kontā.",
         "tune": "Piemērot iestatījumus Google kontā",
         "tuneHint": "{count, plural, =0 {Visām kampaņām iestatījumi jau piemēroti.} one {# kampaņai vēl jāpiemēro: tikai Latvijā esošie, papildu valodas, papildu saites un īsie teksti.} other {# kampaņām vēl jāpiemēro: tikai Latvijā esošie, papildu valodas, papildu saites un īsie teksti.}}",
         "tuned": "Iestatījumi piemēroti: {tuned}, neizdevās: {failed}."

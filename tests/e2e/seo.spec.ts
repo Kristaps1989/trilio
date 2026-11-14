@@ -7,7 +7,14 @@ test("category landing page renders three ranked cards with structured data and 
   page,
 }) => {
   await page.goto("/kategorija/fridge");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākie ledusskapji");
+  // The heading carries the current year, as people search ("labākie ledusskapji 2026").
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    `Labākie ledusskapji ${new Date().getFullYear()}`,
+  );
+  // What matters when choosing, from the category's own knowledge (data/knowledge.json).
+  const choose = page.locator("[data-landing-choose]");
+  await expect(choose.getByRole("heading", { name: "Kā izvēlēties: kas ir svarīgākais" })).toBeVisible();
+  expect(await choose.getByRole("listitem").count()).toBeGreaterThanOrEqual(3);
   await expect(page.getByRole("article")).toHaveCount(3);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/kategorija\/fridge$/);
   const ldBlocks = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -97,7 +104,9 @@ test("no-budget landing stays in the usual price range, agrees in gender and lin
   page,
 }) => {
   await page.goto("/kategorija/freezer");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Labākās saldētavas");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    `Labākās saldētavas ${new Date().getFullYear()}`,
+  );
   await expect(page).toHaveTitle(/^Labākās saldētavas \d{4}: cenas un salīdzinājums · Trilio$/);
   const lead = await page.getByText(/populārākajā cenu klasē līdz/).textContent();
   const max = Number(/līdz ([\d\s ]+)\s€/.exec(lead ?? "")![1]!.replace(/\D/g, "")) * 100;

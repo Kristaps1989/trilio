@@ -27,6 +27,8 @@ import {
   getSettings,
   ACCOUNT_ENTITY,
   paceBudgets,
+  setCampaignBudget,
+  tuneSearchCampaigns,
   setCampaignsStatus,
   syncReports,
   syncAccount,
@@ -35,6 +37,7 @@ import {
   conversionsByDay,
 } from "./account";
 import { adsOverview } from "./overview";
+import { applyRecommendation, campaignPriorities } from "./priorities";
 import { approveCreative, createCreatives, createPmax, templateCopy, writeCopy } from "./creatives";
 import type { AdsProvider } from "./provider";
 import type { Proposal } from "@/domain/ads/guardrails";
@@ -384,6 +387,49 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     const paced = await paceBudgets(db, provider);
     expect(paced.cents).toBeGreaterThan(0);
     await updateSettings(db, { targetCostCents: null });
+    await setCampaignsStatus(db, provider, "paused");
+  });
+
+  it("applies the recommendation: suggested budgets, the recommended campaigns on, the rest untouched", async () => {
+    await setCampaignsStatus(db, provider, "paused");
+    await updateSettings(db, { dailyBudgetCents: 500 });
+    const before = await campaignPriorities(db);
+    const now = before.recommendations.filter((r) => r.tier === "now");
+    // 5 € a day feeds the brand campaign (1 €) and two categories (2 € each).
+    expect(now.map((r) => r.budgetCents)).toEqual([100, 200, 200]);
+    expect(now[0]!.reason).toBe("brand");
+    expect(before.recommendations.find((r) => r.facts.kind === "pmax")?.tier ?? "wait").toBe("wait");
+
+    // One campaign from its own button, then the rest.
+    expect(await applyRecommendation(db, provider, now[1]!.id)).toEqual({ enabled: 1, skipped: 0 });
+    expect(await applyRecommendation(db, provider)).toEqual({ enabled: 3, skipped: 0 });
+    const rows = await db.select().from(adCampaigns);
+    const on = rows.filter((c) => c.status === "enabled");
+    expect(on.map((c) => c.id).sort()).toEqual(now.map((r) => r.id).sort());
+    expect(on.reduce((n, c) => n + c.budgetCents, 0)).toBe(500);
+
+    // A budget set by hand reaches Google and the record; a paused campaign takes no share of pacing.
+    const paused = rows.find((c) => c.status === "paused" && c.kind === "search")!;
+    expect(await setCampaignBudget(db, provider, paused.id, 300)).toEqual({ ok: true });
+    await paceBudgets(db, provider);
+    const after = await db.select().from(adCampaigns);
+    expect(after.find((c) => c.id === paused.id)!.budgetCents).toBe(300);
+    expect(await setCampaignBudget(db, provider, "00000000-0000-0000-0000-000000000000", 300)).toEqual({
+      ok: false,
+      error: "not_found",
+    });
+
+    // The best-practice settings go to each synced Search campaign once.
+    const first = await tuneSearchCampaigns(db, provider);
+    expect(first.failed).toBe(0);
+    expect(first.tuned).toBe(after.filter((c) => c.kind === "search" && c.googleId).length);
+    expect(await tuneSearchCampaigns(db, provider)).toEqual({ tuned: 0, failed: 0 });
+    const sent = await db
+      .select()
+      .from(adChanges)
+      .where(sql`${adChanges.operation}->>'op' = 'tune_search'`);
+    const cool = sent.find((c) => JSON.stringify(c.operation).includes("/kategorija/fridge"));
+    expect(JSON.stringify(cool?.operation)).toContain('"text":"Ledusskapji"');
     await setCampaignsStatus(db, provider, "paused");
   });
 

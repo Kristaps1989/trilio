@@ -316,11 +316,40 @@ export function searchExtensions(): { sitelinks: Sitelink[]; callouts: string[] 
       path: "/par-trilio",
     },
   ];
-  const callouts = [
-    "Bez konta un bez maksas",
-    "Pajautā zemāku cenu",
-    "Secību nenosaka komisija",
-    "Cenas partneru veikalos",
+  return { sitelinks, callouts: CALLOUTS };
+}
+
+const CALLOUTS = [
+  "Bez konta un bez maksas",
+  "Pajautā zemāku cenu",
+  "Secību nenosaka komisija",
+  "Cenas partneru veikalos",
+];
+
+/**
+ * The four sitelinks of one campaign: first its own categories' "best of" pages
+ * (/kategorija/<sub>, a different address from the ads' own landing pages, as Google
+ * asks), then the general ones until there are four. The brand and competitor campaigns
+ * have no categories and get the general four.
+ */
+export function campaignExtensions(
+  group: { subcategories: { id: string; label: string }[] } | null | undefined,
+): { sitelinks: Sitelink[]; callouts: string[] } {
+  const own: Sitelink[] = (group?.subcategories ?? [])
+    .filter((sub) => sub.label.length <= SITELINK_LIMITS.text)
+    .slice(0, 3)
+    .map((sub) => ({
+      text: sub.label,
+      description1: "3 piemērotākie varianti",
+      description2: "Cenas partneru veikalos",
+      path: `/kategorija/${sub.id}`,
+    }));
+  const seen = new Set(own.map((s) => s.text));
+  const general = searchExtensions().sitelinks.filter((s) => !seen.has(s.text));
+  // "Pārbaudi savu modeli" and "Kā mēs izvēlamies" before the other groups' links.
+  const ordered = [
+    ...general.filter((s) => !s.path.startsWith("/izvelies")),
+    ...general.filter((s) => s.path.startsWith("/izvelies")),
   ];
-  return { sitelinks, callouts };
+  return { sitelinks: [...own, ...ordered].slice(0, 4), callouts: CALLOUTS };
 }

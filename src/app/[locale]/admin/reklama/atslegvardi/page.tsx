@@ -52,7 +52,8 @@ export default async function AdsKeywords({ searchParams }: Props) {
     .groupBy(adSearchTerms.term, adGroups.name)
     // What is worth a negative first: irrelevant terms, then by spend.
     .orderBy(
-      desc(sql`max(${adSearchTerms.label}) = 'irrelevant'`),
+      // A term not labelled yet is NULL, which would sort ahead of everything.
+      desc(sql`coalesce(max(${adSearchTerms.label}) = 'irrelevant', false)`),
       desc(sql`sum(${adSearchTerms.costMicros})`),
     )
     .limit(100);

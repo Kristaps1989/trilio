@@ -7,7 +7,8 @@ import { BRAND_GROUP, COMPETITOR_GROUP } from "@/domain/ads/plan";
 import { trilioSources } from "@/domain/offers/sourcing";
 import { catalog } from "@/domain/questions/catalog";
 import { cleanVisitor } from "@/services/visits/suspects";
-import { conversionsByDay, dayOffset, getSettings } from "./account";
+import { conversionsByDay, dayOffset, getSettings, setCampaignBudget, setCampaignsStatus } from "./account";
+import type { AdsProvider } from "./provider";
 
 // Reklāma → Kampaņas: which campaigns to switch on first (src/domain/ads/priority.ts), from
 // Google's figures, what ad visitors did on Trilio, and what people search for on the site.
@@ -77,4 +78,35 @@ export async function campaignPriorities(db: Db, now = new Date()): Promise<Prio
     conversions30d,
     recommendations: recommend(facts, { dailyBudgetCents: settings.dailyBudgetCents, conversions30d }),
   };
+}
+
+/**
+ * Does what the recommendation says for the campaigns to switch on now (all of them, or one):
+ * sets the suggested daily budget, then enables the campaign. A campaign not yet in Google is
+ * skipped; it has to be sent there first.
+ */
+export async function applyRecommendation(
+  db: Db,
+  provider: AdsProvider,
+  campaignId?: string,
+): Promise<{ enabled: number; skipped: number }> {
+  const { recommendations } = await campaignPriorities(db);
+  const targets = recommendations.filter(
+    (r) => r.tier === "now" && (campaignId ? r.id === campaignId : true),
+  );
+  let enabled = 0;
+  let skipped = 0;
+  for (const r of targets) {
+    if (r.budgetCents !== null) {
+      const b = await setCampaignBudget(db, provider, r.id, r.budgetCents);
+      if (!b.ok) {
+        skipped++;
+        continue;
+      }
+    }
+    const n = r.facts.status === "enabled" ? 1 : await setCampaignsStatus(db, provider, "enabled", r.id);
+    if (n) enabled++;
+    else skipped++;
+  }
+  return { enabled, skipped };
 }

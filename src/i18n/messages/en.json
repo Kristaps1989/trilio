@@ -756,6 +756,8 @@
   },
   "landing": {
     "title": "The best {category}",
+    "h1": "The best {category} of {year}",
+    "chooseTitle": "How to choose: what matters most",
     "titleBudget": "The best {category} up to {budget}",
     "metaTitle": "The best {category} {year}: prices and comparison",
     "metaTitleBudget": "The best {category} up to {budget} ({year})",

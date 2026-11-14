@@ -13,11 +13,13 @@ import {
   paceBudgets,
   refreshAds,
   send,
+  setCampaignBudget,
   setCampaignsStatus,
   syncAccount,
   tuneSearchCampaigns,
   updateSettings,
 } from "@/services/ads/account";
+import { applyRecommendation } from "@/services/ads/priorities";
 import { approveCreative, createCreatives, createPmax, writeCopy } from "@/services/ads/creatives";
 import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { decideProposal } from "@/services/ads/optimiser";
@@ -136,6 +138,45 @@ export async function tuneSearchAction(): Promise<void> {
   const r = await tuneSearchCampaigns(db, provider());
   await log(a, "ads.tune_search", "campaigns", r);
   back("/admin/reklama/kampanas", { tuned: `${r.tuned}/${r.failed}` });
+}
+
+/** Reklāma → Kampaņas: "Ieslēgt tagad" on one recommended campaign, or on all of them, with the suggested budgets. */
+export async function applyRecommendationAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const id = formData.get("campaignId");
+  const campaignId = id ? z.string().uuid().parse(id) : undefined;
+  if ((await getSettings(db)).paused) back("/admin/reklama", { err: "paused" });
+  const r = await applyRecommendation(db, provider(), campaignId);
+  await log(a, "ads.recommendation.apply", campaignId ?? "all", r);
+  back("/admin/reklama/kampanas", { applied: `${r.enabled}/${r.skipped}` });
+}
+
+/** Reklāma → Kampaņas: the total daily budget the recommendation hands out. */
+export async function setDailyBudgetAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const parsed = cents.safeParse(String(formData.get("daily") ?? ""));
+  if (!parsed.success || parsed.data < 100 || parsed.data > 50_000)
+    back("/admin/reklama/kampanas", { berr: "daily" });
+  const settings = await getSettings(db);
+  await updateSettings(db, {
+    dailyBudgetCents: parsed.data!,
+    floorCents: Math.min(settings.floorCents, parsed.data!),
+  });
+  await log(a, "ads.budget.daily", "settings", { cents: parsed.data });
+  back("/admin/reklama/kampanas", { ok: "daily" });
+}
+
+/** Reklāma → Kampaņas: one campaign's daily budget, set in Google and here. */
+export async function setCampaignBudgetAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const campaignId = z.string().uuid().parse(formData.get("campaignId"));
+  const parsed = cents.safeParse(String(formData.get("budget") ?? ""));
+  if (!parsed.success || parsed.data < 50 || parsed.data > 20_000)
+    back("/admin/reklama/kampanas", { berr: "campaign" });
+  const r = await setCampaignBudget(db, adsProvider(), campaignId, parsed.data!);
+  await log(a, "ads.budget.campaign", campaignId, { cents: parsed.data, ok: r.ok });
+  if (!r.ok) back("/admin/reklama/kampanas", { berr: "google" });
+  back("/admin/reklama/kampanas", { ok: "budget" });
 }
 
 export async function setCampaignStatusAction(formData: FormData): Promise<void> {
