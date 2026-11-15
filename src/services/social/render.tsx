@@ -3,7 +3,7 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
 import { SAMPLE_PATH } from "@/domain/catalog/media";
-import type { PhoneScreen, PostCard } from "@/domain/social/captions";
+import type { PhoneScreen, PostCard, SocialTheme } from "@/domain/social/captions";
 import { TAGLINE } from "@/domain/social/captions";
 import { brandFonts, Drawing, LogoMark, Wordmark } from "@/services/ads/creatives";
 
@@ -47,6 +47,33 @@ const PAD = 84;
 const HEAD = "Space Grotesk";
 
 const bg = `linear-gradient(165deg, ${NIGHT_SOFT} 0%, ${NIGHT} 42%, ${NIGHT_DEEP} 100%)`;
+const PAPER = "#F2F4F1";
+
+/**
+ * The page's colours per theme (docs/SOCIAL_PLAN.md §14): night green as the posts began,
+ * lime and light from the owner's banners. `accent` is what a highlight is drawn in,
+ * `onAccent` the text on it.
+ */
+type Palette = { ground: string; ink: string; soft: string; accent: string; onAccent: string; rule: string };
+const PALETTES: Record<SocialTheme, Palette> = {
+  night: { ground: bg, ink: MIST, soft: STONE, accent: LIME, onAccent: NIGHT, rule: RULE },
+  lime: {
+    ground: LIME,
+    ink: NIGHT,
+    soft: "rgba(15,42,46,0.74)",
+    accent: NIGHT,
+    onAccent: LIME,
+    rule: "rgba(15,42,46,0.18)",
+  },
+  light: {
+    ground: PAPER,
+    ink: NIGHT,
+    soft: MUTED,
+    accent: NIGHT,
+    onAccent: LIME,
+    rule: "rgba(15,42,46,0.14)",
+  },
+};
 
 /* ---------- atoms ---------- */
 
@@ -580,15 +607,19 @@ function Frame({
   total,
   cue,
   insets,
+  theme = "night",
 }: {
   children: ReactNode;
   index: number;
   total: number;
   cue?: string;
+  theme?: SocialTheme;
   /** Extra top and bottom space (Stories and Reels interface). */
   insets?: { top: number; bottom: number };
 }) {
   const carousel = total > 1;
+  const pal = PALETTES[theme];
+  const night = theme === "night";
   return (
     <div
       style={{
@@ -596,8 +627,8 @@ function Frame({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: bg,
-        color: MIST,
+        background: pal.ground,
+        color: pal.ink,
         fontFamily: "Figtree",
         padding: insets
           ? `${insets.top}px ${PAD}px ${insets.bottom}px`
@@ -607,28 +638,60 @@ function Frame({
       }}
     >
       {/* depth: a soft lime glow low right and a thin ring, both behind the content */}
-      <div
-        style={{
-          position: "absolute",
-          right: -420,
-          bottom: -520,
-          width: 1100,
-          height: 1100,
-          borderRadius: 550,
-          background: "radial-gradient(circle, rgba(216,244,90,0.14) 0%, rgba(216,244,90,0) 62%)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          right: -260,
-          top: -300,
-          width: 760,
-          height: 760,
-          borderRadius: 380,
-          border: "2px solid rgba(216,244,90,0.14)",
-        }}
-      />
+      {night ? (
+        <div
+          style={{
+            position: "absolute",
+            right: -420,
+            bottom: -520,
+            width: 1100,
+            height: 1100,
+            borderRadius: 550,
+            background: "radial-gradient(circle, rgba(216,244,90,0.14) 0%, rgba(216,244,90,0) 62%)",
+          }}
+        />
+      ) : null}
+      {night ? (
+        <div
+          style={{
+            position: "absolute",
+            right: -260,
+            top: -300,
+            width: 760,
+            height: 760,
+            borderRadius: 380,
+            border: "2px solid rgba(216,244,90,0.14)",
+          }}
+        />
+      ) : null}
+      {/* the light page: a lime sheet and a night-green disc behind the photos, as on the collage banner */}
+      {theme === "light" ? (
+        <div
+          style={{
+            position: "absolute",
+            right: -180,
+            bottom: 150,
+            width: 900,
+            height: 640,
+            borderRadius: 60,
+            background: LIME,
+            transform: "rotate(8deg)",
+          }}
+        />
+      ) : null}
+      {theme === "light" ? (
+        <div
+          style={{
+            position: "absolute",
+            left: -190,
+            bottom: 60,
+            width: 430,
+            height: 430,
+            borderRadius: 215,
+            background: NIGHT,
+          }}
+        />
+      ) : null}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Wordmark u={1.35} />
         {carousel ? (
@@ -641,7 +704,7 @@ function Frame({
                   width: i === index ? 34 : 12,
                   height: 12,
                   borderRadius: 6,
-                  background: i === index ? LIME : "rgba(242,245,242,0.32)",
+                  background: i === index ? pal.accent : pal.rule,
                 }}
               />
             ))}
@@ -652,7 +715,7 @@ function Frame({
       <div
         style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", paddingTop: 28 }}
       >
-        <div style={{ display: "flex", fontSize: 28, color: STONE }}>
+        <div style={{ display: "flex", fontSize: 28, color: pal.soft }}>
           {cue ?? (carousel && index < total - 1 ? "Ritini tālāk  →" : "")}
         </div>
         <div
@@ -661,7 +724,7 @@ function Frame({
             fontFamily: HEAD,
             fontWeight: 700,
             fontSize: 34,
-            color: LIME,
+            color: pal.accent,
             letterSpacing: "-0.02em",
           }}
         >
@@ -974,7 +1037,376 @@ function Legacy(c: PostCard) {
   );
 }
 
+/* ---------- themed designs (docs/SOCIAL_PLAN.md §14) ---------- */
+
+type Themed = Slide & { photos?: string[]; cover?: string };
+
+function Tag({ text, pal }: { text: string; pal: Palette }) {
+  return (
+    <div style={{ display: "flex" }}>
+      <div
+        style={{
+          display: "flex",
+          background: pal.accent,
+          color: pal.onAccent,
+          fontWeight: 800,
+          fontSize: 26,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          padding: "10px 18px",
+          borderRadius: 10,
+          transform: "rotate(-2deg)",
+        }}
+      >
+        {text}
+      </div>
+    </div>
+  );
+}
+
+/** One figure as large as the page allows ("−50 €"), what it means, and the product it is about. */
+function Big(c: Themed) {
+  const pal = PALETTES[c.theme ?? "lime"];
+  const figure = c.numeral ?? "";
+  const size = figure.length <= 6 ? 250 : figure.length <= 8 ? 200 : 160;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      {c.eyebrow ? <Tag text={c.eyebrow} pal={pal} /> : null}
+      <div
+        style={{
+          display: "flex",
+          fontFamily: HEAD,
+          fontWeight: 700,
+          fontSize: size,
+          lineHeight: 0.95,
+          letterSpacing: "-0.05em",
+          color: pal.ink,
+          paddingTop: 26,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {figure}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontFamily: HEAD,
+          fontWeight: 600,
+          fontSize: 62,
+          lineHeight: 1.04,
+          letterSpacing: "-0.03em",
+          color: pal.ink,
+          paddingTop: 14,
+        }}
+      >
+        {c.headline ?? c.title}
+      </div>
+      <div style={{ display: "flex", flex: 1 }} />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 36,
+          background: NIGHT,
+          color: MIST,
+          borderRadius: 36,
+          padding: 34,
+          transform: "rotate(-1.5deg)",
+          boxShadow: "0 30px 60px rgba(15,42,46,0.28)",
+        }}
+      >
+        {c.photo ? (
+          <Photo src={c.photo} width={250} height={250} radius={26} />
+        ) : c.hero ? (
+          <Hero subcategoryId={c.hero} size={220} />
+        ) : null}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+          {c.sub ? (
+            <div
+              style={{ display: "flex", fontFamily: HEAD, fontWeight: 600, fontSize: 38, lineHeight: 1.1 }}
+            >
+              {c.sub.length > 44 ? `${c.sub.slice(0, 43)}…` : c.sub}
+            </div>
+          ) : null}
+          <div style={{ display: "flex", gap: 40, alignItems: "flex-end" }}>
+            {c.stat ? <Stat label={c.stat.label} value={c.stat.value} size={62} color={LIME} /> : null}
+            {c.stat2 ? <Stat label={c.stat2.label} value={c.stat2.value} size={44} color={STONE} /> : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The products' own photos scattered on the page, each on its white card, with the names below. */
+function Collage(c: Themed) {
+  const pal = PALETTES[c.theme ?? "light"];
+  const photos = c.photos ?? [];
+  // Where each card sits and how it leans: a tall one at the left, the rest stepping right.
+  const spots = [
+    { left: 0, top: 24, w: 260, h: 400, r: -6 },
+    { left: 270, top: 0, w: 250, h: 260, r: 5 },
+    { left: 520, top: 150, w: 270, h: 290, r: 9 },
+    { left: 270, top: 250, w: 220, h: 220, r: -4 },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {c.eyebrow ? <Tag text={c.eyebrow} pal={pal} /> : null}
+        <div
+          style={{
+            display: "flex",
+            fontFamily: HEAD,
+            fontWeight: 600,
+            fontSize: (c.headline ?? c.title).length > 20 ? 68 : 96,
+            lineHeight: 1.0,
+            letterSpacing: "-0.035em",
+            color: pal.ink,
+          }}
+        >
+          {c.headline ?? c.title}
+        </div>
+        {c.sub ? <div style={{ display: "flex", fontSize: 32, color: pal.soft }}>{c.sub}</div> : null}
+      </div>
+      <div style={{ display: "flex", position: "relative", height: 480, marginTop: 22 }}>
+        {photos.slice(0, 4).map((src, i) => {
+          const s = spots[i]!;
+          return (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                position: "absolute",
+                left: s.left,
+                top: s.top,
+                transform: `rotate(${s.r}deg)`,
+              }}
+            >
+              <Photo src={src} width={s.w} height={s.h} radius={30} />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", flex: 1 }} />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          background: NIGHT,
+          color: MIST,
+          borderRadius: 30,
+          padding: "10px 30px",
+        }}
+      >
+        {(c.rows ?? []).slice(0, 3).map((r, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              padding: "14px 0",
+              borderTop: i ? `1px solid ${RULE}` : "none",
+            }}
+          >
+            <div style={{ display: "flex", fontFamily: HEAD, fontWeight: 700, fontSize: 30, color: LIME }}>
+              {r.n}
+            </div>
+            <div style={{ display: "flex", flex: 1, fontSize: 32, fontWeight: 600 }}>
+              {r.label.length > 30 ? `${r.label.slice(0, 29)}…` : r.label}
+            </div>
+            {r.side ? (
+              <div style={{ display: "flex", fontFamily: HEAD, fontWeight: 700, fontSize: 34 }}>{r.side}</div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** A question in large type and its answers on a white card, lettered as the site's own choices. */
+function Ask(c: Themed) {
+  const pal = PALETTES[c.theme ?? "lime"];
+  const q = c.headline ?? c.title;
+  const options = c.options ?? [];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      {c.eyebrow ? <Tag text={c.eyebrow} pal={pal} /> : null}
+      <div
+        style={{
+          display: "flex",
+          fontFamily: HEAD,
+          fontWeight: 600,
+          fontSize: q.length > 60 ? 62 : q.length > 30 ? 78 : 104,
+          lineHeight: 1.03,
+          letterSpacing: "-0.035em",
+          color: pal.ink,
+          paddingTop: 30,
+        }}
+      >
+        {q}
+      </div>
+      {c.sub ? (
+        <div style={{ display: "flex", fontSize: 34, lineHeight: 1.3, color: pal.soft, paddingTop: 22 }}>
+          {c.sub}
+        </div>
+      ) : null}
+      <div style={{ display: "flex", flex: 1 }} />
+      {options.length ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            background: "#FFFFFF",
+            borderRadius: 36,
+            padding: 30,
+            boxShadow: "0 30px 60px rgba(15,42,46,0.22)",
+          }}
+        >
+          {options.slice(0, 4).map((o, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
+                borderRadius: 20,
+                padding: "20px 24px",
+                background: i === 0 ? NIGHT : "#FFFFFF",
+                color: i === 0 ? MIST : NIGHT,
+                border: i === 0 ? "none" : "2px solid rgba(15,42,46,0.16)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: i === 0 ? LIME : "rgba(15,42,46,0.08)",
+                  color: NIGHT,
+                  fontWeight: 800,
+                  fontSize: 26,
+                }}
+              >
+                {"ABCD"[i]}
+              </div>
+              <div style={{ display: "flex", flex: 1, fontSize: 34, fontWeight: 600 }}>
+                {o.label.length > 28 ? `${o.label.slice(0, 27)}…` : o.label}
+              </div>
+              {o.side ? (
+                <div style={{ display: "flex", fontFamily: HEAD, fontWeight: 700, fontSize: 34 }}>
+                  {o.side}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : c.hero ? (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 320,
+              height: 320,
+              borderRadius: 160,
+              background: "#FFFFFF",
+            }}
+          >
+            <Drawing subcategoryId={c.hero} size={190} />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** A photo of people at home across the top (a stock photo, never a customer), the sentence below it. */
+function People(c: Themed) {
+  const pal = PALETTES.night;
+  const w = Math.min(c.width ?? POST_SIZE.width, POST_SIZE.width) - 2 * PAD;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      {c.cover ? (
+        <div style={{ display: "flex", borderRadius: 40, overflow: "hidden", height: 560 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- satori draws it into the JPEG; nothing reaches a browser */}
+          <img
+            src={c.cover}
+            alt=""
+            width={w}
+            height={560}
+            style={{ width: w, height: 560, objectFit: "cover" }}
+          />
+        </div>
+      ) : c.hero ? (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Hero subcategoryId={c.hero} size={300} />
+        </div>
+      ) : null}
+      <div style={{ display: "flex", paddingTop: 34 }}>
+        {c.eyebrow ? <Tag text={c.eyebrow} pal={pal} /> : null}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontFamily: HEAD,
+          fontWeight: 600,
+          fontSize: (c.headline ?? c.title).length > 60 ? 54 : 68,
+          lineHeight: 1.06,
+          letterSpacing: "-0.03em",
+          color: pal.ink,
+          paddingTop: 22,
+        }}
+      >
+        {c.headline ?? c.title}
+      </div>
+      <div style={{ display: "flex", flex: 1 }} />
+      {c.sub ? <div style={{ display: "flex", fontSize: 32, color: pal.soft }}>{c.sub}</div> : null}
+    </div>
+  );
+}
+
+/**
+ * A photo cropped to fill a box (people at home): fetched over https, cut to the box around its
+ * middle, as a data URL. Undefined when it cannot be had; the design then falls back to the drawing.
+ */
+export async function loadCover(
+  url: string | undefined,
+  width: number,
+  height: number,
+): Promise<string | undefined> {
+  if (!url) return undefined;
+  try {
+    let bytes: Buffer;
+    if (SAMPLE_PATH.test(url)) bytes = await readFile(path.join(process.cwd(), "public", url));
+    else {
+      if (new URL(url).protocol !== "https:") return undefined;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000), headers: { accept: "image/*" } });
+      if (!res.ok) return undefined;
+      bytes = Buffer.from(await res.arrayBuffer());
+    }
+    const sharp = (await import("sharp")).default;
+    const jpeg = await sharp(bytes)
+      .resize(width, height, { fit: "cover", position: "attention" })
+      .jpeg({ quality: 86 })
+      .toBuffer();
+    return `data:image/jpeg;base64,${jpeg.toString("base64")}`;
+  } catch {
+    return undefined;
+  }
+}
+
 const LAYOUTS = {
+  big: Big,
+  collage: Collage,
+  ask: Ask,
+  people: People,
   cover: Cover,
   rank: Rank,
   phone: PhoneSlide,
@@ -1001,7 +1433,18 @@ export async function renderPost(
           ? STORY_SIZE
           : POST_SIZE;
   const Layout = shape === "link" ? LinkCard : card.layout ? LAYOUTS[card.layout] : Legacy;
-  const photo = await loadPhoto(card.image ?? (card.phone?.kind === "card" ? card.phone.image : undefined));
+  const people = card.layout === "people";
+  const photo = people
+    ? undefined
+    : await loadPhoto(card.image ?? (card.phone?.kind === "card" ? card.phone.image : undefined));
+  const cover = people ? await loadCover(card.image, size.width - 2 * PAD, 560) : undefined;
+  const photos =
+    card.layout === "collage"
+      ? (await Promise.all((card.images ?? []).slice(0, 4).map((u) => loadPhoto(u)))).filter(
+          (p): p is string => !!p,
+        )
+      : undefined;
+  const themed = card.layout === "big" || card.layout === "collage" || card.layout === "ask" || people;
   const cue =
     card.layout === "cover" && total > 1
       ? "Ritini tālāk  →"
@@ -1009,8 +1452,14 @@ export async function renderPost(
         ? TAGLINE
         : undefined;
   return new ImageResponse(
-    <Frame index={index} total={total} cue={cue} insets={shape === "story" ? STORY_INSETS : undefined}>
-      <Layout {...card} photo={photo} width={size.width} />
+    <Frame
+      index={index}
+      total={total}
+      cue={cue}
+      insets={shape === "story" ? STORY_INSETS : undefined}
+      theme={themed && shape !== "link" ? (card.theme ?? "night") : "night"}
+    >
+      <Layout {...card} photo={photo} photos={photos} cover={cover} width={size.width} />
     </Frame>,
     { ...size, fonts: await brandFonts() },
   );

@@ -200,3 +200,47 @@ A 5-slide Instagram carousel failed with `Meta 403 #4: Application request limit
   - A late post with one network missing is looked for on Instagram before it is called
     unpublished.
 - **A half-published post keeps its text.** A retry does not refresh prices or captions.
+
+## 14. Variation: designs, people, and a generated Reel (15 Nov 2026)
+
+Owner's review: the posts were static, all looked alike and showed no people. Evidence: the four
+kinds rendered side by side were the same night-green page with a text list and a line icon.
+
+### Designs
+
+A post is drawn in one of its kind's designs, taken in turn (`DESIGNS`, `designOf`), and never in
+the theme the previous post showed (`nextLook`). Only the first picture changes; the facts, the
+captions, the lint and the other slides stay as they are (`restyle`).
+
+| Design | Theme | What it shows | Kinds |
+| --- | --- | --- | --- |
+| classic | night | the design the posts began with | all |
+| big | lime | one figure as large as the page ("−50 €"), what it means, the product | price_drop, offer |
+| collage | light | the products' own photos on white cards, the names and prices below | picks, top_products |
+| ask | lime | a question in large type, its answers lettered A, B, C | picks, advice, top_categories |
+| people | night | a stock photo of people at home across the top, the sentence below | advice |
+
+The big figure is a real difference: today's price against the shop's lowest of the last 30 days
+(Omnibus), or the shop's price against Trilio's for a paid order. Where there is nothing to
+compare, or a design cannot be filled (no product photos, no stock photo), the classic picture stays.
+
+### People
+
+`data/social-photos.json` lists stock photos by address, with the page they come from and the
+category groups they fit (`pickPhoto`). They are fetched when a picture is drawn; no image is kept
+in the repository. Rule: the people are models. They appear as lifestyle imagery only and are never
+shown or described as Trilio customers, next to a quote, or as proof.
+
+### Generated Reel
+
+Saturday 11:00 (slot `sat`): a Reel made from three picks for the next category. Its facts carry the
+picks (`reel.of`), so its caption's prices are linted and re-read before sending like a picks post.
+`renderReel` draws the post's slides upright (9:16) and joins them with ffmpeg: a slow push-in on
+each, a slide-up between them, recorded sounds from `data/social-sounds.json` (fetched by address;
+left out if they cannot be had). The MP4 is built when the post is approved and stored in
+`social_images` (shape `video`); Meta fetches it from `/api/social/<id>/video.mp4`, public once the
+post is approved. "Izveidot tagad" offers it by hand.
+
+The server needs `ffmpeg` (`FFMPEG_PATH`, or on the PATH). On Railway: the variable
+`RAILPACK_DEPLOY_APT_PACKAGES=ffmpeg`. Without it the Saturday slot stays empty and the page says why.
+
