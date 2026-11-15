@@ -17,6 +17,7 @@ import {
   resetActiveTvCampaigns,
   tvStats,
   unlinkFlight,
+  tvPixelReport,
 } from "./tv";
 
 // Display campaigns (a banner on a publisher's site, trafficked in Google Ad Manager) and a
@@ -252,5 +253,55 @@ run("display campaigns and flights", { timeout: 60_000 }, () => {
           .where(sql`${tvHouseholdVisits.slug} = ${BANNER}`)
       ).length,
     ).toBe(0);
+  });
+
+  it("a browser has no device id: an IPv6 phone stays one device, and frequency is also shown per household", async () => {
+    const FREQ = "flighttest-freq";
+    await createTvCampaign(db, { name: "Unit frequency", slug: FREQ, kind: "display", source: "tv3.lv" });
+    const hit = (ip: string, now: Date, userAgent = CHROME) =>
+      recordTvImpression(db, {
+        slug: FREQ,
+        vid: null,
+        ip,
+        userAgent,
+        now,
+        pixel: { params: pixelParams(new URLSearchParams("ch=tv3.lv")), headers: {} },
+      });
+    // One phone on IPv6: the network (/64) stays, the rest of the address changes daily.
+    await hit("2a02:1234:abcd:ef01:1111:2222:3333:4444", at(0));
+    await hit("2a02:1234:abcd:ef01:9999:8888:7777:6666", at(24 * 60));
+    // One home on IPv4: a laptop twice and a phone once, the same day.
+    await hit("198.51.100.44", at(5));
+    await hit("198.51.100.44", at(6));
+    await hit("198.51.100.44", at(7), "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1");
+    const r = await tvPixelReport(db, FREQ, { from: "2032-06-10", to: "2032-06-12" });
+    // Devices: the phone on IPv6 is one device with two impressions, not two devices.
+    expect(Object.fromEntries(r.frequency.map((f) => [f.band, f.devices]))).toEqual({
+      "1": 1,
+      "2": 2,
+      "3-4": 0,
+      "5+": 0,
+    });
+    // Households: two, one of them reached on two days.
+    expect(r.householdFrequency).toEqual({
+      households: 2,
+      impressions: 5,
+      severalDays: 1,
+      bands: [
+        { band: "1", households: 0 },
+        { band: "2", households: 1 },
+        { band: "3-4", households: 1 },
+        { band: "5+", households: 0 },
+      ],
+    });
+    // No address is stored, only hashes.
+    const stored = JSON.stringify(
+      await db
+        .select()
+        .from(tvExposures)
+        .where(sql`${tvExposures.slug} = ${FREQ}`),
+    );
+    expect(stored).not.toContain("198.51.100.44");
+    expect(stored).not.toContain("2a02:1234");
   });
 });

@@ -102,3 +102,30 @@ the shared salt for one advertising campaign, deletion after 21 days.
   Ad Manager tracker and unfilled macros, crawlers left out, the browser's
   address as the household, the flight's three groups, unlinking and deletion.
 - `tests/e2e/tv.spec.ts`: a display campaign and a flight in the admin.
+
+## Frequency of a banner (15 Nov 2026)
+
+A banner's tracker is called by the visitor's browser, which sends no device
+id (the advertising id exists only in apps: under 1 % of tv3.lv impressions).
+So a "device" is the network address plus the browser type, and a phone on
+mobile data changes its address between visits. The device frequency of a
+banner is therefore lower than the true one, and the exact device overlap of a
+flight covers only the app impressions.
+
+What the pixel does about it:
+
+- The device key cuts an IPv6 address to its /64 (`householdKey`), as the
+  household does: phones change the rest of the address daily, and each change
+  used to count as a new device. Applies from this change on; earlier rows keep
+  their old key.
+- The report also gives frequency per household (`householdFrequency`, from
+  `tv_exposures`): households by impressions and how many were reached on more
+  than one day. On home Wi-Fi this is stable; on mobile data it is not.
+- The page says, for a campaign whose impressions mostly carry no id, how many
+  did, what "device" means for the rest, and that Ad Manager's own reach and
+  frequency report is the precise one (it recognises the browser by its
+  cookie).
+
+A stable identifier for browsers would need the publisher to pass one (for
+example a hashed sign-in id as a key-value, read with `%%PATTERN:key%%`) or a
+cookie set by the tracker; both are the owner's and the publisher's decision.

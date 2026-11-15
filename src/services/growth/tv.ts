@@ -186,7 +186,9 @@ export async function recordTvImpression(
       ? null
       : viewerHash(campaign.salt, {
           vid: viewerId(input.vid),
-          ip: input.ip,
+          // Without an id the device is its network and browser. An IPv6 address is cut to its
+          // /64: phones change the rest of it every day, and each change looked like a new device.
+          ip: householdKey(input.ip) ?? input.ip,
           userAgent: input.userAgent,
         });
     const go3 = p?.optOut ? null : parseGo3Viewer(viewerId(input.vid));
@@ -1010,6 +1012,17 @@ export type TvPixelReport = {
   /** Devices by impressions over the period: 1, 2, 3–4, 5 and more. */
   frequency: { band: "1" | "2" | "3-4" | "5+"; devices: number }[];
   /**
+   * Households (home network addresses) by impressions over the period, and how many were
+   * reached on more than one day. Steadier than devices where there is no device id (a banner
+   * in a browser), though a phone on mobile data still changes its address.
+   */
+  householdFrequency: {
+    households: number;
+    impressions: number;
+    severalDays: number;
+    bands: { band: "1" | "2" | "3-4" | "5+"; households: number }[];
+  } | null;
+  /**
    * Households by Go3 subscription (the customer part of the viewer id), over the days that
    * carry it; null before the first such day. Child profiles are the "C" ones.
    */
@@ -1132,6 +1145,24 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
              group by account_hash) v
       group by 1`)) as unknown as { band: TvPixelReport["frequency"][number]["band"]; households: number }[];
   const acctBands = new Map(acctFreq.map((f) => [f.band, Number(f.households)]));
+  const hh = (await db.execute(sql`
+    select case when n = 1 then '1' when n = 2 then '2' when n <= 4 then '3-4' else '5+' end as band,
+           count(*)::int as households, coalesce(sum(n), 0)::int as impressions,
+           count(*) filter (where days > 1)::int as several
+      from (select household, sum(hits) as n,
+                   count(distinct (minute at time zone 'Europe/Riga')::date) as days
+              from tv_exposures
+             where slug = ${slug} and grp = 'ad'
+               and (minute at time zone 'Europe/Riga')::date between ${range.from}::date and ${range.to}::date
+             group by household) v
+      group by 1`)) as unknown as {
+    band: "1" | "2" | "3-4" | "5+";
+    households: number;
+    impressions: number;
+    several: number;
+  }[];
+  const hhBands = new Map(hh.map((f) => [f.band, Number(f.households)]));
+  const hhTotal = hh.reduce((a, f) => a + Number(f.households), 0);
   return {
     days,
     dims: {
@@ -1157,6 +1188,17 @@ export async function tvPixelReport(db: Db, slug: string, range: DayRange): Prom
       channel: list(decoded.channel),
     },
     frequency: (["1", "2", "3-4", "5+"] as const).map((band) => ({ band, devices: bands.get(band) ?? 0 })),
+    householdFrequency: hhTotal
+      ? {
+          households: hhTotal,
+          impressions: hh.reduce((a, f) => a + Number(f.impressions), 0),
+          severalDays: hh.reduce((a, f) => a + Number(f.several), 0),
+          bands: (["1", "2", "3-4", "5+"] as const).map((band) => ({
+            band,
+            households: hhBands.get(band) ?? 0,
+          })),
+        }
+      : null,
     accounts: Number(acct?.households)
       ? {
           households: Number(acct!.households),

@@ -2470,7 +2470,11 @@
               "VOD": "Pēc pieprasījuma (VOD)"
             }
           },
-          "optOut": "Atteikušās no izsekošanas: {n}"
+          "optOut": "Atteikušās no izsekošanas: {n}",
+          "households": "Mājsaimniecības",
+          "frequencyCaveat": "Ierīces reklāmas identifikators bija {withId} no {total} parādījumiem ({share}); tas ir tikai lietotnēs. Pārējiem „ierīce” ir tīkla adrese kopā ar pārlūka veidu. Telefonam mobilajā tīklā adrese mainās, tāpēc viens cilvēks vairākos apmeklējumos izskatās kā vairākas ierīces, un biežums šeit ir zemāks par patieso. Precīzāku banera biežumu rāda Ad Manager pārskats (tas atpazīst pārlūku pēc savas sīkdatnes).",
+          "householdFrequency": "Biežums: mājsaimniecības pēc parādījumu skaita periodā",
+          "householdFrequencyMethod": "{households} mājsaimniecības, vidēji {average} parādījumi katrai; {several} sasniegtas vairāk nekā vienā dienā. Mājsaimniecība ir mājas interneta adrese: mājas Wi-Fi tā ir stabila, mobilajā tīklā — nav. Glabājam 21 dienu."
         },
         "channels": {
           "title": "Apmeklētāji pēc kanāla",

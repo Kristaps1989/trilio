@@ -89,6 +89,10 @@ export async function OffDays({ report }: { report: TvReport }) {
 
 export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
   const t = await getTranslations("admin.ads.tv");
+  // Impressions in the period, and how many carried a viewer or device id (an app or a TV
+  // device); the rest are browsers, where a "device" is only an address and a browser type.
+  const total = pixel.days.reduce((a, d) => a + d.total, 0);
+  const withId = pixel.days.reduce((a, d) => a + (d.params.vid ?? 0), 0);
   const dim = (key: keyof TvPixelReport["dims"]) =>
     pixel.dims[key].length ? (
       <Table
@@ -140,6 +144,36 @@ export async function PixelDetail({ pixel }: { pixel: TvPixelReport }) {
         rows={pixel.frequency.map((f) => [t("px.bandLabel", { band: f.band }), formatInt(f.devices)])}
       />
       <p className="max-w-3xl text-sm text-stone">{t("px.frequencyMethod")}</p>
+      {/* A banner in a browser has no device id: say what "device" means there and how far to trust it. */}
+      {total > 0 && withId < total / 2 ? (
+        <p className="max-w-3xl text-sm text-stone" data-tv-frequency-caveat={withId}>
+          {t("px.frequencyCaveat", { withId, total, share: rate(withId, total) })}
+        </p>
+      ) : null}
+      {pixel.householdFrequency ? (
+        <div
+          className="flex flex-col gap-2"
+          data-tv-household-frequency={pixel.householdFrequency.households}
+        >
+          <Table
+            caption={t("px.householdFrequency")}
+            head={[t("px.band"), t("px.households")]}
+            rows={pixel.householdFrequency.bands.map((f) => [
+              t("px.bandLabel", { band: f.band }),
+              formatInt(f.households),
+            ])}
+          />
+          <p className="max-w-3xl text-sm text-stone">
+            {t("px.householdFrequencyMethod", {
+              households: pixel.householdFrequency.households,
+              average: (pixel.householdFrequency.impressions / pixel.householdFrequency.households)
+                .toFixed(2)
+                .replace(".", ","),
+              several: pixel.householdFrequency.severalDays,
+            })}
+          </p>
+        </div>
+      ) : null}
       {pixel.accounts ? (
         <div className="flex flex-col gap-2" data-tv-accounts={pixel.accounts.households}>
           <Table

@@ -2307,7 +2307,7 @@
           "method": "Skaitām kopš {since}, pēdējās 21 dienas. Mājsaimniecība ir mājas interneta adrese (sajaukta, pašu adresi neglabājam), tāpēc skaitļi ir aptuveni: tālrunis mobilajā tīklā nesakrīt ar mājas adresi, un aiz vienas adreses var būt vairāki cilvēki. „Atvēra Trilio” ir mājsaimniecības, no kurām pēc pirmā parādījuma kāds atvēra vietni.",
           "devicesTitle": "Tās pašas ierīces (pēc ierīces reklāmas identifikatora)",
           "deviceGroup": "Ierīces",
-          "devicesMethod": "Precīza sakritība: viena un tā pati ierīce abās kampaņās. Darbojas tikai lietotnēs, kur reklāmas serveris nodod ierīces reklāmas identifikatoru; pārlūkā tāda nav. Pašu identifikatoru neglabājam, tikai šīm divām kampaņām kopīgu sajaukumu.",
+          "devicesMethod": "Precīza sakritība: viena un tā pati ierīce abās kampaņās. Skaitās tikai parādījumi lietotnēs, kur reklāmas serveris nodod ierīces reklāmas identifikatoru; pārlūkā tāda nav, tāpēc banerim šie skaitļi ir mazi un neatspoguļo visu auditoriju. Pašu identifikatoru neglabājam, tikai šīm divām kampaņām kopīgu sajaukumu.",
           "devicesNone": "Precīzai ierīču sakritībai abiem pikseļiem jāsaņem ierīces reklāmas identifikators: Go3 pikselī lauks did, banera pikselī lietotnē to aizpilda Ad Manager. Kopš saistīšanas neviens nav saņemts.",
           "unlink": "Atsaistīt kampaņas",
           "linked": "Kampaņas saistītas. Pārklāšanos skaitām no šī brīža.",
@@ -2469,7 +2469,11 @@
               "VOD": "Pēc pieprasījuma (VOD)"
             }
           },
-          "optOut": "Atteikušās no izsekošanas: {n}"
+          "optOut": "Atteikušās no izsekošanas: {n}",
+          "households": "Mājsaimniecības",
+          "frequencyCaveat": "Ierīces reklāmas identifikators bija {withId} no {total} parādījumiem ({share}); tas ir tikai lietotnēs. Pārējiem „ierīce” ir tīkla adrese kopā ar pārlūka veidu. Telefonam mobilajā tīklā adrese mainās, tāpēc viens cilvēks vairākos apmeklējumos izskatās kā vairākas ierīces, un biežums šeit ir zemāks par patieso. Precīzāku banera biežumu rāda Ad Manager pārskats (tas atpazīst pārlūku pēc savas sīkdatnes).",
+          "householdFrequency": "Biežums: mājsaimniecības pēc parādījumu skaita periodā",
+          "householdFrequencyMethod": "{households, plural, one {# mājsaimniecība} other {# mājsaimniecības}}, vidēji {average} parādījumi katrai; vairāk nekā vienā dienā sasniegtas: {several}. Mājsaimniecība ir mājas interneta adrese: mājas Wi-Fi tā ir stabila, mobilajā tīklā — nav. Glabājam 21 dienu."
         },
         "channels": {
           "title": "Apmeklētāji pēc kanāla",

@@ -270,7 +270,14 @@ test("display campaign: Ad Manager tracker, click link tagged as display, and a 
       userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 e2e-banner/${Date.now()}`,
     })
   ).newPage();
-  expect((await viewer.request.get(`/px/${banner}?ord=1&ch=tv3.lv&pos=300x250`)).status()).toBe(200);
+  // From a home address, twice: a browser sends no device id, only its address and browser type.
+  const home = { "x-forwarded-for": "81.198.77.61" };
+  for (const ord of [1, 2])
+    expect(
+      (
+        await viewer.request.get(`/px/${banner}?ord=${ord}&ch=tv3.lv&pos=300x250`, { headers: home })
+      ).status(),
+    ).toBe(200);
   await viewer.goto(`/tv/${banner}`);
   await expect(viewer).toHaveURL(
     new RegExp(`/izvelies\\?utm_source=tv3\\.lv&utm_medium=display&utm_campaign=${banner}$`),
@@ -278,9 +285,22 @@ test("display campaign: Ad Manager tracker, click link tagged as display, and a 
   await viewer.context().close();
   await expect(async () => {
     await page.reload();
-    await expect(page.locator(`[data-tv-campaign="${banner}"]`)).toHaveAttribute("data-tv-impressions", "1");
+    await expect(page.locator(`[data-tv-campaign="${banner}"]`)).toHaveAttribute("data-tv-impressions", "2");
     await expect(page.locator(`[data-tv-campaign="${banner}"]`)).toHaveAttribute("data-tv-links", "1");
   }).toPass({ timeout: 15_000 });
+  // Frequency for a banner: what "device" means without an id, and the same per household.
+  await expect(card.locator("[data-tv-frequency-caveat]")).toContainText(
+    "Ierīces reklāmas identifikators bija 0 no 2 parādījumiem",
+  );
+  await expect(card.locator("[data-tv-frequency-caveat]")).toContainText(
+    "Precīzāku banera biežumu rāda Ad Manager pārskats",
+  );
+  const perHousehold = card.locator("[data-tv-household-frequency]");
+  await expect(perHousehold).toHaveAttribute("data-tv-household-frequency", "1");
+  await expect(perHousehold).toContainText("1 mājsaimniecība, vidēji 2,00 parādījumi katrai");
+  await expect(perHousehold.getByRole("row").filter({ hasText: /^2/ }).getByRole("cell").last()).toHaveText(
+    "1",
+  );
 
   // The flight: linked from the banner's card, the overlap table appears on both.
   const link = page.locator(`[data-tv-campaign="${banner}"] [data-tv-flight-form]`);
