@@ -1,0 +1,6 @@
+{
+  "note": "Recorded sound effects for generated Reels (docs/SOCIAL_PLAN.md §14), fetched by address when a video is made; nothing is stored in the repository. Mixkit Sound Effects Free License: free for commercial use, no attribution required. A sound that cannot be fetched is left out; the video is still made.",
+  "sweep": "https://assets.mixkit.co/active_storage/sfx/166/166-preview.mp3",
+  "pop": "https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3",
+  "click": "https://assets.mixkit.co/active_storage/sfx/1113/1113-preview.mp3"
+}

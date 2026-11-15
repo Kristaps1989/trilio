@@ -3,6 +3,7 @@ import type { Db } from "@/db/client";
 import { socialImages, socialPosts } from "@/db/schema";
 import type { PostCard } from "@/domain/social/captions";
 import { renderPostJpeg, slidesOf, type Shape } from "@/services/social/render";
+import { hasGeneratedVideo, postVideo } from "@/services/social/video";
 
 // A post's slide pictures, drawn once and stored (docs/FACEBOOK_CAROUSEL_PLAN.md §6).
 
@@ -65,6 +66,8 @@ export async function slideJpeg(database: Db, p: PostRow, n: number, shape: Shap
  * Facebook cards); a single post's link preview. Returns how many are ready.
  */
 export async function preparePostImages(database: Db, p: PostRow): Promise<number> {
+  // A Reel Trilio makes itself: the video is built and stored now, so Meta's fetch finds it ready.
+  if (hasGeneratedVideo(p)) return (await postVideo(database, p).catch(() => null)) ? 1 : 0;
   if (p.videoUrl) return 0;
   const count = slidesOf(p.card as unknown as PostCard).length;
   const jobs: [number, Shape][] = [];

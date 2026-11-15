@@ -1,0 +1,33 @@
+{
+  "note": "Stock photos of people at home for social posts and Reels (docs/SOCIAL_PLAN.md §14). Lifestyle imagery only: the people are models and are never shown or described as Trilio customers. Fetched by address when a picture is drawn; nothing is stored in the repository. Pexels licence: free for commercial use, no attribution required.",
+  "photos": [
+    {
+      "id": "family-kitchen",
+      "url": "https://images.pexels.com/photos/4617259/pexels-photo-4617259.jpeg?auto=compress&cs=tinysrgb&w=1600",
+      "page": "https://www.pexels.com/photo/a-family-having-breakfast-in-the-kitchen-area-4617259/",
+      "credit": "Pexels",
+      "groups": ["cool", "kitchenbig", "kitchensmall", "cooking", "coffee", "healthy"]
+    },
+    {
+      "id": "breakfast-with-children",
+      "url": "https://images.pexels.com/photos/8657212/pexels-photo-8657212.jpeg?auto=compress&cs=tinysrgb&w=1600",
+      "page": "https://www.pexels.com/photo/photo-of-a-mother-s-children-eating-breakfast-8657212/",
+      "credit": "Pexels",
+      "groups": ["cool", "kitchensmall", "cooking", "coffee", "healthy"]
+    },
+    {
+      "id": "phone-in-kitchen",
+      "url": "https://images.pexels.com/photos/7699373/pexels-photo-7699373.jpeg?auto=compress&cs=tinysrgb&w=1600",
+      "page": "https://www.pexels.com/photo/close-up-shot-of-a-woman-using-a-mobile-phone-7699373/",
+      "credit": "Pexels",
+      "groups": ["*"]
+    },
+    {
+      "id": "loading-washing-machine",
+      "url": "https://images.pexels.com/photos/7282376/pexels-photo-7282376.jpeg?auto=compress&cs=tinysrgb&w=1600",
+      "page": "https://www.pexels.com/photo/anonymous-woman-loading-clothes-in-washing-machine-7282376/",
+      "credit": "Pexels",
+      "groups": ["laundry"]
+    }
+  ]
+}

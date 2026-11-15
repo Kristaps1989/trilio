@@ -13,15 +13,19 @@ import {
 } from "@/db/schema";
 import { leaks } from "@/domain/social/anonymise";
 import { FIRST_CATEGORIES, rigaTime } from "@/domain/social/schedule";
+import { reelCaption } from "@/domain/social/captions";
 import { mockPosts, mockRefreshed, mockSocialProvider } from "./mock";
 import { sharePreview } from "./share";
-import { slideJpeg } from "./stored-images";
+import { preparePostImages, slideJpeg } from "./stored-images";
+import { ffmpegPath, hasGeneratedVideo, postVideo } from "./video";
 import {
   approvePost,
   carouselCard,
   withoutLink,
   createPost,
   draftUpcoming,
+  nextLook,
+  reelInput,
   editCaptions,
   factsFor,
   publishDue,
@@ -555,4 +559,115 @@ run("social posts", () => {
     const r = await editCaptions(db, p!.id, "Tev lētākais Latvijā, tikai šodien!", p!.captionIg);
     expect(r.ok).toBe(false);
   });
+
+  // docs/SOCIAL_PLAN.md §14: designs in turn, and the Saturday Reel.
+  it("gives each new post the kind's next design, never the previous post's theme", async () => {
+    const facts = {
+      kind: "picks" as const,
+      subcategoryId: "fridge",
+      category: "Ledusskapji",
+      picks: [
+        { name: "Produkts A1", priceCents: 30000, shop: "Veikals A", imageUrl: "/sample/fridge-builtin.png" },
+        { name: "Produkts B2", priceCents: 40000, shop: "Veikals B", imageUrl: "/sample/kettle-steel.png" },
+        { name: "Produkts C3", priceCents: 50000, shop: "Veikals C" },
+      ],
+      path: "/izvelies/cool/fridge",
+    };
+    const looks: { design?: string; theme: string }[] = [];
+    for (let i = 0; i < 4; i++) {
+      const r = await createPost(db, deps, {
+        facts,
+        slotAt: rigaTime(`2031-05-${10 + i}`, 19),
+        createdBy: "social-test",
+        mode: "approve",
+      });
+      if (!r.ok) throw new Error(r.reason);
+      const card = r.post.card as { design?: string; slides?: { theme?: string }[]; theme?: string };
+      looks.push({ design: card.design, theme: (card.slides?.[0] ?? card).theme ?? "night" });
+    }
+    for (let i = 1; i < looks.length; i++) {
+      expect(looks[i]!.theme).not.toBe(looks[i - 1]!.theme);
+      expect(looks[i]!.design).not.toBe(looks[i - 1]!.design);
+    }
+    // All three of the kind's designs come up within four posts.
+    expect(new Set(looks.map((l) => l.design))).toEqual(new Set(["collage", "ask", "classic"]));
+    expect(await nextLook(db, { kind: "reel", caption: "x", videoUrl: "https://v", path: "/" })).toEqual({
+      design: "classic",
+      photo: null,
+    });
+  });
+
+  it("an advice post in the people design carries a stock photo and its credit, never a customer", async () => {
+    // Advice designs: people, ask, classic, ask. Make posts until the people one comes up.
+    let people: { layout?: string; image?: string; credit?: string } | null = null;
+    for (let i = 0; i < 5 && !people; i++) {
+      const f = await factsFor(db, "advice", FUTURE);
+      const r = await createPost(db, deps, {
+        facts: f!.facts,
+        slotAt: rigaTime(`2031-06-${10 + i}`, 19),
+        createdBy: "social-test",
+        mode: "approve",
+      });
+      if (!r.ok) throw new Error(r.reason);
+      const card = r.post.card as { layout?: string; image?: string; credit?: string };
+      if (card.layout === "people") people = card;
+    }
+    expect(people).not.toBeNull();
+    expect(people!.image).toMatch(/^https:\/\/images\.pexels\.com\//);
+    expect(people!.credit).toBe("Pexels");
+  });
+
+  it("makes the week's Reel from three picks where the server can make a video, and stores it", async () => {
+    // The picks are given here (the seeded feed may be older than a day); the slot is the test's own.
+    const of = {
+      kind: "picks" as const,
+      subcategoryId: "dish",
+      category: "Trauku mazgājamās mašīnas",
+      picks: [
+        { name: "Produkts A1", priceCents: 30000, shop: "Veikals A", imageUrl: "/sample/fridge-builtin.png" },
+        { name: "Produkts B2", priceCents: 40000, shop: "Veikals B", imageUrl: "/sample/kettle-steel.png" },
+      ],
+      questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
+      path: "/izvelies/kitchenbig/dish",
+    };
+    const r = await createPost(db, deps, {
+      facts: { kind: "reel", caption: reelCaption(of), videoUrl: "", path: of.path, of },
+      generatedVideo: true,
+      slotAt: rigaTime("2031-07-05", 11),
+      createdBy: "social-test",
+      mode: "approve",
+    });
+    if (!r.ok) throw new Error(r.reason);
+    const reel = r.post as (typeof r)["post"] | undefined;
+    // With no fresh picks or no ffmpeg the weekly input is null: the slot then stays empty.
+    const input = await reelInput(db, new Date());
+    if (!(await ffmpegPath())) {
+      expect(input).toBeNull();
+      // The post exists, but no video can be made here, so nothing is prepared for sending.
+      expect(await preparePostImages(db, reel!)).toBe(0);
+      return;
+    }
+    if (input) expect(input.facts).toMatchObject({ kind: "reel", of: { kind: "picks" } });
+    expect(reel).toMatchObject({ kind: "reel", status: "draft" });
+    expect(reel!.videoUrl).toBe(`${BASE}/api/social/${reel!.id}/video.mp4`);
+    expect(hasGeneratedVideo(reel!)).toBe(true);
+    const card = reel!.card as {
+      facts: { kind: string; of?: { kind: string; picks: unknown[] } };
+      slides?: unknown[];
+    };
+    expect(card.facts).toMatchObject({ kind: "reel", of: { kind: "picks" } });
+    expect(card.facts.of!.picks).toHaveLength(2);
+    // The caption tells the same three picks, with today's prices, and passes the rules.
+    expect(reel!.captionIg).toMatch(/\d+(,\d+)?\u00a0€/);
+    expect(reel!.captionIg).toContain("#trilio");
+    // The video is built once, before it goes out, and kept beside the post's pictures.
+    expect(await preparePostImages(db, reel!)).toBe(1);
+    const [stored] = await db
+      .select({ shape: socialImages.shape, bytes: socialImages.jpeg })
+      .from(socialImages)
+      .where(and(eq(socialImages.postId, reel!.id), eq(socialImages.shape, "video")));
+    expect(Buffer.from(stored!.bytes).subarray(4, 8).toString("latin1")).toBe("ftyp");
+    const again = await postVideo(db, reel!);
+    expect(again!.length).toBe(Buffer.from(stored!.bytes).length);
+  }, 240_000);
 });

@@ -11,6 +11,7 @@ import { socialProvider } from "@/services/social";
 import { metaConfigFromEnv } from "@/services/social/meta";
 import { appBaseUrl } from "@/services/payments";
 import { slideUrls, socialSettings } from "@/services/social/posts";
+import { generatedVideoPath, hasGeneratedVideo } from "@/services/social/video";
 import {
   approveAction,
   captionsAction,
@@ -31,7 +32,7 @@ export const metadata: Metadata = { title: "Sociālie tīkli" };
 
 type Props = { searchParams: Promise<Record<string, string | undefined>> };
 
-const KINDS = ["picks", "price_drop", "advice", "offer", "top_categories", "top_products"] as const;
+const KINDS = ["picks", "price_drop", "advice", "offer", "top_categories", "top_products", "reel"] as const;
 const when = (d: Date) =>
   new Intl.DateTimeFormat("lv-LV", {
     timeZone: "Europe/Riga",
@@ -96,7 +97,7 @@ export default async function SocialPage({ searchParams }: Props) {
       );
   const ok = sp.ok ? t(`ok_${sp.ok}` as "ok_saved") : null;
   const err = sp.err
-    ? ["no_data", "off", "invalid", "failed"].includes(sp.err)
+    ? ["no_data", "no_ffmpeg", "off", "invalid", "failed"].includes(sp.err)
       ? t(`err_${sp.err}` as "err_failed")
       : sp.err
     : null;
@@ -149,7 +150,7 @@ export default async function SocialPage({ searchParams }: Props) {
             <select name="kind" className={inputClass}>
               {KINDS.map((k) => (
                 <option key={k} value={k}>
-                  {t(`kind_${k}`)}
+                  {k === "reel" ? t("kind_reel_generated") : t(`kind_${k}`)}
                 </option>
               ))}
             </select>
@@ -170,6 +171,7 @@ export default async function SocialPage({ searchParams }: Props) {
                 className={`flex flex-col gap-3 rounded-panel-lg border-[1.5px] p-4 ${sp.post === p.id ? "border-lime" : "border-line-25"}`}
                 data-social-post={p.kind}
                 data-social-status={p.status}
+                data-social-design={(p.card as { design?: string }).design ?? "classic"}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-semibold text-mist">
@@ -177,7 +179,18 @@ export default async function SocialPage({ searchParams }: Props) {
                   </span>
                   <Chip tone={tone(p.status)}>{t(`status_${p.status}`)}</Chip>
                 </div>
-                {p.videoUrl ? (
+                {hasGeneratedVideo(p) ? (
+                  // A Reel Trilio made from the post's slides: played here before it goes out.
+                  <video
+                    controls
+                    preload="none"
+                    playsInline
+                    src={generatedVideoPath(p.id)}
+                    aria-label={t("generatedReel")}
+                    className="aspect-[9/16] w-[220px] rounded-[14px] border border-line-25 bg-night"
+                    data-social-video
+                  />
+                ) : p.videoUrl ? (
                   <a href={p.videoUrl} className="text-[15px] text-lime underline">
                     {p.videoUrl}
                   </a>

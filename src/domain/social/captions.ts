@@ -57,7 +57,17 @@ export type PostFacts =
       products: (PickLine & { id: string; subcategoryId?: string; path?: string })[];
       path: string;
     }
-  | { kind: "reel"; caption: string; videoUrl: string; path: string };
+  | {
+      kind: "reel";
+      caption: string;
+      videoUrl: string;
+      path: string;
+      /**
+       * A Reel Trilio makes itself (docs/SOCIAL_PLAN.md §14): the facts its slides and its
+       * caption are made from, so the prices in it are checked like any other post's.
+       */
+      of?: Exclude<PostFacts, { kind: "reel" }>;
+    };
 
 export type CardLine = {
   main: string;
@@ -98,7 +108,31 @@ export type PostCard = {
   lines: CardLine[];
   note?: string;
   subcategoryId?: string;
-  layout?: "cover" | "rank" | "phone" | "statement" | "drop" | "product" | "offer" | "closing";
+  layout?:
+    | "cover"
+    | "rank"
+    | "phone"
+    | "statement"
+    | "drop"
+    | "product"
+    | "offer"
+    | "closing"
+    // The themed designs (docs/SOCIAL_PLAN.md §14): a big figure, product photos scattered
+    // on the page, a question with its answers, and a photo of people at home.
+    | "big"
+    | "collage"
+    | "ask"
+    | "people";
+  /** The page's colours: night green (default), lime, or light. Only the themed designs use it. */
+  theme?: SocialTheme;
+  /** "collage": the products' photos, in order. */
+  images?: string[];
+  /** "ask": the answers under the question, lettered A, B, C. */
+  options?: { label: string; side?: string }[];
+  /** "people": who took the stock photo, kept with the post (never shown as a customer). */
+  credit?: string;
+  /** Which of the kind's designs the post was drawn in, so a refresh of its prices keeps it. */
+  design?: Design;
   /** Small capitals in lime above the headline. */
   eyebrow?: string;
   /** The headline; `title` when absent. A second part in lime. */
@@ -137,6 +171,155 @@ export function slideAlt(c: Omit<PostCard, "slides">): string {
   if (c.alt) return c.alt;
   const lines = c.lines.map((l) => [l.main, l.side, l.sub, ...(l.chips ?? [])].filter(Boolean).join(", "));
   return [c.title, ...lines].filter(Boolean).join(". ").slice(0, 900);
+}
+
+export type SocialTheme = "night" | "lime" | "light";
+
+/** A stock photo of people at home, from data/social-photos.json: lifestyle only, never a customer. */
+export type PeoplePhoto = { url: string; credit: string };
+
+/**
+ * The designs a kind rotates through (docs/SOCIAL_PLAN.md §14), so two posts of a kind in a
+ * row never look alike. "classic" is the night-green design the posts began with.
+ */
+export type Design = "classic" | "big" | "collage" | "ask" | "people";
+export const DESIGNS: Record<Exclude<SocialKind, "reel">, Design[]> = {
+  picks: ["collage", "ask", "classic"],
+  price_drop: ["big", "classic"],
+  // Two dark designs (the photo and the classic) never follow each other: lime sits between them.
+  advice: ["people", "ask", "classic", "ask"],
+  offer: ["big", "classic"],
+  top_categories: ["ask", "classic"],
+  top_products: ["collage", "classic"],
+};
+const DESIGN_THEME: Record<Design, SocialTheme> = {
+  classic: "night",
+  big: "lime",
+  collage: "light",
+  ask: "lime",
+  people: "night",
+};
+
+/** The design the n-th post of a kind gets, and the theme it shows. */
+export function designOf(kind: SocialKind, variant: number): { design: Design; theme: SocialTheme } {
+  const list = kind === "reel" ? (["collage", "ask", "classic"] as Design[]) : DESIGNS[kind];
+  const design = list[((variant % list.length) + list.length) % list.length]!;
+  return { design, theme: DESIGN_THEME[design] };
+}
+
+const minus = (cents: number) => `−${eur(cents)}`;
+
+/**
+ * Redraws the post's first picture in the chosen design. The facts (`lines`), the captions and
+ * the other slides stay as they are: only how the cover looks changes. A design that the facts
+ * cannot fill (no shop price to compare, no photo of people) falls back to the classic one.
+ */
+export function restyle(card: PostCard, f: PostFacts, design: Design, photo?: PeoplePhoto | null): PostCard {
+  if (f.kind === "reel") return f.of ? restyle(card, f.of, design, photo) : card;
+  if (design === "classic") return card;
+  const cover: Omit<PostCard, "slides"> = card.slides?.[0] ?? card;
+  let next: Omit<PostCard, "slides"> | null = null;
+  const base = { chip: cover.chip, title: cover.title, lines: cover.lines, note: cover.note };
+  if (design === "big" && f.kind === "price_drop" && f.lowCents > f.priceCents)
+    next = {
+      ...base,
+      layout: "big",
+      theme: "lime",
+      eyebrow: "Cena samazinājās",
+      numeral: minus(f.lowCents - f.priceCents),
+      headline: "zem zemākās cenas pēdējās 30 dienās.",
+      sub: f.product,
+      hero: f.subcategoryId,
+      ...(f.imageUrl ? { image: f.imageUrl } : {}),
+      stat: { label: `Tagad · ${f.shop}`, value: eur(f.priceCents) },
+      stat2: { label: "Zemākā cena 30 dienās", value: eur(f.lowCents) },
+      subcategoryId: f.subcategoryId,
+    };
+  else if (
+    design === "big" &&
+    f.kind === "offer" &&
+    f.shopPriceCents !== null &&
+    f.shopPriceCents > f.trilioPriceCents
+  )
+    next = {
+      ...base,
+      layout: "big",
+      theme: "lime",
+      eyebrow: `Reāls piemērs · ${f.month}`,
+      numeral: minus(f.shopPriceCents - f.trilioPriceCents),
+      headline: "lētāk nekā veikalā.",
+      sub: f.product,
+      hero: f.subcategoryId,
+      ...(f.imageUrl ? { image: f.imageUrl } : {}),
+      stat: { label: "Trilio piedāvājums", value: eur(f.trilioPriceCents) },
+      stat2: { label: `Veikalā${f.shop ? ` ${f.shop}` : ""}`, value: eur(f.shopPriceCents) },
+      subcategoryId: f.subcategoryId,
+    };
+  else if (design === "collage" && (f.kind === "picks" || f.kind === "top_products")) {
+    const items = f.kind === "picks" ? f.picks : f.products;
+    const images = items.map((p) => p.imageUrl).filter((u): u is string => !!u);
+    if (images.length >= 2)
+      next = {
+        ...base,
+        layout: "collage",
+        theme: "light",
+        eyebrow: f.kind === "picks" ? "3 ieteikumi" : "Šonedēļ skatītākās",
+        headline: f.kind === "picks" ? f.category : "Ko skatās visvairāk",
+        sub: "Cenas šodien partneru veikalos.",
+        images: images.slice(0, 4),
+        rows: items.slice(0, 3).map((p, i) => ({ n: `0${i + 1}`, label: p.name, side: eur(p.priceCents) })),
+        ...(f.kind === "picks" ? { subcategoryId: f.subcategoryId, hero: f.subcategoryId } : {}),
+      };
+  } else if (design === "ask" && f.kind === "picks")
+    next = {
+      ...base,
+      layout: "ask",
+      theme: "lime",
+      eyebrow: lower(f.category),
+      headline: "Nezini, kuru izvēlēties?",
+      sub: "Trīs piemērotākie varianti; cenas šodien partneru veikalos.",
+      options: f.picks.slice(0, 3).map((p) => ({ label: p.name, side: eur(p.priceCents) })),
+      subcategoryId: f.subcategoryId,
+      hero: f.subcategoryId,
+    };
+  else if (design === "ask" && f.kind === "top_categories")
+    next = {
+      ...base,
+      layout: "ask",
+      theme: "lime",
+      eyebrow: "Ko meklē šonedēļ",
+      headline: "Ko Latvija meklēja šonedēļ?",
+      sub: "Trilio lietotāju meklētākās kategorijas pēc kārtas.",
+      options: f.categories.slice(0, 4).map((c) => ({ label: c.label })),
+    };
+  else if (design === "ask" && f.kind === "advice")
+    next = {
+      ...base,
+      layout: "ask",
+      theme: "lime",
+      eyebrow: `Kā izvēlēties · ${lower(f.category)}`,
+      headline: f.factor,
+      sub: "Daži jautājumi, un trīs piemērotākie varianti.",
+      subcategoryId: f.subcategoryId,
+      hero: f.subcategoryId,
+    };
+  else if (design === "people" && f.kind === "advice" && photo)
+    next = {
+      ...base,
+      layout: "people",
+      theme: "night",
+      eyebrow: `Kā izvēlēties · ${lower(f.category)}`,
+      headline: f.factor,
+      sub: "Daži jautājumi, un trīs piemērotākie varianti.",
+      image: photo.url,
+      credit: photo.credit,
+      subcategoryId: f.subcategoryId,
+      hero: f.subcategoryId,
+    };
+  if (!next) return card;
+  if (cover.alt) next.alt = cover.alt;
+  if (cover.link) next.link = cover.link;
+  return card.slides?.length ? { ...card, slides: [next, ...card.slides.slice(1)] } : { ...next };
 }
 
 export type ComposedPost = {
@@ -541,7 +724,11 @@ function parts(
         names: f.products.flatMap((p) => [p.name, p.shop]),
       };
     }
-    case "reel":
+    case "reel": {
+      if (f.of) {
+        const o = parts(f.of);
+        return { ...o, body: [f.caption], cta: "", alt: o.alt };
+      }
       return {
         body: [f.caption],
         cta: "",
@@ -551,7 +738,14 @@ function parts(
         numbers: [],
         names: [],
       };
+    }
   }
+}
+
+/** The caption of a generated Reel: what the post about the same facts says, without the link line. */
+export function reelCaption(of: Exclude<PostFacts, { kind: "reel" }>): string {
+  const p = parts(of);
+  return [...p.body, p.cta.replace(/:$/, ".")].filter(Boolean).join("\n\n");
 }
 
 /** The prices, numbers and names a caption about these facts may contain (for the owner's edits too). */
@@ -587,7 +781,15 @@ export const KIND_QUESTION: Partial<Record<SocialKind, string>> = {
 
 export function composePost(
   f: PostFacts,
-  opts: { postId: string; baseUrl: string; lead?: string },
+  opts: {
+    postId: string;
+    baseUrl: string;
+    lead?: string;
+    /** Which of the kind's designs to draw (designOf); the classic one when absent. */
+    design?: Design;
+    /** A photo of people for the "people" design. */
+    photo?: PeoplePhoto | null;
+  },
 ): ComposedPost {
   const p = parts(f, opts.lead);
   const fbLink = utmLink(opts.baseUrl, f.path, "facebook", f.kind, opts.postId);
@@ -611,7 +813,7 @@ export function composePost(
       ? lintPost(f.caption, ctx)
       : [...new Set([...lintPost(captionFb, ctx), ...lintPost(captionIg, ctx), ...lintPost(p.alt, ctx)])];
   return {
-    card: p.card,
+    card: opts.design ? { ...restyle(p.card, f, opts.design, opts.photo), design: opts.design } : p.card,
     captionFb,
     captionIg,
     alt: p.alt,

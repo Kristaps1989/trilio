@@ -47,6 +47,8 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   const post = page.locator(`#post-${id}`);
   await expect(post).toHaveAttribute("data-social-status", "draft");
   await expect(post).toBeVisible();
+  // The post is drawn in one of the kind's designs (they take turns; docs/SOCIAL_PLAN.md §14).
+  await expect(post).toHaveAttribute("data-social-design", /^(people|ask|classic)$/);
   // The image is drawn and is a JPEG Instagram accepts.
   const img = post.getByRole("img");
   await expect(img).toBeVisible();
@@ -154,4 +156,50 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: "Dzēst no tīkliem" }).click();
   await expect(page.locator("[data-outcome]")).toHaveText("Dzēsts no tīkliem.");
+});
+
+// docs/SOCIAL_PLAN.md §14: a Reel Trilio makes from three picks. It needs prices seen today and
+// ffmpeg on the server; where either is missing the page says which, and nothing is made.
+test("a generated Reel: made from three picks, played on the page, public once approved", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "one video is enough; it takes the server a while");
+  test.setTimeout(180_000);
+  await devLogin(page, ADMIN, "/admin/sociali");
+  const generate = page.locator("[data-social-generate]");
+  await generate.getByLabel("Veids").selectOption({ label: "Video (Trilio veidots no trim ieteikumiem)" });
+  await generate.getByRole("button", { name: "Izveidot tagad" }).click();
+  const outcome = page.locator("[data-outcome]");
+  await expect(outcome).toBeVisible();
+  const said = (await outcome.textContent()) ?? "";
+  if (said !== "Melnraksts izveidots.") {
+    // No fresh prices in this database, or no ffmpeg on this machine: said plainly, nothing made.
+    expect(said).toMatch(/^(Šim veidam šobrīd nav datu|Šajā serverī nav video rīka \(ffmpeg\))/);
+    return;
+  }
+  const id = new URL(page.url()).searchParams.get("post") ?? "";
+  const post = page.locator(`#post-${id}`);
+  await expect(post).toHaveAttribute("data-social-post", "reel");
+  await expect(post).toHaveAttribute("data-social-design", /^(collage|ask|classic)$/);
+  const video = post.locator("[data-social-video]");
+  await expect(video).toHaveAttribute("src", `/api/social/${id}/video.mp4`);
+  await expect(video).toHaveAccessibleName("Trilio veidots video");
+  // The caption tells the picks with their prices; the tags are there for Instagram.
+  const ig = await post.getByLabel("Teksts Instagram").inputValue();
+  expect(ig).toMatch(/\d\s?€/);
+  expect(ig).toContain("#trilio");
+  await expectNoAxeViolations(page);
+  // The admin can play it; it is an MP4.
+  const mine = await page.request.get(`/api/social/${id}/video.mp4`);
+  expect(mine.status()).toBe(200);
+  expect(mine.headers()["content-type"]).toBe("video/mp4");
+  expect((await mine.body()).subarray(4, 8).toString("latin1")).toBe("ftyp");
+  // A draft's video is not public.
+  const base = info.project.use.baseURL ?? "http://localhost:3000";
+  const anon = await page.context().browser()!.newContext();
+  expect((await anon.request.get(`${base}/api/social/${id}/video.mp4`)).status()).toBe(404);
+  await anon.close();
+  // Left as skipped, so it never goes out and its slot is free again.
+  await post.getByRole("button", { name: "Izlaist" }).click();
+  await expect(page.locator(`#post-${id}`)).toHaveCount(0);
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { composePost, type PostFacts } from "@/domain/social/captions";
-import { loadPhoto, renderPostJpeg, slidesOf } from "./render";
+import { composePost, type Design, type PostFacts } from "@/domain/social/captions";
+import { loadCover, loadPhoto, POST_SIZE, renderPostJpeg, slidesOf, STORY_SIZE } from "./render";
 
 // The product photo on a slide: fetched and fitted, or left out so the
 // drawing stands in and the post still goes out.
@@ -155,5 +155,108 @@ describe("every layout draws", () => {
     expect((await renderPostJpeg(legacy)).length).toBeGreaterThan(20_000);
     const long = { ...legacy, lines: [...legacy.lines, ...legacy.lines] };
     expect((await renderPostJpeg(long)).length).toBeGreaterThan(20_000);
+  }, 60_000);
+});
+
+// docs/SOCIAL_PLAN.md §14: the themed designs, upright for a post and tall for a Reel.
+describe("themed designs draw", () => {
+  const picks = [
+    {
+      name: "Electrolux EEA27200L",
+      priceCents: 37900,
+      shop: "Veikals A",
+      imageUrl: "/sample/fridge-builtin.png",
+    },
+    { name: "Bosch SMV2ITX22E", priceCents: 52999, shop: "Veikals B", imageUrl: "/sample/kettle-steel.png" },
+    { name: "AEG FSE73727P", priceCents: 79900, shop: "Veikals C", imageUrl: "/sample/kettle-black.png" },
+  ];
+  const fridge: PostFacts = {
+    kind: "picks",
+    subcategoryId: "fridge",
+    category: "Ledusskapji",
+    picks,
+    path: "/",
+  };
+  const advice: PostFacts = {
+    kind: "advice",
+    subcategoryId: "dish",
+    category: "Trauku mazgājamās mašīnas",
+    factor: "Atvērtā virtuvē 44 dB un 48 dB ir liela starpība.",
+    path: "/",
+  };
+  const offer: PostFacts = {
+    kind: "offer",
+    specialOfferId: "o",
+    subcategoryId: "fridge",
+    product: "Bosch KGN36VLED ledusskapis",
+    shop: "Veikals A",
+    shopPriceCents: 64900,
+    trilioPriceCents: 59900,
+    deliveryDays: 3,
+    month: "oktobrī",
+    imageUrl: "/sample/fridge-builtin.png",
+    path: "/",
+  };
+  const cases: [string, PostFacts, Design][] = [
+    ["big", offer, "big"],
+    ["collage", fridge, "collage"],
+    ["ask with answers", fridge, "ask"],
+    ["ask without answers", advice, "ask"],
+    ["people", advice, "people"],
+  ];
+
+  it.each(cases)(
+    "%s",
+    async (_name, f, design) => {
+      // A photo of people from the design samples stands in for the stock library: no network.
+      const post = composePost(f, {
+        postId: "s",
+        baseUrl: "https://trilio.lv",
+        design,
+        photo: { url: "/sample/fridge-builtin.png", credit: "test" },
+      });
+      const [first] = slidesOf(post.card);
+      expect(first!.layout).toBe(design);
+      const sharp = (await import("sharp")).default;
+      const upright = await sharp(await renderPostJpeg(first!)).metadata();
+      expect([upright.width, upright.height]).toEqual([POST_SIZE.width, POST_SIZE.height]);
+      const tall = await sharp(await renderPostJpeg(first!, 0, 1, "story")).metadata();
+      expect([tall.width, tall.height]).toEqual([STORY_SIZE.width, STORY_SIZE.height]);
+    },
+    120_000,
+  );
+
+  it("the lime and light pages are not the night one: the theme reaches the picture", async () => {
+    const sharp = (await import("sharp")).default;
+    const corner = async (design: Design) => {
+      const [first] = slidesOf(
+        composePost(fridge, { postId: "s", baseUrl: "https://trilio.lv", design }).card,
+      );
+      const { data } = await sharp(await renderPostJpeg(first!))
+        .extract({ left: 4, top: 4, width: 8, height: 8 })
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      return [data[0]!, data[1]!, data[2]!];
+    };
+    const [night, lime, light] = [await corner("classic"), await corner("ask"), await corner("collage")];
+    // Night green is dark; lime is bright with little blue; the light page is near white.
+    expect(night[0]! + night[1]! + night[2]!).toBeLessThan(200);
+    expect(lime[1]!).toBeGreaterThan(220);
+    expect(lime[2]!).toBeLessThan(140);
+    expect(Math.min(...light)).toBeGreaterThan(225);
+  }, 120_000);
+
+  it("a people photo that cannot be fetched leaves the drawing in its place", async () => {
+    expect(await loadCover(undefined, 900, 560)).toBeUndefined();
+    expect(await loadCover("http://example.com/a.jpg", 900, 560)).toBeUndefined();
+    expect(await loadCover("https://127.0.0.1:9/a.jpg", 900, 560)).toBeUndefined();
+    expect(await loadCover("/sample/fridge-builtin.png", 900, 560)).toMatch(/^data:image\/jpeg;base64,/);
+    const post = composePost(advice, {
+      postId: "s",
+      baseUrl: "https://trilio.lv",
+      design: "people",
+      photo: { url: "https://127.0.0.1:9/a.jpg", credit: "test" },
+    });
+    expect((await renderPostJpeg(slidesOf(post.card)[0]!)).length).toBeGreaterThan(20_000);
   }, 60_000);
 });

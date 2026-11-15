@@ -57,14 +57,14 @@ export async function settingsAction(form: FormData) {
   back({ ok: "saved" });
 }
 
-const Kind = z.enum(["picks", "price_drop", "advice", "offer", "top_categories", "top_products"]);
+const Kind = z.enum(["picks", "price_drop", "advice", "offer", "top_categories", "top_products", "reel"]);
 
 export async function generateAction(form: FormData) {
   const a = await admin();
   const kind = Kind.safeParse(form.get("kind"));
   if (!kind.success) back({ err: "invalid" });
   const r = await generateNow(db, deps(), kind.data!, a.email);
-  if (!r.ok) back({ err: r.reason === "no_data" ? "no_data" : "failed" });
+  if (!r.ok) back({ err: r.reason === "no_data" || r.reason === "no_ffmpeg" ? r.reason : "failed" });
   const id = r.ok ? r.post.id : "";
   await log(a, "social_generate", id, { kind: kind.data });
   back({ ok: "generated", post: id });

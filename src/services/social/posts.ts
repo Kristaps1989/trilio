@@ -11,7 +11,14 @@ import {
   utmLink,
   type PostCard,
   type PostFacts,
+  designOf,
+  reelCaption,
+  type Design,
+  type PeoplePhoto,
 } from "@/domain/social/captions";
+import { pickPhoto } from "@/domain/social/photos";
+import { ffmpegPath, generatedVideoPath } from "./video";
+import { getGroupOfSubcategory } from "@/domain/questions/catalog";
 import { lintPost } from "@/domain/social/lint";
 import {
   DRAFT_AHEAD_MS,
@@ -183,6 +190,37 @@ async function claudeLead(caller: StructuredCaller | null | undefined, f: PostFa
   return res.ok ? res.value.lead.trim() : null;
 }
 
+/**
+ * How the next post of this kind looks (docs/SOCIAL_PLAN.md §14): the kind's designs in turn,
+ * skipping one whose theme the previous post already showed, so two posts in a row never share
+ * a design or a colour. An advice post in the "people" design gets a photo that fits its group.
+ */
+export async function nextLook(db: Db, f: PostFacts): Promise<{ design: Design; photo: PeoplePhoto | null }> {
+  // The owner's own video has no drawn slides; a generated Reel takes its turn of designs.
+  if (f.kind === "reel" && !f.of) return { design: "classic", photo: null };
+  const [{ n }] = (await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(socialPosts)
+    .where(eq(socialPosts.kind, f.kind))) as [{ n: number }];
+  const [last] = await db
+    .select({ card: socialPosts.card })
+    .from(socialPosts)
+    .orderBy(desc(socialPosts.createdAt))
+    .limit(1);
+  const lastCard = last?.card as unknown as PostCard | undefined;
+  const lastTheme = (lastCard?.slides?.[0] ?? lastCard)?.theme ?? "night";
+  let variant = n;
+  if (
+    last &&
+    designOf(f.kind, variant).theme === lastTheme &&
+    designOf(f.kind, variant + 1).theme !== lastTheme
+  )
+    variant++;
+  const { design } = designOf(f.kind, variant);
+  const group = "subcategoryId" in f ? (getGroupOfSubcategory(f.subcategoryId)?.id ?? null) : null;
+  return { design, photo: design === "people" ? pickPhoto(group, n) : null };
+}
+
 export type CreateResult = { ok: true; post: SocialPost } | { ok: false; reason: string };
 
 /** Composes, checks (lint and personal data) and stores one post. Never stores a post that fails. */
@@ -196,14 +234,26 @@ export async function createPost(
     personal?: (string | null)[];
     mode: SocialMode;
     videoUrl?: string;
+    /** A Reel Trilio makes from the post's own slides: its address is this post's video. */
+    generatedVideo?: boolean;
   },
 ): Promise<CreateResult> {
   const id = randomUUID();
+  if (input.generatedVideo && input.facts.kind === "reel") {
+    const videoUrl = `${deps.baseUrl}${generatedVideoPath(id)}`;
+    input = { ...input, videoUrl, facts: { ...input.facts, videoUrl } };
+  }
   const lead = await claudeLead(deps.caller, input.facts).catch(() => null);
-  let post = composePost(input.facts, { postId: id, baseUrl: deps.baseUrl, lead: lead ?? undefined });
+  const look = await nextLook(db, input.facts);
+  let post = composePost(input.facts, {
+    postId: id,
+    baseUrl: deps.baseUrl,
+    lead: lead ?? undefined,
+    ...look,
+  });
   let source = lead ? "claude" : "template";
   if (post.issues.length && lead) {
-    post = composePost(input.facts, { postId: id, baseUrl: deps.baseUrl });
+    post = composePost(input.facts, { postId: id, baseUrl: deps.baseUrl, ...look });
     source = "template";
   }
   if (post.issues.length) return { ok: false, reason: post.issues.join("; ") };
@@ -271,17 +321,53 @@ export async function draftUpcoming(db: Db, deps: SocialDeps, now = new Date()):
     );
   const open = slots.filter((s) => !taken.some((t) => t.at.getTime() === s.at.getTime()));
   if (!open.length) return 0;
-  const { has, found } = await availability(db, now);
+  const { has: data, found } = await availability(db, now);
+  const has = { ...data, video: !!(await ffmpegPath()) };
   let made = 0;
   for (const slot of open) {
     const kind = pickKind(slot, has);
     if (!kind) continue;
+    if (kind === "reel") {
+      const reel = await reelInput(db, now);
+      if (!reel) continue;
+      const r = await createPost(db, deps, {
+        ...reel,
+        slotAt: slot.at,
+        createdBy: SYSTEM,
+        mode: settings.mode,
+      });
+      if (r.ok) made++;
+      continue;
+    }
     const f = found.get(kind) ?? (await factsFor(db, kind, now));
     if (!f) continue;
     const r = await createPost(db, deps, { ...f, slotAt: slot.at, createdBy: SYSTEM, mode: settings.mode });
     if (r.ok) made++;
   }
   return made;
+}
+
+/**
+ * A generated Reel's input (docs/SOCIAL_PLAN.md §14): three picks for the next category, as the
+ * Monday post has them, told as a video. Null without data or without ffmpeg on this machine.
+ */
+export async function reelInput(
+  db: Db,
+  now: Date,
+): Promise<{ facts: PostFacts; generatedVideo: true } | null> {
+  if (!(await ffmpegPath())) return null;
+  const src = await factsFor(db, "picks", now);
+  if (!src || src.facts.kind === "reel") return null;
+  return {
+    facts: {
+      kind: "reel",
+      caption: reelCaption(src.facts),
+      videoUrl: "",
+      path: src.facts.path,
+      of: src.facts,
+    },
+    generatedVideo: true,
+  };
 }
 
 /** A post by hand ("Ģenerēt tagad"): the next free evening, as a draft. */
@@ -292,8 +378,8 @@ export async function generateNow(
   admin: string,
   now = new Date(),
 ): Promise<CreateResult> {
-  const f = await factsFor(db, kind, now);
-  if (!f) return { ok: false, reason: "no_data" };
+  const f = kind === "reel" ? await reelInput(db, now) : await factsFor(db, kind, now);
+  if (!f) return { ok: false, reason: kind === "reel" && !(await ffmpegPath()) ? "no_ffmpeg" : "no_data" };
   const taken = await db
     .select({ at: socialPosts.slotAt })
     .from(socialPosts)
@@ -341,15 +427,30 @@ export async function refresh(
 ): Promise<{ ok: true; post: SocialPost } | { ok: false; reason: string }> {
   const card = post.card as unknown as StoredCard;
   const old = card.facts;
-  if (!old || !["picks", "price_drop", "top_products"].includes(post.kind)) return { ok: true, post };
-  const next =
-    old.kind === "picks"
-      ? await picksFacts(db, old.subcategoryId, now)
-      : old.kind === "price_drop"
-        ? await priceDropFacts(db, now, [], old.productId)
-        : await topProductsFacts(db, now);
+  // A generated Reel tells three picks: its prices are read again like the picks post's.
+  const reelOf = old?.kind === "reel" && old.of?.kind === "picks" ? old.of : null;
+  if (!old || !(["picks", "price_drop", "top_products"].includes(post.kind) || reelOf))
+    return { ok: true, post };
+  let next: PostFacts | null;
+  if (old.kind === "reel") {
+    const of = reelOf ? await picksFacts(db, reelOf.subcategoryId, now) : null;
+    next = of && of.kind === "picks" ? { ...old, caption: reelCaption(of), of } : null;
+  } else
+    next =
+      old.kind === "picks"
+        ? await picksFacts(db, old.subcategoryId, now)
+        : old.kind === "price_drop"
+          ? await priceDropFacts(db, now, [], old.productId)
+          : await topProductsFacts(db, now);
   if (!next) return { ok: false, reason: "Dati vairs neatbilst (cena vai pieejamība mainījās)." };
-  const fresh = composePost(next, { postId: post.id, baseUrl: deps.baseUrl });
+  // The refreshed post keeps the design it was drawn in, and its photo.
+  const shown = card.slides?.[0] ?? card;
+  const fresh = composePost(next, {
+    postId: post.id,
+    baseUrl: deps.baseUrl,
+    design: card.design,
+    photo: shown.layout === "people" && shown.image ? { url: shown.image, credit: shown.credit ?? "" } : null,
+  });
   if (prices(fresh.card) === prices(card) && JSON.stringify(fresh.card.lines) === JSON.stringify(card.lines))
     return { ok: true, post };
   if (card.edited)

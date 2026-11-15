@@ -3,7 +3,7 @@ import type { SocialKind } from "@/db/schema";
 // When posts go out and which kind fills a slot (docs/SOCIAL_PLAN.md §4).
 // Pure: the job passes the clock and what today's data allows.
 
-export type SlotKey = "mon" | "wed" | "fri" | "sun";
+export type SlotKey = "mon" | "wed" | "fri" | "sat" | "sun";
 export type Slot = { key: SlotKey; at: Date; day: string };
 
 /** Riga weekday (0 = Sunday) → slot and local time. */
@@ -11,6 +11,8 @@ const SLOTS: Record<number, { key: SlotKey; hour: number; minute: number }> = {
   1: { key: "mon", hour: 19, minute: 0 },
   3: { key: "wed", hour: 19, minute: 0 },
   5: { key: "fri", hour: 19, minute: 0 },
+  // Saturday morning: the week's generated Reel (docs/SOCIAL_PLAN.md §14).
+  6: { key: "sat", hour: 11, minute: 0 },
   0: { key: "sun", hour: 11, minute: 0 },
 };
 
@@ -106,6 +108,8 @@ export type Availability = {
   paidOffer: boolean;
   topCategories: boolean;
   topProducts: boolean;
+  /** The server can make a video (ffmpeg is there): the Saturday Reel. */
+  video?: boolean;
 };
 
 /** Which kind fills a slot (§4), or null when the slot stays empty this week. */
@@ -119,6 +123,9 @@ export function pickKind(slot: Pick<Slot, "key" | "day">, has: Availability): So
       if (has.paidOffer) return "offer";
       if (isoWeek(slot.day) % 2 === 0 && has.topProducts) return "top_products";
       return "picks";
+    case "sat":
+      // A Reel made from three picks; only where the server can make a video.
+      return has.video ? "reel" : null;
     case "sun":
       return has.topCategories ? "top_categories" : null;
   }
