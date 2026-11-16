@@ -7,6 +7,16 @@ import type { EmailMessage } from "@/services/notify/email";
 // above it and the plain-text part folded below. The HTML is Trilio's own,
 // every value escaped and no scripts, and the page's CSP covers the frame too.
 
+/**
+ * A link clicked in the preview opens in a new tab. Inside the frame it would load
+ * trilio.lv, which refuses to be framed (frame-ancestors 'none'), and the browser
+ * shows a "blocked" sign in place of the e-mail.
+ */
+export function previewHtml(html: string): string {
+  const base = '<base target="_blank">';
+  return /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (h) => `${h}${base}`) : `${base}${html}`;
+}
+
 type Props = {
   message: Pick<EmailMessage, "to" | "subject" | "text" | "html">;
   labels: { to: string; frame: string; text: string };
@@ -26,7 +36,7 @@ export function EmailPreview({ message, labels }: Props) {
       {message.html ? (
         <iframe
           title={labels.frame}
-          srcDoc={message.html}
+          srcDoc={previewHtml(message.html)}
           className="mt-3 w-full rounded-control border-0"
           style={{ height }}
           onLoad={(e) => {

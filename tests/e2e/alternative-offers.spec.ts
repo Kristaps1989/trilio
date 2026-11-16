@@ -160,7 +160,7 @@ test("unavailable → another maker's product with a picture: one shopper gets i
       if (!label.includes(direct) && !label.includes(older)) await box.uncheck();
     }
     await expect(admin.locator("[data-alt-split]")).toHaveText(
-      "1 saņems piedāvājumu uzreiz, 1 vispirms saņems jautājumu „Jā / Nē”.",
+      "1 saņems piedāvājumu uzreiz. 1 vispirms saņems jautājumu „Jā / Nē”, jo viņu pieprasījuma tekstā alternatīva netika pieminēta; piedāvājums viņiem aizies tikai pēc „Jā”.",
     );
     const limits = admin.locator("[data-limit-original]");
     const seen = Number(await limits.getAttribute("data-limit-original"));
@@ -191,12 +191,26 @@ test("unavailable → another maker's product with a picture: one shopper gets i
     await expect(admin.locator("[data-description-problems]")).toBeVisible();
     await description.fill("Klusa, ar ērtu programmu izvēli.");
     await expect(admin.locator("[data-description-problems]")).toHaveCount(0);
-    const mail = admin.frameLocator('[data-testid="email-preview"] iframe');
+    // The question the older request gets now, then the offer that follows "Jā".
+    const ask = admin.locator('[data-testid="email-preview"] iframe').first().contentFrame();
+    await expect(ask.getByRole("heading", { level: 1 })).toHaveText("Tavs modelis šobrīd nav pieejams.");
+    await expect(ask.getByRole("link", { name: "Jā, piedāvājiet" })).toBeVisible();
+    await expect(admin.getByTestId("send-alternative")).toHaveText(
+      "Nosūtīt: 1 piedāvājumu uzreiz, 1 jautājumu „Jā / Nē”",
+    );
+    const mail = admin.locator('[data-testid="email-preview"] iframe').last().contentFrame();
     await expect(mail.getByRole("heading", { level: 1 })).toContainText("Tavs modelis nav pieejams.");
     await expect(mail.getByText("Tu prasīji", { exact: true }).first()).toBeVisible();
     await expect(mail.getByText("Trilio apraksts")).toBeVisible();
     await expect(mail.getByRole("link", { name: "Gribu tikai pieprasīto modeli" })).toBeVisible();
-    await expect(admin.getByTestId("email-subject")).toContainText("nav pieejams — varam piedāvāt");
+    // A link clicked in the preview opens a new tab; the preview itself stays (the site refuses framing).
+    const [popup] = await Promise.all([
+      admin.waitForEvent("popup"),
+      mail.getByRole("link", { name: "Gribu tikai pieprasīto modeli" }).click(),
+    ]);
+    await popup.close();
+    await expect(mail.getByRole("heading", { level: 1 })).toContainText("Tavs modelis nav pieejams.");
+    await expect(admin.getByTestId("email-subject").last()).toContainText("nav pieejams — varam piedāvāt");
     await expectNoAxeViolations(admin);
     await noSideScroll(admin);
     await admin.getByTestId("send-alternative").click();

@@ -11,6 +11,7 @@ import {
 } from "@/domain/offers/alternative";
 import { formatEur } from "@/i18n/format";
 import { composeOfferEmail } from "@/services/offers/compose";
+import { composeAskEmail } from "@/services/offers/compose-answers";
 import type { CompareRow } from "@/services/offers/mail-layout";
 import { Button } from "@/ui/Button";
 import { alternativeAction, type AltFormState } from "../../../outcome-actions";
@@ -191,6 +192,24 @@ export function AltOfferForm(props: Props) {
           },
         )
       : null;
+
+  // Someone asked first gets the "Jā / Nē" question now; the offer follows only after "Jā".
+  const asked = recipients.find((r) => chosen.has(r.key) && !r.direct);
+  const askPreview = asked
+    ? composeAskEmail({
+        baseUrl: props.baseUrl,
+        signature: props.signature,
+        inbox: props.inbox,
+        company: props.company,
+        to: asked.email,
+        askedName: original.name,
+        requestedAt: asked.requestedAt ? new Date(asked.requestedAt) : null,
+        watchUntil: asked.watchUntil ? new Date(asked.watchUntil) : null,
+        yesUrl: `${props.baseUrl}/piedavajumi/alternativa/…?atbilde=ja`,
+        noUrl: `${props.baseUrl}/piedavajumi/alternativa/…?atbilde=ne`,
+        unsubscribeUrl: `${props.baseUrl}/piedavajumi/atteikties/…`,
+      })
+    : null;
 
   const toggle = (key: string) =>
     setChosen((prev) => {
@@ -420,14 +439,31 @@ export function AltOfferForm(props: Props) {
         ) : null}
         <div>
           <Button type="submit" size="lg" disabled={blocked} data-testid="send-alternative">
-            {t("send", { direct: directCount, ask: askCount })}
+            {askCount === 0
+              ? t("sendDirect", { count: directCount })
+              : directCount === 0
+                ? t("sendAsk", { count: askCount })
+                : t("send", { direct: directCount, ask: askCount })}
           </Button>
         </div>
       </div>
 
       <section aria-label={t("preview")} className="flex flex-col gap-2">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("preview")}</h2>
-        {first && !first.direct ? <p className="text-sm text-stone">{t("previewAsk")}</p> : null}
+        {askPreview ? (
+          <>
+            <p className="text-sm text-stone">{t("previewAsk")}</p>
+            <EmailPreview
+              message={askPreview}
+              labels={{
+                to: t("to", { email: askPreview.to }),
+                frame: t("previewAskFrame"),
+                text: t("textVersion"),
+              }}
+            />
+            <h3 className="mt-4 font-heading text-lg font-semibold text-mist">{t("previewAfterYes")}</h3>
+          </>
+        ) : null}
         {preview ? (
           <EmailPreview
             message={preview}

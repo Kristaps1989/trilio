@@ -3099,7 +3099,7 @@
       "isEquivalent": "Līdzvērtīgs: nekas nav sliktāk. E-pastā drīkst rakstīt „līdzvērtīgs”.",
       "isSimilar": "Līdzīgs. E-pastā būs nosaukts: {list}.",
       "recipients": "{count, plural, one {Saņems # cilvēks} other {Saņems # cilvēki}}",
-      "split": "{direct} saņems piedāvājumu uzreiz, {ask} vispirms saņems jautājumu „Jā / Nē”.",
+      "split": "{direct} saņems piedāvājumu uzreiz. {ask} vispirms saņems jautājumu „Jā / Nē”, jo viņu pieprasījuma tekstā alternatīva netika pieminēta; piedāvājums viņiem aizies tikai pēc „Jā”.",
       "price": "Cena (EUR)",
       "limitOriginal": "Nedrīkst būt dārgāk par pieprasītās preces redzēto cenu: {price}.",
       "limitShop": "Jābūt lētākam par šīs preces cenu veikalos: {price}.",
@@ -3116,9 +3116,9 @@
       "private": "Tikai adminam: iepirkums un piegādātājs",
       "cost": "Iepirkuma cena (EUR)",
       "supplier": "Piegādātājs, piezīme",
-      "send": "Nosūtīt ({direct} uzreiz, {ask} jautājums)",
+      "send": "Nosūtīt: {direct, plural, one {# piedāvājumu uzreiz} other {# piedāvājumus uzreiz}}, {ask, plural, one {# jautājumu „Jā / Nē”} other {# jautājumus „Jā / Nē”}}",
       "preview": "E-pasta priekšskatījums",
-      "previewAsk": "Pirmais saņēmējs vispirms saņems jautājumu; šis piedāvājums aizies pēc „Jā”.",
+      "previewAsk": "Šis cilvēks vispirms saņems šo jautājumu:",
       "previewEmpty": "Ievadi cenu, un šeit parādīsies e-pasts.",
       "to": "Kam: {email}",
       "textVersion": "Teksta versija",
@@ -3131,7 +3131,11 @@
         "validity": "Spēkā līdz datumam jābūt nākotnē.",
         "description": "Aprakstā ir kaut kas, ko nedrīkst rakstīt.",
         "recipients_none": "Nav neviena, kam sūtīt."
-      }
+      },
+      "sendDirect": "Nosūtīt piedāvājumu ({count})",
+      "sendAsk": "Nosūtīt jautājumu „Jā / Nē” ({count})",
+      "previewAskFrame": "Jautājuma e-pasta priekšskatījums",
+      "previewAfterYes": "Pēc „Jā” aizies šis piedāvājums:"
     }
   },
   "alertsUnsubscribe": {
