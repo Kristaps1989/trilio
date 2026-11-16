@@ -63,6 +63,22 @@ The per-request table below keeps one menu per row ("Piedāvāt šo", "Alternat�
 
 The offer row stores `alternative_to_product_id` and a frozen `comparison` snapshot (as reference prices are frozen today), so the e-mail and the offer page read the same later even if the catalogue changes.
 
+### 3.4 Pictures and description (owner, 16 Nov 2026)
+
+The offer form, for every offer and not only alternatives, gets a **"Bildes un apraksts"** block:
+
+- **Pictures, up to 4.** Each one can be added in either of two ways:
+  - **No datora**: a file field with drag and drop on desktop. On a phone it opens the camera or the gallery. JPEG, PNG or WebP, up to 10 MB.
+  - **No saites**: paste an address (for example the maker's or the distributor's product page picture), then press "Pievienot".
+  
+  Either way, the server stores **its own copy**. It never links to the original address, so the e-mail and the offer page still work if that page changes, and the shopper's mail client never calls a third-party server. Each picture is resized with `sharp` to at most 1600 px and saved as JPEG with EXIF data (location, camera) removed. The first picture is the main one, and arrows change the order. When the catalogue has a picture for the product, it is there by default and can be removed.
+- **Alt text** for each picture. It is required (accessibility) and prefilled with the product name.
+- **Rights check**: a tick box "Man ir tiesības izmantot šo bildi" is required for pictures from a link. Who added a picture, and from which address, goes to the audit log.
+- **Description ("Apraksts")**: plain text with line breaks, up to 1 500 characters, with a live preview. On the offer page and in the e-mail it appears under the heading **"Trilio apraksts"**, so it is clear Trilio wrote it and not the maker. It passes the existing honesty lint, which blocks "tikai šodien", "pēdējie", countdowns and similar wording. It is an addition: it never replaces the comparison table, and a "līdzvērtīgs" claim in the text is blocked when the comparison label is "līdzīgs".
+- **A product not in the catalogue** (a model the distributor has that no partner shop lists): "Prece nav katalogā" opens fields for name, brand, model code, EAN and the category's key attributes. Attributes left empty show as "nav datu" in the comparison, never as "tāpat". Pictures and description are then required, because there is nothing else to show. Discount claims are not allowed for such a product, since there is no 30-day shop price (rule 5); the e-mail shows only the offer price and the original's price.
+
+Security for the link option: HTTPS only, public addresses only (no internal or private IPs, so the server can't be made to fetch internal URLs (SSRF)), at most 3 redirects, 10 s, 10 MB, and the bytes must decode as an image. If the link fails, the form says why ("Saite nav bilde", "Pārāk liela", "Neizdevās ielādēt") and keeps what was typed.
+
 ## 4. What the shopper sees (honest by construction)
 
 ### 4.1 Alternative offer e-mail (consent version from this plan onward)
@@ -90,7 +106,7 @@ This is one short message per request, never repeated: "Šobrīd nevaram piedāv
 
 ## 5. Data and code
 
-- **Schema:** a new table `request_outcomes` (id, product_id, notify_request_id null, user_id null, email, outcome enum from §2, offer_id null, alternative_product_id null, wait_until null, note, created_by, created_at, notified_at, answered_at, answer `yes|no|declined` null). The newest row per request wins, and older rows are the history. `special_offers` gets `alternative_to_product_id` and `comparison jsonb`. `notify_requests` needs nothing new: the consent version is already stored.
+- **Schema:** a new table `request_outcomes` (id, product_id, notify_request_id null, user_id null, email, outcome enum from §2, offer_id null, alternative_product_id null, wait_until null, note, created_by, created_at, notified_at, answered_at, answer `yes|no|declined` null). The newest row per request wins, and older rows are the history. `special_offers` gets `alternative_to_product_id`, `comparison jsonb`, `description` and `manual_product jsonb` (for a product not in the catalogue). The new table `offer_images` (offer_id, position, bytes bytea, width, height, alt, source `upload|url`, source_url, added_by, created_at) is stored like `social_images` and served at `/piedavajums/{token}/bilde/{n}.jpg`. A picture is deleted together with its offer. `notify_requests` needs nothing new: the consent version is already stored.
 - **Domain (pure, tested):** `src/domain/offers/alternative.ts` holds `compareProducts(original, alt, category, answers)` → lines and the label `equivalent | similar`, `suggestAlternatives(candidates, original)` (ranking order, other makers, in stock), `alternativePriceCheck(...)` and `canOfferAlternative(consentVersion)`. `src/domain/admin/crm.ts` gains the `classifyLead` changes: "unavailable with open requests" becomes `action` with next step `decide_unavailable`, plus `wait_until` and "back in stock".
 - **Services:** `services/offers/alternative.ts` (suggestions, snapshot, send to all requesters), `services/admin/outcomes.ts` (set an outcome one at a time or in bulk, send the e-mail, audit log and `offer_events`).
 - **Copy:** in lv.json, with English in en.json and lt/et scaffolded: the e-mails in §4, the chips, the panel, the consent and privacy text (new version).
@@ -99,9 +115,9 @@ This is one short message per request, never repeated: "Šobrīd nevaram piedāv
 ## 6. PRs
 
 1. **Domain and data:** outcomes, comparison and label, price check, consent version, migration, unit tests.
-2. **Admin:** decision panel, suggestions and comparison screen, prefilled offer form, bulk actions, Uzdevumi view "Nav pieejams: jāizlemj", "Atkal pieejams", outcome filter and chips, CSV.
-3. **Shopper side:** the alternative e-mail and offer page banner, "Gribu tikai {Original}", the ask-first e-mail for older consents, the "nothing to offer" e-mail, consent and privacy text.
-4. **e2e at 360 px and desktop with axe:** unavailable → alternative → shopper sees the swap and the table → accepts; unavailable → nothing to offer → e-mail → monitoring continues; old consent → ask → "Jā" → offer; bulk "Tikai sekot cenai"; "Atkal pieejams" brings a lead back.
+2. **Admin:** decision panel, pictures (upload or link) and description in the offer form, product not in the catalogue, suggestions and comparison screen, prefilled offer form, bulk actions, Uzdevumi view "Nav pieejams: jāizlemj", "Atkal pieejams", outcome filter and chips, CSV.
+3. **Shopper side:** the alternative e-mail and offer page banner, pictures and "Trilio apraksts" in the e-mail and on the offer page, "Gribu tikai {Original}", the ask-first e-mail for older consents, the "nothing to offer" e-mail, consent and privacy text.
+4. **e2e at 360 px and desktop with axe:** unavailable → alternative → shopper sees the swap and the table → accepts; unavailable → nothing to offer → e-mail → monitoring continues; old consent → ask → "Jā" → offer; bulk "Tikai sekot cenai"; upload a picture from a file and add one from a link (local test server), wrong link → clear error, alt text required; "Atkal pieejams" brings a lead back.
 
 ## 7. Open decisions for the owner
 
