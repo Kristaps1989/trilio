@@ -1385,15 +1385,6 @@
     "keepWatching": "Turpinām sekot cenai precei {asked} līdz {date}. Ja tā samazināsies, uzrakstīsim.",
     "reasonRequest": "Šo e-pastu sūtām, jo {date} trilio.lv pieprasīji zemāku cenu precei {asked}. Ja to neprasīji tu, šo e-pastu ignorē: vairāk nerakstīsim.",
     "reasonSaved": "Šo e-pastu saņem, jo saglabāji šo preci trilio.lv un atļāvi sūtīt piedāvājumus.",
-    "askSubject": "{asked} nav pieejams. Piedāvāt līdzvērtīgu?",
-    "askPreheader": "Viens klikšķis: jā vai nē.",
-    "askHero": "Tavs modelis šobrīd nav pieejams.",
-    "askIntroRequest": "{date} pieprasīji zemāku cenu precei {asked}. Mūsu partneriem tā šobrīd nav.",
-    "askIntroSaved": "Tu saglabāji preci {asked}. Mūsu partneriem tā šobrīd nav.",
-    "askQuestion": "Gribi, lai piedāvājam vienu līdzvērtīgu cita ražotāja preci? Atsūtīsim to ar abiem modeļiem blakus, un tu izlemsi pats.",
-    "askYes": "Jā, piedāvājiet",
-    "askNo": "Nē, tikai sekojiet cenai",
-    "askNoAnswer": "Ja neatbildēsi, neko citu nesūtīsim. Cenai sekojam līdz {date}.",
     "nothingSubject": "{asked}: šobrīd nevaram piedāvāt lētāk",
     "nothingPreheader": "Cenai sekojam tālāk un uzrakstīsim, kad tā samazināsies.",
     "nothingHero": "Šoreiz lētāk nesanāca.",
@@ -3043,7 +3034,6 @@
       "saved": "saglabāja",
       "noOffers": "Nav piekrišanas piedāvājumiem",
       "direct": "Var sūtīt uzreiz",
-      "askFirst": "Vispirms pajautāsim",
       "bulkNothing": "Atzīmētajiem: nav ko piedāvāt",
       "bulkMonitoring": "Atzīmētajiem: tikai sekot cenai",
       "bulkHint": "„Nav ko piedāvāt” nosūta īsu paziņojumu tiem, kas piekrita piedāvājumiem (vienreiz). „Tikai sekot cenai” neko nesūta.",
@@ -3117,9 +3107,7 @@
       "private": "Tikai adminam: iepirkums un piegādātājs",
       "cost": "Iepirkuma cena (EUR)",
       "supplier": "Piegādātājs, piezīme",
-      "send": "Nosūtīt ({direct} uzreiz, {ask} jautājums)",
       "preview": "E-pasta priekšskatījums",
-      "previewAsk": "Pirmais saņēmējs vispirms saņems jautājumu; šis piedāvājums aizies pēc „Jā”.",
       "previewEmpty": "Ievadi cenu, un šeit parādīsies e-pasts.",
       "to": "Kam: {email}",
       "textVersion": "Teksta versija",
@@ -3132,7 +3120,8 @@
         "validity": "Spēkā līdz datumam jābūt nākotnē.",
         "description": "Aprakstā ir kaut kas, ko nedrīkst rakstīt.",
         "recipients_none": "Nav neviena, kam sūtīt."
-      }
+      },
+      "sendDirect": "Nosūtīt piedāvājumu ({count})"
     }
   },
   "alertsUnsubscribe": {

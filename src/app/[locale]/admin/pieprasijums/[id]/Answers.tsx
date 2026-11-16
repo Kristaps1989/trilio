@@ -61,7 +61,6 @@ export async function Answers({ productId, partner, status }: Props) {
       })
     : null;
   const decide = waiting.length > 0;
-  const direct = waiting.filter((p) => p.direct).length;
 
   return (
     <Section title={t("title")} id="answers">
@@ -94,9 +93,7 @@ export async function Answers({ productId, partner, status }: Props) {
           className="flex flex-col gap-4 rounded-panel-lg border-[1.5px] border-warning p-4"
           data-decision-panel
         >
-          <p className="text-[15px] text-mist">
-            {t("waiting", { count: waiting.length, direct, ask: waiting.length - direct })}
-          </p>
+          <p className="text-[15px] text-mist">{t("waiting", { count: waiting.length })}</p>
           {suggestion ? (
             <p className="text-[15px] font-semibold text-mist" data-suggestion={suggestion}>
               {t("suggestion", { reason: t(`reason.${suggestion}`) })}
@@ -267,7 +264,7 @@ export async function Answers({ productId, partner, status }: Props) {
                         {p.seenCents !== null ? formatEur(p.seenCents) : "—"}
                       </td>
                       <td className="px-3 py-2 align-top text-sm">
-                        {!p.wantsOffers ? t("noOffers") : p.direct ? t("direct") : t("askFirst")}
+                        {p.wantsOffers ? t("direct") : t("noOffers")}
                       </td>
                     </tr>
                   );

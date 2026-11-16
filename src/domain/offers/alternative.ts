@@ -211,17 +211,6 @@ export function undecided(chip: RequestChip): boolean {
   return chip === "new" || chip === "requested";
 }
 
-/**
- * From this consent version on, the request form says that Trilio may offer one
- * equivalent product from another maker when the one asked for is unavailable.
- * Everyone else is asked first (owner, 16 Nov 2026).
- */
-export const ALTERNATIVE_CONSENT_FROM = "2026-11-16";
-
-export function mayOfferAlternativeDirectly(consentVersion: string | null): boolean {
-  return !!consentVersion && consentVersion >= ALTERNATIVE_CONSENT_FROM;
-}
-
 // ---------------------------------------------------------------- the admin's description
 
 export type DescriptionIssue = "urgency" | "superlative" | "shouting" | "equivalent_claim" | "too_long";

@@ -27,7 +27,6 @@ import { inputClass, labelClass } from "../../../ui";
 type Recipient = {
   key: string;
   email: string;
-  direct: boolean;
   requestedAt: string | null;
   watchUntil: string | null;
 };
@@ -147,8 +146,6 @@ export function AltOfferForm(props: Props) {
     (!manual.name.trim() || !manual.brand.trim() || !description.trim() || pictures.length === 0);
   const offeredName = alternative?.name ?? (manual.name.trim() || t("manualTitle"));
   const first = recipients.find((r) => chosen.has(r.key));
-  const directCount = recipients.filter((r) => chosen.has(r.key) && r.direct).length;
-  const askCount = chosen.size - directCount;
 
   const preview =
     priceCents && first && comparison
@@ -235,18 +232,13 @@ export function AltOfferForm(props: Props) {
                     onChange={() => toggle(r.key)}
                     className="h-5 w-5 accent-lime"
                   />
-                  <span className="min-w-0 [overflow-wrap:anywhere]">
-                    {r.email}
-                    <span className="block text-sm text-stone">
-                      {r.direct ? tv("direct") : tv("askFirst")}
-                    </span>
-                  </span>
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{r.email}</span>
                 </label>
               </li>
             ))}
           </ul>
           <p className="text-sm text-stone" data-alt-split>
-            {t("split", { direct: directCount, ask: askCount })}
+            {t("split")}
           </p>
         </fieldset>
 
@@ -420,14 +412,13 @@ export function AltOfferForm(props: Props) {
         ) : null}
         <div>
           <Button type="submit" size="lg" disabled={blocked} data-testid="send-alternative">
-            {t("send", { direct: directCount, ask: askCount })}
+            {t("sendDirect", { count: chosen.size })}
           </Button>
         </div>
       </div>
 
       <section aria-label={t("preview")} className="flex flex-col gap-2">
         <h2 className="font-heading text-xl font-semibold text-mist">{t("preview")}</h2>
-        {first && !first.direct ? <p className="text-sm text-stone">{t("previewAsk")}</p> : null}
         {preview ? (
           <EmailPreview
             message={preview}

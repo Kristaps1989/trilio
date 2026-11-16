@@ -5,7 +5,6 @@ import {
   descriptionIssues,
   parseTypedAttributes,
   downsides,
-  mayOfferAlternativeDirectly,
   pickSuggestions,
   requestChip,
   suggestNothing,
@@ -191,15 +190,6 @@ describe("requestChip", () => {
     expect(undecided("requested")).toBe(true);
     expect(undecided("alternative_asked")).toBe(false);
     expect(undecided("monitoring_only")).toBe(false);
-  });
-});
-
-describe("mayOfferAlternativeDirectly", () => {
-  it("only under the consent text that mentions an alternative", () => {
-    expect(mayOfferAlternativeDirectly("2026-11-16")).toBe(true);
-    expect(mayOfferAlternativeDirectly("2026-11-16.1")).toBe(true);
-    expect(mayOfferAlternativeDirectly("2026-11-09.2")).toBe(false);
-    expect(mayOfferAlternativeDirectly(null)).toBe(false);
   });
 });
 

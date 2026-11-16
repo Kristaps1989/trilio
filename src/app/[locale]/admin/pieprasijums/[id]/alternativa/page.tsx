@@ -63,9 +63,7 @@ export default async function AlternativePage({ params, searchParams }: Props) {
           {t("back")}
         </ButtonLink>
       </AdminTitle>
-      <p className="text-[15px] text-stone">
-        {t("who", { count: people.length, direct: people.filter((p) => p.direct).length })}
-      </p>
+      <p className="text-[15px] text-stone">{t("who", { count: people.length })}</p>
     </>
   );
 
@@ -307,7 +305,6 @@ export default async function AlternativePage({ params, searchParams }: Props) {
         recipients={people.map((p) => ({
           key: p.key,
           email: p.email,
-          direct: p.direct,
           requestedAt: p.requestedAt?.toISOString() ?? null,
           watchUntil: p.watchUntil?.toISOString() ?? null,
         }))}
