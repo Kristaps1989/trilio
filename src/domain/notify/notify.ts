@@ -3,7 +3,7 @@
 // where the text shown said so, and that text is stored with its version.
 
 /** Bump when the wording in notify.body* changes, so every stored consent names the text it saw. */
-export const CONSENT_VERSION = "2026-11-09.2";
+export const CONSENT_VERSION = "2026-11-16";
 
 /**
  * From this consent version on, the text shown says that one proposal for the product

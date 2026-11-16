@@ -7,6 +7,7 @@ import { purgeAdLandings } from "@/services/growth/landings";
 import { purgeTvHouseholds, purgeTvViewers, rollupTvUplift } from "@/services/growth/tv";
 import { purgeSocialImages } from "@/services/social/stored-images";
 import { purgeUiEvents } from "@/services/notify/events";
+import { purgeUnusedImages } from "@/services/offers/images";
 import { purgeNotifyRequests } from "@/services/notify/requests";
 import { renewalTexts } from "@/services/texts";
 import { runAlertRenewals, type RenewalResult } from "@/services/wishlist/alerts";
@@ -28,6 +29,7 @@ export type HousekeepingResult = {
   socialImagesPurged: number;
   notifyRequestsPurged: number;
   uiEventsPurged: number;
+  offerImagesPurged: number;
   /** Price e-mails' 90 days: "turpināt?" e-mails sent, unrenewed requests deleted. */
   alertRenewals: RenewalResult;
 };
@@ -42,6 +44,7 @@ export async function runHousekeeping(db: Db, now = new Date()): Promise<Houseke
   const socialImagesPurged = await purgeSocialImages(db, now);
   const notifyRequestsPurged = await purgeNotifyRequests(db, now);
   const uiEventsPurged = await purgeUiEvents(db, now);
+  const offerImagesPurged = await purgeUnusedImages(db, now);
   const mail = offerMailDeps();
   const alertRenewals = await runAlertRenewals(db, {
     email: mail.email,
@@ -60,6 +63,7 @@ export async function runHousekeeping(db: Db, now = new Date()): Promise<Houseke
     socialImagesPurged,
     notifyRequestsPurged,
     uiEventsPurged,
+    offerImagesPurged,
     alertRenewals,
   };
 }
@@ -74,6 +78,7 @@ export function eventful(r: HousekeepingResult): boolean {
     r.socialImagesPurged > 0 ||
     r.notifyRequestsPurged > 0 ||
     r.uiEventsPurged > 0 ||
+    r.offerImagesPurged > 0 ||
     Object.values(r.alertRenewals).some((n) => n > 0) ||
     Object.values(r.offers).some((n) => n > 0)
   );

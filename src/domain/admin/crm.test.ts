@@ -72,6 +72,53 @@ describe("leads", () => {
   });
 });
 
+describe("leads with answers owed (docs/ALTERNATIVE_OFFER_PLAN.md)", () => {
+  const base = {
+    firstSavedAt: d("2026-10-20"),
+    lastSavedAt: d("2026-10-27"),
+    openOffers: 0,
+    paidOffers: 0,
+    lastOfferAt: null,
+    now: NOW,
+  };
+  const unavailable: PartnerMark = { ...requested, status: "unavailable", at: d("2026-10-29") };
+
+  it("unavailable with people still waiting is Trilio's turn: decide", () => {
+    expect(classifyLead({ ...base, partner: unavailable, undecided: 2 })).toEqual({
+      stage: "unavailable",
+      state: "action",
+      next: "decide_unavailable",
+      waitingSince: d("2026-10-29"),
+    });
+  });
+  it("unavailable and everyone answered is done", () => {
+    expect(classifyLead({ ...base, partner: unavailable, undecided: 0 })).toMatchObject({
+      stage: "unavailable",
+      state: "done",
+    });
+  });
+  it("Pagaidīt keeps it with the partner until the date, then it comes back", () => {
+    const wait = { ...base, partner: unavailable, undecided: 1, waitUntil: d("2026-11-05") };
+    expect(classifyLead(wait)).toMatchObject({ stage: "waiting", state: "partner", next: null });
+    expect(classifyLead({ ...wait, now: d("2026-11-06") })).toMatchObject({
+      state: "action",
+      next: "decide_unavailable",
+      waitingSince: d("2026-11-05"),
+    });
+  });
+  it("nobody asked for a lower price: price monitoring only, nothing to do", () => {
+    expect(classifyLead({ ...base, partner: null, undecided: 0 })).toMatchObject({
+      stage: "monitoring",
+      state: "done",
+    });
+  });
+  it("back in stock after nothing to offer is Trilio's turn to offer", () => {
+    expect(
+      classifyLead({ ...base, partner: { ...requested, status: "confirmed" }, undecided: 0, backAt: d("2026-10-30") }),
+    ).toMatchObject({ stage: "back", state: "action", next: "make_offer" });
+  });
+});
+
 describe("offers and orders", () => {
   const offer = { createdAt: d("2026-10-25"), sentAt: null, openedAt: null, acceptedAt: null, partner: null };
   it("a draft is Trilio's to send, unless it waits for the partner; sent waits for the shopper", () => {

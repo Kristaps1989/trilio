@@ -8,6 +8,8 @@ import {
   savedItems,
   specialOffers,
   users,
+  type ManualProduct,
+  type OfferComparison,
   type SpecialOffer,
 } from "@/db/schema";
 import { requestOfferable, type OfferableReason } from "@/domain/notify/notify";
@@ -17,8 +19,10 @@ import { canAccept } from "@/domain/offers/offers";
 import type { EmailMessage, EmailSender } from "@/services/notify/email";
 import { offersPaused } from "@/services/admin/audit";
 import { referenceFor } from "./reference";
-import { composeOfferEmail, type OfferMailContext } from "./compose";
-import { localizedPath } from "@/i18n/routing";
+import { composeOfferEmail, type AlternativeMail, type OfferMailContext } from "./compose";
+import { comparisonWords } from "./alternative";
+import { imagePath, imagesOfSet } from "./images";
+import { localizedPath, type UiLocale } from "@/i18n/routing";
 
 // Personal offers (docs/ADMIN_AND_OFFERS_PLAN.md §3–§5): made by the admin,
 // one per person per product, sent only to people who opted in, and claims
@@ -44,13 +48,31 @@ export type OfferInput = {
   message: string | null;
   supplierNote: string | null;
   costCents: number | null;
+  /** The admin's own description ("Trilio apraksts"). */
+  description?: string | null;
+  /** Pictures the admin added (offer_images.set_id). */
+  imageSetId?: string | null;
+  /**
+   * Another maker's product in place of the one asked for (docs/ALTERNATIVE_OFFER_PLAN.md):
+   * the requests and savers are of that product, and the comparison is frozen on the offer.
+   */
+  alternativeTo?: { productId: string; name: string; comparison: OfferComparison } | null;
+  /** A product no partner shop lists, typed by the admin (productId is then the original's, unused). */
+  manualProduct?: ManualProduct | null;
 };
 
 export type SkipReason =
   "no_consent" | "unknown" | "other_product" | "offered" | Exclude<OfferableReason, "ok">;
 
+export type CreatedOffer = { offerId: string; userId: string | null; notifyRequestId: string | null };
+
 export type CreateResult =
-  | { ok: true; offerIds: string[]; skipped: { userId: string; reason: SkipReason }[] }
+  | {
+      ok: true;
+      offerIds: string[];
+      created: CreatedOffer[];
+      skipped: { userId: string; reason: SkipReason }[];
+    }
   | { ok: false; reason: "product" | "price" | "recipients" | "validity" };
 
 /**
@@ -89,8 +111,12 @@ export async function createOffers(db: Db, input: OfferInput, createdBy: string)
   if (!Number.isInteger(input.priceCents) || input.priceCents <= 0) return { ok: false, reason: "price" };
   if (input.validUntil.getTime() <= Date.now()) return { ok: false, reason: "validity" };
   if (input.userIds.length === 0 && !input.requestIds?.length) return { ok: false, reason: "recipients" };
-  const ref = await referenceFor(db, input.productId);
-  if (!ref) return { ok: false, reason: "product" };
+  const manual = input.manualProduct ?? null;
+  const ref = manual ? null : await referenceFor(db, input.productId);
+  if (!ref && !manual) return { ok: false, reason: "product" };
+  if (manual && !input.alternativeTo) return { ok: false, reason: "product" };
+  // An alternative answers the requests of the product asked for.
+  const askedFor = input.alternativeTo?.productId ?? ref!.product.id;
 
   const people = await db
     .select({ id: users.id, optIn: users.offersOptIn })
@@ -105,13 +131,15 @@ export async function createOffers(db: Db, input: OfferInput, createdBy: string)
     else recipients.push(id);
   }
   // Requests whose address is not confirmed: one proposal each, to the address entered.
-  const requests = await offerableRequests(db, input.requestIds ?? [], ref.product.id);
+  const requests = await offerableRequests(db, input.requestIds ?? [], askedFor);
   skipped.push(...requests.skipped);
   const targets: { userId: string | null; email: string | null; notifyRequestId: string | null }[] = [
     ...recipients.map((userId) => ({ userId, email: null, notifyRequestId: null })),
     ...requests.ok.map((r) => ({ userId: null, email: r.email, notifyRequestId: r.id })),
   ];
-  if (targets.length === 0) return { ok: true, offerIds: [], skipped };
+  if (targets.length === 0) return { ok: true, offerIds: [], created: [], skipped };
+  const subcategoryId =
+    ref?.product.subcategoryId ?? (await referenceFor(db, askedFor))?.product.subcategoryId ?? "";
 
   const batchId = targets.length > 1 ? randomUUID() : null;
   const rows = await db
@@ -120,16 +148,22 @@ export async function createOffers(db: Db, input: OfferInput, createdBy: string)
       targets.map((target) => ({
         token: token(),
         ...target,
-        productId: ref.product.id,
-        productName: ref.product.name,
-        subcategoryId: ref.product.subcategoryId,
+        productId: ref?.product.id ?? null,
+        productName: ref?.product.name ?? manual!.name,
+        subcategoryId,
         condition: input.condition,
         grade: input.condition === "refurbished" ? input.grade : null,
         warrantyMonths: input.warrantyMonths,
         priceCents: input.priceCents,
-        referencePriceCents: ref.priceCents,
-        referenceLow30Cents: ref.low30Cents,
-        referenceStoreName: ref.storeName,
+        referencePriceCents: ref?.priceCents ?? null,
+        referenceLow30Cents: ref?.low30Cents ?? null,
+        referenceStoreName: ref?.storeName ?? null,
+        alternativeToProductId: input.alternativeTo?.productId ?? null,
+        alternativeToName: input.alternativeTo?.name ?? null,
+        comparison: input.alternativeTo?.comparison ?? null,
+        description: input.description?.trim().slice(0, 1500) || null,
+        imageSetId: input.imageSetId ?? null,
+        manualProduct: manual,
         quantity: input.quantity,
         deliveryWorkingDays: input.deliveryWorkingDays,
         validUntil: input.validUntil,
@@ -140,11 +174,20 @@ export async function createOffers(db: Db, input: OfferInput, createdBy: string)
         createdBy,
       })),
     )
-    .returning({ id: specialOffers.id });
+    .returning({
+      id: specialOffers.id,
+      userId: specialOffers.userId,
+      notifyRequestId: specialOffers.notifyRequestId,
+    });
   await db
     .insert(offerEvents)
     .values(rows.map((r) => ({ offerId: r.id, kind: "created", source: "admin", note: createdBy })));
-  return { ok: true, offerIds: rows.map((r) => r.id), skipped };
+  return {
+    ok: true,
+    offerIds: rows.map((r) => r.id),
+    created: rows.map((r) => ({ offerId: r.id, userId: r.userId, notifyRequestId: r.notifyRequestId })),
+    skipped,
+  };
 }
 
 export async function offerById(db: Db, id: string): Promise<SpecialOffer | null> {
@@ -173,14 +216,63 @@ export async function ensureOffersToken(db: Db, userId: string): Promise<string>
   return again?.t ?? fresh;
 }
 
-/** The offer as the e-mail shows it: with the product's picture when the shop allows it. */
-async function withImage(db: Db, offer: SpecialOffer) {
-  if (!offer.productId) return offer;
-  const [row] = await db
-    .select({ imageUrl: products.imageUrl })
-    .from(products)
-    .where(eq(products.id, offer.productId));
-  return { ...offer, imageUrl: imageSrc(row?.imageUrl, IMAGE_HOSTS) };
+/**
+ * The offer as the e-mail shows it: the admin's pictures or the product's (when the
+ * shop allows it), the description, and for another maker's product the comparison
+ * in the reader's words, when the request was made and how long the price is followed.
+ */
+export async function mailDraft(
+  db: Db,
+  offer: SpecialOffer,
+  ctx: { lang: UiLocale; baseUrl: string; userId: string | null },
+) {
+  let imageUrl: string | null = null;
+  if (offer.productId) {
+    const [row] = await db
+      .select({ imageUrl: products.imageUrl })
+      .from(products)
+      .where(eq(products.id, offer.productId));
+    imageUrl = imageSrc(row?.imageUrl, IMAGE_HOSTS);
+  }
+  const imageUrls = (await imagesOfSet(db, offer.imageSetId)).map((i) => imagePath(i.id));
+  let alternative: AlternativeMail | null = null;
+  if (offer.alternativeToName && offer.comparison) {
+    const asked = offer.alternativeToProductId;
+    const [request] = asked
+      ? await db
+          .select({ at: notifyRequests.createdAt })
+          .from(notifyRequests)
+          .where(
+            and(
+              eq(notifyRequests.productId, asked),
+              offer.notifyRequestId
+                ? eq(notifyRequests.id, offer.notifyRequestId)
+                : ctx.userId
+                  ? eq(notifyRequests.userId, ctx.userId)
+                  : sql`false`,
+            ),
+          )
+          .orderBy(desc(notifyRequests.createdAt))
+          .limit(1)
+      : [];
+    const [saved] =
+      asked && ctx.userId
+        ? await db
+            .select({ until: savedItems.alertsUntil })
+            .from(savedItems)
+            .where(and(eq(savedItems.userId, ctx.userId), eq(savedItems.productId, asked)))
+        : [];
+    alternative = {
+      askedName: offer.alternativeToName,
+      equivalent: offer.comparison.label === "equivalent",
+      ...comparisonWords(offer.comparison, offer.subcategoryId, ctx.lang),
+      originalSeenCents: offer.comparison.originalSeenCents,
+      requestedAt: request?.at ?? null,
+      declineUrl: `${ctx.baseUrl}${localizedPath(`/piedavajums/${offer.token}/atteikt`, ctx.lang)}`,
+      watchUntil: saved?.until ?? null,
+    };
+  }
+  return { ...offer, imageUrl, imageUrls, alternative };
 }
 
 async function savedContext(db: Db, offer: SpecialOffer) {
@@ -286,7 +378,7 @@ export async function sendOffer(
   if (await offersPaused(db)) return { ok: false, reason: "paused" };
   const to = await recipientOf(db, offer, deps.baseUrl, now);
   if (!to.ok) return to;
-  const message = composeOfferEmail(await withImage(db, { ...offer, userId: to.userId }), {
+  const message = composeOfferEmail(await mailDraft(db, offer, { lang: to.lang, baseUrl: deps.baseUrl, userId: to.userId }), {
     ...deps,
     to: to.to,
     lang: to.lang,
@@ -322,7 +414,7 @@ export async function previewOffer(
       .from(notifyRequests)
       .where(eq(notifyRequests.id, offer.notifyRequestId!));
     const lang = request?.locale === "en" ? "en" : "lv";
-    return composeOfferEmail(await withImage(db, offer), {
+    return composeOfferEmail(await mailDraft(db, offer, { lang, baseUrl: ctx.baseUrl, userId: null }), {
       ...ctx,
       to: offer.email ?? "",
       lang,
@@ -340,7 +432,7 @@ export async function previewOffer(
     .from(users)
     .where(eq(users.id, offer.userId));
   const lang = user?.locale === "en" ? "en" : "lv";
-  return composeOfferEmail(await withImage(db, offer), {
+  return composeOfferEmail(await mailDraft(db, offer, { lang, baseUrl: ctx.baseUrl, userId: offer.userId }), {
     ...ctx,
     to: user?.email ?? "",
     lang,

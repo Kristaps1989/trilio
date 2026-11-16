@@ -26,6 +26,7 @@ export type PartnerMark = {
 export type NextStep =
   | "request_partner"
   | "record_answer"
+  | "decide_unavailable"
   | "make_offer"
   | "send_offer"
   | "pack"
@@ -49,6 +50,17 @@ export type LeadFacts = {
   paidOffers: number;
   lastOfferAt: Date | null;
   partner: PartnerMark | null;
+  /**
+   * Requests that still wait for Trilio's answer (docs/ALTERNATIVE_OFFER_PLAN.md §2):
+   * people who agreed to offers on a product worth asking, with no offer and no outcome.
+   * Undefined keeps the older rule (every lead is Trilio's turn).
+   */
+  undecided?: number;
+  /** "Pagaidīt": the partner expects stock; the lead comes back on this date. */
+  waitUntil?: Date | null;
+  /** "Atkal pieejams": after "nothing to offer", a partner confirmed or the shop price fell. */
+  backAt?: Date | null;
+  now?: Date;
 };
 
 /** A product people asked to hear about. */
@@ -58,11 +70,28 @@ export function classifyLead(f: LeadFacts): Classified {
   // Saved again after the last offer: a new lead on the same product.
   const newSince = f.lastOfferAt && f.lastSavedAt > f.lastOfferAt ? f.lastSavedAt : null;
   if (f.paidOffers > 0 && !newSince) return { stage: "won", state: "done", next: null, waitingSince: null };
+  if (f.backAt) return { stage: "back", state: "action", next: "make_offer", waitingSince: f.backAt };
   const p = f.partner;
+  const open = f.undecided === undefined || f.undecided > 0;
   if (p?.status === "requested")
     return { stage: "requested", state: "partner", next: "record_answer", waitingSince: p.at };
-  if (p?.status === "unavailable")
+  if (p?.status === "unavailable") {
+    const now = f.now ?? new Date();
+    if (open && f.waitUntil && f.waitUntil > now)
+      return { stage: "waiting", state: "partner", next: null, waitingSince: p.at };
+    // An answer is still owed to the people who asked: offer another maker's product or say there is none.
+    if (open && f.undecided !== undefined)
+      return {
+        stage: "unavailable",
+        state: "action",
+        next: "decide_unavailable",
+        waitingSince: f.waitUntil && f.waitUntil > p.at ? f.waitUntil : p.at,
+      };
     return { stage: "unavailable", state: "done", next: null, waitingSince: null };
+  }
+  // Nobody asked for a lower price (cheap, plain price alerts) or everyone was answered: only the price is watched.
+  if (!open && p?.status !== "confirmed")
+    return { stage: "monitoring", state: "done", next: null, waitingSince: null };
   if (p?.status === "confirmed")
     return { stage: "confirmed", state: "action", next: "make_offer", waitingSince: newSince ?? p.at };
   return {
@@ -80,9 +109,14 @@ export type OfferFacts = {
   openedAt: Date | null;
   acceptedAt: Date | null;
   partner: PartnerMark | null;
+  /** A draft waiting for the shopper's answer to the question asked first. */
+  held?: boolean;
 };
 
 export function classifyOffer(f: OfferFacts): Classified {
+  // An alternative held until the shopper answers "Jā / Nē" (docs/ALTERNATIVE_OFFER_PLAN.md §4.3).
+  if (f.status === "draft" && f.held)
+    return { stage: "held", state: "waiting", next: null, waitingSince: f.createdAt };
   switch (f.status) {
     case "draft":
       // A draft waiting for the partner's confirmation is the partner's turn.
@@ -169,6 +203,8 @@ export type WorkItem = Classified & {
     /** Unconfirmed "Iegūt lētāk" requests still kept, and how many of them may get one proposal. */
     requested?: number;
     requestable?: number;
+    /** Requests still waiting for Trilio's answer (docs/ALTERNATIVE_OFFER_PLAN.md §2). */
+    undecided?: number;
   };
   /** Extra text the search should find (phone, buyer name, company). */
   searchText?: string;

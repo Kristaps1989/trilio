@@ -20,6 +20,23 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import type { AlternativeLabel, ComparedLine, NothingReason, StoredOutcome } from "@/domain/offers/alternative";
+
+const bytea = customType<{ data: Buffer<ArrayBufferLike>; driverData: Buffer<ArrayBufferLike> }>({
+  dataType: () => "bytea",
+});
+
+/** The comparison frozen on an alternative offer (src/domain/offers/alternative.ts). */
+export type OfferComparison = { label: AlternativeLabel; lines: ComparedLine[]; originalSeenCents: number | null };
+
+/** A product typed by the admin because no partner shop lists it. */
+export type ManualProduct = {
+  name: string;
+  brand: string;
+  modelCode: string | null;
+  ean: string | null;
+  attributes: Record<string, unknown>;
+};
 import type { AdapterAccountType } from "next-auth/adapters";
 
 // Phase 1 tables from docs/DATA_MODEL.md. Money is integer cents. Shop names
@@ -719,6 +736,24 @@ export const specialOffers = pgTable(
     deliveryWorkingDays: integer("delivery_working_days").notNull().default(3),
     validUntil: timestamp("valid_until", { withTimezone: true }).notNull(),
     message: text("message"),
+    /**
+     * Another maker's product offered because the one asked for is unavailable
+     * (docs/ALTERNATIVE_OFFER_PLAN.md): the product asked for, its name then, and the
+     * comparison as it was when the offer was made (frozen, like the reference prices).
+     */
+    alternativeToProductId: uuid("alternative_to_product_id").references((): AnyPgColumn => products.id, {
+      onDelete: "set null",
+    }),
+    alternativeToName: text("alternative_to_name"),
+    comparison: jsonb("comparison").$type<OfferComparison>(),
+    /** The admin's own description, shown as "Trilio apraksts". */
+    description: text("description"),
+    /** Pictures chosen for the offer (offer_images.set_id); null: the catalogue picture. */
+    imageSetId: uuid("image_set_id"),
+    /** A product the distributor has that no partner shop lists: what the admin typed. */
+    manualProduct: jsonb("manual_product").$type<ManualProduct>(),
+    /** The shopper's answer to an alternative: "Gribu tikai {original}". */
+    declinedAt: timestamp("declined_at", { withTimezone: true }),
     /** Admin-only: distributor and purchase price. Never shown to the shopper or exported to them. */
     supplierNote: text("supplier_note"),
     costCents: integer("cost_cents"),
@@ -1471,6 +1506,8 @@ export const partnerRequests = pgTable(
     /** The partner's own order number. */
     partnerOrderRef: text("partner_order_ref"),
     costCents: integer("cost_cents"),
+    /** "Pagaidīt": the partner expects stock; the lead returns to Uzdevumi on this date. */
+    waitUntil: timestamp("wait_until", { withTimezone: true }),
     note: text("note"),
     createdBy: text("created_by").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -1498,6 +1535,70 @@ export const leadNotes = pgTable(
 
 export type PartnerRequest = typeof partnerRequests.$inferSelect;
 
+/**
+ * What Trilio answered one person on one product (docs/ALTERNATIVE_OFFER_PLAN.md §2):
+ * an alternative sent or asked about, nothing to offer, or price monitoring only. One
+ * person is an account (user_id) or an e-mail-only request (notify_request_id). The
+ * newest row per person and product wins; older rows are the history.
+ */
+export const requestOutcomes = pgTable(
+  "request_outcomes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** For the shopper's "Jā / Nē" links in the ask-first e-mail: 32 random bytes, base64url. */
+    token: text("token").notNull().unique(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    notifyRequestId: uuid("notify_request_id").references((): AnyPgColumn => notifyRequests.id, {
+      onDelete: "cascade",
+    }),
+    email: text("email").notNull(),
+    outcome: text("outcome").$type<StoredOutcome>().notNull(),
+    reason: text("reason").$type<NothingReason>(),
+    /** The alternative offer sent or held for the answer. */
+    offerId: uuid("offer_id").references((): AnyPgColumn => specialOffers.id, { onDelete: "set null" }),
+    /** The lowest shop price when this was decided, so "Atkal pieejams" can see it fall. */
+    shopCents: integer("shop_cents"),
+    note: text("note"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    answer: text("answer").$type<"yes" | "no">(),
+    answeredAt: timestamp("answered_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("request_outcomes_product_idx").on(t.productId, t.createdAt),
+    index("request_outcomes_user_idx").on(t.userId),
+  ],
+);
+
+export type RequestOutcome = typeof requestOutcomes.$inferSelect;
+
+/**
+ * Pictures the admin added to an offer (docs/ALTERNATIVE_OFFER_PLAN.md §3.4), from a
+ * file or a link, always stored as Trilio's own copy (resized JPEG, no EXIF), so the
+ * e-mail never loads a third-party server. Offers made together share a set.
+ */
+export const offerImages = pgTable(
+  "offer_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    setId: uuid("set_id").notNull(),
+    position: integer("position").notNull().default(0),
+    bytes: bytea("bytes").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    alt: text("alt").notNull(),
+    source: text("source").$type<"upload" | "url">().notNull(),
+    sourceUrl: text("source_url"),
+    addedBy: text("added_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("offer_images_set_idx").on(t.setId, t.position)],
+);
+
 export const socialPostStatusEnum = pgEnum("social_post_status", [
   "draft",
   "approved",
@@ -1516,9 +1617,7 @@ export type SocialKind =
  * published to both networks. `card` holds the facts the image is drawn
  * from, already anonymised; nothing about a shopper is ever stored here.
  */
-const bytea = customType<{ data: Buffer<ArrayBufferLike>; driverData: Buffer<ArrayBufferLike> }>({
-  dataType: () => "bytea",
-});
+
 
 /**
  * A post's slide pictures, drawn once and stored (docs/FACEBOOK_CAROUSEL_PLAN.md §6):

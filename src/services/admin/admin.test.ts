@@ -257,11 +257,13 @@ run("admin statistics, visits and audit", () => {
 
   it("turns saved products into leads with consent counts, codes and prices", async () => {
     const lead = (await leadItems(db)).find((r) => r.id === productId);
+    // An 89 € blender is under the 200 € line: price monitoring only, nothing to ask a partner
+    // (docs/ALTERNATIVE_OFFER_PLAN.md §2).
     expect(lead).toMatchObject({
       kind: "lead",
-      stage: "new",
-      state: "action",
-      next: "request_partner",
+      stage: "monitoring",
+      state: "done",
+      next: null,
       savers: { total: 2, optedIn: 1, offered: 0, bought: 0 },
       product: { id: productId, subcategoryId: "blender" },
     });

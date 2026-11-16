@@ -34,6 +34,11 @@ export function hero(text: string): string {
   return `<h1 style="margin:0 0 12px;text-align:center;font-family:${HEADING};font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-0.5px;color:${NIGHT}">${esc(text)}</h1>`;
 }
 
+/** A section title inside the card. */
+export function subheading(text: string): string {
+  return `<h2 style="margin:8px 0 10px;font-family:${HEADING};font-size:18px;line-height:1.3;font-weight:700;color:${NIGHT}">${esc(text)}</h2>`;
+}
+
 export function centred(text: string, style = ""): string {
   return `<p style="margin:0 0 20px;text-align:center;font-size:16px;line-height:1.5;color:${MUTED};${style}">${esc(text)}</p>`;
 }
@@ -70,6 +75,79 @@ export function perks(items: Perk[]): string {
 
 export function button(label: string, href: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 12px"><tr><td align="center"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:14px;background:${LIME}"><a href="${esc(href)}" style="display:inline-block;padding:17px 36px;font-family:${FONT};font-size:17px;font-weight:700;color:${NIGHT};text-decoration:none;border-radius:14px">${esc(label)}</a></td></tr></table></td></tr></table>`;
+}
+
+/** A product named in a soft box, with a line or two under it (no price headline). */
+export function productCard(name: string, lines: string[]): string {
+  const small = lines
+    .filter(Boolean)
+    .map((l) => `<p style="margin:4px 0 0;font-size:14px;line-height:1.4;color:${MUTED}">${esc(l)}</p>`)
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px"><tr><td align="center" style="background:${MIST};border-radius:16px;padding:18px 16px"><p style="margin:0;font-family:${HEADING};font-size:18px;line-height:1.35;font-weight:600;color:${NIGHT}">${esc(name)}</p>${small}</td></tr></table>`;
+}
+
+/** A second, quieter choice under the main button: an outlined pill. */
+export function outlineButton(label: string, href: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px"><tr><td align="center"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:14px;border:1.5px solid ${LINE}"><a href="${esc(href)}" style="display:inline-block;padding:13px 28px;font-family:${FONT};font-size:15px;font-weight:600;color:${NIGHT};text-decoration:none;border-radius:14px">${esc(label)}</a></td></tr></table></td></tr></table>`;
+}
+
+/** The pictures after the first, small and in one row. */
+export function thumbnails(urls: string[]): string {
+  if (!urls.length) return "";
+  const cells = urls
+    .slice(0, 3)
+    .map(
+      (u) =>
+        `<td align="center" style="padding:0 6px"><img src="${esc(u)}" width="96" height="96" alt="" style="display:block;width:96px;height:96px;object-fit:contain;border:1px solid ${LINE};border-radius:12px;background:#FFFFFF"></td>`,
+    )
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 16px"><tr>${cells}</tr></table>`;
+}
+
+/**
+ * "Tu prasīji → Piedāvājam": the product asked for, then the one offered, so the
+ * swap is the first thing the reader sees and never a surprise further down.
+ */
+export function swapCard(asked: { label: string; name: string; note: string }, offered: { label: string; name: string }): string {
+  const cell = (label: string, name: string, note: string | null, strong: boolean) =>
+    `<td width="50%" style="vertical-align:top;padding:14px 14px;background:${strong ? VALUE : MIST};border-radius:14px"><p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${MUTED}">${esc(label)}</p><p style="margin:0;font-family:${HEADING};font-size:15px;line-height:1.35;font-weight:600;color:${NIGHT}">${esc(name)}</p>${note ? `<p style="margin:4px 0 0;font-size:13px;line-height:1.4;color:${MUTED}">${esc(note)}</p>` : ""}</td>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-collapse:separate;border-spacing:0"><tr>${cell(asked.label, asked.name, asked.note, false)}<td width="28" align="center" style="font-size:20px;color:${MUTED}">&rarr;</td>${cell(offered.label, offered.name, null, true)}</tr></table>`;
+}
+
+export type CompareRow = {
+  label: string;
+  asked: string;
+  offered: string;
+  /** Shown as a word, not only a colour (better, same, worse, different, no data). */
+  verdict: { text: string; tone: "good" | "same" | "bad" | "none" } | null;
+};
+
+/** The two products side by side; every line names its verdict in words. */
+export function compareTable(head: { label: string; asked: string; offered: string }, rows: CompareRow[]): string {
+  const tone = { good: [VALUE, NIGHT], same: [MIST, MUTED], bad: ["#FCEBD9", "#7A3B0C"], none: [MIST, MUTED] };
+  const th = (t: string, align = "left") =>
+    `<th scope="col" align="${align}" style="padding:0 8px 8px;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:${MUTED};border-bottom:1px solid ${LINE}">${esc(t)}</th>`;
+  const body = rows
+    .map((r) => {
+      const [bg, fg] = tone[r.verdict?.tone ?? "none"];
+      const pill = r.verdict
+        ? `<br><span style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:10px;background:${bg};font-size:12px;font-weight:700;color:${fg}">${esc(r.verdict.text)}</span>`
+        : "";
+      return `<tr><th scope="row" align="left" style="padding:10px 8px;font-size:14px;font-weight:600;color:${NIGHT};border-bottom:1px solid ${LINE};vertical-align:top">${esc(r.label)}</th><td style="padding:10px 8px;font-size:14px;color:${MUTED};border-bottom:1px solid ${LINE};vertical-align:top">${esc(r.asked)}</td><td style="padding:10px 8px;font-size:14px;font-weight:600;color:${NIGHT};border-bottom:1px solid ${LINE};vertical-align:top">${esc(r.offered)}${pill}</td></tr>`;
+    })
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-collapse:collapse;font-family:${FONT}"><thead><tr>${th(head.label)}${th(head.asked)}${th(head.offered)}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+/** The admin's own words, labelled as Trilio's, with line breaks kept. */
+export function described(title: string, text: string): string {
+  const paras = text
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${NIGHT}">${esc(p).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px"><tr><td style="background:${MIST};border-radius:14px;padding:16px 18px"><p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${MUTED}">${esc(title)}</p>${paras}</td></tr></table>`;
 }
 
 /** A quiet section under a thin rule: "Kāpēc lētāk?" and its answer, or the admin's own note. */

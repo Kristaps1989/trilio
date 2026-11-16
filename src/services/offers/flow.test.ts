@@ -245,6 +245,7 @@ run("offers and orders", () => {
     expect(none).toEqual({
       ok: true,
       offerIds: [],
+      created: [],
       skipped: [{ userId: noConsent.id, reason: "no_consent" }],
     });
     const r = await createOffers(
