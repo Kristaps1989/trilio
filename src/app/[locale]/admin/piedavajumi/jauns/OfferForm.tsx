@@ -7,7 +7,10 @@ import { formatEur } from "@/i18n/format";
 import { composeOfferEmail } from "@/services/offers/compose";
 import { Button } from "@/ui/Button";
 import { createOfferAction, type OfferFormState } from "../../actions";
+import { descriptionIssues } from "@/domain/offers/alternative";
 import { EmailPreview } from "../EmailPreview";
+import { DescriptionField } from "../DescriptionField";
+import { OfferPictures, type Picture } from "../OfferPictures";
 import { inputClass, labelClass } from "../../ui";
 
 // The offer form (docs/ADMIN_AND_OFFERS_PLAN.md §11.10): everything prefilled
@@ -26,6 +29,8 @@ export type Recipient = {
 
 type Props = {
   product: { id: string; name: string; imageUrl: string | null };
+  /** The new pictures' set (offer_images.set_id), made by the page. */
+  imageSetId: string;
   reference: { priceCents: number | null; storeName: string | null; low30Cents: number | null };
   recipients: Recipient[];
   vatRate: number | null;
@@ -50,6 +55,7 @@ function cents(raw: string): number | null {
 
 export function OfferForm({
   product,
+  imageSetId,
   reference,
   recipients,
   vatRate,
@@ -82,6 +88,9 @@ export function OfferForm({
   const [days, setDays] = useState(String(defaults.deliveryWorkingDays));
   const [validUntil, setValidUntil] = useState(defaults.validUntil);
   const [message, setMessage] = useState("");
+  const [description, setDescription] = useState("");
+  const [pictures, setPictures] = useState<Picture[]>([]);
+  const descriptionProblems = descriptionIssues(description, null);
   const allowed = recipients.filter((r) => r.optIn);
   const [chosen, setChosen] = useState<Set<string>>(new Set(allowed.map((r) => r.id)));
 
@@ -111,6 +120,8 @@ export function OfferForm({
         message: message.trim() || null,
         validUntil: new Date(`${validUntil}T20:59:59Z`),
         imageUrl: product.imageUrl,
+        imageUrls: pictures.map((p) => p.src),
+        description: description.trim() || null,
       },
       {
         baseUrl,
@@ -314,6 +325,14 @@ export function OfferForm({
           />
         </label>
 
+        <OfferPictures
+          setId={imageSetId}
+          defaultAlt={product.name}
+          catalogImage={product.imageUrl}
+          onChange={setPictures}
+        />
+        <DescriptionField value={description} onChange={setDescription} problems={descriptionProblems} />
+
         <details
           open={!!defaults.costCents}
           className="rounded-panel-lg border-[1.5px] border-dashed border-line-30 p-4"
@@ -352,7 +371,7 @@ export function OfferForm({
             name="intent"
             value="send"
             size="lg"
-            disabled={pending || !priceCents || chosen.size === 0}
+            disabled={pending || !priceCents || chosen.size === 0 || descriptionProblems.length > 0}
           >
             {chosen.size > 1 ? t("sendMany", { count: chosen.size }) : t("send")}
           </Button>

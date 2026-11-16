@@ -26,6 +26,7 @@ import {
 import { isLate } from "@/domain/offers/offers";
 import { OFFER_WITHOUT_CONFIRM_FROM, REQUEST_TTL_MS, requestOfferable } from "@/domain/notify/notify";
 import { currentOffer } from "@/domain/wishlist/wishlist";
+import { answerSummary, heldOfferIds } from "./outcomes";
 
 // The CRM's data (docs/CRM_PLAN.md §6): leads, offers and orders as one list
 // of WorkItem, with the product's model code and EAN, the partner mark and the
@@ -126,26 +127,51 @@ export async function leadItems(
       saved.push({ productId: r.productId, total: 0, optedIn: 0, first: r.first, last: r.last });
   const ids = saved.map((s) => s.productId!).filter(Boolean);
   if (ids.length === 0) return [];
+  // An alternative belongs to the lead of the product asked for, not to the product offered.
+  const leadOf = sql<string>`coalesce(${specialOffers.alternativeToProductId}, ${specialOffers.productId})`;
   const offers = await db
     .select({
-      productId: specialOffers.productId,
+      productId: leadOf,
       open: sql<number>`(count(*) filter (where ${specialOffers.status} in ('draft','sent','opened','accepted')))::int`,
       paid: sql<number>`(count(*) filter (where ${specialOffers.status} = 'paid'))::int`,
       offered: sql<number>`(count(*) filter (where ${specialOffers.status} not in ('draft','cancelled')))::int`,
       last: sql<Date | null>`max(coalesce(${specialOffers.sentAt}, ${specialOffers.createdAt}))`,
     })
     .from(specialOffers)
-    .where(inArray(specialOffers.productId, ids))
-    .groupBy(specialOffers.productId);
+    .where(
+      sql`${leadOf} in (${sql.join(
+        ids.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})`,
+    )
+    .groupBy(leadOf);
   const byProduct = new Map(offers.map((o) => [o.productId, o]));
   const prods = await productsById(db, ids);
   const m = marks ?? (await partnerMarks(db));
+  // Who still waits for an answer, and "Atkal pieejams" (docs/ALTERNATIVE_OFFER_PLAN.md §3.1).
+  const shopNow = new Map(
+    (await loadProducts(db, ids)).map((p) => [p.id, currentOffer(p)?.priceCents ?? null]),
+  );
+  const answers = await answerSummary(
+    db,
+    [...prods.values()].map((p) => {
+      const pm = m.byProduct.get(p.id);
+      return {
+        id: p.id,
+        subcategoryId: p.subcategoryId,
+        priceCents: shopNow.get(p.id) ?? null,
+        partner: pm ? { status: pm.status, at: pm.createdAt } : null,
+      };
+    }),
+  );
+  const now = new Date();
   const out: WorkItem[] = [];
   for (const s of saved) {
     const p = prods.get(s.productId!);
     if (!p) continue;
     const o = byProduct.get(p.id);
     const partner = mark(m.byProduct.get(p.id));
+    const answer = answers.get(p.id);
     const req = byRequest.get(p.id);
     const firstAt = Math.min(new Date(s.first).getTime(), req ? new Date(req.first).getTime() : Infinity);
     const lastAt = Math.max(new Date(s.last).getTime(), req ? new Date(req.last).getTime() : 0);
@@ -156,6 +182,10 @@ export async function leadItems(
       paidOffers: Number(o?.paid ?? 0),
       lastOfferAt: o?.last ? new Date(o.last) : null,
       partner,
+      undecided: answer?.undecided ?? 0,
+      waitUntil: m.byProduct.get(p.id)?.waitUntil ?? null,
+      backAt: answer?.backAt ?? null,
+      now,
     });
     out.push({
       ...c,
@@ -175,6 +205,7 @@ export async function leadItems(
         requestable: Number(req?.offerable ?? 0),
         offered: Number(o?.offered ?? 0),
         bought: Number(o?.paid ?? 0),
+        undecided: answer?.undecided ?? 0,
       },
     });
   }
@@ -197,10 +228,12 @@ export async function offerItems(
     rows.map((r) => r.offer.productId).filter((x): x is string => !!x),
   );
   const m = marks ?? (await partnerMarks(db));
+  const held = await heldOfferIds(db);
   return rows.map(({ offer, email }) => {
     const p = offer.productId ? prods.get(offer.productId) : undefined;
     const partner = offer.productId ? mark(m.byProduct.get(offer.productId)) : null;
     const c = classifyOffer({
+      held: held.has(offer.id),
       status: offer.status,
       createdAt: offer.createdAt,
       sentAt: offer.sentAt,

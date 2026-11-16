@@ -7,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { db, offerEvents, stores, users } from "@/db";
 import { endOfRigaDay } from "@/domain/offers/offers";
+import { DESCRIPTION_MAX, descriptionIssues } from "@/domain/offers/alternative";
 import { audit, OFFERS_PAUSED, offersPaused, setFlag } from "@/services/admin/audit";
 import { retryEprelErrors } from "@/services/admin/stats";
 import { ingestStore } from "@/services/ingestion/run";
@@ -63,6 +64,8 @@ const OfferForm = z.object({
   validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   message: z.string().trim().max(1000).optional(),
   supplierNote: z.string().trim().max(500).optional(),
+  description: z.string().trim().max(DESCRIPTION_MAX).optional(),
+  imageSetId: z.union([z.literal(""), z.uuid()]).optional(),
   intent: z.enum(["draft", "send"]),
 });
 
@@ -79,6 +82,7 @@ export async function createOfferAction(_prev: OfferFormState, formData: FormDat
   if (!parsed.success) return { error: `invalid:${parsed.error.issues[0]?.path.join(".")}` };
   const v = parsed.data;
   if (v.userIds.length + v.requestIds.length === 0) return { error: "invalid:userIds" };
+  if (v.description && descriptionIssues(v.description, null).length) return { error: "description" };
   const validUntil = endOfRigaDay(new Date(`${v.validUntil}T12:00:00Z`));
   const created = await createOffers(
     db,
@@ -96,6 +100,8 @@ export async function createOfferAction(_prev: OfferFormState, formData: FormDat
       message: v.message || null,
       supplierNote: v.supplierNote || null,
       costCents: v.cost ?? null,
+      description: v.description || null,
+      imageSetId: v.imageSetId || null,
     },
     a.email,
   );

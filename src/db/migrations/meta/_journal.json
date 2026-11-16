@@ -253,6 +253,13 @@
       "when": 1794650800810,
       "tag": "0035_ad_account_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794831212418,
+      "tag": "0036_alternative_offers",
+      "breakpoints": true
     }
   ]
 }

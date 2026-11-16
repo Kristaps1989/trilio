@@ -11,7 +11,9 @@ import { trackersFromEnv } from "@/services/offers/tracking";
 import { Button } from "@/ui/Button";
 import { retryEprelAction, runIngestAction, toggleOffersPausedAction } from "../actions";
 import { requireAdmin } from "../guard";
-import { AdminTitle, Chip, Section, Table } from "../ui";
+import { AdminTitle, Chip, Section, Table, inputClass, labelClass } from "../ui";
+import { minMarginAction } from "../outcome-actions";
+import { minMarginPct } from "@/services/admin/outcomes";
 
 // Sistēma: shops' ingestion, EPREL, Claude API spend, configuration as the
 // server sees it (no secrets), the offers kill switch and the audit trail.
@@ -27,7 +29,7 @@ const time = new Intl.DateTimeFormat("lv-LV", {
   minute: "2-digit",
 });
 
-type Props = { searchParams: Promise<{ ingest?: string; eprel?: string }> };
+type Props = { searchParams: Promise<{ ingest?: string; eprel?: string; margin?: string }> };
 
 export default async function AdminSystem({ searchParams }: Props) {
   await requireAdmin("/admin/sistema");
@@ -37,13 +39,14 @@ export default async function AdminSystem({ searchParams }: Props) {
   const dayStart = new Date(now);
   dayStart.setUTCHours(0, 0, 0, 0);
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const [runs, eprel, llmToday, llmMonth, paused, auditRows] = await Promise.all([
+  const [runs, eprel, llmToday, llmMonth, paused, auditRows, margin] = await Promise.all([
     lastRuns(db),
     eprelCounts(db),
     usageSince(db, dayStart),
     usageSince(db, monthStart),
     offersPaused(db),
     recentAudit(db, 30),
+    minMarginPct(db),
   ]);
   const usd = (rows: typeof llmToday) => rows.reduce((n, r) => n + (r.estimatedUsd ?? 0), 0);
   const provider = paymentsProvider();
@@ -74,6 +77,29 @@ export default async function AdminSystem({ searchParams }: Props) {
           </form>
         </div>
         <p className="text-sm text-stone">{t("pauseHint")}</p>
+      </Section>
+
+      <Section title={t("marginTitle")} id="margin">
+        {sp.margin ? (
+          <p role="status" className="text-[15px] font-semibold text-mist" data-margin={sp.margin}>
+            {sp.margin === "saved" ? t("marginSaved") : t("marginError")}
+          </p>
+        ) : null}
+        <form action={minMarginAction} className="flex flex-wrap items-end gap-3">
+          <label className={labelClass}>
+            {t("marginLabel")}
+            <input
+              name="pct"
+              inputMode="decimal"
+              defaultValue={String(margin).replace(".", ",")}
+              className={`${inputClass} max-w-[120px]`}
+            />
+          </label>
+          <Button type="submit" variant="outline" size="sm">
+            {t("marginSave")}
+          </Button>
+        </form>
+        <p className="text-sm text-stone">{t("marginHint")}</p>
       </Section>
 
       <Section title={t("ingestion")} id="ingestion">

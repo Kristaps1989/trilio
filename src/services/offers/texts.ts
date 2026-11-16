@@ -15,6 +15,11 @@ export function offerCopyFor(lang: UiLocale = "lv"): typeof lv.offerEmail {
   return lang === "en" ? en.offerEmail : lv.offerEmail;
 }
 
+/** Copy for Trilio's answers that are not an offer for the product asked for (docs/ALTERNATIVE_OFFER_PLAN.md). */
+export function answerCopyFor(lang: UiLocale = "lv"): typeof lv.answerEmail {
+  return lang === "en" ? en.answerEmail : lv.answerEmail;
+}
+
 /** The language a user's e-mails are written in; Latvian without an account. */
 export async function userLang(db: Db, userId: string | null | undefined): Promise<UiLocale> {
   if (!userId) return "lv";

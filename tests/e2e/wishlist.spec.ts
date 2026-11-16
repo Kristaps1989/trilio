@@ -126,8 +126,9 @@ test("signed out: one e-mail field on the card starts it; the receipt can unsubs
   await expect(pitch).toContainText("Zemāku cenu ne vienmēr izdodas panākt.");
   const panel = first.getByRole("group", { name: "Uz kādu e-pastu sūtīt piedāvājumu?" });
   await expect(panel).toContainText(
-    // The text names the proposal and the address (docs/REQUEST_OFFER_PLAN.md).
-    "Pajautāsim izplatītājam un 2 darba dienu laikā atsūtīsim piedāvājumu par šo preci uz šo e-pastu.",
+    // The text names the proposal and the address (docs/REQUEST_OFFER_PLAN.md), and the one
+    // alternative from another maker (docs/ALTERNATIVE_OFFER_PLAN.md §4.2).
+    "Pajautāsim izplatītājam un 2 darba dienu laikā atsūtīsim piedāvājumu par šo preci uz šo e-pastu (ja tā nebūs pieejama — par vienu līdzvērtīgu cita ražotāja preci, ar salīdzinājumu).",
   );
   await expectNoAxeViolations(page);
   await panel.getByLabel("E-pasts").fill("nav-epasts");
