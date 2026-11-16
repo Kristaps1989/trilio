@@ -5,7 +5,7 @@ import postgres from "postgres";
 // Answering every price request (docs/ALTERNATIVE_OFFER_PLAN.md): the product asked
 // for is unavailable, so the admin offers another maker's product with pictures and a
 // description; one shopper gets it at once and says "only my model", another (an
-// older request) is asked first and says yes. On a second product there is nothing to
+// older request) gets it at once too, with no question first. On a second product there is nothing to
 // offer: Trilio suggests why, one short e-mail goes, and a later confirmation brings
 // the lead back as "Atkal pieejams".
 
@@ -111,7 +111,7 @@ async function markPartner(admin: Page, status: "Nav pieejams" | "Partneris apst
 test.setTimeout(180_000);
 test.skip(() => !process.env.DATABASE_URL, "needs the database to make one request an older one");
 
-test("unavailable → another maker's product with a picture: one shopper gets it and declines, another is asked first and says yes", async ({
+test("unavailable → another maker's product with a picture: one shopper declines, an older request gets it at once too", async ({
   page,
   browser,
 }) => {
@@ -137,8 +137,8 @@ test("unavailable → another maker's product with a picture: one shopper gets i
     const panel = admin.locator("[data-decision-panel]");
     await expect(panel).toBeVisible();
     const table = admin.locator("[data-answers-table]");
-    await expect(table.getByRole("row").filter({ hasText: direct })).toContainText("Var sūtīt uzreiz");
-    await expect(table.getByRole("row").filter({ hasText: older })).toContainText("Vispirms pajautāsim");
+    await expect(table.getByRole("row").filter({ hasText: direct })).toContainText("Saņems uzreiz");
+    await expect(table.getByRole("row").filter({ hasText: older })).toContainText("Saņems uzreiz");
     await expectNoAxeViolations(admin);
     await noSideScroll(admin);
     // Uzdevumi has the view for it.
@@ -160,7 +160,7 @@ test("unavailable → another maker's product with a picture: one shopper gets i
       if (!label.includes(direct) && !label.includes(older)) await box.uncheck();
     }
     await expect(admin.locator("[data-alt-split]")).toHaveText(
-      "1 saņems piedāvājumu uzreiz. 1 vispirms saņems jautājumu „Jā / Nē”, jo viņu pieprasījuma tekstā alternatīva netika pieminēta; piedāvājums viņiem aizies tikai pēc „Jā”.",
+      "Piedāvājums aizies uzreiz katram atzīmētajam.",
     );
     const limits = admin.locator("[data-limit-original]");
     const seen = Number(await limits.getAttribute("data-limit-original"));
@@ -191,14 +191,8 @@ test("unavailable → another maker's product with a picture: one shopper gets i
     await expect(admin.locator("[data-description-problems]")).toBeVisible();
     await description.fill("Klusa, ar ērtu programmu izvēli.");
     await expect(admin.locator("[data-description-problems]")).toHaveCount(0);
-    // The question the older request gets now, then the offer that follows "Jā".
-    const ask = admin.locator('[data-testid="email-preview"] iframe').first().contentFrame();
-    await expect(ask.getByRole("heading", { level: 1 })).toHaveText("Tavs modelis šobrīd nav pieejams.");
-    await expect(ask.getByRole("link", { name: "Jā, piedāvājiet" })).toBeVisible();
-    await expect(admin.getByTestId("send-alternative")).toHaveText(
-      "Nosūtīt: 1 piedāvājumu uzreiz, 1 jautājumu „Jā / Nē”",
-    );
-    const mail = admin.locator('[data-testid="email-preview"] iframe').last().contentFrame();
+    await expect(admin.getByTestId("send-alternative")).toHaveText("Nosūtīt piedāvājumu (2)");
+    const mail = admin.frameLocator('[data-testid="email-preview"] iframe');
     await expect(mail.getByRole("heading", { level: 1 })).toContainText("Tavs modelis nav pieejams.");
     await expect(mail.getByText("Tu prasīji", { exact: true }).first()).toBeVisible();
     await expect(mail.getByText("Trilio apraksts")).toBeVisible();
@@ -210,14 +204,14 @@ test("unavailable → another maker's product with a picture: one shopper gets i
     ]);
     await popup.close();
     await expect(mail.getByRole("heading", { level: 1 })).toContainText("Tavs modelis nav pieejams.");
-    await expect(admin.getByTestId("email-subject").last()).toContainText("nav pieejams — varam piedāvāt");
+    await expect(admin.getByTestId("email-subject")).toContainText("nav pieejams — varam piedāvāt");
     await expectNoAxeViolations(admin);
     await noSideScroll(admin);
     await admin.getByTestId("send-alternative").click();
-    await expect(admin.locator("[data-answered]")).toHaveText("Alternatīva nosūtīta 1, pajautāts 1.");
+    await expect(admin.locator("[data-answered]")).toHaveText("Alternatīva nosūtīta: 2.");
     const table = admin.locator("[data-answers-table]");
     await expect(table.getByRole("row").filter({ hasText: direct })).toContainText("Alternatīva piedāvāta");
-    await expect(table.getByRole("row").filter({ hasText: older })).toContainText("Jautāts par alternatīvu");
+    await expect(table.getByRole("row").filter({ hasText: older })).toContainText("Alternatīva piedāvāta");
   });
 
   await test.step("the shopper sees the swap at once and says: only my model", async () => {
@@ -236,16 +230,14 @@ test("unavailable → another maker's product with a picture: one shopper gets i
     await expect(page.locator("[data-declined]")).toBeVisible();
   });
 
-  await test.step("the older request is asked first; Jā sends the offer", async () => {
-    const ask = await mailTo(other, older, /Piedāvāt līdzvērtīgu\?/);
-    expect(ask.text).not.toMatch(/\/piedavajums\//);
-    await other.goto(path(ask.text, /https?:\/\/\S+atbilde=ja/));
-    await expectNoAxeViolations(other);
-    await other.getByTestId("answer-yes").click();
-    await expect(other.locator("[data-answer]")).toHaveAttribute("data-answer", "yes");
-    await other.getByRole("link", { name: "Atvērt piedāvājumu" }).click();
+  await test.step("the older request gets the offer at once, with no question first", async () => {
+    const msg = await mailTo(other, older, /nav pieejams — varam piedāvāt/);
+    await other.goto(path(msg.text, /https?:\/\/\S+\/piedavajums\/[A-Za-z0-9_-]{20,}(?=\s)/));
     await expect(other.getByRole("heading", { name: "Šis nav tevis pieprasītais modelis" })).toBeVisible();
-    await mailTo(other, older, /nav pieejams — varam piedāvāt/);
+    const all = (await (
+      await other.request.get(`/api/test/outbox?to=${encodeURIComponent(older)}`)
+    ).json()) as Mail[];
+    expect(all.some((m) => /Piedāvāt līdzvērtīgu/.test(m.subject))).toBe(false);
   });
 
   await admin.goto(`/admin/pieprasijums/${productId}`);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { composeAskEmail, composeNothingEmail } from "./compose-answers";
+import { composeNothingEmail } from "./compose-answers";
 import { composeOfferEmail, offerPictures, type OfferDraft } from "./compose";
 import { comparisonWords } from "./alternative";
 import { compareProducts } from "@/domain/offers/alternative";
@@ -46,37 +46,6 @@ describe("nothing to offer", () => {
     expect(m.text).toContain("We keep following the price. If it drops");
     expect(m.headers).toBeUndefined();
     expect(m.html).toContain('lang="en"');
-  });
-});
-
-describe("asked first", () => {
-  it("offers two answers and no offer link", () => {
-    const m = composeAskEmail({
-      ...ctx,
-      requestedAt: null,
-      watchUntil: new Date("2027-02-10T10:00:00Z"),
-      yesUrl: "https://trilio.test/piedavajumi/alternativa/t?atbilde=ja",
-      noUrl: "https://trilio.test/piedavajumi/alternativa/t?atbilde=ne",
-    });
-    expect(m.subject).toMatch(/Piedāvāt līdzvērtīgu\?/);
-    expect(m.text).toContain("Tu saglabāji preci");
-    expect(m.text).toContain("Jā, piedāvājiet: https://trilio.test/piedavajumi/alternativa/t?atbilde=ja");
-    expect(m.text).not.toMatch(/\/piedavajums\//);
-  });
-  it("in English with no end date", () => {
-    const m = composeAskEmail({
-      ...ctx,
-      lang: "en",
-      signature: "Kristaps",
-      requestedAt: new Date("2026-11-12T10:00:00Z"),
-      watchUntil: null,
-      yesUrl: "https://y",
-      noUrl: "https://n",
-      unsubscribeUrl: "https://trilio.test/en/piedavajumi/atteikties/t",
-    });
-    expect(m.subject).toMatch(/Offer an equivalent\?/);
-    expect(m.text).toContain("Kristaps, Trilio");
-    expect(m.headers?.["List-Unsubscribe"]).toContain("/api/offers/unsubscribe/t");
   });
 });
 

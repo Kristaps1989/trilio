@@ -220,8 +220,7 @@ export async function alternativeAction(_prev: AltFormState, formData: FormData)
     manual: !v.alternativeId,
     priceCents: v.price,
     sent: res.sent,
-    asked: res.asked,
   });
   revalidatePath("/admin", "layout");
-  redirect(`${leadPath(v.originalId)}?answered=alternative&sent=${res.sent}&asked=${res.asked}`);
+  redirect(`${leadPath(v.originalId)}?answered=alternative&sent=${res.sent}`);
 }

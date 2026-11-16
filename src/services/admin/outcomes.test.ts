@@ -15,6 +15,7 @@ import {
 import { gtinCheckDigit } from "@/domain/catalog/ean";
 import { upsertOffers } from "@/services/ingestion/upsert";
 import { memoryEmailSender } from "@/services/notify/email";
+import { createOffers } from "@/services/offers/offers";
 import { leadItems, offerItems } from "./crm";
 import {
   answerAsk,
@@ -32,7 +33,7 @@ import {
 import { setFlag } from "./audit";
 
 // Answering every price request (docs/ALTERNATIVE_OFFER_PLAN.md): who asked and
-// what each was answered, an alternative sent directly or asked about first, the
+// what each was answered, an alternative sent at once to everyone who agreed to offers, the
 // "Jā / Nē", "Gribu tikai pieprasīto modeli", nothing to offer, monitoring only.
 
 const url = process.env.DATABASE_URL;
@@ -209,13 +210,13 @@ run("answers to price requests", { timeout: 60_000 }, () => {
     await end();
   });
 
-  it("lists who asked, each with an answer chip and whether an alternative may go directly", async () => {
+  it("lists who asked, each with an answer chip", async () => {
     const list = await requestersOf(db, ids.orig);
     const by = (k: string) => list.find((r) => r.key === k)!;
-    expect(by(`u:${people.direct}`)).toMatchObject({ chip: "new", direct: true, wantsOffers: true });
-    expect(by(`u:${people.old}`)).toMatchObject({ chip: "new", direct: false, seenCents: 61_000 });
+    expect(by(`u:${people.direct}`)).toMatchObject({ chip: "new", wantsOffers: true });
+    expect(by(`u:${people.old}`)).toMatchObject({ chip: "new", seenCents: 61_000 });
     expect(by(`u:${people.plain}`)).toMatchObject({ chip: "monitoring_only", wantsOffers: false });
-    expect(by(`r:${emailOnly}`)).toMatchObject({ chip: "new", direct: true, userId: null });
+    expect(by(`r:${emailOnly}`)).toMatchObject({ chip: "new", userId: null });
   });
 
   it("puts an unavailable product with people waiting at the top: decide", async () => {
@@ -241,14 +242,14 @@ run("answers to price requests", { timeout: 60_000 }, () => {
       "admin@test",
       { ...deps },
     );
-    expect(above).toEqual({ ok: true, sent: 1, asked: 0, skipped: 0 });
+    expect(above).toEqual({ ok: true, sent: 1, skipped: 0 });
   });
 
-  it("sends the alternative directly where the text allowed it, and asks the others first", async () => {
-    // The earlier call answered "direct"; the rest still wait.
+  it("sends the alternative at once to everyone who agreed to offers, older requests too", async () => {
+    // The earlier call answered "direct"; the rest still wait (owner, 16 Nov 2026: no "Jā / Nē" first).
     const before = mail.sent.length;
     const res = await offerAlternative(db, alternative(), "admin@test", deps);
-    expect(res).toEqual({ ok: true, sent: 1, asked: 1, skipped: 0 });
+    expect(res).toEqual({ ok: true, sent: 2, skipped: 0 });
     const sent = mail.sent.slice(before);
     const direct = sent.find((m) => m.to === address("mailonly"))!;
     expect(direct.subject).toMatch(/nav pieejams — varam piedāvāt/);
@@ -256,17 +257,13 @@ run("answers to price requests", { timeout: 60_000 }, () => {
     expect(direct.html).toContain("Labāk");
     expect(direct.html).toContain("Trilio apraksts");
     expect(direct.text).toContain("Gribu tikai pieprasīto modeli");
-    const ask = sent.find((m) => m.to === address("old"))!;
-    expect(ask.subject).toMatch(/Piedāvāt līdzvērtīgu\?/);
-    expect(ask.text).toMatch(/atbilde=ja/);
-    // The held draft is the shopper's turn, not a task to send.
-    const held = (await offerItems(db)).find((o) => o.person === address("old"));
-    expect(held).toMatchObject({ stage: "held", state: "waiting", next: null });
+    expect(sent.find((m) => m.to === address("old"))!.subject).toMatch(/nav pieejams — varam piedāvāt/);
+    expect(sent.some((m) => /Piedāvāt līdzvērtīgu\?/.test(m.subject))).toBe(false);
     const chips = (await requestersOf(db, ids.orig)).map((r) => [r.key, r.chip]);
     expect(chips).toEqual(
       expect.arrayContaining([
         [`u:${people.direct}`, "alternative_offered"],
-        [`u:${people.old}`, "alternative_asked"],
+        [`u:${people.old}`, "alternative_offered"],
         [`r:${emailOnly}`, "alternative_offered"],
       ]),
     );
@@ -279,13 +276,51 @@ run("answers to price requests", { timeout: 60_000 }, () => {
     expect(msg.text).toMatch(/trokšņa|troksn/i);
   });
 
-  it("Jā sends the held offer once; answering again changes nothing", async () => {
-    const [row] = await db.select().from(requestOutcomes).where(eq(requestOutcomes.userId, people.old!));
+  it("a question already sent: Jā sends the held offer once; answering again changes nothing", async () => {
+    // Questions sent before the owner chose to send at once still get their answer.
+    const asker = await person("asker", true, ids.alt, "notify.body@2026-11-09.2", 62_000);
+    const made = await createOffers(
+      db,
+      {
+        productId: ids.worse,
+        userIds: [asker],
+        priceCents: 55_000,
+        condition: "new",
+        grade: null,
+        warrantyMonths: 24,
+        quantity: 1,
+        deliveryWorkingDays: 3,
+        validUntil: new Date(Date.now() + 7 * DAY),
+        message: null,
+        supplierNote: null,
+        costCents: null,
+        alternativeTo: {
+          productId: ids.alt,
+          name: "AltBrandOc",
+          comparison: { label: "similar", lines: [], originalSeenCents: 62_000 },
+        },
+      },
+      "admin@test",
+    );
+    const offerId = made.ok ? made.offerIds[0]! : "";
+    const [row] = await db
+      .insert(requestOutcomes)
+      .values({
+        token: `${PREFIX}ask-${stamp}-token-abcdefghijkl`,
+        productId: ids.alt,
+        userId: asker,
+        email: address("asker"),
+        outcome: "alternative_asked",
+        offerId,
+        createdBy: "admin@test",
+      })
+      .returning();
+    const held = (await offerItems(db)).find((o) => o.id === offerId);
+    expect(held).toMatchObject({ stage: "held", state: "waiting", next: null });
     const before = mail.sent.length;
-    const yes = await answerAsk(db, row!.token, "yes", deps);
-    expect(yes).toMatchObject({ ok: true, answer: "yes" });
+    expect(await answerAsk(db, row!.token, "yes", deps)).toMatchObject({ ok: true, answer: "yes" });
     expect(mail.sent.length).toBe(before + 1);
-    expect(mail.sent.at(-1)!.to).toBe(address("old"));
+    expect(mail.sent.at(-1)!.to).toBe(address("asker"));
     expect(await answerAsk(db, row!.token, "no", deps)).toMatchObject({ ok: true, answer: "yes" });
     expect(mail.sent.length).toBe(before + 1);
   });

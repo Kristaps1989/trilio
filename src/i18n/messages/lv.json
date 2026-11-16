@@ -1384,15 +1384,6 @@
     "keepWatching": "Turpinām sekot cenai precei {asked} līdz {date}. Ja tā samazināsies, uzrakstīsim.",
     "reasonRequest": "Šo e-pastu sūtām, jo {date} trilio.lv pieprasīji zemāku cenu precei {asked}. Ja to neprasīji tu, šo e-pastu ignorē: vairāk nerakstīsim.",
     "reasonSaved": "Šo e-pastu saņem, jo saglabāji šo preci trilio.lv un atļāvi sūtīt piedāvājumus.",
-    "askSubject": "{asked} nav pieejams. Piedāvāt līdzvērtīgu?",
-    "askPreheader": "Viens klikšķis: jā vai nē.",
-    "askHero": "Tavs modelis šobrīd nav pieejams.",
-    "askIntroRequest": "{date} pieprasīji zemāku cenu precei {asked}. Mūsu partneriem tā šobrīd nav.",
-    "askIntroSaved": "Tu saglabāji preci {asked}. Mūsu partneriem tā šobrīd nav.",
-    "askQuestion": "Gribi, lai piedāvājam vienu līdzvērtīgu cita ražotāja preci? Atsūtīsim to ar abiem modeļiem blakus, un tu izlemsi pats.",
-    "askYes": "Jā, piedāvājiet",
-    "askNo": "Nē, tikai sekojiet cenai",
-    "askNoAnswer": "Ja neatbildēsi, neko citu nesūtīsim. Cenai sekojam līdz {date}.",
     "nothingSubject": "{asked}: šobrīd nevaram piedāvāt lētāk",
     "nothingPreheader": "Cenai sekojam tālāk un uzrakstīsim, kad tā samazināsies.",
     "nothingHero": "Šoreiz lētāk nesanāca.",
@@ -3008,7 +2999,7 @@
         "yes": "Atbildēja: jā",
         "no": "Atteicās no alternatīvas"
       },
-      "waiting": "{count, plural, one {# cilvēks gaida atbildi} other {# cilvēki gaida atbildi}}: {direct} var sūtīt alternatīvu uzreiz, {ask} vispirms pajautāsim.",
+      "waiting": "{count, plural, one {# cilvēks gaida atbildi} other {# cilvēki gaida atbildi}}.",
       "suggestion": "Ieteikums: nav ko piedāvāt · {reason}",
       "reason": {
         "partner_not_cheaper": "Partneris nevar lētāk",
@@ -3041,8 +3032,7 @@
       "requested": "pieprasīja zemāku cenu",
       "saved": "saglabāja",
       "noOffers": "Nav piekrišanas piedāvājumiem",
-      "direct": "Var sūtīt uzreiz",
-      "askFirst": "Vispirms pajautāsim",
+      "direct": "Saņems uzreiz",
       "bulkNothing": "Atzīmētajiem: nav ko piedāvāt",
       "bulkMonitoring": "Atzīmētajiem: tikai sekot cenai",
       "bulkHint": "„Nav ko piedāvāt” nosūta īsu paziņojumu tiem, kas piekrita piedāvājumiem (vienreiz). „Tikai sekot cenai” neko nesūta.",
@@ -3060,14 +3050,14 @@
         "monitoring": "Atzīmēti {marked}: tikai cenu monitorings.",
         "wait": "Atgādināsim Uzdevumos norādītajā datumā.",
         "wait_error": "Pagaidīt var tikai pēc partnera atbildes.",
-        "alternative": "Alternatīva nosūtīta {sent}, pajautāts {asked}."
+        "alternative": "Alternatīva nosūtīta: {sent}."
       }
     },
     "alternative": {
       "title": "Piedāvāt alternatīvu",
       "sub": "Prasīja: {name}",
       "back": "Atpakaļ",
-      "who": "{count, plural, one {# cilvēks gaida} other {# cilvēki gaida}}, {direct} no tiem var sūtīt uzreiz.",
+      "who": "{count, plural, one {# cilvēks gaida atbildi} other {# cilvēki gaida atbildi}}. Visi, kas piekrita piedāvājumiem, alternatīvu saņems uzreiz.",
       "suggestions": "Trilio ieteikumi",
       "suggestionsHint": "Citu ražotāju preces, kas ir veikalos, sakārtotas pēc Trilio vērtējuma (ne pēc uzcenojuma).",
       "noSuggestions": "Ieteikumu nav. Meklē zemāk vai ievadi preci, kuras nav katalogā.",
@@ -3099,7 +3089,7 @@
       "isEquivalent": "Līdzvērtīgs: nekas nav sliktāk. E-pastā drīkst rakstīt „līdzvērtīgs”.",
       "isSimilar": "Līdzīgs. E-pastā būs nosaukts: {list}.",
       "recipients": "{count, plural, one {Saņems # cilvēks} other {Saņems # cilvēki}}",
-      "split": "{direct} saņems piedāvājumu uzreiz. {ask} vispirms saņems jautājumu „Jā / Nē”, jo viņu pieprasījuma tekstā alternatīva netika pieminēta; piedāvājums viņiem aizies tikai pēc „Jā”.",
+      "split": "Piedāvājums aizies uzreiz katram atzīmētajam.",
       "price": "Cena (EUR)",
       "limitOriginal": "Nedrīkst būt dārgāk par pieprasītās preces redzēto cenu: {price}.",
       "limitShop": "Jābūt lētākam par šīs preces cenu veikalos: {price}.",
@@ -3116,9 +3106,7 @@
       "private": "Tikai adminam: iepirkums un piegādātājs",
       "cost": "Iepirkuma cena (EUR)",
       "supplier": "Piegādātājs, piezīme",
-      "send": "Nosūtīt: {direct, plural, one {# piedāvājumu uzreiz} other {# piedāvājumus uzreiz}}, {ask, plural, one {# jautājumu „Jā / Nē”} other {# jautājumus „Jā / Nē”}}",
       "preview": "E-pasta priekšskatījums",
-      "previewAsk": "Šis cilvēks vispirms saņems šo jautājumu:",
       "previewEmpty": "Ievadi cenu, un šeit parādīsies e-pasts.",
       "to": "Kam: {email}",
       "textVersion": "Teksta versija",
@@ -3132,10 +3120,7 @@
         "description": "Aprakstā ir kaut kas, ko nedrīkst rakstīt.",
         "recipients_none": "Nav neviena, kam sūtīt."
       },
-      "sendDirect": "Nosūtīt piedāvājumu ({count})",
-      "sendAsk": "Nosūtīt jautājumu „Jā / Nē” ({count})",
-      "previewAskFrame": "Jautājuma e-pasta priekšskatījums",
-      "previewAfterYes": "Pēc „Jā” aizies šis piedāvājums:"
+      "sendDirect": "Nosūtīt piedāvājumu ({count})"
     }
   },
   "alertsUnsubscribe": {

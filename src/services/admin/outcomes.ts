@@ -13,11 +13,10 @@ import {
   type RequestOutcome,
 } from "@/db/schema";
 import { loadProduct } from "@/db/queries/catalog";
-import { REQUEST_TTL_MS, consentVersion, requestOfferable } from "@/domain/notify/notify";
+import { REQUEST_TTL_MS, requestOfferable } from "@/domain/notify/notify";
 import {
   DEFAULT_MIN_MARGIN_PCT,
   alternativePriceProblems,
-  mayOfferAlternativeDirectly,
   requestChip,
   suggestNothing,
   undecided,
@@ -31,7 +30,7 @@ import { localizedPath, type UiLocale } from "@/i18n/routing";
 import type { EmailSender } from "@/services/notify/email";
 import { getFlag, offersPaused, setFlag } from "@/services/admin/audit";
 import { compare, shopPrice, suggestionsFor } from "@/services/offers/alternative";
-import { composeAskEmail, composeNothingEmail } from "@/services/offers/compose-answers";
+import { composeNothingEmail } from "@/services/offers/compose-answers";
 import type { OfferMailContext } from "@/services/offers/compose";
 import { cancelOffer, createOffers, ensureOffersToken, sendOffer } from "@/services/offers/offers";
 
@@ -72,8 +71,6 @@ export type Requester = {
   /** The price e-mails run until then (accounts); null for an e-mail-only request. */
   watchUntil: Date | null;
   wantsOffers: boolean;
-  /** Their request's text mentioned an alternative: one may be sent without asking first. */
-  direct: boolean;
   outcome: RequestOutcome | null;
   offered: boolean;
   chip: RequestChip;
@@ -198,7 +195,6 @@ export async function requestersOfMany(
       requestedAt: req?.offers ? req.createdAt : null,
       watchUntil: s.until,
       wantsOffers: !!s.optIn,
-      direct: !!s.optIn && !!req?.offers && mayOfferAlternativeDirectly(consentVersion(req.consent)),
     });
   }
   const since = now.getTime() - REQUEST_TTL_MS;
@@ -216,7 +212,6 @@ export async function requestersOfMany(
       requestedAt: r.createdAt,
       watchUntil: null,
       wantsOffers: ok,
-      direct: ok && mayOfferAlternativeDirectly(consentVersion(r.consent)),
     });
   }
   for (const list of out.values()) list.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
@@ -503,7 +498,7 @@ export type AlternativeInput = {
 };
 
 export type AlternativeResult =
-  | { ok: true; sent: number; asked: number; skipped: number }
+  | { ok: true; sent: number; skipped: number }
   | {
       ok: false;
       reason: "product" | "recipients" | "price" | "validity" | "manual" | "paused";
@@ -584,7 +579,6 @@ export async function offerAlternative(
     };
   const byKey = new Map(created.created.map((c) => [keyOf(c), c.offerId]));
   let sent = 0;
-  let asked = 0;
   const shop = shopPrice(original)?.cents ?? null;
   for (const p of people) {
     const offerId = byKey.get(p.key);
@@ -600,39 +594,15 @@ export async function offerAlternative(
       createdBy: by,
       createdAt: now,
     };
-    if (p.direct) {
-      const res = await sendOffer(db, offerId, { ...deps, now });
-      await db.insert(requestOutcomes).values({
-        ...row,
-        outcome: "alternative_offered",
-        notifiedAt: res.ok && res.emailed ? now : null,
-      });
-      if (res.ok) sent++;
-    } else {
-      const [outcome] = await db
-        .insert(requestOutcomes)
-        .values({ ...row, outcome: "alternative_asked" })
-        .returning();
-      const base = `${deps.baseUrl}${localizedPath(`/piedavajumi/alternativa/${outcome!.token}`, p.lang)}`;
-      const res = await deps.email.send(
-        composeAskEmail({
-          ...deps,
-          to: p.email,
-          lang: p.lang,
-          askedName: original.name,
-          requestedAt: p.requestedAt,
-          watchUntil: p.watchUntil,
-          yesUrl: `${base}?atbilde=ja`,
-          noUrl: `${base}?atbilde=ne`,
-          unsubscribeUrl: await unsubscribeFor(db, p, deps.baseUrl),
-        }),
-      );
-      if (res.ok)
-        await db.update(requestOutcomes).set({ notifiedAt: now }).where(eq(requestOutcomes.id, outcome!.id));
-      asked++;
-    }
+    const res = await sendOffer(db, offerId, { ...deps, now });
+    await db.insert(requestOutcomes).values({
+      ...row,
+      outcome: "alternative_offered",
+      notifiedAt: res.ok && res.emailed ? now : null,
+    });
+    if (res.ok) sent++;
   }
-  return { ok: true, sent, asked, skipped: created.skipped.length };
+  return { ok: true, sent, skipped: created.skipped.length };
 }
 
 // ---------------------------------------------------------------- the shopper's answers

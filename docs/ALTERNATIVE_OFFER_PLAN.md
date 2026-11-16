@@ -134,7 +134,7 @@ The suggestion is a chip on the row ("Ieteikums: nav ko piedāvāt · Partneris 
 
 ## 8. Decided (owner, 16 Nov 2026)
 
-1. Older requests: ask first, then offer.
+1. ~~Older requests: ask first, then offer.~~ Changed the same day (owner, 16 Nov 2026): the alternative goes at once to everyone who agreed to offers, with no "Jā / Nē" first. The answer page for questions already sent stays.
 2. The "nothing to offer" e-mail is sent by default; the admin decides with Trilio's suggested reason (§7).
 3. An alternative may not cost more than the original's price the shopper saw (a hard rule).
 4. One alternative per request.
@@ -144,8 +144,7 @@ The suggestion is a chip on the row ("Ieteikums: nav ko piedāvāt · Partneris 
 Built as planned, with these choices made while building:
 
 - **The comparison** is product against product, on the category's compare attributes (`compare` in data/categories.json). It does not use each shopper's answers, because one alternative goes to everyone who asked for the product. A line only the alternative states is neutral (no downside); a line only the original states is "Nav datu" and makes the label "līdzīgs".
-- **Who is asked first:** everyone whose request text did not mention an alternative. That covers requests before consent `2026-11-16` and accounts that saved the product without a request. Only people who agreed to offers are answered at all; the rest, and products under the 200 € line, are "Tikai cenu monitorings" automatically.
-- **The held offer:** for people asked first, the alternative is created as a draft at once and sent on "Jā". In Uzdevumi it shows as "Gaida pircēja „Jā”", the shopper's turn, not a task to send.
+- **Who gets it:** everyone still waiting who agreed to offers gets the alternative at once (owner, 16 Nov 2026: no question first). The rest, and products under the 200 € line, are "Tikai cenu monitorings" automatically. The "Jā / Nē" page (`piedavajumi/alternativa/[token]`) still answers questions sent before this change; a held offer shows as "Gaida pircēja „Jā”" until then.
 - **New people waiting keep a lead Trilio's,** even when offers are out to others on the same product.
 - **The catalogue picture** is used when no picture is added; any picture added replaces it.
 - **The Uzdevumi view** "Nav pieejams: jāizlemj" is the link `/admin?state=action&partner=unavailable&kind=lead`, shown above the Pieprasījums list.
