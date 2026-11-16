@@ -42,7 +42,7 @@ One outcome per request (per person and product), shown as a chip on every row:
 When the partner answer is "Nav pieejams", the top of `/admin/pieprasijums/{id}` replaces the next-step box with three large buttons:
 
 1. **Piedāvāt alternatīvu** (§3.3)
-2. **Nav ko piedāvāt**: one tap. It shows a preview of the e-mail in §4.4 with the switch "Nosūtīt paziņojumu" (on by default) and the note field. Confirm. Every open request of the product gets the outcome, and those who agreed get the e-mail.
+2. **Nav ko piedāvāt**: one tap. It shows a preview of the e-mail in §4.4 with the switch "Nosūtīt paziņojumu" (on by default), the reason (preselected from §7) and the note field. Confirm. Every open request of the product gets the outcome, and those who agreed get the e-mail.
 3. **Pagaidīt**: the partner expects stock. Pick a date (7 / 14 / 30 days, or a date). The lead leaves Uzdevumi and comes back on that date.
 
 The per-request table below keeps one menu per row ("Piedāvāt šo", "Alternatīva", "Nav ko piedāvāt", "Tikai sekot cenai"), for when people need different answers.
@@ -119,9 +119,22 @@ This is one short message per request, never repeated: "Šobrīd nevaram piedāv
 3. **Shopper side:** the alternative e-mail and offer page banner, pictures and "Trilio apraksts" in the e-mail and on the offer page, "Gribu tikai {Original}", the ask-first e-mail for older consents, the "nothing to offer" e-mail, consent and privacy text.
 4. **e2e at 360 px and desktop with axe:** unavailable → alternative → shopper sees the swap and the table → accepts; unavailable → nothing to offer → e-mail → monitoring continues; old consent → ask → "Jā" → offer; bulk "Tikai sekot cenai"; upload a picture from a file and add one from a link (local test server), wrong link → clear error, alt text required; "Atkal pieejams" brings a lead back.
 
-## 7. Open decisions for the owner
+## 7. When is there "nothing to offer"?
 
-1. Older requests: ask first (recommended), or send the alternative directly?
-2. Send the "nothing to offer" e-mail by default (recommended), or only mark it?
-3. Must an alternative cost no more than the original's price the shopper saw (recommended: yes, as a hard rule), or is it only a warning?
-4. One alternative per request (recommended), or up to two?
+The admin decides; Trilio never closes a request on its own (no time limits, owner 30 Oct 2026). Trilio does show the evidence, and suggests "Nav ko piedāvāt" with its reason when one of these holds:
+
+| Reason (shown on the row and stored with the outcome) | How Trilio knows |
+| --- | --- |
+| **Partneris nevar lētāk** | The partner confirmed a cost, and that cost plus the minimum margin is at or above the lowest shop price now. Trilio could only sell at a loss or above the shops. Computed from the partner mark and live shop prices. |
+| **Nav pieejams, un nav alternatīvas** | The original is marked "Nav pieejams", and none of the suggested alternatives passes: no partner confirmed one, or none passes the price check (§3.3) and the "līdzvērtīgs/līdzīgs" comparison. |
+| **Visi partneri atteica** | Every partner asked for this product (the `partner_requests` history) answered "Nav pieejams". |
+| **Cits iemesls** | The admin's own reason, typed in the note. |
+
+The suggestion is a chip on the row ("Ieteikums: nav ko piedāvāt · Partneris nevar lētāk"), and the decision panel preselects that reason. The admin confirms with one tap. The minimum margin is a setting in Admin → Sistēma (default 3 %), not code. If the evidence changes later (the shop price rises, a partner confirms), "Atkal pieejams" (§3.1) brings the request back.
+
+## 8. Decided (owner, 16 Nov 2026)
+
+1. Older requests: ask first, then offer.
+2. The "nothing to offer" e-mail is sent by default; the admin decides with Trilio's suggested reason (§7).
+3. An alternative may not cost more than the original's price the shopper saw (a hard rule).
+4. One alternative per request.
