@@ -65,11 +65,14 @@ export type LeadFacts = {
 
 /** A product people asked to hear about. */
 export function classifyLead(f: LeadFacts): Classified {
-  if (f.openOffers > 0)
+  // People still waiting for an answer keep the lead Trilio's, whatever others were offered.
+  const waitingPeople = (f.undecided ?? 0) > 0;
+  if (f.openOffers > 0 && !waitingPeople)
     return { stage: "offered", state: "waiting", next: null, waitingSince: f.lastOfferAt };
   // Saved again after the last offer: a new lead on the same product.
   const newSince = f.lastOfferAt && f.lastSavedAt > f.lastOfferAt ? f.lastSavedAt : null;
-  if (f.paidOffers > 0 && !newSince) return { stage: "won", state: "done", next: null, waitingSince: null };
+  if (f.paidOffers > 0 && !newSince && !waitingPeople)
+    return { stage: "won", state: "done", next: null, waitingSince: null };
   if (f.backAt) return { stage: "back", state: "action", next: "make_offer", waitingSince: f.backAt };
   const p = f.partner;
   const open = f.undecided === undefined || f.undecided > 0;
@@ -90,8 +93,7 @@ export function classifyLead(f: LeadFacts): Classified {
     return { stage: "unavailable", state: "done", next: null, waitingSince: null };
   }
   // Nobody asked for a lower price (cheap, plain price alerts) or everyone was answered: only the price is watched.
-  if (!open && p?.status !== "confirmed")
-    return { stage: "monitoring", state: "done", next: null, waitingSince: null };
+  if (!open) return { stage: "monitoring", state: "done", next: null, waitingSince: null };
   if (p?.status === "confirmed")
     return { stage: "confirmed", state: "action", next: "make_offer", waitingSince: newSince ?? p.at };
   return {

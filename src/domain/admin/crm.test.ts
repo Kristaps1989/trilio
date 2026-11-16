@@ -111,10 +111,35 @@ describe("leads with answers owed (docs/ALTERNATIVE_OFFER_PLAN.md)", () => {
       stage: "monitoring",
       state: "done",
     });
+    // Everyone answered: a later confirmation alone is no task (only "Atkal pieejams" is).
+    expect(
+      classifyLead({ ...base, partner: { ...requested, status: "confirmed" }, undecided: 0 }),
+    ).toMatchObject({ stage: "monitoring", state: "done" });
+  });
+  it("new people waiting keep the lead Trilio's even with offers out to others", () => {
+    expect(
+      classifyLead({
+        ...base,
+        openOffers: 1,
+        lastOfferAt: d("2026-10-28"),
+        partner: unavailable,
+        undecided: 1,
+      }),
+    ).toMatchObject({ state: "action", next: "decide_unavailable" });
+    expect(
+      classifyLead({ ...base, openOffers: 1, lastOfferAt: d("2026-10-28"), partner: null, undecided: 0 }),
+    ).toMatchObject({
+      stage: "offered",
+    });
   });
   it("back in stock after nothing to offer is Trilio's turn to offer", () => {
     expect(
-      classifyLead({ ...base, partner: { ...requested, status: "confirmed" }, undecided: 0, backAt: d("2026-10-30") }),
+      classifyLead({
+        ...base,
+        partner: { ...requested, status: "confirmed" },
+        undecided: 0,
+        backAt: d("2026-10-30"),
+      }),
     ).toMatchObject({ stage: "back", state: "action", next: "make_offer" });
   });
 });

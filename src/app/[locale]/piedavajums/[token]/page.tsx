@@ -11,6 +11,8 @@ import { formatDateDative, formatEur } from "@/i18n/format";
 import { activeLocale } from "@/i18n/active";
 import { signatureLine } from "@/services/offers/compose";
 import { markOpened, offerByToken } from "@/services/offers/offers";
+import { comparisonWords } from "@/services/offers/alternative";
+import { imagePath, imagesOfSet } from "@/services/offers/images";
 import { orderOfOffer } from "@/services/offers/orders";
 import { Button, ButtonLink } from "@/ui/Button";
 import { EnergyBadge } from "@/ui/EnergyBadge";
@@ -38,6 +40,7 @@ export default async function OfferPage({ params }: Props) {
   const { token } = await params;
   const t = await getTranslations("offer");
   const tr = await getTranslations("results");
+  const ta = await getTranslations("answerEmail");
   const offer = await offerByToken(db, token);
   if (!offer || offer.status === "draft") notFound();
   const session = await auth();
@@ -64,7 +67,13 @@ export default async function OfferPage({ params }: Props) {
           <span lang="lv">{offer.productName}</span>
         </PageTitle>
         <p className="text-[17px] text-stone" role="status">
-          {phase === "paid" ? t("paid") : phase === "cancelled" ? t("cancelled") : t("expired")}
+          {phase === "paid"
+            ? t("paid")
+            : phase === "cancelled"
+              ? offer.declinedAt
+                ? t("declined")
+                : t("cancelled")
+              : t("expired")}
         </p>
         <div className="flex flex-wrap gap-3">
           {phase === "paid" && yours && order ? (
@@ -81,6 +90,16 @@ export default async function OfferPage({ params }: Props) {
   }
 
   const awaitingPayment = order?.status === "awaiting_payment";
+  const lang = activeLocale() === "en" ? "en" : "lv";
+  const pictures = await imagesOfSet(db, offer.imageSetId);
+  const alternative =
+    offer.alternativeToName && offer.comparison
+      ? {
+          asked: offer.alternativeToName,
+          label: offer.comparison.label,
+          ...comparisonWords(offer.comparison, offer.subcategoryId, lang),
+        }
+      : null;
   return (
     <Page size="narrow" gap="gap-5">
       <div className="flex flex-col gap-2">
@@ -89,6 +108,22 @@ export default async function OfferPage({ params }: Props) {
           <span lang="lv">{offer.productName}</span>
         </PageTitle>
       </div>
+
+      {alternative ? (
+        <section
+          aria-labelledby="alt-banner"
+          className="flex flex-col gap-1 rounded-card border-[1.5px] border-warning p-4 text-mist"
+          data-alternative={alternative.label}
+        >
+          <h2 id="alt-banner" className="font-heading text-lg font-semibold">
+            {t("altBanner")}
+          </h2>
+          <p className="text-[16px]">{t("altBannerText", { asked: alternative.asked })}</p>
+          <p className="text-[15px] text-stone">
+            {alternative.label === "equivalent" ? t("altLabelEquivalent") : t("altLabelSimilar")}
+          </p>
+        </section>
+      ) : null}
 
       <section
         aria-label={t("boxLabel")}
@@ -109,6 +144,8 @@ export default async function OfferPage({ params }: Props) {
           <p className="text-[15px] text-muted">
             {t("shops", { price: formatEur(offer.referencePriceCents) })}
           </p>
+        ) : alternative ? (
+          <p className="text-[15px] text-muted">{t("noShopPrice")}</p>
         ) : null}
         <ul className="flex flex-col gap-1.5 text-[16px]">
           <li>{t("delivery", { date: formatDateDative(deliveryBy(now, offer.deliveryWorkingDays)) })}</li>
@@ -142,17 +179,126 @@ export default async function OfferPage({ params }: Props) {
         <p className="text-sm text-muted">{t("valid", { date: formatDateDative(offer.validUntil) })}</p>
       </section>
 
+      {alternative && alternative.rows.length ? (
+        <section aria-labelledby="alt-compare" className="flex flex-col gap-3">
+          <h2 id="alt-compare" className="font-heading text-xl font-semibold text-mist">
+            {ta("compareTitle")}
+          </h2>
+          <div
+            tabIndex={0}
+            role="group"
+            aria-label={ta("compareTitle")}
+            className="overflow-x-auto rounded-card border-[1.5px] border-line-40"
+          >
+            <table className="w-full min-w-[320px] border-collapse text-left text-[15px] text-mist">
+              <caption className="sr-only">{ta("compareTitle")}</caption>
+              <thead>
+                <tr className="border-b border-line-25 text-sm text-stone">
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    {ta("colAttr")}
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    {ta("colAsked")}
+                  </th>
+                  <th scope="col" className="px-3 py-2 font-semibold">
+                    {ta("colOffered")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {alternative.rows.map((r, i) => (
+                  <tr key={i} className="border-b border-line-20 last:border-0">
+                    <th scope="row" className="px-3 py-2 font-semibold">
+                      {r.label}
+                    </th>
+                    <td className="px-3 py-2 text-stone">{r.asked}</td>
+                    <td className="px-3 py-2">
+                      {r.offered}
+                      {r.verdict ? (
+                        <span
+                          className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold ${
+                            r.verdict.tone === "good"
+                              ? "bg-lime text-night"
+                              : r.verdict.tone === "bad"
+                                ? "bg-warning text-night"
+                                : "bg-chip text-mist"
+                          }`}
+                        >
+                          {r.verdict.text}
+                        </span>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {alternative.downsides.length ? (
+            <p className="text-[15px] text-mist">
+              {ta("downsides", { list: alternative.downsides.join("; ") })}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {offer.description ? (
+        <section
+          aria-labelledby="trilio-description"
+          className="flex flex-col gap-2 rounded-card bg-card-soft p-5 text-night"
+        >
+          <h2 id="trilio-description" className="text-sm font-bold tracking-wide uppercase text-muted">
+            {t("descriptionTitle")}
+          </h2>
+          <p className="text-[16px] whitespace-pre-line">{offer.description}</p>
+        </section>
+      ) : null}
+
+      {pictures.length ? (
+        <section aria-label={t("product")} className="flex flex-col gap-3">
+          <ul className="grid grid-cols-2 gap-3">
+            {pictures.map((p, i) => (
+              <li key={p.id} className={i === 0 ? "col-span-2" : ""}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- Trilio's own stored copy */}
+                <img
+                  src={imagePath(p.id)}
+                  alt={p.alt}
+                  width={p.width}
+                  height={p.height}
+                  className="h-auto w-full rounded-card bg-white object-contain"
+                  data-offer-picture
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {alternative ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-[15px] text-stone">{ta("declineHint")}</p>
+          <ButtonLink
+            href={`/piedavajums/${token}/atteikt`}
+            variant="outline"
+            data-testid="decline-alternative"
+          >
+            {t("decline")}
+          </ButtonLink>
+        </div>
+      ) : null}
+
       {product && media ? (
         <section
           aria-label={t("product")}
           className="flex flex-col gap-3 rounded-card border-[1.5px] border-line-40 p-5"
         >
-          <ProductImage
-            src={media.image.src}
-            alt={product.name}
-            fallback={media.image.fallback}
-            size="card"
-          />
+          {pictures.length ? null : (
+            <ProductImage
+              src={media.image.src}
+              alt={product.name}
+              fallback={media.image.fallback}
+              size="card"
+            />
+          )}
           <p className="font-heading text-sm font-semibold text-stone">
             {tr("model", { code: product.modelCode, ean: product.ean ?? "—" })}
           </p>

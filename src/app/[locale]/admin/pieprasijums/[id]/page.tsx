@@ -8,6 +8,7 @@ import { leadItems, leadRecord } from "@/services/admin/crm";
 import { Button, ButtonLink } from "@/ui/Button";
 import { leadNoteAction } from "../../crm-actions";
 import { NextStepBox, RecordProduct } from "../../crm";
+import { Answers } from "./Answers";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, Section, Table, inputClass, labelClass } from "../../ui";
 
@@ -20,7 +21,7 @@ export const metadata: Metadata = { title: "Pieprasījums" };
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ partner?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 };
 
 export default async function AdminLead({ params, searchParams }: Props) {
@@ -47,6 +48,7 @@ export default async function AdminLead({ params, searchParams }: Props) {
         ) : null}
       </AdminTitle>
       <NextStepBox item={item} />
+      <Answers productId={id} partner={record.history[0]?.status ?? null} status={sp} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <div className="flex flex-col gap-5">
           <RecordProduct productId={id} back={`/admin/pieprasijums/${id}`} status={sp.partner} />

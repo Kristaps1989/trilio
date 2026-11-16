@@ -28,7 +28,7 @@ describe("admin configuration", () => {
       socialImagesPurged: 0,
       notifyRequestsPurged: 0,
       uiEventsPurged: 0,
-    offerImagesPurged: 0,
+      offerImagesPurged: 0,
       alertRenewals: { asked: 0, deleted: 0, usersDeleted: 0 },
     };
     expect(eventful(quiet)).toBe(false);

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { and, eq, ilike, inArray, or } from "drizzle-orm";
@@ -221,6 +222,7 @@ export default async function NewOffer({ searchParams }: Props) {
       ) : (
         <OfferForm
           product={{ id: product.id, name: product.name, imageUrl: image.src }}
+          imageSetId={randomUUID()}
           reference={{
             priceCents: reference.priceCents,
             storeName: reference.storeName,

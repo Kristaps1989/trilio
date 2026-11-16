@@ -55,7 +55,10 @@ run("answers to price requests", { timeout: 60_000 }, () => {
   let emailOnly = "";
 
   async function cleanup() {
-    const prods = await db.select({ id: products.id }).from(products).where(inArray(products.ean, Object.values(EANS)));
+    const prods = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(inArray(products.ean, Object.values(EANS)));
     const pids = prods.map((p) => p.id);
     if (pids.length) {
       const offers = await db
@@ -77,7 +80,13 @@ run("answers to price requests", { timeout: 60_000 }, () => {
     await db.delete(stores).where(eq(stores.slug, "outcomes_test_store"));
   }
 
-  const person = async (n: string, optIn: boolean, product: string, consent: string | null, seen = 60_000) => {
+  const person = async (
+    n: string,
+    optIn: boolean,
+    product: string,
+    consent: string | null,
+    seen = 60_000,
+  ) => {
     const [u] = await db
       .insert(users)
       .values({ email: address(n), offersOptIn: optIn, locale: "lv" })
@@ -163,8 +172,12 @@ run("answers to price requests", { timeout: 60_000 }, () => {
       row(EANS.worse, "WorseBrandOc", 58_000, { ...base, capacity_kg: 8, noise_db: 78, energy_class: "B" }),
       row(EANS.cheap, "CheapBrandOc", 45_000, { ...base, capacity_kg: 7 }),
     ]);
-    const list = await db.select().from(products).where(inArray(products.ean, Object.values(EANS)));
-    for (const k of Object.keys(EANS) as (keyof typeof EANS)[]) ids[k] = list.find((p) => p.ean === EANS[k])!.id;
+    const list = await db
+      .select()
+      .from(products)
+      .where(inArray(products.ean, Object.values(EANS)));
+    for (const k of Object.keys(EANS) as (keyof typeof EANS)[])
+      ids[k] = list.find((p) => p.ean === EANS[k])!.id;
     // Direct: the request's text mentioned an alternative. Asked first: an older text. Monitoring: no offers.
     await person("direct", true, ids.orig, "notify.body@2026-11-16");
     await person("old", true, ids.orig, "notify.body@2026-11-09.2", 61_000);
@@ -217,9 +230,11 @@ run("answers to price requests", { timeout: 60_000 }, () => {
       reason: "price",
       problems: ["not_below_shop", "above_original"],
     });
-    expect(
-      await offerAlternative(db, alternative({ priceCents: 61_000 }), "admin@test", deps),
-    ).toEqual({ ok: false, reason: "price", problems: ["above_original"] });
+    expect(await offerAlternative(db, alternative({ priceCents: 61_000 }), "admin@test", deps)).toEqual({
+      ok: false,
+      reason: "price",
+      problems: ["above_original"],
+    });
     const above = await offerAlternative(
       db,
       alternative({ alternativeId: ids.worse, priceCents: 57_000, keys: [`u:${people.direct}`] }),
@@ -265,10 +280,7 @@ run("answers to price requests", { timeout: 60_000 }, () => {
   });
 
   it("Jā sends the held offer once; answering again changes nothing", async () => {
-    const [row] = await db
-      .select()
-      .from(requestOutcomes)
-      .where(eq(requestOutcomes.userId, people.old!));
+    const [row] = await db.select().from(requestOutcomes).where(eq(requestOutcomes.userId, people.old!));
     const before = mail.sent.length;
     const yes = await answerAsk(db, row!.token, "yes", deps);
     expect(yes).toMatchObject({ ok: true, answer: "yes" });
@@ -279,10 +291,7 @@ run("answers to price requests", { timeout: 60_000 }, () => {
   });
 
   it("Gribu tikai pieprasīto modeli withdraws the alternative and keeps the answer", async () => {
-    const [offer] = await db
-      .select()
-      .from(specialOffers)
-      .where(eq(specialOffers.notifyRequestId, emailOnly));
+    const [offer] = await db.select().from(specialOffers).where(eq(specialOffers.notifyRequestId, emailOnly));
     expect(await declineAlternative(db, offer!.token)).toBe(true);
     expect(await declineAlternative(db, offer!.token)).toBe(false);
     const [after] = await db.select().from(specialOffers).where(eq(specialOffers.id, offer!.id));
@@ -331,9 +340,12 @@ run("answers to price requests", { timeout: 60_000 }, () => {
 
   it("Pagaidīt keeps the lead with the partner until the date", async () => {
     await person("waiter", true, ids.alt, "notify.body@2026-11-16", 62_000);
-    await db
-      .insert(partnerRequests)
-      .values({ productId: ids.alt, status: "unavailable", partner: "Distributor B", createdBy: "admin@test" });
+    await db.insert(partnerRequests).values({
+      productId: ids.alt,
+      status: "unavailable",
+      partner: "Distributor B",
+      createdBy: "admin@test",
+    });
     expect(await waitForPartner(db, ids.alt, new Date(Date.now() + 7 * DAY), "admin@test")).toBe(true);
     const lead = (await leadItems(db)).find((l) => l.id === ids.alt);
     expect(lead).toMatchObject({ stage: "waiting", state: "partner" });

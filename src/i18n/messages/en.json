@@ -1405,6 +1405,28 @@
     "sign": "{name}, Trilio",
     "signTeam": "The Trilio team"
   },
+  "altAnswer": {
+    "kicker": "An answer to your request",
+    "askTitle": "Offer an equivalent product from another maker?",
+    "askBody": "Our partners don't have {asked}, the product you asked for, right now. If you like, we'll send one equivalent product from another maker with both models side by side, and you decide.",
+    "yes": "Yes, offer one",
+    "no": "No, just follow the price",
+    "yesTitle": "Thank you!",
+    "yesBody": "The offer is on its way to your e-mail. You can also open it here.",
+    "noTitle": "Understood",
+    "noBody": "We won't offer an alternative. We keep following the price of {asked} and will write if it drops.",
+    "expiredTitle": "This offer is no longer valid",
+    "expiredBody": "The time to answer has passed. We keep following the price, and if there is something to offer, we'll write.",
+    "openOffer": "Open the offer",
+    "declineTitle": "Only the model you asked for?",
+    "declineBody": "We won't offer this alternative ({offered}) again. We'll keep following the price of {asked}.",
+    "declineConfirm": "Yes, only the model I asked for",
+    "backToOffer": "Back to the offer",
+    "declinedTitle": "Understood",
+    "declinedBody": "We won't offer this alternative again. We keep following the price of {asked} and will write if it drops.",
+    "closedTitle": "This offer is no longer open",
+    "closedBody": "It has ended or was already ordered. If anything is unclear, reply to the e-mail."
+  },
   "offersConsent": {
     "label": "I'd like personal offers for the products I've saved",
     "hint": "If we can offer one of your saved products for less than the shops, we'll write. Only about that product, no advertising. You can unsubscribe at any time.",

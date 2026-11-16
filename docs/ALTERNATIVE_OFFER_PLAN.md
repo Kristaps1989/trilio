@@ -1,4 +1,4 @@
-# Answering every price request: offer, alternative, or "nothing to offer" (plan, 16 Nov 2026)
+# Answering every price request: offer, alternative, or "nothing to offer" (plan and status, 16 Nov 2026)
 
 The owner's case: a shopper asked for a lower price ("Iegūt lētāk") on a product, the partner cannot supply that maker's model, and the owner wants to offer an equivalent product from another maker without misleading anyone. The owner also wants to mark requests that have nothing to offer and those that only have price monitoring, so that every request has a visible outcome. Viewpoint: the admin doing this every day, on a phone if needed.
 
@@ -138,3 +138,17 @@ The suggestion is a chip on the row ("Ieteikums: nav ko piedāvāt · Partneris 
 2. The "nothing to offer" e-mail is sent by default; the admin decides with Trilio's suggested reason (§7).
 3. An alternative may not cost more than the original's price the shopper saw (a hard rule).
 4. One alternative per request.
+
+## 9. Status (16 Nov 2026): built
+
+Built as planned, with these choices made while building:
+
+- **The comparison** is product against product, on the category's compare attributes (`compare` in data/categories.json). It does not use each shopper's answers, because one alternative goes to everyone who asked for the product. A line only the alternative states is neutral (no downside); a line only the original states is "Nav datu" and makes the label "līdzīgs".
+- **Who is asked first:** everyone whose request text did not mention an alternative. That covers requests before consent `2026-11-16` and accounts that saved the product without a request. Only people who agreed to offers are answered at all; the rest, and products under the 200 € line, are "Tikai cenu monitorings" automatically.
+- **The held offer:** for people asked first, the alternative is created as a draft at once and sent on "Jā". In Uzdevumi it shows as "Gaida pircēja „Jā”", the shopper's turn, not a task to send.
+- **New people waiting keep a lead Trilio's,** even when offers are out to others on the same product.
+- **The catalogue picture** is used when no picture is added; any picture added replaces it.
+- **The Uzdevumi view** "Nav pieejams: jāizlemj" is the link `/admin?state=action&partner=unavailable&kind=lead`, shown above the Pieprasījums list.
+- **The e-mail scanner rule:** the e-mail's "Jā / Nē" and "Gribu tikai pieprasīto modeli" links open a page with one confirming button. A link opened by a mail scanner never answers for the shopper.
+
+Code: `src/domain/offers/alternative.ts` (rules), `src/services/admin/outcomes.ts` (requesters, decisions, answers), `src/services/offers/alternative.ts` (suggestions, comparison words), `src/services/offers/images.ts` (pictures), `src/services/offers/compose.ts` and `compose-answers.ts` (e-mails). Admin pages: `admin/pieprasijums/[id]` (Atbildes pieprasītājiem) and `admin/pieprasijums/[id]/alternativa`. Shopper pages: `piedavajums/[token]` (the swap, the table, pictures, "Trilio apraksts"), `piedavajums/[token]/atteikt` and `piedavajumi/alternativa/[token]`. Tests: unit and DB tests next to each module; e2e in `tests/e2e/alternative-offers.spec.ts`.

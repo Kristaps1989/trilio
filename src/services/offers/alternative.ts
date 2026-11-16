@@ -29,8 +29,16 @@ export function comparedKeys(subcategoryId: string): string[] {
   return getSubcategory(subcategoryId)?.compare ?? [];
 }
 
-export function compare(original: ProductView, alternative: { attributes: Record<string, unknown> }): Comparison {
-  return compareProducts(original.attributes, alternative.attributes, comparedKeys(original.subcategoryId), original.subcategoryId);
+export function compare(
+  original: ProductView,
+  alternative: { attributes: Record<string, unknown> },
+): Comparison {
+  return compareProducts(
+    original.attributes,
+    alternative.attributes,
+    comparedKeys(original.subcategoryId),
+    original.subcategoryId,
+  );
 }
 
 export type Suggestion = {
@@ -42,10 +50,15 @@ export type Suggestion = {
 
 /**
  * Up to five products from the same subcategory and other makers that a partner
- * shop has now, best value first by the normal ranking (src/domain/ranking), and
- * not dearer in the shops than 1.3 × the original, so they stay in its class.
+ * shop has now, best value first by the normal ranking (src/domain/ranking): those
+ * not dearer in the shops than 1.3 × the original first, so they stay in its class,
+ * then others when fewer than three are.
  */
-export async function suggestionsFor(db: Db, original: ProductView, originalCents: number | null): Promise<Suggestion[]> {
+export async function suggestionsFor(
+  db: Db,
+  original: ProductView,
+  originalCents: number | null,
+): Promise<Suggestion[]> {
   const sub = getSubcategory(original.subcategoryId);
   if (!sub) return [];
   const products = await loadCandidates(db, sub.id);
@@ -53,12 +66,26 @@ export async function suggestionsFor(db: Db, original: ProductView, originalCent
     candidatePool({ products, sub, answers: {}, budget: null, urgency: "two_weeks", showUnknown: true }),
   );
   const cap = originalCents ? Math.round(originalCents * 1.3) : null;
-  const picked = pickSuggestions(
-    ordered
-      .filter((c) => cap === null || c.price <= cap)
-      .map((c, i) => ({ id: c.product.id, brand: c.product.brand, shopCents: c.price, value: ordered.length - i })),
+  const all = ordered.map((c, i) => ({
+    id: c.product.id,
+    brand: c.product.brand,
+    shopCents: c.price,
+    value: ordered.length - i,
+  }));
+  const near = pickSuggestions(
+    all.filter((c) => cap === null || c.shopCents <= cap),
     { id: original.id, brand: original.brand },
   );
+  // Few in its class: the rest by the same order, dearer ones included (the price checks still apply).
+  const picked =
+    near.length >= 3
+      ? near
+      : [
+          ...near,
+          ...pickSuggestions(all, { id: original.id, brand: original.brand }, 10).filter(
+            (s) => !near.some((n) => n.id === s.id),
+          ),
+        ].slice(0, 5);
   const byId = new Map(ordered.map((c) => [c.product.id, c]));
   return picked.map((s) => {
     const c = byId.get(s.id)!;
@@ -102,9 +129,11 @@ export function comparisonWords(
     label: attrLabel(l.attr, lang),
     asked: value(l, l.original),
     offered: value(l, l.alternative),
-    // Only what differs is marked, so the eye goes to it; "Tāpat" stays in the plain-text version.
+    // Only what differs is marked ("Tāpat" left out), so the eye goes to the differences.
     verdict:
-      l.verdict === "neutral" || l.verdict === "same" ? null : { text: a.verdict[l.verdict], tone: tone[l.verdict] },
+      l.verdict === "neutral" || l.verdict === "same"
+        ? null
+        : { text: a.verdict[l.verdict], tone: tone[l.verdict] },
   }));
   const down = downsides({ label: c.label, lines: c.lines }).map((l) =>
     fill(l.verdict === "worse" ? a.downWorse : l.verdict === "different" ? a.downDifferent : a.downUnknown, {

@@ -1407,6 +1407,28 @@
     "sign": "{name}, Trilio",
     "signTeam": "Trilio komanda"
   },
+  "altAnswer": {
+    "kicker": "Atbilde uz tavu pieprasījumu",
+    "askTitle": "Piedāvāt līdzvērtīgu cita ražotāja preci?",
+    "askBody": "Tevis pieprasītā prece {asked} mūsu partneriem šobrīd nav. Ja gribi, atsūtīsim vienu līdzvērtīgu cita ražotāja preci ar abiem modeļiem blakus, un tu izlemsi pats.",
+    "yes": "Jā, piedāvājiet",
+    "no": "Nē, tikai sekojiet cenai",
+    "yesTitle": "Paldies!",
+    "yesBody": "Piedāvājums ir nosūtīts uz tavu e-pastu. To vari atvērt arī šeit.",
+    "noTitle": "Skaidrs",
+    "noBody": "Alternatīvu nepiedāvāsim. Turpinām sekot cenai precei {asked} un uzrakstīsim, ja tā samazināsies.",
+    "expiredTitle": "Šis piedāvājums vairs nav spēkā",
+    "expiredBody": "Laiks atbildēt ir beidzies. Cenai turpinām sekot, un, ja būs ko piedāvāt, uzrakstīsim.",
+    "openOffer": "Atvērt piedāvājumu",
+    "declineTitle": "Gribi tikai pieprasīto modeli?",
+    "declineBody": "Šo alternatīvu ({offered}) vairs nepiedāvāsim. Turpināsim sekot cenai precei {asked}.",
+    "declineConfirm": "Jā, tikai pieprasīto modeli",
+    "backToOffer": "Atpakaļ uz piedāvājumu",
+    "declinedTitle": "Skaidrs",
+    "declinedBody": "Šo alternatīvu vairs nepiedāvāsim. Turpinām sekot cenai precei {asked} un uzrakstīsim, ja tā samazināsies.",
+    "closedTitle": "Šis piedāvājums vairs nav atvērts",
+    "closedBody": "Tas ir beidzies vai jau pasūtīts. Ja kaut kas nav skaidrs, atbildi uz e-pastu."
+  },
   "offersConsent": {
     "label": "Vēlos saņemt personīgus piedāvājumus par saglabātajām precēm",
     "hint": "Ja kādu no tavām saglabātajām precēm varēsim piedāvāt lētāk nekā veikalos, uzrakstīsim. Tikai par šīm precēm, bez reklāmām. Atteikties var jebkurā brīdī.",
@@ -1833,7 +1855,18 @@
       "noOffer": "Nav veikalos",
       "offerAll": "Piedāvāt visiem ({count})",
       "nobodyOptedIn": "Neviens nepiekrīt",
-      "empty": "Vēl neviens nav saglabājis preces."
+      "empty": "Vēl neviens nav saglabājis preces.",
+      "select": "Atzīmēt",
+      "selectOne": "Atzīmēt {name}",
+      "undecided": "{count, plural, one {# gaida atbildi} other {# gaida atbildi}}",
+      "decideView": "Nav pieejams: jāizlemj →",
+      "bulkMonitoring": "Atzīmētajiem: tikai sekot cenai",
+      "bulkNothing": "Atzīmētajiem: nav ko piedāvāt",
+      "bulkHint": "„Nav ko piedāvāt” nosūta īsu paziņojumu (vienreiz); „tikai sekot cenai” neko nesūta.",
+      "bulkDone": {
+        "nothing": "{count} pieprasījumi atzīmēti: nav ko piedāvāt.",
+        "monitoring": "{count} pieprasījumi atzīmēti: tikai cenu monitorings."
+      }
     },
     "offerForm": {
       "title": "Jauns piedāvājums",
@@ -1883,7 +1916,8 @@
         "validity": "Termiņam jābūt nākotnē.",
         "product": "Prece nav atrasta.",
         "recipients": "Izvēlies saņēmēju.",
-        "no_consent": "Neviens no saņēmējiem nav atļāvis piedāvājumus."
+        "no_consent": "Neviens no saņēmējiem nav atļāvis piedāvājumus.",
+        "description": "Aprakstā ir kaut kas, ko nedrīkst rakstīt."
       },
       "previewFrame": "E-pasta priekšskatījums",
       "textVersion": "Teksta versija",
@@ -2091,7 +2125,13 @@
       "who": "Kas",
       "what": "Ko",
       "target": "Kam",
-      "noAudit": "Darbību vēl nav."
+      "noAudit": "Darbību vēl nav.",
+      "marginTitle": "Minimālais uzcenojums",
+      "marginLabel": "Uzcenojums virs iepirkuma (%)",
+      "marginSave": "Saglabāt",
+      "marginSaved": "Saglabāts.",
+      "marginError": "Jābūt skaitlim no 0 līdz 50.",
+      "marginHint": "Ja partnera iepirkums kopā ar šo uzcenojumu nav lētāks par veikaliem, Trilio iesaka „Nav ko piedāvāt · Partneris nevar lētāk”."
     },
     "ads": {
       "nav": {
@@ -2663,7 +2703,10 @@
           "confirmed": "Partneris apstiprināja",
           "unavailable": "Nav pieejams",
           "offered": "Piedāvāts",
-          "won": "Nopirkts"
+          "won": "Nopirkts",
+          "waiting": "Gaida partneri (pagaidīt)",
+          "back": "Atkal pieejams",
+          "monitoring": "Tikai cenu monitorings"
         },
         "offer": {
           "draft": "Melnraksts",
@@ -2672,7 +2715,8 @@
           "accepted": "Pieņemts",
           "paid": "Apmaksāts",
           "expired": "Beidzies",
-          "cancelled": "Atcelts"
+          "cancelled": "Atcelts",
+          "held": "Gaida pircēja „Jā”"
         },
         "order": {
           "awaiting_payment": "Gaida apmaksu",
@@ -2696,7 +2740,8 @@
         "check_parcel": "Pārbaudīt sūtījumu",
         "contact_buyer": "Sazināties",
         "refund": "Atmaksāt",
-        "resolve_problem": "Atrisināt"
+        "resolve_problem": "Atrisināt",
+        "decide_unavailable": "Izlemt: alternatīva vai nav ko piedāvāt"
       },
       "partner": {
         "none": "Nav prasīts",
@@ -2907,6 +2952,186 @@
       "kind_reel_generated": "Video (Trilio veidots no trim ieteikumiem)",
       "generatedReel": "Trilio veidots video",
       "err_no_ffmpeg": "Šajā serverī nav video rīka (ffmpeg), tāpēc video izveidot nevar. Railway iestatījumos pievieno mainīgo RAILPACK_DEPLOY_APT_PACKAGES ar vērtību ffmpeg un izvieto vēlreiz."
+    },
+    "pictures": {
+      "title": "Bildes ({count} no {max})",
+      "catalog": "Ja nepievienosi savu bildi, e-pastā un piedāvājumā būs kataloga bilde.",
+      "list": "Pievienotās bildes",
+      "main": "Galvenā bilde",
+      "extra": "{n}. bilde",
+      "alt": "Apraksts neredzīgajiem",
+      "earlier": "Uz priekšu",
+      "later": "Uz aizmuguri",
+      "remove": "Noņemt",
+      "fromComputer": "No datora vai telefona",
+      "fileHint": "JPEG, PNG vai WebP līdz 10 MB. Datorā failu var arī ievilkt šeit. Saglabājam savu kopiju, samazinātu līdz 1600 px, bez atrašanās vietas un kameras datiem.",
+      "fromLink": "No saites",
+      "rights": "Man ir tiesības izmantot šo bildi",
+      "addLink": "Pievienot",
+      "full": "Pievienotas {max} bildes, vairāk nevar.",
+      "working": "Apstrādājam bildi…",
+      "description": "Apraksts (Trilio apraksts)",
+      "descriptionHint": "Redzams e-pastā un piedāvājumā zem virsraksta „Trilio apraksts”. Atlikušas {left} zīmes.",
+      "problem": {
+        "urgency": "Bez steidzināšanas: „tikai šodien”, „pēdējie”, „pasteidzies” nedrīkst.",
+        "superlative": "Bez apgalvojumiem, ko nevaram pierādīt („lētākais Latvijā”, „Nr. 1”).",
+        "shouting": "Bez kliegšanas: lielie burti un vairākas izsaukuma zīmes nedrīkst.",
+        "equivalent_claim": "Salīdzinājums atļauj tikai „līdzīgs”, tāpēc „līdzvērtīgs” rakstīt nedrīkst.",
+        "too_long": "Apraksts ir par garu."
+      },
+      "error": {
+        "not_image": "Fails vai saite nav bilde.",
+        "too_big": "Pārāk liela: līdz 10 MB.",
+        "too_many": "Var pievienot ne vairāk kā 4 bildes.",
+        "bad_link": "Saitei jābūt ar https://.",
+        "blocked_host": "Šo adresi nevaram ielādēt (ne publiska vietne).",
+        "fetch_failed": "Neizdevās ielādēt. Pārbaudi saiti.",
+        "alt_missing": "Bildei vajag aprakstu.",
+        "rights": "Atzīmē, ka tev ir tiesības izmantot šo bildi.",
+        "failed": "Neizdevās. Mēģini vēlreiz."
+      }
+    },
+    "answers": {
+      "title": "Atbildes pieprasītājiem",
+      "summary": "Kā atbildēts",
+      "chip": {
+        "new": "Jauns",
+        "requested": "Prasīts partnerim",
+        "offered": "Piedāvāts",
+        "alternative_offered": "Alternatīva piedāvāta",
+        "alternative_asked": "Jautāts par alternatīvu",
+        "nothing_to_offer": "Nav ko piedāvāt · seko cenai",
+        "monitoring_only": "Tikai cenu monitorings",
+        "ended": "Beidzies"
+      },
+      "answer": {
+        "yes": "Atbildēja: jā",
+        "no": "Atteicās no alternatīvas"
+      },
+      "waiting": "{count, plural, one {# cilvēks gaida atbildi} other {# cilvēki gaida atbildi}}: {direct} var sūtīt alternatīvu uzreiz, {ask} vispirms pajautāsim.",
+      "suggestion": "Ieteikums: nav ko piedāvāt · {reason}",
+      "reason": {
+        "partner_not_cheaper": "Partneris nevar lētāk",
+        "no_alternative": "Nav pieejams, un nav alternatīvas",
+        "all_partners_refused": "Visi partneri atteica",
+        "other": "Cits iemesls"
+      },
+      "offerAlternative": "Piedāvāt alternatīvu",
+      "wait": "Pagaidīt:",
+      "waitDays": "{days} dienas",
+      "nothingTitle": "Nav ko piedāvāt",
+      "reasonLabel": "Iemesls",
+      "notify": "Nosūtīt īsu paziņojumu ({count})",
+      "note": "Piezīme (redzama tikai adminā)",
+      "preview": "E-pasta priekšskatījums",
+      "previewTo": "Kam: {email}",
+      "textVersion": "Teksta versija",
+      "nothingSubmit": "Atzīmēt: nav ko piedāvāt ({count})",
+      "people": "Pieprasītāji",
+      "select": "Atzīmēt",
+      "selectOne": "Atzīmēt {email}",
+      "col": {
+        "who": "Kas",
+        "answer": "Atbilde",
+        "asked": "Datums",
+        "seen": "Redzētā cena",
+        "alternative": "Alternatīva"
+      },
+      "watchUntil": "Cenai sekojam līdz {date}",
+      "requested": "pieprasīja zemāku cenu",
+      "saved": "saglabāja",
+      "noOffers": "Nav piekrišanas piedāvājumiem",
+      "direct": "Var sūtīt uzreiz",
+      "askFirst": "Vispirms pajautāsim",
+      "bulkNothing": "Atzīmētajiem: nav ko piedāvāt",
+      "bulkMonitoring": "Atzīmētajiem: tikai sekot cenai",
+      "bulkHint": "„Nav ko piedāvāt” nosūta īsu paziņojumu tiem, kas piekrita piedāvājumiem (vienreiz). „Tikai sekot cenai” neko nesūta.",
+      "askedFor": "Prasīja",
+      "offering": "Piedāvājam",
+      "verdict": {
+        "better": "Labāk",
+        "same": "Tāpat",
+        "worse": "Sliktāk",
+        "different": "Atšķiras",
+        "unknown": "Nav datu"
+      },
+      "done": {
+        "nothing": "Atzīmēti {marked}, e-pasti nosūtīti {emailed}.",
+        "monitoring": "Atzīmēti {marked}: tikai cenu monitorings.",
+        "wait": "Atgādināsim Uzdevumos norādītajā datumā.",
+        "wait_error": "Pagaidīt var tikai pēc partnera atbildes.",
+        "alternative": "Alternatīva nosūtīta {sent}, pajautāts {asked}."
+      }
+    },
+    "alternative": {
+      "title": "Piedāvāt alternatīvu",
+      "sub": "Prasīja: {name}",
+      "back": "Atpakaļ",
+      "who": "{count, plural, one {# cilvēks gaida} other {# cilvēki gaida}}, {direct} no tiem var sūtīt uzreiz.",
+      "suggestions": "Trilio ieteikumi",
+      "suggestionsHint": "Citu ražotāju preces, kas ir veikalos, sakārtotas pēc Trilio vērtējuma (ne pēc uzcenojuma).",
+      "noSuggestions": "Ieteikumu nav. Meklē zemāk vai ievadi preci, kuras nav katalogā.",
+      "label": {
+        "equivalent": "Līdzvērtīgs",
+        "similar": "Līdzīgs"
+      },
+      "better": "{count} labāk",
+      "worse": "{count} sliktāk vai citādi",
+      "choose": "Izvēlēties",
+      "noShop": "Veikalos nav",
+      "search": "Meklēt citu",
+      "searchHint": "Nosaukums, zīmols vai modelis",
+      "searchButton": "Meklēt",
+      "noResults": "Šajā kategorijā nekas neatrodas.",
+      "manualTitle": "Prece nav katalogā",
+      "manualHint": "Modelis, ko izplatītājam ir, bet neviens partneru veikals nepārdod.",
+      "manual": "Ievadīt preci",
+      "manualRequired": "Nosaukums, zīmols, vismaz viena bilde un apraksts ir obligāti. Tukšās īpašības salīdzinājumā būs „Nav datu”.",
+      "manualName": "Nosaukums",
+      "manualBrand": "Zīmols",
+      "manualModel": "Modelis",
+      "manualNoDiscount": "Šai precei nav veikalu cenas, tāpēc atlaidi solīt nevar: e-pastā būs tikai piedāvājuma cena un pieprasītās preces cena.",
+      "seen": "Redzētā cena: {price}",
+      "altShop": "Veikalos {price} · {store}",
+      "change": "Mainīt preci",
+      "compareTitle": "Salīdzinājums",
+      "colAttr": "Īpašība",
+      "isEquivalent": "Līdzvērtīgs: nekas nav sliktāk. E-pastā drīkst rakstīt „līdzvērtīgs”.",
+      "isSimilar": "Līdzīgs. E-pastā būs nosaukts: {list}.",
+      "recipients": "{count, plural, one {Saņems # cilvēks} other {Saņems # cilvēki}}",
+      "split": "{direct} saņems piedāvājumu uzreiz, {ask} vispirms saņems jautājumu „Jā / Nē”.",
+      "price": "Cena (EUR)",
+      "limitOriginal": "Nedrīkst būt dārgāk par pieprasītās preces redzēto cenu: {price}.",
+      "limitShop": "Jābūt lētākam par šīs preces cenu veikalos: {price}.",
+      "noShopLimit": "Šai precei veikalu cenas nav.",
+      "problem": {
+        "not_below_shop": "Cena nav zemāka par šīs preces cenu veikalos.",
+        "above_original": "Cena ir augstāka par pieprasītās preces redzēto cenu."
+      },
+      "priceOk": "Cena atbilst abiem noteikumiem.",
+      "warranty": "Garantija (mēn.)",
+      "deliveryDays": "Piegāde (darba dienas)",
+      "validUntil": "Spēkā līdz",
+      "message": "Personīga piezīme (nav obligāta)",
+      "private": "Tikai adminam: iepirkums un piegādātājs",
+      "cost": "Iepirkuma cena (EUR)",
+      "supplier": "Piegādātājs, piezīme",
+      "send": "Nosūtīt ({direct} uzreiz, {ask} jautājums)",
+      "preview": "E-pasta priekšskatījums",
+      "previewAsk": "Pirmais saņēmējs vispirms saņems jautājumu; šis piedāvājums aizies pēc „Jā”.",
+      "previewEmpty": "Ievadi cenu, un šeit parādīsies e-pasts.",
+      "to": "Kam: {email}",
+      "textVersion": "Teksta versija",
+      "error": {
+        "price": "Cena neatbilst noteikumiem.",
+        "recipients": "Nav neviena, kam sūtīt.",
+        "product": "Prece nav atrasta.",
+        "manual": "Precei, kuras nav katalogā, vajag nosaukumu, zīmolu, bildi un aprakstu.",
+        "paused": "Piedāvājumu sūtīšana ir apturēta (Sistēma).",
+        "validity": "Spēkā līdz datumam jābūt nākotnē.",
+        "description": "Aprakstā ir kaut kas, ko nedrīkst rakstīt.",
+        "recipients_none": "Nav neviena, kam sūtīt."
+      }
     }
   },
   "alertsUnsubscribe": {

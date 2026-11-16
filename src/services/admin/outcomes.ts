@@ -168,7 +168,9 @@ export async function requestersOfMany(
   const facts = new Map(items.map((i) => [i.id, i]));
   // The newest request per account and product: its consent says whether an alternative may go directly.
   const requestOf = new Map<string, (typeof requests)[number]>();
-  for (const r of requests) if (r.userId && !requestOf.has(`${r.productId}:${r.userId}`)) requestOf.set(`${r.productId}:${r.userId}`, r);
+  for (const r of requests)
+    if (r.userId && !requestOf.has(`${r.productId}:${r.userId}`))
+      requestOf.set(`${r.productId}:${r.userId}`, r);
   const push = (productId: string, r: Omit<Requester, "chip" | "outcome" | "offered">) => {
     const f = facts.get(productId)!;
     const outcome = outcomes.get(productId)?.get(r.key) ?? null;
@@ -237,9 +239,14 @@ export async function requestersOf(db: Db, productId: string, now = new Date()) 
   const status = new Map(latest ? [[productId, latest.status] as const] : []);
   const shop = shopPrice(product);
   return (
-    (await requestersOfMany(db, [{ id: productId, subcategoryId: product.subcategoryId, priceCents: shop?.cents ?? null }], status, now)).get(
-      productId,
-    ) ?? []
+    (
+      await requestersOfMany(
+        db,
+        [{ id: productId, subcategoryId: product.subcategoryId, priceCents: shop?.cents ?? null }],
+        status,
+        now,
+      )
+    ).get(productId) ?? []
   );
 }
 
@@ -249,7 +256,9 @@ export async function requestersOf(db: Db, productId: string, now = new Date()) 
  */
 export async function answerSummary(
   db: Db,
-  items: (ProductFacts & { partner: { status: "requested" | "confirmed" | "unavailable"; at: Date } | null })[],
+  items: (ProductFacts & {
+    partner: { status: "requested" | "confirmed" | "unavailable"; at: Date } | null;
+  })[],
   now = new Date(),
 ): Promise<Map<string, { undecided: number; backAt: Date | null }>> {
   const status = new Map(items.filter((i) => i.partner).map((i) => [i.id, i.partner!.status]));
@@ -263,7 +272,8 @@ export async function answerSummary(
       const decided = new Date(Math.max(...nothing.map((r) => r.outcome!.createdAt.getTime())));
       const shopThen = Math.min(...nothing.map((r) => r.outcome!.shopCents ?? Infinity));
       if (i.partner?.status === "confirmed" && i.partner.at > decided) backAt = i.partner.at;
-      else if (i.priceCents !== null && Number.isFinite(shopThen) && i.priceCents <= shopThen * 0.95) backAt = now;
+      else if (i.priceCents !== null && Number.isFinite(shopThen) && i.priceCents <= shopThen * 0.95)
+        backAt = now;
     }
     out.set(i.id, { undecided: list.filter((r) => undecided(r.chip)).length, backAt });
   }
@@ -373,7 +383,9 @@ export async function markNothing(
       .where(
         and(
           eq(requestOutcomes.productId, input.productId),
-          r.userId ? eq(requestOutcomes.userId, r.userId) : eq(requestOutcomes.notifyRequestId, r.notifyRequestId!),
+          r.userId
+            ? eq(requestOutcomes.userId, r.userId)
+            : eq(requestOutcomes.notifyRequestId, r.notifyRequestId!),
           eq(requestOutcomes.outcome, "nothing_to_offer"),
           isNotNull(requestOutcomes.notifiedAt),
         ),
@@ -424,7 +436,9 @@ export async function markMonitoringOnly(
   now = new Date(),
 ): Promise<number> {
   const list = pick(await requestersOf(db, input.productId, now), input.keys, (r) =>
-    input.keys ? r.chip !== "offered" && r.chip !== "ended" && r.chip !== "monitoring_only" : undecided(r.chip),
+    input.keys
+      ? r.chip !== "offered" && r.chip !== "ended" && r.chip !== "monitoring_only"
+      : undecided(r.chip),
   );
   if (!list.length) return 0;
   await db.insert(requestOutcomes).values(
@@ -490,7 +504,11 @@ export type AlternativeInput = {
 
 export type AlternativeResult =
   | { ok: true; sent: number; asked: number; skipped: number }
-  | { ok: false; reason: "product" | "recipients" | "price" | "validity" | "manual" | "paused"; problems?: PriceProblem[] };
+  | {
+      ok: false;
+      reason: "product" | "recipients" | "price" | "validity" | "manual" | "paused";
+      problems?: PriceProblem[];
+    };
 
 /**
  * Sends one alternative to everyone still waiting (or those chosen): directly to people
@@ -515,8 +533,10 @@ export async function offerAlternative(
     if (!m?.name.trim() || !m.brand.trim() || !input.description?.trim() || !input.imageSetId)
       return { ok: false, reason: "manual" };
   }
-  const people = pick(await requestersOf(db, input.originalId, now), input.keys, (r) =>
-    r.wantsOffers && (input.keys ? r.chip !== "offered" && r.chip !== "ended" : undecided(r.chip)),
+  const people = pick(
+    await requestersOf(db, input.originalId, now),
+    input.keys,
+    (r) => r.wantsOffers && (input.keys ? r.chip !== "offered" && r.chip !== "ended" : undecided(r.chip)),
   );
   if (!people.length) return { ok: false, reason: "recipients" };
   const originalShop = shopPrice(original)?.cents ?? null;
@@ -556,7 +576,12 @@ export async function offerAlternative(
     },
     by,
   );
-  if (!created.ok) return { ok: false, reason: created.reason === "validity" ? "validity" : created.reason === "price" ? "price" : "recipients" };
+  if (!created.ok)
+    return {
+      ok: false,
+      reason:
+        created.reason === "validity" ? "validity" : created.reason === "price" ? "price" : "recipients",
+    };
   const byKey = new Map(created.created.map((c) => [keyOf(c), c.offerId]));
   let sent = 0;
   let asked = 0;
@@ -630,12 +655,17 @@ export async function answerAsk(
   value: string,
   answer: AskAnswer,
   deps: AnswerDeps,
-): Promise<{ ok: true; answer: AskAnswer; offerToken: string | null } | { ok: false; reason: "unknown" | "expired" }> {
+): Promise<
+  { ok: true; answer: AskAnswer; offerToken: string | null } | { ok: false; reason: "unknown" | "expired" }
+> {
   const now = deps.now ?? new Date();
   const row = await outcomeByToken(db, value);
   if (!row || row.outcome !== "alternative_asked") return { ok: false, reason: "unknown" };
-  const [offer] = row.offerId ? await db.select().from(specialOffers).where(eq(specialOffers.id, row.offerId)) : [];
-  if (row.answer) return { ok: true, answer: row.answer, offerToken: row.answer === "yes" ? (offer?.token ?? null) : null };
+  const [offer] = row.offerId
+    ? await db.select().from(specialOffers).where(eq(specialOffers.id, row.offerId))
+    : [];
+  if (row.answer)
+    return { ok: true, answer: row.answer, offerToken: row.answer === "yes" ? (offer?.token ?? null) : null };
   const claimed = await db
     .update(requestOutcomes)
     .set({ answer, answeredAt: now })

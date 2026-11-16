@@ -138,13 +138,20 @@ export async function leadItems(
       last: sql<Date | null>`max(coalesce(${specialOffers.sentAt}, ${specialOffers.createdAt}))`,
     })
     .from(specialOffers)
-    .where(sql`${leadOf} in (${sql.join(ids.map((id) => sql`${id}::uuid`), sql`, `)})`)
+    .where(
+      sql`${leadOf} in (${sql.join(
+        ids.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})`,
+    )
     .groupBy(leadOf);
   const byProduct = new Map(offers.map((o) => [o.productId, o]));
   const prods = await productsById(db, ids);
   const m = marks ?? (await partnerMarks(db));
   // Who still waits for an answer, and "Atkal pieejams" (docs/ALTERNATIVE_OFFER_PLAN.md §3.1).
-  const shopNow = new Map((await loadProducts(db, ids)).map((p) => [p.id, currentOffer(p)?.priceCents ?? null]));
+  const shopNow = new Map(
+    (await loadProducts(db, ids)).map((p) => [p.id, currentOffer(p)?.priceCents ?? null]),
+  );
   const answers = await answerSummary(
     db,
     [...prods.values()].map((p) => {

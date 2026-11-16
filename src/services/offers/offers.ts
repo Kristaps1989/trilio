@@ -378,15 +378,18 @@ export async function sendOffer(
   if (await offersPaused(db)) return { ok: false, reason: "paused" };
   const to = await recipientOf(db, offer, deps.baseUrl, now);
   if (!to.ok) return to;
-  const message = composeOfferEmail(await mailDraft(db, offer, { lang: to.lang, baseUrl: deps.baseUrl, userId: to.userId }), {
-    ...deps,
-    to: to.to,
-    lang: to.lang,
-    unsubscribeUrl: to.unsubscribeUrl,
-    request: to.request,
-    saved: to.userId ? await savedContext(db, { ...offer, userId: to.userId }) : null,
-    now,
-  });
+  const message = composeOfferEmail(
+    await mailDraft(db, offer, { lang: to.lang, baseUrl: deps.baseUrl, userId: to.userId }),
+    {
+      ...deps,
+      to: to.to,
+      lang: to.lang,
+      unsubscribeUrl: to.unsubscribeUrl,
+      request: to.request,
+      saved: to.userId ? await savedContext(db, { ...offer, userId: to.userId }) : null,
+      now,
+    },
+  );
   const sent = await deps.email.send(message);
   if (!sent.ok && sent.reason === "error") return { ok: false, reason: "email_failed" };
   await db.update(specialOffers).set({ status: "sent", sentAt: now }).where(eq(specialOffers.id, offer.id));

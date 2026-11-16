@@ -20,14 +20,23 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import type { AlternativeLabel, ComparedLine, NothingReason, StoredOutcome } from "@/domain/offers/alternative";
+import type {
+  AlternativeLabel,
+  ComparedLine,
+  NothingReason,
+  StoredOutcome,
+} from "@/domain/offers/alternative";
 
 const bytea = customType<{ data: Buffer<ArrayBufferLike>; driverData: Buffer<ArrayBufferLike> }>({
   dataType: () => "bytea",
 });
 
 /** The comparison frozen on an alternative offer (src/domain/offers/alternative.ts). */
-export type OfferComparison = { label: AlternativeLabel; lines: ComparedLine[]; originalSeenCents: number | null };
+export type OfferComparison = {
+  label: AlternativeLabel;
+  lines: ComparedLine[];
+  originalSeenCents: number | null;
+};
 
 /** A product typed by the admin because no partner shop lists it. */
 export type ManualProduct = {
@@ -1617,7 +1626,6 @@ export type SocialKind =
  * published to both networks. `card` holds the facts the image is drawn
  * from, already anonymised; nothing about a shopper is ever stored here.
  */
-
 
 /**
  * A post's slide pictures, drawn once and stored (docs/FACEBOOK_CAROUSEL_PLAN.md §6):

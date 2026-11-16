@@ -108,7 +108,10 @@ export function thumbnails(urls: string[]): string {
  * "Tu prasīji → Piedāvājam": the product asked for, then the one offered, so the
  * swap is the first thing the reader sees and never a surprise further down.
  */
-export function swapCard(asked: { label: string; name: string; note: string }, offered: { label: string; name: string }): string {
+export function swapCard(
+  asked: { label: string; name: string; note: string },
+  offered: { label: string; name: string },
+): string {
   const cell = (label: string, name: string, note: string | null, strong: boolean) =>
     `<td width="50%" style="vertical-align:top;padding:14px 14px;background:${strong ? VALUE : MIST};border-radius:14px"><p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${MUTED}">${esc(label)}</p><p style="margin:0;font-family:${HEADING};font-size:15px;line-height:1.35;font-weight:600;color:${NIGHT}">${esc(name)}</p>${note ? `<p style="margin:4px 0 0;font-size:13px;line-height:1.4;color:${MUTED}">${esc(note)}</p>` : ""}</td>`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-collapse:separate;border-spacing:0"><tr>${cell(asked.label, asked.name, asked.note, false)}<td width="28" align="center" style="font-size:20px;color:${MUTED}">&rarr;</td>${cell(offered.label, offered.name, null, true)}</tr></table>`;
@@ -123,8 +126,16 @@ export type CompareRow = {
 };
 
 /** The two products side by side; every line names its verdict in words. */
-export function compareTable(head: { label: string; asked: string; offered: string }, rows: CompareRow[]): string {
-  const tone = { good: [VALUE, NIGHT], same: [MIST, MUTED], bad: ["#FCEBD9", "#7A3B0C"], none: [MIST, MUTED] };
+export function compareTable(
+  head: { label: string; asked: string; offered: string },
+  rows: CompareRow[],
+): string {
+  const tone = {
+    good: [VALUE, NIGHT],
+    same: [MIST, MUTED],
+    bad: ["#FCEBD9", "#7A3B0C"],
+    none: [MIST, MUTED],
+  };
   const th = (t: string, align = "left") =>
     `<th scope="col" align="${align}" style="padding:0 8px 8px;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:${MUTED};border-bottom:1px solid ${LINE}">${esc(t)}</th>`;
   const body = rows
@@ -145,7 +156,10 @@ export function described(title: string, text: string): string {
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => `<p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${NIGHT}">${esc(p).replace(/\n/g, "<br>")}</p>`)
+    .map(
+      (p) =>
+        `<p style="margin:0 0 10px;font-size:15px;line-height:1.55;color:${NIGHT}">${esc(p).replace(/\n/g, "<br>")}</p>`,
+    )
     .join("");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px"><tr><td style="background:${MIST};border-radius:14px;padding:16px 18px"><p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${MUTED}">${esc(title)}</p>${paras}</td></tr></table>`;
 }

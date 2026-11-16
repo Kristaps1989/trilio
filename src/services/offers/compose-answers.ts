@@ -2,8 +2,23 @@ import type lv from "@/i18n/messages/lv.json";
 import { formatDateDative, formatDayLocative, formatEur } from "@/i18n/format";
 import { localizedPath, type UiLocale } from "@/i18n/routing";
 import type { EmailMessage } from "@/services/notify/email";
-import { keepTogether, offerProductName, signatureLine, subjectProductName, type OfferMailContext } from "./compose";
-import { button, centred, emailShell, hero, kicker, outlineButton, paragraph, productCard } from "./mail-layout";
+import {
+  keepTogether,
+  offerProductName,
+  signatureLine,
+  subjectProductName,
+  type OfferMailContext,
+} from "./compose";
+import {
+  button,
+  centred,
+  emailShell,
+  hero,
+  kicker,
+  outlineButton,
+  paragraph,
+  productCard,
+} from "./mail-layout";
 import { answerCopyFor, fill } from "./texts";
 
 export { answerCopyFor };
@@ -25,7 +40,12 @@ export type AnswerContext = OfferMailContext & {
   unsubscribeUrl?: string;
 };
 
-function intro(c: typeof lv.answerEmail, kind: "nothing" | "ask", ctx: AnswerContext, lang: UiLocale): string {
+function intro(
+  c: typeof lv.answerEmail,
+  kind: "nothing" | "ask",
+  ctx: AnswerContext,
+  lang: UiLocale,
+): string {
   const asked = offerProductName(ctx.askedName);
   if (ctx.requestedAt)
     return fill(kind === "nothing" ? c.nothingIntroRequest : c.askIntroRequest, {

@@ -378,7 +378,11 @@ function composeAlternativeEmail(
       ? subheading(a.compareTitle) +
         compareTable({ label: a.colAttr, asked: a.colAsked, offered: a.colOffered }, alt.rows)
       : "",
-    alt.equivalent ? centred(a.equivalentNote, "font-size:14px") : downsides ? aside(a.downsidesTitle, downsides) : "",
+    alt.equivalent
+      ? centred(a.equivalentNote, "font-size:14px")
+      : downsides
+        ? aside(a.downsidesTitle, downsides)
+        : "",
     offer.description ? described(a.descriptionTitle, offer.description) : "",
     perks(list),
     button(a.button, url),

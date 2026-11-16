@@ -53,9 +53,21 @@ describe("links", () => {
       return map[host]!;
     };
   it("knows private, loopback and link-local addresses", () => {
-    for (const ip of ["10.0.0.1", "127.0.0.1", "169.254.169.254", "172.16.5.4", "192.168.1.1", "100.64.0.1", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.1"])
+    for (const ip of [
+      "10.0.0.1",
+      "127.0.0.1",
+      "169.254.169.254",
+      "172.16.5.4",
+      "192.168.1.1",
+      "100.64.0.1",
+      "::1",
+      "fd00::1",
+      "fe80::1",
+      "::ffff:10.0.0.1",
+    ])
       expect(isPublicAddress(ip), ip).toBe(false);
-    for (const ip of ["8.8.8.8", "93.184.216.34", "2606:4700::1111"]) expect(isPublicAddress(ip), ip).toBe(true);
+    for (const ip of ["8.8.8.8", "93.184.216.34", "2606:4700::1111"])
+      expect(isPublicAddress(ip), ip).toBe(true);
   });
   it("accepts https on public hosts only", async () => {
     const r = resolve({ "images.example.com": ["93.184.216.34"], "inside.example.com": ["10.1.2.3"] });
@@ -69,19 +81,32 @@ describe("links", () => {
     expect(await checkLink("nav saite", r)).toBe("bad_link");
   });
   it("follows a redirect only to another public host, and refuses what is not a picture", async () => {
-    const r = resolve({ "a.example.com": ["93.184.216.34"], "b.example.com": ["93.184.216.35"], "evil.example.com": ["169.254.169.254"] });
+    const r = resolve({
+      "a.example.com": ["93.184.216.34"],
+      "b.example.com": ["93.184.216.35"],
+      "evil.example.com": ["169.254.169.254"],
+    });
     const bytes = await photo(10, 10);
     const fetcher = async (u: URL) => {
-      if (u.pathname === "/to-b") return new Response(null, { status: 302, headers: { location: "https://b.example.com/p.jpg" } });
+      if (u.pathname === "/to-b")
+        return new Response(null, { status: 302, headers: { location: "https://b.example.com/p.jpg" } });
       if (u.pathname === "/to-evil")
-        return new Response(null, { status: 302, headers: { location: "https://evil.example.com/latest/meta-data" } });
-      if (u.pathname === "/page") return new Response("<html></html>", { headers: { "content-type": "text/html" } });
+        return new Response(null, {
+          status: 302,
+          headers: { location: "https://evil.example.com/latest/meta-data" },
+        });
+      if (u.pathname === "/page")
+        return new Response("<html></html>", { headers: { "content-type": "text/html" } });
       return new Response(new Uint8Array(bytes), { headers: { "content-type": "image/jpeg" } });
     };
-    expect(Buffer.isBuffer(await fetchImage("https://a.example.com/to-b", { fetcher, resolve: r }))).toBe(true);
+    expect(Buffer.isBuffer(await fetchImage("https://a.example.com/to-b", { fetcher, resolve: r }))).toBe(
+      true,
+    );
     expect(await fetchImage("https://a.example.com/to-evil", { fetcher, resolve: r })).toBe("blocked_host");
     expect(await fetchImage("https://a.example.com/page", { fetcher, resolve: r })).toBe("not_image");
-    expect(await fetchImage("https://nowhere.example.com/x.jpg", { fetcher, resolve: r })).toBe("fetch_failed");
+    expect(await fetchImage("https://nowhere.example.com/x.jpg", { fetcher, resolve: r })).toBe(
+      "fetch_failed",
+    );
   });
 });
 
@@ -120,7 +145,12 @@ run("stored pictures", { timeout: 30_000 }, () => {
       reason: "too_many",
     });
     expect(await moveImage(db, setId, added[2]!, -1)).toBe(true);
-    expect((await imagesOfSet(db, setId)).map((i) => i.alt)).toEqual(["Bilde 1", "Bilde 3", "Bilde 2", "Bilde 4"]);
+    expect((await imagesOfSet(db, setId)).map((i) => i.alt)).toEqual([
+      "Bilde 1",
+      "Bilde 3",
+      "Bilde 2",
+      "Bilde 4",
+    ]);
     expect(await moveImage(db, setId, added[0]!, -1)).toBe(false);
     expect(await removeImage(db, setId, added[3]!)).toBe(true);
     expect(await imagesOfSet(db, setId)).toHaveLength(3);
@@ -131,7 +161,9 @@ run("stored pictures", { timeout: 30_000 }, () => {
 
   it("purges sets no offer uses after two days", async () => {
     expect(await purgeUnusedImages(db, new Date())).toBe(0);
-    expect(await purgeUnusedImages(db, new Date(Date.now() + 3 * 24 * 3600 * 1000))).toBeGreaterThanOrEqual(3);
+    expect(await purgeUnusedImages(db, new Date(Date.now() + 3 * 24 * 3600 * 1000))).toBeGreaterThanOrEqual(
+      3,
+    );
     expect(await imagesOfSet(db, setId)).toHaveLength(0);
   });
 });

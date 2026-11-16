@@ -68,7 +68,8 @@ export function compareProducts(
     lines.push({ attr, original: ov ?? null, alternative: av ?? null, verdict });
   }
   const label: AlternativeLabel =
-    lines.length > 0 && lines.every((l) => l.verdict === "better" || l.verdict === "same" || l.verdict === "neutral") &&
+    lines.length > 0 &&
+    lines.every((l) => l.verdict === "better" || l.verdict === "same" || l.verdict === "neutral") &&
     lines.some((l) => l.verdict !== "neutral")
       ? "equivalent"
       : "similar";
@@ -168,7 +169,8 @@ export function suggestNothing(f: NothingFacts): Exclude<NothingReason, "other">
 
 // ---------------------------------------------------------------- outcomes
 
-export type StoredOutcome = "alternative_offered" | "alternative_asked" | "nothing_to_offer" | "monitoring_only";
+export type StoredOutcome =
+  "alternative_offered" | "alternative_asked" | "nothing_to_offer" | "monitoring_only";
 
 /** The chip on each request (§2), in the order a request moves through them. */
 export type RequestChip =
@@ -218,4 +220,50 @@ export const ALTERNATIVE_CONSENT_FROM = "2026-11-16";
 
 export function mayOfferAlternativeDirectly(consentVersion: string | null): boolean {
   return !!consentVersion && consentVersion >= ALTERNATIVE_CONSENT_FROM;
+}
+
+// ---------------------------------------------------------------- the admin's description
+
+export type DescriptionIssue = "urgency" | "superlative" | "shouting" | "equivalent_claim" | "too_long";
+export const DESCRIPTION_MAX = 1500;
+
+/**
+ * "Trilio apraksts" follows the honesty rules (CLAUDE.md rule 4): no fake urgency or
+ * scarcity, no superlatives Trilio can't show, no shouting, and no "līdzvērtīgs" when
+ * the comparison only allows "līdzīgs".
+ */
+export function descriptionIssues(text: string, label: AlternativeLabel | null): DescriptionIssue[] {
+  const t = text.trim();
+  const out = new Set<DescriptionIssue>();
+  if (t.length > DESCRIPTION_MAX) out.add("too_long");
+  if (
+    /\b(tikai|vien)\s+(šodien|sodien|rīt)\b|p[eē]d[eē]j(ā|a|ie|ais)\b|steidz|pasteidz|nenokav|atlik(uši|ušas)\s+tikai|\bonly\s+today\b|\blast\s+(one|chance|few)\b|\bhurry\b/i.test(
+      t,
+    )
+  )
+    out.add("urgency");
+  if (
+    /\b(nr\.?\s*1|numur(s|a)\s*1|#1|labākais\s+(latvij|tirg)|lētākais\s+(latvij|tirg)|best\s+in\s+latvia|cheapest)\b/i.test(
+      t,
+    )
+  )
+    out.add("superlative");
+  if (/!{2,}|\b[A-ZĀČĒĢĪĶĻŅŠŪŽ]{6,}\b/.test(t)) out.add("shouting");
+  if (label === "similar" && /līdzvērtīg|equivalent/i.test(t)) out.add("equivalent_claim");
+  return [...out];
+}
+
+/** What the admin typed for a product no shop lists: numbers as numbers, "jā/ir" and "nē/nav" as yes and no. */
+export function parseTypedAttributes(entries: [string, string][]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, raw] of entries) {
+    const v = raw.trim();
+    if (!v) continue;
+    const n = v.replace(/\s/g, "").replace(",", ".");
+    if (/^-?\d+(\.\d+)?$/.test(n)) out[key] = Number(n);
+    else if (/^(jā|ja|ir|yes|true)$/i.test(v)) out[key] = true;
+    else if (/^(nē|ne|nav|no|false)$/i.test(v)) out[key] = false;
+    else out[key] = v;
+  }
+  return out;
 }

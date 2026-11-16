@@ -17,13 +17,7 @@ const FETCH_TIMEOUT_MS = 10_000;
 const MAX_REDIRECTS = 3;
 
 export type ImageError =
-  | "not_image"
-  | "too_big"
-  | "too_many"
-  | "bad_link"
-  | "blocked_host"
-  | "fetch_failed"
-  | "alt_missing";
+  "not_image" | "too_big" | "too_many" | "bad_link" | "blocked_host" | "fetch_failed" | "alt_missing";
 
 export type Processed = { bytes: Buffer; width: number; height: number };
 
@@ -125,7 +119,8 @@ export async function fetchImage(
     }
     if (!res.ok || !res.body) return "fetch_failed";
     const type = res.headers.get("content-type") ?? "";
-    if (type && !type.startsWith("image/") && !type.startsWith("application/octet-stream")) return "not_image";
+    if (type && !type.startsWith("image/") && !type.startsWith("application/octet-stream"))
+      return "not_image";
     const length = Number(res.headers.get("content-length") ?? 0);
     if (length > MAX_IMAGE_BYTES) return "too_big";
     const chunks: Uint8Array[] = [];
@@ -152,7 +147,14 @@ export async function fetchImage(
 
 // ---------------------------------------------------------------- storage
 
-export type OfferImage = { id: string; position: number; alt: string; width: number; height: number; source: string };
+export type OfferImage = {
+  id: string;
+  position: number;
+  alt: string;
+  width: number;
+  height: number;
+  source: string;
+};
 
 export function imagePath(id: string): string {
   return `/api/offer-images/${id}.jpg`;
@@ -177,7 +179,14 @@ export async function imagesOfSet(db: Db, setId: string | null | undefined): Pro
 /** Adds one processed picture to the end of a set (at most four). */
 export async function addImage(
   db: Db,
-  input: { setId: string; bytes: Buffer; alt: string; source: "upload" | "url"; sourceUrl?: string | null; by: string },
+  input: {
+    setId: string;
+    bytes: Buffer;
+    alt: string;
+    source: "upload" | "url";
+    sourceUrl?: string | null;
+    by: string;
+  },
 ): Promise<{ ok: true; image: OfferImage } | { ok: false; reason: ImageError }> {
   const alt = input.alt.trim().slice(0, 200);
   if (!alt) return { ok: false, reason: "alt_missing" };
@@ -201,7 +210,14 @@ export async function addImage(
     .returning();
   return {
     ok: true,
-    image: { id: row!.id, position: row!.position, alt: row!.alt, width: row!.width, height: row!.height, source: row!.source },
+    image: {
+      id: row!.id,
+      position: row!.position,
+      alt: row!.alt,
+      width: row!.width,
+      height: row!.height,
+      source: row!.source,
+    },
   };
 }
 
@@ -254,7 +270,12 @@ export async function purgeUnusedImages(db: Db, now = new Date()): Promise<numbe
   if (!stale.length) return 0;
   const rows = await db
     .delete(offerImages)
-    .where(inArray(offerImages.setId, stale.map((s) => s.setId)))
+    .where(
+      inArray(
+        offerImages.setId,
+        stale.map((s) => s.setId),
+      ),
+    )
     .returning({ id: offerImages.id });
   return rows.length;
 }

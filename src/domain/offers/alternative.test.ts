@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   alternativePriceProblems,
   compareProducts,
+  descriptionIssues,
+  parseTypedAttributes,
   downsides,
   mayOfferAlternativeDirectly,
   pickSuggestions,
@@ -70,17 +72,29 @@ describe("compareProducts", () => {
 describe("alternativePriceProblems", () => {
   it("blocks an offer that does not beat the alternative's shop price", () => {
     expect(
-      alternativePriceProblems({ offerCents: 50_000, alternativeShopCents: 50_000, originalSeenCents: 60_000 }),
+      alternativePriceProblems({
+        offerCents: 50_000,
+        alternativeShopCents: 50_000,
+        originalSeenCents: 60_000,
+      }),
     ).toEqual(["not_below_shop"]);
   });
   it("blocks an offer above the original's price the shopper saw", () => {
     expect(
-      alternativePriceProblems({ offerCents: 61_000, alternativeShopCents: 70_000, originalSeenCents: 60_000 }),
+      alternativePriceProblems({
+        offerCents: 61_000,
+        alternativeShopCents: 70_000,
+        originalSeenCents: 60_000,
+      }),
     ).toEqual(["above_original"]);
   });
   it("passes a price below both, and skips checks with no price to compare", () => {
     expect(
-      alternativePriceProblems({ offerCents: 55_000, alternativeShopCents: 59_900, originalSeenCents: 60_000 }),
+      alternativePriceProblems({
+        offerCents: 55_000,
+        alternativeShopCents: 59_900,
+        originalSeenCents: 60_000,
+      }),
     ).toEqual([]);
     expect(
       alternativePriceProblems({ offerCents: 55_000, alternativeShopCents: null, originalSeenCents: null }),
@@ -114,9 +128,9 @@ describe("suggestNothing", () => {
   const base = { partnersAsked: [], bestShopCents: 50_000, minMarginPct: 3, alternativeAvailable: true };
 
   it("says the partner can't be cheaper when cost plus margin reaches the shops", () => {
-    expect(
-      suggestNothing({ ...base, partner: { status: "confirmed", costCents: 48_600 } }),
-    ).toBe("partner_not_cheaper");
+    expect(suggestNothing({ ...base, partner: { status: "confirmed", costCents: 48_600 } })).toBe(
+      "partner_not_cheaper",
+    );
     expect(suggestNothing({ ...base, partner: { status: "confirmed", costCents: 48_000 } })).toBeNull();
   });
 
@@ -162,7 +176,9 @@ describe("requestChip", () => {
   it("moves from new to requested, and an answer wins", () => {
     expect(requestChip(f)).toBe("new");
     expect(requestChip({ ...f, partner: "requested" })).toBe("requested");
-    expect(requestChip({ ...f, partner: "unavailable", outcome: "nothing_to_offer" })).toBe("nothing_to_offer");
+    expect(requestChip({ ...f, partner: "unavailable", outcome: "nothing_to_offer" })).toBe(
+      "nothing_to_offer",
+    );
     expect(requestChip({ ...f, offered: true, outcome: "nothing_to_offer" })).toBe("offered");
     expect(requestChip({ ...f, ended: true, offered: true })).toBe("ended");
   });
@@ -184,5 +200,35 @@ describe("mayOfferAlternativeDirectly", () => {
     expect(mayOfferAlternativeDirectly("2026-11-16.1")).toBe(true);
     expect(mayOfferAlternativeDirectly("2026-11-09.2")).toBe(false);
     expect(mayOfferAlternativeDirectly(null)).toBe(false);
+  });
+});
+
+describe("descriptionIssues", () => {
+  it("lets a plain, factual description through", () => {
+    expect(descriptionIssues("Klusa, ar tvaika programmu un 10 gadu motora garantiju.", "similar")).toEqual(
+      [],
+    );
+  });
+  it("blocks urgency, superlatives, shouting and an equivalent claim the comparison does not allow", () => {
+    expect(descriptionIssues("Tikai šodien! Pēdējie 2 gab.", null)).toContain("urgency");
+    expect(descriptionIssues("Lētākais Latvijā", null)).toContain("superlative");
+    expect(descriptionIssues("SUPERCENA!!", null)).toContain("shouting");
+    expect(descriptionIssues("Pilnīgi līdzvērtīgs modelis", "similar")).toEqual(["equivalent_claim"]);
+    expect(descriptionIssues("Pilnīgi līdzvērtīgs modelis", "equivalent")).toEqual([]);
+    expect(descriptionIssues("a".repeat(1501), null)).toEqual(["too_long"]);
+  });
+});
+
+describe("parseTypedAttributes", () => {
+  it("reads numbers with a decimal comma, yes and no, and skips blanks", () => {
+    expect(
+      parseTypedAttributes([
+        ["capacity_kg", "8,5"],
+        ["steam", "jā"],
+        ["inverter", "nav"],
+        ["loading", "front"],
+        ["noise_db", " "],
+      ]),
+    ).toEqual({ capacity_kg: 8.5, steam: true, inverter: false, loading: "front" });
   });
 });
