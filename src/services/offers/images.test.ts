@@ -80,6 +80,42 @@ describe("links", () => {
     expect(await checkLink("https://user:pw@images.example.com/a.jpg", r)).toBe("bad_link");
     expect(await checkLink("nav saite", r)).toBe("bad_link");
   });
+  it("refuses big files, a redirect without a target, too many redirects and a failing host", async () => {
+    const r = resolve({ "a.example.com": ["93.184.216.34"] });
+    const big = async () =>
+      new Response(new Uint8Array(4), {
+        headers: { "content-type": "image/jpeg", "content-length": String(20 * 1024 * 1024) },
+      });
+    expect(await fetchImage("https://a.example.com/big.jpg", { fetcher: big, resolve: r })).toBe("too_big");
+    const streamed = async () =>
+      new Response(new Uint8Array(11 * 1024 * 1024), { headers: { "content-type": "image/jpeg" } });
+    expect(await fetchImage("https://a.example.com/s.jpg", { fetcher: streamed, resolve: r })).toBe(
+      "too_big",
+    );
+    const nowhere = async () => new Response(null, { status: 302 });
+    expect(await fetchImage("https://a.example.com/r", { fetcher: nowhere, resolve: r })).toBe(
+      "fetch_failed",
+    );
+    const loop = async () =>
+      new Response(null, { status: 302, headers: { location: "https://a.example.com/again" } });
+    expect(await fetchImage("https://a.example.com/r", { fetcher: loop, resolve: r })).toBe("fetch_failed");
+    const broken = async (): Promise<Response> => {
+      throw new Error("reset");
+    };
+    expect(await fetchImage("https://a.example.com/x.jpg", { fetcher: broken, resolve: r })).toBe(
+      "fetch_failed",
+    );
+    const missing = async () => new Response("nope", { status: 404 });
+    expect(await fetchImage("https://a.example.com/x.jpg", { fetcher: missing, resolve: r })).toBe(
+      "fetch_failed",
+    );
+    expect(await checkLink("https://a.example.com/x.jpg", async () => [])).toBe("blocked_host");
+    expect(await checkLink("https://[::1]/x.jpg", r)).toBe("blocked_host");
+    expect(await checkLink("https://8.8.8.8/x.jpg", r)).toBeInstanceOf(URL);
+    expect(isPublicAddress("not an ip")).toBe(false);
+    expect(isPublicAddress("224.0.0.1")).toBe(false);
+  });
+
   it("follows a redirect only to another public host, and refuses what is not a picture", async () => {
     const r = resolve({
       "a.example.com": ["93.184.216.34"],

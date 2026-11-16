@@ -368,4 +368,47 @@ run("answers to price requests", { timeout: 60_000 }, () => {
     await setFlag(db, "offers.min_margin_pct", null);
     expect(await minMarginPct(db)).toBe(3);
   });
+
+  it("refuses what it cannot do, and says why", async () => {
+    expect(await answerAsk(db, "not-a-token", "yes", deps)).toEqual({ ok: false, reason: "unknown" });
+    expect(await declineAlternative(db, "bad")).toBe(false);
+    expect(await waitForPartner(db, ids.cheap, new Date(Date.now() + DAY), "admin@test")).toBe(false);
+    expect(
+      await markNothing(
+        db,
+        { productId: "00000000-0000-0000-0000-000000000000", reason: "other", note: null, notify: true },
+        "admin@test",
+        deps,
+      ),
+    ).toEqual({ marked: 0, emailed: 0 });
+    expect(
+      await offerAlternative(
+        db,
+        alternative({ originalId: "00000000-0000-0000-0000-000000000000" }),
+        "a",
+        deps,
+      ),
+    ).toEqual({
+      ok: false,
+      reason: "product",
+    });
+    expect(
+      await offerAlternative(
+        db,
+        alternative({
+          alternativeId: null,
+          manual: { name: "", brand: "", modelCode: null, ean: null, attributes: {} },
+        }),
+        "a",
+        deps,
+      ),
+    ).toEqual({ ok: false, reason: "manual" });
+    // Everyone on the original has an answer now: nobody to send to.
+    expect(await offerAlternative(db, alternative(), "a", deps)).toEqual({ ok: false, reason: "recipients" });
+    await setFlag(db, "offers_paused", "1");
+    expect(await offerAlternative(db, alternative(), "a", deps)).toEqual({ ok: false, reason: "paused" });
+    await setFlag(db, "offers_paused", null);
+    expect(await nothingSuggestion(db, "00000000-0000-0000-0000-000000000000")).toBeNull();
+    expect(await requestersOf(db, "00000000-0000-0000-0000-000000000000")).toEqual([]);
+  });
 });
