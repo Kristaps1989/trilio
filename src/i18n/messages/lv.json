@@ -2943,7 +2943,28 @@
       "carouselPhotos": "kā foto ar saiti tekstā. Lai kartes būtu klikšķināmas, iestati META_AD_ACCOUNT_ID (Ads Manager „act_…”) un sistēmas lietotājam piešķir ads_management šim kontam (docs/FACEBOOK_CAROUSEL_PLAN.md).",
       "kind_reel_generated": "Video (Trilio veidots no trim ieteikumiem)",
       "generatedReel": "Trilio veidots video",
-      "err_no_ffmpeg": "Šajā serverī nav video rīka (ffmpeg), tāpēc video izveidot nevar. Railway iestatījumos pievieno mainīgo RAILPACK_DEPLOY_APT_PACKAGES ar vērtību ffmpeg un izvieto vēlreiz."
+      "err_no_ffmpeg": "Šajā serverī nav video rīka (ffmpeg), tāpēc video izveidot nevar. Railway iestatījumos pievieno mainīgo RAILPACK_DEPLOY_APT_PACKAGES ar vērtību ffmpeg un izvieto vēlreiz.",
+      "adviceTitle": "Pārbaudi pirms publicēšanas (tavs teksts netiek bloķēts):",
+      "advice": {
+        "price": "Cena {value} nav Trilio datos par šo ierakstu: pārliecinies, ka tā ir pareiza un aktuāla.",
+        "number": "Skaitlis {value} nav Trilio datos: pārliecinies, ka tas ir pareizs.",
+        "emojis": "Vairāk nekā {max} emocijzīmes: Trilio stilā tās iezīmē tikai ko svarīgu.",
+        "hype": "Steidzināšanas emocijzīme (🔥, ⏰, 🚨…): godīgas pārliecināšanas noteikumi tās neizmanto.",
+        "urgency": "Steidzināšana („tikai šodien”, „pēdējā iespēja”): godīgas pārliecināšanas noteikumi to neļauj.",
+        "guarantee": "Solījums „garantēts”: pārliecinies, ka to tiešām var garantēt.",
+        "cheapest": "„Lētāk nekā visur”: Trilio to nevar pierādīt.",
+        "discount": "„Atlaide/akcija”: Trilio pats atlaides nesludina.",
+        "delivery": "„Bezmaksas piegāde”: veikalu piegādes noteikumi nav Trilio.",
+        "superlative": "„Nr. 1 / labākais”: apgalvojums, ko nevar pierādīt.",
+        "percent": "Procenti: pārliecinies, ka skaitlis ir no datiem.",
+        "competitor": "Konkurenta nosaukums tekstā.",
+        "shouting": "Lielie burti vai vairākas izsaukuma zīmes.",
+        "notLatvian": "Teksts, šķiet, nav latviski.",
+        "free": "„Bez maksas” pie preces: bez maksas ir tikai Trilio pakalpojums.",
+        "promise": "Piedāvājums solīts bez „ja”.",
+        "informal": "Uzruna „tu”: ierakstos lieto „jūs” vai bez uzrunas.",
+        "other": "{text}"
+      }
     },
     "pictures": {
       "title": "Bildes ({count} no {max})",

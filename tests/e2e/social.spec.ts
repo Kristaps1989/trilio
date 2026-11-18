@@ -64,10 +64,23 @@ test("a post from the knowledge base: draft, image, publish now to both networks
   expect(ig).toContain("#trilio");
   await expectNoAxeViolations(page);
 
-  // An edit that breaks the rules is refused with the reason.
-  await post.getByLabel("Teksts Facebook").fill("Tev lētākais Latvijā, tikai šodien!");
+  // The owner's own text is saved even with prices Trilio has no data for (owner, 18 Nov 2026);
+  // what the honesty rules would flag is shown next to the post, in Latvian, as advice.
+  const own = "Kafijas automāti no 479,99 € līdz 2 000 €. Tev lētākais Latvijā!";
+  await post.getByLabel("Teksts Facebook").fill(own);
   await post.getByRole("button", { name: "Saglabāt tekstu" }).click();
-  await expect(page.locator('[data-outcome="error"]')).toContainText("informal address");
+  await expect(page.locator("[data-outcome]")).toHaveText("Saglabāts.");
+  await expect(post.getByLabel("Teksts Facebook")).toHaveValue(own);
+  const advice = post.locator("[data-social-advice]");
+  await expect(advice).toContainText("Pārbaudi pirms publicēšanas");
+  await expect(advice).toContainText("Cena 2 000 € nav Trilio datos");
+  await expect(advice).toContainText("Uzruna „tu”");
+  await expect(advice).not.toContainText("is not in the data");
+  await expectNoAxeViolations(page);
+  // An empty text is still refused.
+  await post.getByLabel("Teksts Facebook").fill(" ");
+  await post.getByRole("button", { name: "Saglabāt tekstu" }).click();
+  await expect(page.locator('[data-outcome="error"]')).toBeVisible();
 
   expect(src).toBe(`/api/social/${id}/image.jpg`);
   await post.getByRole("button", { name: "Publicēt tūlīt" }).click();

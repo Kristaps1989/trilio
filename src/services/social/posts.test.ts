@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, like } from "drizzle-orm";
+import { and, desc, eq, gte, like, ne } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import {
@@ -554,10 +554,20 @@ run("social posts", () => {
     expect(cover.target).toContain(`${BASE}/?utm_source=facebook`);
   });
 
-  it("refuses an edit that breaks the rules", async () => {
-    const [p] = await db.select().from(socialPosts).where(eq(socialPosts.createdBy, "social-test")).limit(1);
-    const r = await editCaptions(db, p!.id, "Tev lētākais Latvijā, tikai šodien!", p!.captionIg);
-    expect(r.ok).toBe(false);
+  it("keeps the owner's own words: only an empty or too long text is refused (owner, 18 Nov 2026)", async () => {
+    const [p] = await db
+      .select()
+      .from(socialPosts)
+      .where(and(eq(socialPosts.createdBy, "social-test"), ne(socialPosts.status, "published")))
+      .limit(1);
+    // Prices and numbers that are not in the post's data are the owner's call: shown as advice, not stopped.
+    const own = "Kafijas automāts par 479,99 € un vēl 6 modeļi līdz 1 520,01 €. Salīdzini pats.";
+    expect(await editCaptions(db, p!.id, own, p!.captionIg)).toEqual({ ok: true });
+    const [saved] = await db.select().from(socialPosts).where(eq(socialPosts.id, p!.id));
+    expect(saved!.captionFb).toBe(own);
+    expect((saved!.card as { edited?: boolean }).edited).toBe(true);
+    expect(await editCaptions(db, p!.id, "   ", p!.captionIg)).toEqual({ ok: false, reason: "empty" });
+    expect((await editCaptions(db, p!.id, "a".repeat(2201), p!.captionIg)).ok).toBe(false);
   });
 
   // docs/SOCIAL_PLAN.md §14: designs in turn, and the Saturday Reel.

@@ -1,7 +1,7 @@
 import type { SocialKind } from "@/db/schema";
 import { formatEur } from "@/i18n/format";
 import { OFFER_DISCOUNT_UP_TO_PCT, maxOfferSavingCents } from "@/domain/offers/discount";
-import { lintPost, type PostLintContext } from "./lint";
+import { lintPost, ownerTextBlocks, type PostLintContext } from "./lint";
 
 // The words of each post type (docs/SOCIAL_PLAN.md §3), from facts the job
 // queried a moment before. Register (§6, owner D1): no "tu" and no "jūs" in
@@ -810,7 +810,10 @@ export function composePost(
   const ctx = { pricesCents: p.prices, numbers: p.numbers, names: p.names };
   const issues =
     f.kind === "reel"
-      ? lintPost(f.caption, ctx)
+      ? // A Reel the owner shot carries the owner's own words: only empty or too long stops it.
+        f.of
+        ? lintPost(f.caption, ctx)
+        : ownerTextBlocks(f.caption)
       : [...new Set([...lintPost(captionFb, ctx), ...lintPost(captionIg, ctx), ...lintPost(p.alt, ctx)])];
   return {
     card: opts.design ? { ...restyle(p.card, f, opts.design, opts.photo), design: opts.design } : p.card,

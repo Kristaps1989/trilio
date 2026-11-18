@@ -12,7 +12,7 @@ import {
 } from "./captions";
 import { pickPhoto } from "./photos";
 import { CROSS_SECONDS, reelFilter, reelPlan, SLIDE_SECONDS } from "./reel";
-import { lintPost, priceToCents } from "./lint";
+import { issueAdvice, lintPost, ownerTextBlocks, priceToCents } from "./lint";
 import { isoWeek, nextCategory, nextFreeEvening, pickKind, rigaTime, slotsBetween } from "./schedule";
 
 const none = { priceDrop: false, paidOffer: false, topCategories: false, topProducts: false };
@@ -566,5 +566,36 @@ describe("designs", () => {
     expect(graph).toContain("[vout]");
     // Without any sound the silent track alone is the audio.
     expect(reelFilter(reelPlan(1), [])).toContain("[1:a]amix=inputs=1");
+  });
+});
+
+describe("the owner's own text (owner, 18 Nov 2026)", () => {
+  it("is stopped only when empty or too long", () => {
+    expect(ownerTextBlocks("Mans Reels: 2 000 € un 47 € 🎬🎥📱")).toEqual([]);
+    expect(ownerTextBlocks("  ")).toEqual(["empty"]);
+    expect(ownerTextBlocks("x".repeat(2201))).toHaveLength(1);
+  });
+  it("turns each finding into advice the admin page can word", () => {
+    expect(issueAdvice("price 2 000 € is not in the data")).toEqual({
+      key: "price",
+      values: { value: "2 000 €" },
+    });
+    expect(issueAdvice("number 445 is not in the data")).toEqual({ key: "number", values: { value: "445" } });
+    expect(issueAdvice("more than 2 emojis")).toEqual({ key: "emojis", values: { max: "2" } });
+    expect(issueAdvice("fake urgency").key).toBe("urgency");
+    expect(issueAdvice("informal address: captions avoid the pronoun, or use “jūs”").key).toBe("informal");
+    expect(issueAdvice("something new")).toEqual({ key: "other", values: { text: "something new" } });
+  });
+  it("lets a Reel the owner shot carry prices that are not in Trilio's data", () => {
+    const post = composePost(
+      {
+        kind: "reel",
+        caption: "Kafijas automāti no 479,99 € līdz 2 000 €.",
+        videoUrl: "https://v.example/a.mp4",
+        path: "/",
+      },
+      { postId: "p", baseUrl: "https://trilio.lv" },
+    );
+    expect(post.issues).toEqual([]);
   });
 });
