@@ -71,6 +71,7 @@
     "why": "Rādīsim tikai preces šajā cenu robežā. Ja derēs mazāk nekā trīs, parādīsim līdz diviem variantiem, kas ir ne vairāk kā 25 % virs augšējās robežas, un tos skaidri atzīmēsim.",
     "from": "No",
     "to": "Līdz",
+    "cheapest": "Lētākā prece, kas atbilst tavām atbildēm: {price}. Lētāk šeit nekā nav.",
     "minLabel": "Zemākā cena, eiro",
     "maxLabel": "Augstākā cena, eiro",
     "show": "{count, plural, =0 {Šajā robežā nav preču} =1 {Rādīt 1 preci} =2 {Rādīt 2 preces} =3 {Rādīt 3 preces} other {Rādīt labākos 3 no #}}",
