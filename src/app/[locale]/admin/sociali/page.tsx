@@ -12,6 +12,8 @@ import { metaConfigFromEnv } from "@/services/social/meta";
 import { appBaseUrl } from "@/services/payments";
 import { slideUrls, socialSettings } from "@/services/social/posts";
 import { generatedVideoPath, hasGeneratedVideo } from "@/services/social/video";
+import { lintContext, type PostFacts } from "@/domain/social/captions";
+import { issueAdvice, lintPost, type IssueAdvice } from "@/domain/social/lint";
 import {
   approveAction,
   captionsAction,
@@ -31,6 +33,26 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Sociālie tīkli" };
 
 type Props = { searchParams: Promise<Record<string, string | undefined>> };
+
+type StoredCard = { edited?: boolean; facts?: PostFacts };
+
+/** What the honesty rules would flag in the owner's own text: advice, never a stop. */
+function ownerAdvice(p: SocialPost): IssueAdvice[] {
+  const card = p.card as unknown as StoredCard;
+  const facts = card.facts;
+  const ownReel = facts?.kind === "reel" && !facts.of;
+  if (!card.edited && !ownReel) return [];
+  const ctx = facts && !ownReel ? lintContext(facts) : {};
+  const texts = ownReel && facts?.kind === "reel" ? [facts.caption] : [p.captionFb, p.captionIg];
+  const issues = [...new Set(texts.flatMap((x) => lintPost(x, ctx)))];
+  const seen = new Set<string>();
+  return issues.map(issueAdvice).filter((a) => {
+    const k = `${a.key}:${JSON.stringify(a.values)}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
 
 const KINDS = ["picks", "price_drop", "advice", "offer", "top_categories", "top_products", "reel"] as const;
 const when = (d: Date) =>
@@ -219,6 +241,23 @@ export default async function SocialPage({ searchParams }: Props) {
                     {p.error}
                   </p>
                 ) : null}
+                {(() => {
+                  // The owner's own words are not stopped; what the honesty rules would flag is shown to check.
+                  const advice = ownerAdvice(p);
+                  return advice.length ? (
+                    <div
+                      className="rounded-control border-[1.5px] border-warning px-3 py-2 text-sm text-mist"
+                      data-social-advice
+                    >
+                      <p className="font-semibold">{t("adviceTitle")}</p>
+                      <ul className="list-disc pl-5">
+                        {advice.map((a, i) => (
+                          <li key={i}>{t(`advice.${a.key}` as "advice.other", a.values)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null;
+                })()}
                 <form action={captionsAction} className="flex flex-col gap-2">
                   <input type="hidden" name="id" value={p.id} />
                   <label className={labelClass}>

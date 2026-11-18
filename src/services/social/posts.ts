@@ -6,7 +6,6 @@ import { appFlags, socialInsights, socialPosts, type SocialKind, type SocialPost
 import { leaks } from "@/domain/social/anonymise";
 import {
   composePost,
-  lintContext,
   slideAlt,
   utmLink,
   type PostCard,
@@ -19,7 +18,7 @@ import {
 import { pickPhoto } from "@/domain/social/photos";
 import { ffmpegPath, generatedVideoPath } from "./video";
 import { getGroupOfSubcategory } from "@/domain/questions/catalog";
-import { lintPost } from "@/domain/social/lint";
+import { ownerTextBlocks } from "@/domain/social/lint";
 import {
   DRAFT_AHEAD_MS,
   LATE_LIMIT_MS,
@@ -742,9 +741,8 @@ export async function approvePost(
 export async function editCaptions(db: Db, id: string, captionFb: string, captionIg: string) {
   const [p] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
   if (!p || p.status === "published") return { ok: false as const, reason: "locked" };
-  const facts = (p.card as unknown as StoredCard).facts;
-  const ctx = facts ? lintContext(facts) : {};
-  const issues = [...new Set([...lintPost(captionFb, ctx), ...lintPost(captionIg, ctx)])];
+  // The owner's words: only an empty or too long text stops them; the rest is advice on the page.
+  const issues = [...new Set([...ownerTextBlocks(captionFb), ...ownerTextBlocks(captionIg)])];
   if (issues.length) return { ok: false as const, reason: issues.join("; ") };
   await db
     .update(socialPosts)

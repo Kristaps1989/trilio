@@ -72,3 +72,45 @@ export function lintPost(text: string, ctx: PostLintContext = {}): string[] {
   if (HYPE.test(words)) issues.push("hype emoji");
   return issues;
 }
+
+/**
+ * The owner's own text (an edited caption, the caption of a Reel they shot): only an empty
+ * or too long text stops it (owner, 18 Nov 2026: "the comments seem unreasonable"). Everything
+ * else lintPost finds is advice shown next to the post, because the owner, not Trilio's data,
+ * is the source of what it says.
+ */
+export function ownerTextBlocks(text: string): string[] {
+  const t = text.trim();
+  if (!t) return ["empty"];
+  if ([...t].length > CAPTION_MAX) return [`longer than ${CAPTION_MAX} characters`];
+  return [];
+}
+
+export type IssueAdvice = { key: string; values: Record<string, string> };
+
+/** A lint finding as a message key for the admin, with its value ("price 2 000 € …" → price). */
+export function issueAdvice(issue: string): IssueAdvice {
+  const price = /^price (.+) is not in the data$/.exec(issue);
+  if (price) return { key: "price", values: { value: price[1]! } };
+  const number = /^number (.+) is not in the data$/.exec(issue);
+  if (number) return { key: "number", values: { value: number[1]! } };
+  if (issue.startsWith("more than")) return { key: "emojis", values: { max: String(MAX_EMOJIS) } };
+  const known: Record<string, string> = {
+    "hype emoji": "hype",
+    "fake urgency": "urgency",
+    "guarantee claim": "guarantee",
+    "cheapest-anywhere claim": "cheapest",
+    "discount claim Trilio does not make": "discount",
+    "shop's delivery terms are not Trilio's": "delivery",
+    "superlative claim": "superlative",
+    "percentage claim": "percent",
+    "competitor name": "competitor",
+    shouting: "shouting",
+    "not Latvian": "notLatvian",
+  };
+  if (known[issue]) return { key: known[issue]!, values: {} };
+  if (issue.startsWith("“bez maksas”")) return { key: "free", values: {} };
+  if (issue.startsWith("an offer is promised")) return { key: "promise", values: {} };
+  if (issue.startsWith("informal address")) return { key: "informal", values: {} };
+  return { key: "other", values: { text: issue } };
+}
