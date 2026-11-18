@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { useUiLocale } from "@/i18n/useUiLocale";
 import type { PriceStats } from "@/domain/flow/insight";
 import { formatEur } from "@/i18n/format";
@@ -28,6 +29,24 @@ export function rangeAnswer(range: CentsRange, stats: PriceStats | null): { min?
   return { min: range.min > lo ? range.min : undefined, max: range.max < top ? range.max : undefined };
 }
 
+/**
+ * A typed limit, applied when the field is left (or Enter pressed): kept between the
+ * cheapest product the answers leave and the dearest, and never past the other limit.
+ * Null when the text is not a number, so the field goes back to the current value.
+ */
+export function typedLimit(
+  key: "min" | "max",
+  text: string,
+  range: CentsRange,
+  scale: { lo: number; top: number },
+): CentsRange | null {
+  const t = text.replace(/\s/g, "").replace(",", ".").replace(/€$/, "");
+  if (!/^\d+(\.\d+)?$/.test(t)) return null;
+  const cents = Math.round(Number(t)) * 100;
+  if (key === "min") return { min: Math.min(Math.max(scale.lo, cents), range.max), max: range.max };
+  return { min: range.min, max: Math.max(Math.min(scale.top, cents), range.min) };
+}
+
 /** "+" steps that matter for the category: €10–50 for kettles, €50–500 for fridges. */
 export function widenSteps(stats: PriceStats | null): number[] {
   const typical = stats ? (stats.defaultMinCents + stats.defaultMaxCents) / 2 : 50_000;
@@ -51,15 +70,13 @@ export function PriceRange({
   const locale = useUiLocale();
   const { step, lo, hi, top } = priceScale(stats);
 
-  function setField(key: "min" | "max", text: string) {
-    const eur = Number(text.replace(/\s/g, "").replace(",", "."));
-    if (!Number.isFinite(eur)) return;
-    const cents = Math.round(eur) * 100;
-    onChange(
-      key === "min"
-        ? { min: Math.min(Math.max(lo, cents), value.max), max: value.max }
-        : { min: value.min, max: Math.max(Math.min(top, cents), value.min) },
-    );
+  // What is being typed stays as typed: "8" on the way to "800" is not clamped to the lower
+  // limit at the first key. The limit is applied when the field is left or Enter pressed.
+  const [draft, setDraft] = useState<{ key: "min" | "max"; text: string } | null>(null);
+  function commit(key: "min" | "max", text: string) {
+    setDraft(null);
+    const next = typedLimit(key, text, value, { lo, top });
+    if (next && (next.min !== value.min || next.max !== value.max)) onChange(next);
   }
 
   return (
@@ -100,8 +117,15 @@ export function PriceRange({
               <input
                 inputMode="numeric"
                 aria-label={key === "min" ? t("minLabel") : t("maxLabel")}
-                value={String(Math.round(value[key] / 100))}
-                onChange={(e) => setField(key, e.target.value)}
+                value={draft?.key === key ? draft.text : String(Math.round(value[key] / 100))}
+                onChange={(e) => setDraft({ key, text: e.target.value })}
+                onBlur={(e) => commit(key, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commit(key, e.currentTarget.value);
+                  }
+                }}
                 className="min-h-11 w-full bg-transparent text-lg font-semibold text-mist outline-none"
               />
               <span aria-hidden="true">€</span>
@@ -109,6 +133,11 @@ export function PriceRange({
           </label>
         ))}
       </div>
+      {stats ? (
+        <p className="text-sm text-stone" data-price-floor={lo}>
+          {t("cheapest", { price: formatEur(stats.minCents, locale) })}
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-stone">{t("widenBy")}</span>
         {widenSteps(stats).map((d) => (

@@ -257,3 +257,61 @@ test("results: more than three options on request, best value first", async ({ p
   await expect(section.getByRole("article")).toHaveCount(Math.min(10, total));
   if (total <= 10) await expect(section.getByRole("link", { name: /^Rādīt vēl/ })).toHaveCount(0);
 });
+
+test("price range: typed key by key, the limits apply only when the field is left", async ({ page }) => {
+  // Owner, 18 Nov 2026: typing "800" into "Līdz" jumped to the lower limit at the first key.
+  await page.goto("/izvelies/cool/fridge");
+  await toPrice(page);
+  const min = page.getByRole("textbox", { name: "Zemākā cena, eiro" });
+  const max = page.getByRole("textbox", { name: "Augstākā cena, eiro" });
+  // The slider's lower end: the cheapest product the answers leave, rounded down to the step.
+  const cheapest = page.locator("[data-price-floor]");
+  await expect(cheapest).toContainText("Lētākā prece, kas atbilst tavām atbildēm:");
+  const floor = Number(await cheapest.getAttribute("data-price-floor")) / 100;
+
+  // Typed one key at a time, as a person types: every digit stays.
+  const target = floor + 300;
+  await max.click();
+  await max.press("ControlOrMeta+a");
+  await max.press("Backspace");
+  await max.pressSequentially(String(target), { delay: 30 });
+  await expect(max).toHaveValue(String(target));
+  await max.blur();
+  await expect(max).toHaveValue(String(target));
+
+  // Enter applies it too; a lower limit below the cheapest product goes to the cheapest.
+  await min.click();
+  await min.press("ControlOrMeta+a");
+  await min.pressSequentially("1", { delay: 30 });
+  await expect(min).toHaveValue("1");
+  await min.press("Enter");
+  await expect(min).toHaveValue(String(floor));
+
+  // An upper limit typed below the lower one stops at the lower one, it never crosses it.
+  await max.click();
+  await max.press("ControlOrMeta+a");
+  await max.pressSequentially("5", { delay: 30 });
+  await expect(max).toHaveValue("5");
+  await max.blur();
+  await expect(max).toHaveValue(String(floor));
+
+  // Not a number: the field goes back to the limit it had.
+  await max.click();
+  await max.press("ControlOrMeta+a");
+  await max.pressSequentially("abc", { delay: 30 });
+  await max.blur();
+  await expect(max).toHaveValue(String(floor));
+
+  // The range is used: the results stay inside it.
+  await max.click();
+  await max.press("ControlOrMeta+a");
+  await max.pressSequentially(String(target), { delay: 30 });
+  await max.blur();
+  await expectNoAxeViolations(page);
+  await page.getByRole("button", { name: /^Rādīt / }).click();
+  await expect(page).toHaveURL(/\/rezultati\?sub=fridge/);
+  for (const card of await picks(page).all()) {
+    const text = (await card.textContent()) ?? "";
+    if (!/Virs budžeta par/.test(text)) expect(await priceOf(card)).toBeLessThanOrEqual(target);
+  }
+});

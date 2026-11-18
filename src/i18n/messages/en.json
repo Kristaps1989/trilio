@@ -71,6 +71,7 @@
     "why": "We'll show only products in this price range. If fewer than three fit, we'll show up to two options at most 25% above the upper limit, clearly marked.",
     "from": "From",
     "to": "To",
+    "cheapest": "The cheapest product that fits your answers: {price}. Nothing here costs less.",
     "minLabel": "Lowest price, euros",
     "maxLabel": "Highest price, euros",
     "show": "{count, plural, =0 {No products in this range} =1 {Show 1 product} =2 {Show 2 products} =3 {Show 3 products} other {Show the best 3 of #}}",
