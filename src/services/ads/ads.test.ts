@@ -46,7 +46,14 @@ import { mockProvider } from "./mock";
 import { accountControl, checkAccount, pauseForeignCampaign, reconcileAccount } from "./control";
 import type { CampaignState, Expected } from "@/domain/ads/drift";
 import type { AdsChange } from "./provider";
-import { decideProposal, EMPTY_PROPOSAL_FIELDS, OptimiserOutput, runDaily } from "./optimiser";
+import {
+  decideProposal,
+  EMPTY_PROPOSAL_FIELDS,
+  OptimiserOutput,
+  optimiserContext,
+  raiseStarvedCaps,
+  runDaily,
+} from "./optimiser";
 
 // The ads pipeline end to end against the database (docs/GROWTH_PLAN.md):
 // build → sync → daily run with a fake Claude → guardrails → owner's decision.
@@ -413,6 +420,107 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     const paced = await paceBudgets(db, provider);
     expect(paced.cents).toBeGreaterThan(0);
     await updateSettings(db, { targetCostCents: null });
+    await setCampaignsStatus(db, provider, "paused");
+  });
+
+  it("a small budget: a campaign that is hardly shown gets a higher price cap, and the campaign's ceiling follows", async () => {
+    await updateSettings(db, { dailyBudgetCents: 500, mode: "approve" });
+    const all = await db
+      .select()
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.kind} = 'search'`);
+    const [starved, shown] = all;
+    await setCampaignsStatus(db, provider, "enabled", starved!.id);
+    await setCampaignsStatus(db, provider, "enabled", shown!.id);
+    const old = new Date(Date.now() - 10 * 86_400_000);
+    await db.update(adCampaigns).set({ syncedAt: old });
+    await db.update(adGroups).set({ cpcCapCents: 30 });
+    await db.delete(adProposals);
+    // One campaign was not shown at all in the last week; the other was shown plenty.
+    await db.delete(adDailyStats).where(sql`${adDailyStats.entityId} = ${starved!.id}`);
+    await db
+      .insert(adDailyStats)
+      .values({ day: dayOffset(new Date(), 2), level: "campaign", entityId: shown!.id, impressions: 900 })
+      .onConflictDoUpdate({
+        target: [adDailyStats.day, adDailyStats.level, adDailyStats.entityId],
+        set: { impressions: 900 },
+      });
+    const run = async () =>
+      (
+        await db
+          .insert(adAgentRuns)
+          .values({ kind: "test", day: dayOffset(new Date(), 0) })
+          .returning()
+      )[0]!;
+    const groups = await db
+      .select()
+      .from(adGroups)
+      .where(sql`${adGroups.campaignId} = ${starved!.id}`);
+
+    // "Apstiprināt": the raise waits for the owner, nothing changes in Google.
+    expect(await raiseStarvedCaps(db, provider, (await run()).id)).toBe(groups.length);
+    const waiting = await db.select().from(adProposals);
+    expect(waiting.every((p) => p.action === "set_cpc" && p.status === "proposed")).toBe(true);
+    expect(waiting.every((p) => (p.params as { cpcCapCents: number }).cpcCapCents === 45)).toBe(true);
+    expect(waiting[0]!.reason).toContain(starved!.name);
+    expect((await db.select().from(adGroups)).every((g) => g.cpcCapCents === 30)).toBe(true);
+    // Not twice within three days.
+    await db.delete(adAgentRuns).where(sql`${adAgentRuns.kind} = 'test'`);
+    expect(await raiseStarvedCaps(db, provider, (await run()).id)).toBe(0);
+
+    // "Pārvaldīt pašam": applied at once, and the campaign's own ceiling is raised with it.
+    await db.delete(adProposals);
+    await db.delete(adChanges);
+    await db.delete(adAgentRuns).where(sql`${adAgentRuns.kind} = 'test'`);
+    await updateSettings(db, { mode: "manage" });
+    expect(await raiseStarvedCaps(db, provider, (await run()).id)).toBe(groups.length);
+    const after = await db
+      .select()
+      .from(adGroups)
+      .where(sql`${adGroups.campaignId} = ${starved!.id}`);
+    expect(after.every((g) => g.cpcCapCents === 45)).toBe(true);
+    const others = await db
+      .select()
+      .from(adGroups)
+      .where(sql`${adGroups.campaignId} = ${shown!.id}`);
+    expect(others.every((g) => g.cpcCapCents === 30)).toBe(true);
+    const sent = (await db.select().from(adChanges)).map((c) => c.operation);
+    expect(sent).toContainEqual({ op: "set_cpc_ceiling", campaign: starved!.googleId, cents: 45 });
+
+    // The agent reads the goal, the small-budget limits and what each category's visitors did.
+    const context = await optimiserContext(db);
+    expect(context.settings).toMatchObject({
+      smallBudget: true,
+      maxBudgetMoveShare: 0.5,
+      cpcCeilingCents: 100,
+    });
+    expect(context.campaigns[0]).toHaveProperty("emailsFromAds28");
+    expect(context.adGroups[0]).toHaveProperty("siteFunnel28");
+
+    // Switching a campaign off: the day's total goes to the ones that stay on.
+    const p: Proposal = { action: "pause_campaign", campaignId: shown!.id };
+    const [row] = await db
+      .insert(adProposals)
+      .values({ action: p.action, params: p as unknown as Record<string, unknown>, reason: "r" })
+      .returning();
+    expect((await applyProposal(db, provider, row!, p, "auto")).ok).toBe(true);
+    const now = await db.select().from(adCampaigns);
+    expect(now.find((c) => c.id === shown!.id)!.status).toBe("paused");
+    const running = now.filter((c) => c.status === "enabled");
+    expect(running.reduce((a, c) => a + c.budgetCents, 0)).toBe(500);
+    const back: Proposal = { action: "enable_campaign", campaignId: shown!.id };
+    const [row2] = await db
+      .insert(adProposals)
+      .values({ action: back.action, params: back as unknown as Record<string, unknown>, reason: "r" })
+      .returning();
+    expect((await applyProposal(db, provider, row2!, back, "auto")).ok).toBe(true);
+    const again = (await db.select().from(adCampaigns)).filter((c) => c.status === "enabled");
+    expect(again.map((c) => c.id)).toContain(shown!.id);
+    expect(again.reduce((a, c) => a + c.budgetCents, 0)).toBe(500);
+
+    await db.delete(adAgentRuns).where(sql`${adAgentRuns.kind} = 'test'`);
+    await db.delete(adProposals);
+    await updateSettings(db, { mode: "approve", dailyBudgetCents: 1500 });
     await setCampaignsStatus(db, provider, "paused");
   });
 

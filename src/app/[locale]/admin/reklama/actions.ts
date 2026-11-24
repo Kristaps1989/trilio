@@ -78,7 +78,7 @@ export async function saveAdSettingsAction(formData: FormData): Promise<void> {
       target: z.union([z.literal(""), cents]),
       clickWeight: z.coerce.number().int().min(0).max(100),
       saveWeight: z.coerce.number().int().min(0).max(100),
-      mode: z.enum(["observe", "approve", "auto"]),
+      mode: z.enum(["observe", "approve", "auto", "manage"]),
       reviewCadence: z.enum(["weekly", "daily"]).default("weekly"),
       reviewWeekday: z.coerce.number().int().min(1).max(7).default(1),
     })

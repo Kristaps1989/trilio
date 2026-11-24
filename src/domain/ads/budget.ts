@@ -5,6 +5,49 @@
 export const MIN_CAMPAIGN_CENTS = 100;
 /** A campaign budget moves at most this share in a day. */
 export const MAX_DAILY_SHIFT = 0.2;
+/**
+ * A small budget (owner, 24 Nov 2026: 5 € a day) cannot be spread: a fifth of a 2 € campaign is
+ * 40 cents, which changes nothing. Up to this total the agent may move half a campaign's budget
+ * at once and switch whole campaigns off and on, so the money goes where e-mails come from.
+ */
+export const SMALL_BUDGET_CENTS = 1000;
+export const SMALL_BUDGET_SHIFT = 0.5;
+
+/** The share of one campaign's budget a single move may take, by the owner's daily total. */
+export function maxShift(dailyBudgetCents: number | null | undefined): number {
+  return dailyBudgetCents && dailyBudgetCents <= SMALL_BUDGET_CENTS ? SMALL_BUDGET_SHIFT : MAX_DAILY_SHIFT;
+}
+
+/** The click-price cap every Search campaign starts with. */
+export const DEFAULT_CPC_CAP_CENTS = 30;
+/** No click may be allowed to cost more than this, whatever the budget. */
+export const CPC_CEILING_MAX_CENTS = 200;
+
+/**
+ * The highest click-price cap the agent may set on its own: one click never costs more than a
+ * fifth of the day's budget (1 € at 5 € a day), never under the starting cap, never over 2 €.
+ */
+export function cpcCeilingFor(dailyBudgetCents: number): number {
+  return Math.min(CPC_CEILING_MAX_CENTS, Math.max(DEFAULT_CPC_CAP_CENTS, Math.round(dailyBudgetCents * 0.2)));
+}
+
+/** Fewer impressions than this in seven days: the ads are not entering the auctions. */
+export const STARVED_IMPRESSIONS_7D = 20;
+
+/**
+ * A campaign that is switched on, has money left and is hardly shown is priced out: its cap is
+ * under what the searches cost. The next cap is half as much again, up to the ceiling; null
+ * when the campaign is shown enough or the cap is already at the ceiling.
+ */
+export function starvedCap(
+  input: { impressions7d: number; capCents: number },
+  dailyBudgetCents: number,
+): number | null {
+  if (input.impressions7d >= STARVED_IMPRESSIONS_7D) return null;
+  const ceiling = cpcCeilingFor(dailyBudgetCents);
+  if (input.capCents >= ceiling) return null;
+  return Math.min(ceiling, Math.ceil(input.capCents * 1.5));
+}
 
 /** Splits `total` by weight, every share at least MIN_CAMPAIGN_CENTS when the total allows, the sum exactly `total`. */
 export function splitBudget(total: number, weights: Record<string, number>): Record<string, number> {

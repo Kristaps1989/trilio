@@ -437,6 +437,17 @@ export function googleAdsProvider(cfg: GoogleAdsConfig, fetchImpl: Fetch = fetch
           },
         ]);
         return { ok: true, id: change.adGroup };
+      case "set_cpc_ceiling":
+        await mutate("campaigns", [
+          {
+            update: {
+              resourceName: change.campaign,
+              targetSpend: { cpcBidCeilingMicros: micros(change.cents) },
+            },
+            updateMask: "target_spend.cpc_bid_ceiling_micros",
+          },
+        ]);
+        return { ok: true, id: change.campaign };
       case "set_campaign_status":
         await mutate("campaigns", [
           { update: { resourceName: change.campaign, status: STATUS[change.status] }, updateMask: "status" },

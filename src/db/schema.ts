@@ -1178,7 +1178,13 @@ export const tvUplift = pgTable(
   (t) => [primaryKey({ columns: [t.slug, t.day] })],
 );
 
-export const adModeEnum = pgEnum("ad_mode", ["observe", "approve", "auto"]);
+/**
+ * Who applies the agent's proposals. "observe": nobody. "approve": the owner, one by one.
+ * "auto": negatives and keyword pauses apply themselves, the rest waits for the owner.
+ * "manage": every proposal the guardrails pass applies itself (owner, 24 Nov 2026: the agent
+ * manages the budget); the owner reads what was done.
+ */
+export const adModeEnum = pgEnum("ad_mode", ["observe", "approve", "auto", "manage"]);
 /** How often Claude reviews the account; reports and budget pacing run daily regardless. */
 export const adReviewCadenceEnum = pgEnum("ad_review_cadence", ["weekly", "daily"]);
 

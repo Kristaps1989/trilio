@@ -204,3 +204,41 @@ The weekly memo could not credit Trilio's shop clicks to Google campaigns: Googl
 
 - **Owner setting, once, in Google Ads:** Admin → Account settings → Tracking → **Final URL suffix**: `utm_source=google&utm_medium=cpc&utm_campaign={campaignid}`. Auto-tagging stays on. It covers every campaign, PMax included, and new ones.
 - **Code:** visits are keyed `source/campaign`. A visit with only `gclid` counts as `google/(none)`; with the suffix it is `google/<campaign id>`, which the review matches with `campaigns[].googleId`. Other sources (`meta`, `facebook`, `tv`) are listed apart and left out of Google decisions; the Meta tag `120250227220820296` in the 2 Nov memo was the Meta campaign's own id.
+
+## The agent manages a small budget (24 Nov 2026)
+
+Owner: the ads are for **e-mail addresses** (a saved product or a price request), a shop click
+earns about 0,03 €, and the agent is to manage the whole 5 € day. What changed in the optimiser:
+
+- **The goal is the cost per e-mail left.** The agent reads, per campaign, the e-mails its
+  visitors left in 28 days (`emailsFromAds28`), and per ad group what all visitors of that
+  category's results page did (`siteFunnel28`: results visitors, ad visitors, taps on the request,
+  e-mails sent). A category whose visitors leave e-mails is worth paid clicks; one with many ad
+  visitors and no taps is not.
+- **A mode that applies without asking: "Pārvaldīt pašam" (`manage`).** Every proposal the
+  guardrails pass is applied; the owner reads what was done under Priekšlikumi. "Automātiski"
+  still applies only negatives and keyword pauses. The total budget is never the agent's.
+- **Small budget, up to 10 € a day** (`SMALL_BUDGET_CENTS`): a move may take half of a
+  campaign's budget (a fifth above), leaving it at least 1 €.
+- **Campaigns can be switched off and on** (`pause_campaign`, `enable_campaign`). Never the
+  last running one, never one whose visitors left an e-mail in 28 days, never Trilio's own name;
+  switching one on needs 1 € a day for every running campaign. The day's total is split again
+  among those that run.
+- **The click-price cap reaches the auctions.** Search campaigns buy clicks under the
+  *campaign's* ceiling; `set_cpc` used to change only the ad group's bid, which does nothing
+  above that ceiling. It now also sets the ceiling to the campaign's highest ad group
+  (`set_cpc_ceiling`, `syncCpcCeiling`).
+- **A campaign that is hardly shown is priced out, and code fixes that** (`raiseStarvedCaps`,
+  every day, no Claude): running, in Google for at least 4 days, under 20 impressions in 7 days
+  → each ad group's cap goes up by half (30 → 45 → 68 → 100 cents), at most every 3 days,
+  never above a fifth of the daily budget (1 € at 5 €), never above 2 €. Each raise is a
+  proposal like any other: checked by the guardrails, applied or waiting by the owner's mode.
+
+Why: on 13–19 Nov the kitchen campaign had 2 848 impressions at 0,18 € a click while fridges
+and washing machines had 5 and 1 with their budgets unspent, on the starting cap of 30 cents.
+In 30 days 82 ad visitors of the kitchen categories left no e-mail; fridges, washers, dryers
+and vacuums are where visitors tap the request.
+
+Not changed: the review still runs weekly by default (one review costs about as much as a
+tenth of a 5 € day), ad text still passes the honesty lint, and geography, language, conversion
+settings and the total budget stay out of the action set.

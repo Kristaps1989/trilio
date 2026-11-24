@@ -25,6 +25,11 @@ export type AdsChange =
   | { op: "set_ad_status"; ad: string; status: "enabled" | "paused" }
   | { op: "set_budget"; budget: string; cents: number }
   | { op: "set_cpc"; adGroup: string; cents: number }
+  /**
+   * The campaign's own click-price cap. Search campaigns buy clicks under this ceiling, and the
+   * ceiling is what the auctions see: an ad group's higher bid does nothing above it.
+   */
+  | { op: "set_cpc_ceiling"; campaign: string; cents: number }
   | { op: "set_campaign_status"; campaign: string; status: "enabled" | "paused" }
   | {
       /**
