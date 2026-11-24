@@ -706,6 +706,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
       domain: "trilio.test",
     };
     const prices: Record<string, number> = { fridge: 49900, vacuum: 19900, hob: 29900 };
+    let noPhoto = false;
     const picks = async (sub: string): Promise<PostFacts | null> =>
       prices[sub] === undefined
         ? null
@@ -718,7 +719,8 @@ run("ads pipeline", { timeout: 60_000 }, () => {
               name: `Modelis ${sub.toUpperCase()}${i}`,
               priceCents: prices[sub]! + i * 5000,
               shop: "Veikals A",
-              imageUrl: null,
+              // A category whose picks lack a photo gets no ad: the ad is its products' pictures.
+              imageUrl: sub === "hob" && noPhoto ? null : "/sample/kettle-black.png",
             })),
             path: `/izvelies/x/${sub}`,
           };
@@ -816,6 +818,14 @@ run("ads pipeline", { timeout: 60_000 }, () => {
       (a) => a.error === "Budget too low [100]",
     );
     expect(refused).toMatchObject({ kind: "meta_create", applied: false });
+    // Without its products' photos a category is not advertised.
+    noPhoto = true;
+    await db.delete(metaAgentAds);
+    meta.calls.length = 0;
+    expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 300)).toMatchObject({ created: 2 });
+    expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual(["vacuum", "fridge"]);
+    noPhoto = false;
+    await db.delete(metaAgentAds);
     // No share, no ad.
     expect(await ensureAgentAds(db, { meta, ...creator }, 50)).toEqual({ created: 0, retired: 0, failed: 0 });
     // The daily round runs the same thing with Meta's share of the day, and a channel the

@@ -71,15 +71,17 @@ export type CreatorDeps = {
 
 /**
  * The ad's picture, square: the page's own "collage" design, which leads with the three
- * products' photos and names them with today's prices (a product, not an explanation, is what
- * stops a thumb in the feed; owner, 24 Nov 2026). When a pick has no photo, the "ask" design:
- * the question "Nezini, kuru izvēlēties?" over the same three names and prices. Both quote
- * prices, which is why an ad is replaced the day a price changes.
+ * products' photos under Trilio's logo and names them with today's prices (owner, 24 Nov 2026:
+ * product pictures and Trilio's branding; a product, not an explanation, stops a thumb in the
+ * feed). An ad without its products' photos is not made: every photo must load, or this throws.
+ * The picture quotes prices, which is why an ad is replaced the day a price changes.
  */
 export async function renderAdPicture(facts: PostFacts, baseUrl: string): Promise<Buffer> {
-  const { renderPostJpeg } = await import("@/services/social/render");
-  const photos = facts.kind === "picks" && facts.picks.every((p) => p.imageUrl);
-  const { card } = composePost(facts, { postId: "ad", baseUrl, design: photos ? "collage" : "ask" });
+  const { loadPhoto, renderPostJpeg } = await import("@/services/social/render");
+  if (facts.kind !== "picks") throw new Error("not a picks ad");
+  for (const p of facts.picks)
+    if (!(await loadPhoto(p.imageUrl ?? undefined))) throw new Error(`no photo of ${p.name}`);
+  const { card } = composePost(facts, { postId: "ad", baseUrl, design: "collage" });
   // One picture: the design's own first page, without the carousel's further slides.
   const { slides: _slides, ...single } = card;
   void _slides;
@@ -126,7 +128,9 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
   const current = new Map<string, Extract<PostFacts, { kind: "picks" }>>();
   for (const f of funnel) {
     const facts = await picks(f.subcategoryId).catch(() => null);
-    if (facts?.kind === "picks" && facts.picks.length >= 3) current.set(f.subcategoryId, facts);
+    // Three picks, each with its photo: the ad is its products' pictures.
+    if (facts?.kind === "picks" && facts.picks.length >= 3 && facts.picks.every((p) => p.imageUrl))
+      current.set(f.subcategoryId, facts);
   }
   // An ad that was stopped in Meta (by the owner, by Meta's review, or by the rule for ads that
   // bring nothing) is no longer the agent's running ad.

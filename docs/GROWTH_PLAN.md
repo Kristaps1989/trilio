@@ -298,8 +298,9 @@ pause it). In "Pārvaldīt pašam" mode, with `META_PAGE_ID` and `META_PIXEL_ID`
   categories whose results-page visitors leave e-mails (then: tap the request), among those
   that can show three picks today.
 - **What an ad is:** a square picture in the page's own "collage" design (the three products'
-  photos, their names and today's prices; the "ask" design, a question over the same three,
-  when a pick has no photo), and a text that names the three picks with today's prices. The
+  photos under Trilio's logo, their names and today's prices), and a text that names the three
+  picks with today's prices. Owner, 24 Nov 2026: product pictures and Trilio's branding. A
+  category whose picks lack a photo, or whose photo does not load, gets no ad. The
   first picture tried, the cover of the "three steps" post, explained Trilio and showed no
   product; the owner asked whether it would bring leads, and it was replaced the same day.
   It leads to that category's three picks, with `utm_campaign` and `utm_content` in the address
