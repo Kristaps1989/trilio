@@ -281,6 +281,13 @@
       "when": 1795522295518,
       "tag": "0039_marketing_manager",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795523689470,
+      "tag": "0040_meta_agent_ads",
+      "breakpoints": true
     }
   ]
 }

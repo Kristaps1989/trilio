@@ -18,12 +18,15 @@ import {
   marketingActions,
   metaAdDaily,
   metaAdEntities,
+  metaAgentAds,
   savedItems,
   seoQueries,
   users,
 } from "@/db/schema";
 import { mockMetaAds } from "@/services/marketing/meta-ads";
 import { channelPerformance, metaLeads, runMarketingDaily } from "@/services/marketing/manager";
+import { ensureAgentAds, type CreatorConfig } from "@/services/marketing/meta-creator";
+import type { PostFacts } from "@/domain/social/captions";
 import { adParams } from "@/domain/growth/attribution";
 import type { StructuredCaller } from "@/services/llm/client";
 import { adLandingFor, purgeAdLandings, recordAdLanding } from "@/services/growth/landings";
@@ -84,6 +87,7 @@ async function wipe(db: Db) {
     seoQueries,
     marketingActions,
     metaAdDaily,
+    metaAgentAds,
     metaAdEntities,
   ])
     await db.delete(t);
@@ -669,6 +673,169 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     await db.delete(adDailyStats);
     for (let i = 0; i < statsBefore.length; i += 2000)
       await db.insert(adDailyStats).values(statsBefore.slice(i, i + 2000));
+    for (const c of campaignsBefore)
+      await db
+        .update(adCampaigns)
+        .set({ status: c.status, budgetCents: c.budgetCents })
+        .where(sql`${adCampaigns.id} = ${c.id}`);
+  });
+
+  it("the agent makes its own Meta ads, replaces one whose price changed, and rests a category that brought nothing", async () => {
+    const campaignsBefore = await db.select().from(adCampaigns);
+    // Neither channel has spent anything yet: the day starts even.
+    const statsBefore = await db.select().from(adDailyStats);
+    await db.delete(adDailyStats);
+    await db.delete(marketingActions);
+    await db.delete(metaAgentAds);
+    await db.delete(metaAdEntities);
+    await updateSettings(db, { dailyBudgetCents: 500, mode: "manage", metaManaged: true, metaDailyCents: 0 });
+    const [google] = await db
+      .select()
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.kind} = 'search'`)
+      .limit(1);
+    await setCampaignsStatus(db, provider, "enabled", google!.id);
+    // An empty Meta account: no campaign yet.
+    const meta = mockMetaAds({ entities: [] });
+    const config: CreatorConfig = {
+      pageId: "100200300",
+      instagramUserId: "17840000000000000",
+      pixelId: "2161476984461393",
+      advertiser: "Sky Solutions SIA",
+      baseUrl: "https://trilio.test",
+      domain: "trilio.test",
+    };
+    const prices: Record<string, number> = { fridge: 49900, vacuum: 19900, hob: 29900 };
+    const picks = async (sub: string): Promise<PostFacts | null> =>
+      prices[sub] === undefined
+        ? null
+        : {
+            kind: "picks",
+            subcategoryId: sub,
+            category: sub === "fridge" ? "Ledusskapji" : sub === "vacuum" ? "Putekļsūcēji" : "Plīts virsmas",
+            questions: [],
+            picks: [0, 1, 2].map((i) => ({
+              name: `Modelis ${sub.toUpperCase()}${i}`,
+              priceCents: prices[sub]! + i * 5000,
+              shop: "Veikals A",
+              imageUrl: null,
+            })),
+            path: `/izvelies/x/${sub}`,
+          };
+    const creator = {
+      config,
+      render: async () => Buffer.from("jpeg-bytes"),
+      load: {
+        funnel: async () => [
+          { subcategoryId: "hob", resultsVisitors: 37, sent: 0, taps: 0 },
+          { subcategoryId: "fridge", resultsVisitors: 53, sent: 2, taps: 10 },
+          { subcategoryId: "vacuum", resultsVisitors: 15, sent: 3, taps: 6 },
+          { subcategoryId: "toaster", resultsVisitors: 90, sent: 9, taps: 30 },
+        ],
+        picks,
+      },
+    };
+    const today = dayOffset(new Date(), 0).replace(/-/g, "");
+
+    // Day one: Meta has nothing, so the agent makes the campaign, the ad set and two ads
+    // (one per euro of Meta's 2,50 €): the categories whose visitors leave e-mails. A category
+    // that cannot show three picks gets none, however good its numbers.
+    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
+      created: 2,
+      retired: 0,
+      failed: 0,
+    });
+    expect(meta.calls.map((c) => c.op)).toEqual(["campaign", "adset", "ad", "ad"]);
+    expect(meta.calls.map((c) => c.value)).toEqual([
+      "trilio-ai-epasti",
+      "latvija",
+      `vacuum-${today}`,
+      `fridge-${today}`,
+    ]);
+    const made = await db.select().from(metaAgentAds);
+    expect(made.map((a) => a.status)).toEqual(["active", "active"]);
+    const fridgeAd = made.find((a) => a.subcategoryId === "fridge")!;
+    expect(fridgeAd.link).toBe(
+      `https://trilio.test/rezultati?sub=fridge&cena=tipiska&utm_source=meta&utm_medium=paid_social&utm_campaign=trilio-ai-epasti&utm_content=fridge-${today}`,
+    );
+    expect(fridgeAd.message).toMatch(/• Modelis FRIDGE0: 499\s€/);
+    expect(fridgeAd.imageHash).toBe("hash10");
+    const steps = await db.select().from(marketingActions);
+    expect(steps.filter((a) => a.kind === "meta_create" && a.applied)).toHaveLength(4);
+
+    // Nothing changed: the same two ads stay, nothing new is made.
+    meta.calls.length = 0;
+    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
+      created: 0,
+      retired: 0,
+      failed: 0,
+    });
+    expect(meta.calls).toEqual([]);
+
+    // A fridge got cheaper: the ad that quotes the old price is paused, a new one replaces it.
+    prices.fridge = 47900;
+    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
+      created: 1,
+      retired: 1,
+      failed: 0,
+    });
+    expect(meta.calls.map((c) => c.op)).toEqual(["status", "ad"]);
+    const fridgeAds = (await db.select().from(metaAgentAds)).filter((a) => a.subcategoryId === "fridge");
+    expect(fridgeAds.map((a) => `${a.status}/${a.retiredWhy ?? ""}`).sort()).toEqual([
+      "active/",
+      "paused/facts",
+    ]);
+    expect(fridgeAds.find((a) => a.status === "active")!.message).toMatch(/479\s€/);
+
+    // The vacuum ad was stopped for bringing nothing: its category rests, the next one gets the place.
+    await db
+      .update(metaAgentAds)
+      .set({ status: "paused", retiredAt: new Date(), retiredWhy: "no_leads" })
+      .where(sql`${metaAgentAds.subcategoryId} = 'vacuum'`);
+    meta.calls.length = 0;
+    const tomorrow = new Date(Date.now() + 86_400_000);
+    expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 250)).toEqual({
+      created: 1,
+      retired: 0,
+      failed: 0,
+    });
+    expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual(["hob"]);
+
+    // A refusal by Meta is written down with Meta's words, and nothing is recorded as made.
+    await db.delete(metaAgentAds);
+    const refusing = {
+      ...meta,
+      createAd: async () => ({ ok: false as const, error: "Budget too low [100]" }),
+    };
+    expect(await ensureAgentAds(db, { meta: refusing, ...creator }, 100)).toMatchObject({
+      created: 0,
+      failed: 1,
+    });
+    expect(await db.select().from(metaAgentAds)).toEqual([]);
+    const refused = (await db.select().from(marketingActions)).find(
+      (a) => a.error === "Budget too low [100]",
+    );
+    expect(refused).toMatchObject({ kind: "meta_create", applied: false });
+    // No share, no ad.
+    expect(await ensureAgentAds(db, { meta, ...creator }, 50)).toEqual({ created: 0, retired: 0, failed: 0 });
+    // The daily round runs the same thing with Meta's share of the day, and a channel the
+    // agent can make ads for counts as running.
+    const round = await runMarketingDaily(db, { meta, google: provider, creator, force: true });
+    expect(round).toMatchObject({ ok: true, applied: true });
+    expect(round!.split!.google + round!.split!.meta).toBe(500);
+    expect(round!.split!.meta).toBeGreaterThanOrEqual(150);
+
+    await db.delete(marketingActions);
+    await db.delete(metaAgentAds);
+    await db.delete(metaAdEntities);
+    for (let i = 0; i < statsBefore.length; i += 2000)
+      await db.insert(adDailyStats).values(statsBefore.slice(i, i + 2000));
+    await updateSettings(db, {
+      metaManaged: false,
+      metaDailyCents: 0,
+      mode: "approve",
+      dailyBudgetCents: 1500,
+    });
     for (const c of campaignsBefore)
       await db
         .update(adCampaigns)

@@ -35,6 +35,36 @@ export type MetaInsight = {
 };
 
 export type MetaResult = { ok: true } | { ok: false; error: string };
+export type MetaCreated = { ok: true; id: string } | { ok: false; error: string };
+
+/** A new campaign: the budget sits on it and Meta spreads it over its ads. */
+export type NewCampaign = { name: string; dailyBudgetCents: number };
+/**
+ * A new ad set under a campaign: people in Latvia, optimised for the site's own "Lead" event
+ * (an e-mail left), Meta choosing the audience and the placements.
+ */
+export type NewAdSet = {
+  campaignId: string;
+  name: string;
+  pixelId: string;
+  /** Who the ad is for and who pays (the EU's Digital Services Act asks both on every ad set). */
+  advertiser: string;
+};
+/** A new single-image link ad from the page (and its Instagram account when given). */
+export type NewAd = {
+  adsetId: string;
+  name: string;
+  pageId: string;
+  instagramUserId?: string | null;
+  /** Where the ad leads, with its campaign tags already in the address. */
+  link: string;
+  message: string;
+  headline: string;
+  description: string;
+  imageHash: string;
+  /** "trilio.lv": the domain whose pixel counts the ad's results. */
+  domain: string;
+};
 
 export interface MetaAdsProvider {
   list(): Promise<{ ok: true; entities: MetaEntity[] } | { ok: false; error: string }>;
@@ -45,6 +75,11 @@ export interface MetaAdsProvider {
   ): Promise<{ ok: true; rows: MetaInsight[] } | { ok: false; error: string }>;
   setDailyBudget(id: string, cents: number): Promise<MetaResult>;
   setStatus(id: string, status: "ACTIVE" | "PAUSED"): Promise<MetaResult>;
+  /** Puts a picture into the ad account's library; the id is its hash. */
+  uploadImage(jpeg: Buffer): Promise<MetaCreated>;
+  createCampaign(input: NewCampaign): Promise<MetaCreated>;
+  createAdSet(input: NewAdSet): Promise<MetaCreated>;
+  createAd(input: NewAd): Promise<MetaCreated>;
 }
 
 export type MetaAdsConfig = { adAccountId: string; token: string; version: string };
@@ -133,8 +168,81 @@ export function metaAdsProvider(cfg: MetaAdsConfig, http: typeof fetch = fetch):
     }
   }
 
+  /** A create call on one of the account's edges: form fields, objects as JSON. */
+  async function create(edge: string, fields: Record<string, unknown>): Promise<MetaCreated> {
+    const form = new URLSearchParams();
+    for (const [k, v] of Object.entries(fields))
+      if (v !== undefined && v !== null) form.set(k, typeof v === "string" ? v : JSON.stringify(v));
+    try {
+      const res = await http(`${base}/act_${cfg.adAccountId}/${edge}`, {
+        method: "POST",
+        headers: { ...headers, "content-type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+        signal: AbortSignal.timeout(60_000),
+      });
+      const body = (await res.json().catch(() => null)) as Json | null;
+      if (!res.ok || !body) return { ok: false, error: metaError(body, res.status) };
+      if (edge === "adimages") {
+        const first = Object.values((body.images ?? {}) as Record<string, { hash?: string }>)[0];
+        return first?.hash
+          ? { ok: true, id: first.hash }
+          : { ok: false, error: "Meta returned no image hash" };
+      }
+      const id = text(body.id);
+      return id ? { ok: true, id } : { ok: false, error: metaError(body, res.status) };
+    } catch (err) {
+      return { ok: false, error: `Meta: ${(err as Error).message}`.slice(0, 400) };
+    }
+  }
+
   const account = `act_${cfg.adAccountId}`;
   return {
+    uploadImage: (jpeg) => create("adimages", { bytes: jpeg.toString("base64") }),
+    createCampaign: (c) =>
+      create("campaigns", {
+        name: c.name,
+        objective: "OUTCOME_LEADS",
+        status: "ACTIVE",
+        special_ad_categories: [],
+        buying_type: "AUCTION",
+        daily_budget: String(Math.round(c.dailyBudgetCents)),
+        bid_strategy: "LOWEST_COST_WITHOUT_CAP",
+      }),
+    createAdSet: (a) =>
+      create("adsets", {
+        name: a.name,
+        campaign_id: a.campaignId,
+        status: "ACTIVE",
+        billing_event: "IMPRESSIONS",
+        optimization_goal: "OFFSITE_CONVERSIONS",
+        destination_type: "WEBSITE",
+        promoted_object: { pixel_id: a.pixelId, custom_event_type: "LEAD" },
+        targeting: { geo_locations: { countries: ["LV"] }, targeting_automation: { advantage_audience: 1 } },
+        dsa_beneficiary: a.advertiser,
+        dsa_payor: a.advertiser,
+      }),
+    createAd: (a) =>
+      create("ads", {
+        name: a.name,
+        adset_id: a.adsetId,
+        status: "ACTIVE",
+        conversion_domain: a.domain,
+        creative: {
+          name: a.name,
+          object_story_spec: {
+            page_id: a.pageId,
+            ...(a.instagramUserId ? { instagram_user_id: a.instagramUserId } : {}),
+            link_data: {
+              link: a.link,
+              message: a.message,
+              name: a.headline,
+              description: a.description,
+              image_hash: a.imageHash,
+              call_to_action: { type: "LEARN_MORE", value: { link: a.link } },
+            },
+          },
+        },
+      }),
     async list() {
       const common = "id,name,status,effective_status";
       const [campaigns, adsets, ads] = await Promise.all([
@@ -242,8 +350,62 @@ export function mockMetaAds(
     },
   ];
   const calls: { op: string; id: string; value: string | number }[] = [];
+  let next = 9400000000;
+  const add = (e: Omit<MetaEntity, "id">, op: string): MetaCreated => {
+    const id = String(++next);
+    entities.push({ ...e, id });
+    calls.push({ op, id, value: e.name });
+    return { ok: true, id };
+  };
   return {
     calls,
+    async uploadImage(jpeg) {
+      return jpeg.length ? { ok: true, id: `hash${jpeg.length}` } : { ok: false, error: "empty image" };
+    },
+    async createCampaign(c) {
+      return add(
+        {
+          level: "campaign",
+          name: c.name,
+          campaignId: null,
+          adsetId: null,
+          status: "ACTIVE",
+          effectiveStatus: "ACTIVE",
+          dailyBudgetCents: c.dailyBudgetCents,
+        },
+        "campaign",
+      );
+    },
+    async createAdSet(a) {
+      return add(
+        {
+          level: "adset",
+          name: a.name,
+          campaignId: a.campaignId,
+          adsetId: null,
+          status: "ACTIVE",
+          effectiveStatus: "ACTIVE",
+          dailyBudgetCents: null,
+        },
+        "adset",
+      );
+    },
+    async createAd(a) {
+      const set = entities.find((e) => e.id === a.adsetId);
+      if (!set) return { ok: false, error: "unknown ad set" };
+      return add(
+        {
+          level: "ad",
+          name: a.name,
+          campaignId: set.campaignId,
+          adsetId: a.adsetId,
+          status: "ACTIVE",
+          effectiveStatus: "ACTIVE",
+          dailyBudgetCents: null,
+        },
+        "ad",
+      );
+    },
     async list() {
       return { ok: true, entities: entities.map((e) => ({ ...e })) };
     },
