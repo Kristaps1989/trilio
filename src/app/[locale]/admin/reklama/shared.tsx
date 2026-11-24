@@ -5,6 +5,7 @@ import { FilterLinks } from "../ui";
 
 const TABS = [
   ["overview", "/admin/reklama"],
+  ["channels", "/admin/reklama/kanali"],
   ["campaigns", "/admin/reklama/kampanas"],
   ["proposals", "/admin/reklama/priekslikumi"],
   ["keywords", "/admin/reklama/atslegvardi"],

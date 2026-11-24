@@ -242,3 +242,45 @@ and vacuums are where visitors tap the request.
 Not changed: the review still runs weekly by default (one review costs about as much as a
 tenth of a 5 € day), ad text still passes the honesty lint, and geography, language, conversion
 settings and the total budget stay out of the action set.
+
+## One agent for every channel (24 Nov 2026)
+
+Owner: the agent is to work on all of Trilio's channels, not only Google. Decisions the owner
+made the same day: **one daily budget (5 €) for Google and Meta together**, the agent **may
+change Meta ads within limits**, and it **applies SEO improvements on its own**. Built in parts.
+
+### Part 1 (built): one budget, and Meta ads
+
+Switched on with "Viens dienas budžets Google un Meta kopā" in Admin → Reklāma
+(`ad_settings.meta_managed`); the daily budget there is then the total for both. Each morning
+from 06:00 Riga time, before the Google optimiser, the manager
+(`services/marketing/manager.ts`, rules in `domain/marketing/allocate.ts`):
+
+1. **Reads Meta's account** (`services/marketing/meta-ads.ts`, the Marketing API with the page's
+   system-user token and `META_AD_ACCOUNT_ID`): campaigns, ad sets, ads, and 28 days of spend,
+   impressions and link clicks per ad and day.
+2. **Splits the day's total** by e-mails per euro over 28 days. A channel with nothing switched
+   on gets nothing; two running ones each keep at least 30 % and 1 €; the split moves at most a
+   fifth of the total a day. A channel is assumed to bring one e-mail per 10 € until it shows
+   otherwise, so a few euro without an e-mail do not write it off. Google's part is what its
+   campaigns, guardrails and price ceiling are measured against (`googleShareCents`).
+3. **Spreads Meta's share** over the campaigns or ad sets that carry a budget, at least 1 € each;
+   what the share cannot feed is paused, the best e-mails per euro kept.
+4. **Pauses a Meta ad** that spent 5 € in 14 days without an e-mail, one per ad set a day, never
+   the last running ad of its ad set.
+
+In the owner's "Pārvaldīt pašam" mode the steps are carried out; in any other mode they are
+written down as suggestions and nothing changes. Every step is on Reklāma → Kanāli with its
+reason, next to both channels' spend, e-mails and cost per e-mail.
+
+E-mails are credited from Trilio's own data: a saved product or price request by a visitor whose
+landing that day carried `utm_source=meta`, a paid `utm_medium`, `utm_campaign={{campaign.name}}`
+and `utm_content={{ad.name}}` (the page shows the line to paste into Ads Manager;
+`ad_landings.utm_content` is new). **An ad is judged only when its campaign's visits carry the
+ad's name**: without the tags every ad would look like it brings nothing, so none is paused.
+
+Not known until it runs on the real account: Meta's smallest daily budget for the account (a
+refusal is shown on the page with Meta's words), and whether the token has `ads_management`.
+
+### Part 2 (next): SEO applied by the agent
+### Part 3 (next): one weekly report for every channel

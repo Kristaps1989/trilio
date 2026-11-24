@@ -1,5 +1,6 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
+import { googleShareCents } from "@/domain/ads/budget";
 import { adCampaigns, adDailyStats } from "@/db/schema";
 import { rigaDay } from "@/domain/analytics/visits";
 import { recommend, type CampaignFacts, type Recommendation } from "@/domain/ads/priority";
@@ -74,9 +75,9 @@ export async function campaignPriorities(db: Db, now = new Date()): Promise<Prio
       };
     });
   return {
-    dailyBudgetCents: settings.dailyBudgetCents,
+    dailyBudgetCents: googleShareCents(settings),
     conversions30d,
-    recommendations: recommend(facts, { dailyBudgetCents: settings.dailyBudgetCents, conversions30d }),
+    recommendations: recommend(facts, { dailyBudgetCents: googleShareCents(settings), conversions30d }),
   };
 }
 

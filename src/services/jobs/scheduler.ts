@@ -3,6 +3,7 @@ import { eprelClientFromEnv } from "@/services/eprel/client";
 import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
 import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
+import { runMarketingJob } from "@/services/marketing/job";
 import { runSocialJob } from "@/services/social/job";
 import { runAllJobs } from "./all";
 import { eventful, runHousekeeping } from "./housekeeping";
@@ -38,6 +39,12 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
     // Visit counts and offers run every tick, also when no shop is due.
     const housekeeping = await runHousekeeping(db);
     if (eventful(housekeeping)) log.log("housekeeping:", JSON.stringify(housekeeping));
+    // One budget for Google and Meta: the day's split, before the optimiser reads its part.
+    const marketing = await runMarketingJob(db).catch((err) => {
+      log.error("marketing manager:", err);
+      return null;
+    });
+    if (marketing) log.log("marketing manager:", JSON.stringify(marketing));
     // The ads optimiser, once a day after 06:30 Riga time (docs/GROWTH_PLAN.md, Phase 2).
     const ads = await runAdsJob(db).catch((err) => {
       log.error("ads optimiser:", err);

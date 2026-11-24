@@ -8,6 +8,8 @@ export type AdParams = {
   utmMedium: string | null;
   utmCampaign: string | null;
   utmTerm: string | null;
+  /** The ad's name (Meta's utm_content={{ad.name}}); absent on rows from before it was kept. */
+  utmContent?: string | null;
 };
 
 const GCLID = /^[A-Za-z0-9_-]{8,200}$/;
@@ -30,6 +32,7 @@ export function adParams(input: Record<string, unknown>): AdParams | null {
     utmMedium: tag(input.utm_medium),
     utmCampaign: tag(input.utm_campaign),
     utmTerm: tag(input.utm_term),
+    utmContent: tag(input.utm_content),
   };
   // A click from Facebook or Instagram carries fbclid even without tags (an organic share or
   // post): kept as a social landing, so TV measurement can tell it apart (docs/TV_ANALYTICS_PLAN.md §8).
@@ -41,4 +44,12 @@ export function adParams(input: Record<string, unknown>): AdParams | null {
 }
 
 /** The query keys the page sends with its first view. */
-export const AD_KEYS = ["gclid", "fbclid", "utm_source", "utm_medium", "utm_campaign", "utm_term"] as const;
+export const AD_KEYS = [
+  "gclid",
+  "fbclid",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+] as const;

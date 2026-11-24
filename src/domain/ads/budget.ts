@@ -66,6 +66,18 @@ export function splitBudget(total: number, weights: Record<string, number>): Rec
   return out;
 }
 
+/**
+ * Google's part of the owner's daily budget: all of it, or what is left after Meta's share
+ * when one budget serves both (docs/GROWTH_PLAN.md, "One agent for every channel").
+ */
+export function googleShareCents(s: {
+  dailyBudgetCents: number;
+  metaManaged?: boolean;
+  metaDailyCents?: number;
+}): number {
+  return s.metaManaged ? Math.max(0, s.dailyBudgetCents - (s.metaDailyCents ?? 0)) : s.dailyBudgetCents;
+}
+
 export type Performance = {
   /** Spend over the last 7 days, in cents. */
   cost7dCents: number;

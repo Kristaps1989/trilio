@@ -13,7 +13,13 @@ import {
   type AdProposal,
 } from "@/db/schema";
 import { rigaDay } from "@/domain/analytics/visits";
-import { costPerConversion, cpcCeilingFor, SMALL_BUDGET_CENTS, starvedCap } from "@/domain/ads/budget";
+import {
+  costPerConversion,
+  cpcCeilingFor,
+  googleShareCents,
+  SMALL_BUDGET_CENTS,
+  starvedCap,
+} from "@/domain/ads/budget";
 import {
   ACTIONS,
   appliesItself,
@@ -213,6 +219,7 @@ const eur = (micros: number) => Math.round(micros / 10_000) / 100;
 /** The account as Claude reads it: compact, ids included, numbers rounded. */
 export async function optimiserContext(db: Db, now = new Date()) {
   const settings = await getSettings(db);
+  const googleBudget = googleShareCents(settings);
   const d7 = dayOffset(now, 7);
   const d28 = dayOffset(now, 28);
   const yesterday = dayOffset(now, 1);
@@ -282,14 +289,15 @@ export async function optimiserContext(db: Db, now = new Date()) {
   return {
     today: rigaDay(now),
     settings: {
-      dailyBudgetEur: settings.dailyBudgetCents / 100,
+      // Google's part of the owner's budget (the rest is Meta's when one budget serves both).
+      dailyBudgetEur: googleBudget / 100,
       floorEur: settings.floorCents / 100,
       targetCostPerConversionEur: settings.targetCostCents === null ? null : settings.targetCostCents / 100,
       weights: { shopClick: settings.clickWeight, save: settings.saveWeight },
       goal: "e-mails left (saves) at the lowest cost per e-mail",
-      smallBudget: settings.dailyBudgetCents <= SMALL_BUDGET_CENTS,
-      maxBudgetMoveShare: settings.dailyBudgetCents <= SMALL_BUDGET_CENTS ? 0.5 : 0.2,
-      cpcCeilingCents: cpcCeilingFor(settings.dailyBudgetCents),
+      smallBudget: googleBudget <= SMALL_BUDGET_CENTS,
+      maxBudgetMoveShare: googleBudget <= SMALL_BUDGET_CENTS ? 0.5 : 0.2,
+      cpcCeilingCents: cpcCeilingFor(googleBudget),
     },
     last7Days: {
       costEur: perf.cost7dCents / 100,
@@ -413,7 +421,7 @@ export async function raiseStarvedCaps(db: Db, provider: AdsProvider, runId: str
       .from(adGroups)
       .where(and(eq(adGroups.campaignId, c.id), sql`${adGroups.status} <> 'removed'`));
     for (const g of groups) {
-      const next = starvedCap({ impressions7d, capCents: g.cpcCapCents }, settings.dailyBudgetCents);
+      const next = starvedCap({ impressions7d, capCents: g.cpcCapCents }, googleShareCents(settings));
       if (next === null) continue;
       const [recent] = await db
         .select({ id: adProposals.id })

@@ -23,6 +23,7 @@ import {
 import { applyRecommendation } from "@/services/ads/priorities";
 import { approveCreative, createCreatives, createPmax, writeCopy } from "@/services/ads/creatives";
 import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
+import { runMarketingJob } from "@/services/marketing/job";
 import { decideProposal } from "@/services/ads/optimiser";
 import { createCaller } from "@/services/llm/client";
 import { markSeoDone } from "@/services/seo/search-console";
@@ -81,6 +82,7 @@ export async function saveAdSettingsAction(formData: FormData): Promise<void> {
       mode: z.enum(["observe", "approve", "auto", "manage"]),
       reviewCadence: z.enum(["weekly", "daily"]).default("weekly"),
       reviewWeekday: z.coerce.number().int().min(1).max(7).default(1),
+      metaManaged: z.literal("on").optional(),
     })
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) back("/admin/reklama", { err: "settings" });
@@ -94,6 +96,9 @@ export async function saveAdSettingsAction(formData: FormData): Promise<void> {
     mode: v.mode,
     reviewCadence: v.reviewCadence,
     reviewWeekday: v.reviewWeekday,
+    metaManaged: v.metaManaged === "on",
+    // Switched off: Google has the whole budget again.
+    ...(v.metaManaged === "on" ? {} : { metaDailyCents: 0 }),
   });
   await log(a, "ads.settings", "settings", { ...v });
   // The owner's new number reaches the campaigns now, not tomorrow.
@@ -189,6 +194,16 @@ export async function setCampaignStatusAction(formData: FormData): Promise<void>
   const n = await setCampaignsStatus(db, provider(), status, campaignId);
   await log(a, `ads.campaign.${status}`, campaignId ?? "all", { count: n });
   back(campaignId ? "/admin/reklama/kampanas" : "/admin/reklama", { enabled: n });
+}
+
+/** "Pārrēķināt tagad" on Kanāli: the day's round of the marketing manager, now. */
+export async function runMarketingAction(): Promise<void> {
+  const a = await admin();
+  const r = await runMarketingJob(db, { force: true });
+  await log(a, "marketing.run", "manager", r ?? {});
+  if (!r) back("/admin/reklama/kanali", { err: "off" });
+  if (!r!.ok) back("/admin/reklama/kanali", { err: `meta:${r!.error ?? ""}`.slice(0, 200) });
+  back("/admin/reklama/kanali", { ok: r!.applied ? "applied" : "suggested" });
 }
 
 export async function runOptimiserAction(): Promise<void> {

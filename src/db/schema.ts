@@ -943,6 +943,8 @@ export const adLandings = pgTable(
     utmMedium: text("utm_medium"),
     utmCampaign: text("utm_campaign"),
     utmTerm: text("utm_term"),
+    /** The ad's own name on Meta (utm_content={{ad.name}}): which ad of a campaign brought the visit. */
+    utmContent: text("utm_content"),
     path: text("path").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1201,6 +1203,13 @@ export const adSettings = pgTable("ad_settings", {
   /** Proposal actions applied without asking in "auto" mode. */
   autoActions: jsonb("auto_actions").$type<string[]>().notNull().default(["add_negative", "pause_keyword"]),
   paused: boolean("paused").notNull().default(false),
+  /**
+   * One budget for Google and Meta together (owner, 24 Nov 2026): the daily budget above is then
+   * the total for both, and code splits it by the cost per e-mail (services/marketing/manager.ts).
+   */
+  metaManaged: boolean("meta_managed").notNull().default(false),
+  /** Meta's share of the daily budget today; Google has the rest. 0 while Meta is not managed. */
+  metaDailyCents: integer("meta_daily_cents").notNull().default(0),
   /** Weekly by default (owner, 24 Oct 2026): at 15 € a day one day's data is mostly noise. */
   reviewCadence: adReviewCadenceEnum("review_cadence").notNull().default("weekly"),
   /** ISO weekday of the weekly review: 1 = Monday … 7 = Sunday. */
@@ -1430,6 +1439,65 @@ export const seoQueries = pgTable(
   (t) => [primaryKey({ columns: [t.day, t.query, t.page] })],
 );
 
+/**
+ * Meta's campaigns, ad sets and ads as the Marketing API listed them last (docs/GROWTH_PLAN.md,
+ * "One agent for every channel"). Ids are Meta's. A budget sits on the campaign or on the ad
+ * set, never both; `dailyBudgetCents` is null where it does not sit.
+ */
+export const metaAdEntities = pgTable("meta_ad_entities", {
+  id: text("id").primaryKey(),
+  /** "campaign", "adset" or "ad". */
+  level: text("level").notNull(),
+  name: text("name").notNull(),
+  campaignId: text("campaign_id"),
+  adsetId: text("adset_id"),
+  /** What was set: ACTIVE or PAUSED. */
+  status: text("status").notNull(),
+  /** What runs: ACTIVE, PAUSED, CAMPAIGN_PAUSED, ADSET_PAUSED, DISAPPROVED, … */
+  effectiveStatus: text("effective_status").notNull(),
+  dailyBudgetCents: integer("daily_budget_cents"),
+  seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Meta's own numbers per ad and day. Kept like Google's daily numbers. */
+export const metaAdDaily = pgTable(
+  "meta_ad_daily",
+  {
+    day: date("day").notNull(),
+    adId: text("ad_id").notNull(),
+    campaignId: text("campaign_id").notNull(),
+    spendCents: integer("spend_cents").notNull().default(0),
+    impressions: integer("impressions").notNull().default(0),
+    linkClicks: integer("link_clicks").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.adId] })],
+);
+
+/**
+ * What the marketing manager did or would do, one row per step: the day's split between the
+ * channels, a Meta budget set, a Meta ad paused. `applied` false: a suggestion (the owner's
+ * mode is not "manage") or a call Meta refused (`error`).
+ */
+export const marketingActions = pgTable(
+  "marketing_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    day: date("day").notNull(),
+    /** "split", "meta_budget", "meta_pause". */
+    kind: text("kind").notNull(),
+    /** Meta's id of the campaign, ad set or ad; null for the split. */
+    entityId: text("entity_id"),
+    detail: jsonb("detail").$type<Record<string, unknown>>().notNull(),
+    reason: text("reason").notNull(),
+    applied: boolean("applied").notNull().default(false),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("marketing_actions_day_idx").on(t.day)],
+);
+
+export type MetaAdEntity = typeof metaAdEntities.$inferSelect;
+export type MarketingAction = typeof marketingActions.$inferSelect;
 export type AdSettings = typeof adSettings.$inferSelect;
 export type AdCampaign = typeof adCampaigns.$inferSelect;
 export type AdGroup = typeof adGroups.$inferSelect;

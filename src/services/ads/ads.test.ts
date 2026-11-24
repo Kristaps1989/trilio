@@ -15,8 +15,15 @@ import {
   adProposals,
   adSearchTerms,
   adSettings,
+  marketingActions,
+  metaAdDaily,
+  metaAdEntities,
+  savedItems,
   seoQueries,
+  users,
 } from "@/db/schema";
+import { mockMetaAds } from "@/services/marketing/meta-ads";
+import { channelPerformance, metaLeads, runMarketingDaily } from "@/services/marketing/manager";
 import { adParams } from "@/domain/growth/attribution";
 import type { StructuredCaller } from "@/services/llm/client";
 import { adLandingFor, purgeAdLandings, recordAdLanding } from "@/services/growth/landings";
@@ -75,8 +82,12 @@ async function wipe(db: Db) {
     adCampaigns,
     adSettings,
     seoQueries,
+    marketingActions,
+    metaAdDaily,
+    metaAdEntities,
   ])
     await db.delete(t);
+  await db.delete(users).where(sql`${users.email} like 'marketing-test-%'`);
   await db.delete(adLandings).where(sql`${adLandings.path} like '/e2e-ads%'`);
 }
 
@@ -522,6 +533,147 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     await db.delete(adProposals);
     await updateSettings(db, { mode: "approve", dailyBudgetCents: 1500 });
     await setCampaignsStatus(db, provider, "paused");
+  });
+
+  it("one budget for Google and Meta: split by e-mails per euro, Meta's budget set, a spent ad paused", async () => {
+    const today = dayOffset(new Date(), 0);
+    const day = (n: number) => dayOffset(new Date(), n);
+    await db.delete(adLandings).where(sql`${adLandings.path} like '/e2e-ads%'`);
+    await updateSettings(db, {
+      dailyBudgetCents: 500,
+      mode: "approve",
+      metaManaged: true,
+      metaDailyCents: 0,
+    });
+    const [google] = await db
+      .select()
+      .from(adCampaigns)
+      .where(sql`${adCampaigns.kind} = 'search'`)
+      .limit(1);
+    await setCampaignsStatus(db, provider, "enabled", google!.id);
+    // What the tests after this one rely on is put back at the end.
+    const statsBefore = await db.select().from(adDailyStats);
+    const campaignsBefore = await db.select().from(adCampaigns);
+    // Google spent 20 € in the month without an e-mail.
+    await db.delete(adDailyStats);
+    await db.insert(adDailyStats).values({
+      day: day(3),
+      level: "campaign",
+      entityId: google!.id,
+      costMicros: 20_000_000,
+      impressions: 900,
+    });
+    // Meta: 12 € on two ads; the first ad's visitors left two e-mails, the second none.
+    const meta = mockMetaAds({
+      insights: [
+        {
+          day: day(2),
+          adId: "9300000001",
+          campaignId: "9100000001",
+          spendCents: 600,
+          impressions: 4000,
+          linkClicks: 30,
+        },
+        {
+          day: day(2),
+          adId: "9300000002",
+          campaignId: "9100000001",
+          spendCents: 600,
+          impressions: 4000,
+          linkClicks: 12,
+        },
+      ],
+    });
+    const [buyer] = await db
+      .insert(users)
+      .values({ email: `marketing-test-${Date.now()}@example.invalid` })
+      .returning();
+    const visit = async (n: number, ad: string) => {
+      const who = { ip: `203.0.113.${n}`, userAgent: "Mozilla/5.0 marketing" };
+      await recordAdLanding(db, {
+        ...who,
+        path: "/e2e-ads/meta-lead",
+        params: adParams({
+          utm_source: "meta",
+          utm_medium: "paid_social",
+          utm_campaign: "Trilio Leads",
+          utm_content: ad,
+        })!,
+      });
+      return (await adLandingFor(db, who))!;
+    };
+    for (const n of [21, 22])
+      await db.insert(savedItems).values({
+        userId: buyer!.id,
+        kind: "product",
+        key: `marketing-test-${n}`,
+        subcategoryId: "fridge",
+        adLandingId: await visit(n, "A1 trīs varianti"),
+      });
+    for (const n of [23, 24, 25, 26]) await visit(n, "A2 pajautā cenu");
+    expect(await metaLeads(db, day(28), today)).toEqual([
+      { campaign: "trilio leads", ad: "a1 trīs varianti", leads: 2 },
+    ]);
+
+    // Not in "manage": the split is written down as a suggestion, nothing is changed.
+    const suggested = await runMarketingDaily(db, { meta, google: provider });
+    expect(suggested).toMatchObject({
+      ok: true,
+      applied: false,
+      split: { google: 150, meta: 350 },
+      budgets: 0,
+    });
+    expect(meta.calls).toEqual([]);
+    expect((await getSettings(db)).metaDailyCents).toBe(0);
+    expect(await runMarketingDaily(db, { meta, google: provider })).toBeNull();
+    const perf = await channelPerformance(db);
+    expect(perf.google).toMatchObject({ active: true, spendCents: 2000, leads: 0, costPerLeadCents: null });
+    expect(perf.meta).toMatchObject({ active: true, spendCents: 1200, leads: 2, costPerLeadCents: 600 });
+
+    // "Pārvaldīt pašam": the split is applied, Meta's campaign budget set, the spent ad paused.
+    await updateSettings(db, { mode: "manage" });
+    const done = await runMarketingDaily(db, { meta, google: provider, force: true });
+    expect(done).toMatchObject({ ok: true, applied: true, budgets: 1, paused: 1 });
+    expect(done!.split!.google + done!.split!.meta).toBe(500);
+    expect(done!.split!.meta).toBeGreaterThan(done!.split!.google);
+    const s = await getSettings(db);
+    expect(s.metaDailyCents).toBe(done!.split!.meta);
+    expect(meta.calls).toEqual([
+      { op: "budget", id: "9100000001", value: done!.split!.meta },
+      { op: "status", id: "9300000002", value: "PAUSED" },
+    ]);
+    // Google's campaigns now share what Meta's part leaves.
+    const running = (await db.select().from(adCampaigns)).filter((c) => c.status === "enabled");
+    expect(running.reduce((a, c) => a + c.budgetCents, 0)).toBe(done!.split!.google);
+    const steps = await db.select().from(marketingActions);
+    expect(steps.map((a) => a.kind).sort()).toEqual(["meta_budget", "meta_pause", "split"]);
+    expect(steps.find((a) => a.kind === "meta_pause")!.reason).toContain("neatnesa nevienu e-pastu");
+
+    // A Meta account that cannot be read: said so, nothing changed.
+    const broken = { ...meta, list: async () => ({ ok: false as const, error: "Permissions error [200]" }) };
+    expect(await runMarketingDaily(db, { meta: broken, google: provider, force: true })).toMatchObject({
+      ok: false,
+      error: "Permissions error [200]",
+    });
+    // Without Meta, or with the one budget switched off, the round does not run.
+    expect(await runMarketingDaily(db, { meta: null, google: provider, force: true })).toBeNull();
+    await updateSettings(db, {
+      metaManaged: false,
+      metaDailyCents: 0,
+      mode: "approve",
+      dailyBudgetCents: 1500,
+    });
+    expect(await runMarketingDaily(db, { meta, google: provider, force: true })).toBeNull();
+    await db.delete(savedItems).where(sql`${savedItems.userId} = ${buyer!.id}`);
+    await db.delete(adLandings).where(sql`${adLandings.path} = '/e2e-ads/meta-lead'`);
+    await db.delete(adDailyStats);
+    for (let i = 0; i < statsBefore.length; i += 2000)
+      await db.insert(adDailyStats).values(statsBefore.slice(i, i + 2000));
+    for (const c of campaignsBefore)
+      await db
+        .update(adCampaigns)
+        .set({ status: c.status, budgetCents: c.budgetCents })
+        .where(sql`${adCampaigns.id} = ${c.id}`);
   });
 
   it("applies the recommendation: suggested budgets, the recommended campaigns on, the rest untouched", async () => {

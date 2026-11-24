@@ -16,7 +16,21 @@ describe("adParams", () => {
       utmMedium: "cpc",
       utmCampaign: "dzesēšana",
       utmTerm: null,
+      utmContent: null,
     });
+  });
+  it("keeps the ad's name of a Meta ad, so each ad can be judged on its own", () => {
+    expect(
+      adParams({
+        utm_source: "meta",
+        utm_medium: "paid_social",
+        utm_campaign: "Trilio Leads",
+        utm_content: "A2 pajautā cenu",
+      }),
+    ).toMatchObject({ utmCampaign: "trilio leads", utmContent: "a2 pajautā cenu" });
+    expect(
+      adParams({ utm_source: "meta", utm_medium: "paid_social", utm_content: "<b>" })?.utmContent,
+    ).toBeNull();
   });
   it("ignores visits that did not come from an ad, and junk values", () => {
     expect(adParams({})).toBeNull();
