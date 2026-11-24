@@ -9,6 +9,8 @@ import { OFFER_DISCOUNT_UP_TO_PCT } from "@/domain/offers/discount";
 import { LandingPage } from "../LandingPage";
 import { activeLocale } from "@/i18n/active";
 import { initLocale } from "@/i18n/init";
+import { db } from "@/db";
+import { seoOverrideFor } from "@/services/seo/agent";
 
 export const revalidate = 3600;
 
@@ -31,13 +33,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations("landing");
   const category = sub.label.toLowerCase();
   const gender = categoryGender(sub.label);
+  // The SEO agent's own text for this page, when it has one (Latvian pages; docs/GROWTH_PLAN.md).
+  const own =
+    activeLocale() === "lv" ? await seoOverrideFor(db, `/kategorija/${sub.id}`).catch(() => null) : null;
   return pageMetadata(
     `/kategorija/${sub.id}`,
-    t("metaTitle", { category, gender, year: new Date().getFullYear() }),
+    own?.title ?? t("metaTitle", { category, gender, year: new Date().getFullYear() }),
     // Where Trilio sources, the description names the request and its "up to" discount (docs/PRICE_NOTIFY_PLAN.md §8.7).
-    trilioSources(sub.id)
-      ? t("descriptionOffers", { category, gender, pct: OFFER_DISCOUNT_UP_TO_PCT })
-      : t("description", { category, gender }),
+    own?.description ??
+      (trilioSources(sub.id)
+        ? t("descriptionOffers", { category, gender, pct: OFFER_DISCOUNT_UP_TO_PCT })
+        : t("description", { category, gender })),
   );
 }
 

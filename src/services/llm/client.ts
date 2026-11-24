@@ -21,7 +21,9 @@ export type LlmPurpose =
   | "ads_terms"
   | "ads_copy"
   /** The lead sentence of a Facebook and Instagram post (docs/SOCIAL_PLAN.md). */
-  | "social_copy";
+  | "social_copy"
+  /** The SEO agent's title and description for a category page (docs/GROWTH_PLAN.md). */
+  | "seo_copy";
 
 /** Small, fast and cheap: reading spec tables and routing short text needs no more (LLM_MODEL overrides). */
 export const DEFAULT_MODEL = "claude-haiku-5-5";

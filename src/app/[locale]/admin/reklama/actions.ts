@@ -24,6 +24,8 @@ import { applyRecommendation } from "@/services/ads/priorities";
 import { approveCreative, createCreatives, createPmax, writeCopy } from "@/services/ads/creatives";
 import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { runMarketingJob } from "@/services/marketing/job";
+import { decideSeoOverride } from "@/services/seo/agent";
+import { runSeoJob } from "@/services/seo/job";
 import { decideProposal } from "@/services/ads/optimiser";
 import { createCaller } from "@/services/llm/client";
 import { markSeoDone } from "@/services/seo/search-console";
@@ -344,6 +346,32 @@ export async function seoDoneAction(formData: FormData): Promise<void> {
   await markSeoDone(db, query, page);
   await log(a, "seo.done", query, { page });
   back("/admin/reklama/seo", { ok: "done" });
+}
+
+/** "Palaist SEO aģentu tagad": the weekly round now. */
+export async function runSeoAgentAction(): Promise<void> {
+  const a = await admin();
+  const r = await runSeoJob(db, { force: true });
+  await log(a, "seo.run", "agent", r ?? {});
+  back(
+    "/admin/reklama/seo",
+    r ? { ran: `${r.written}/${r.applied}/${r.refused}/${r.kept}/${r.reverted}` } : { err: "off" },
+  );
+}
+
+/** The owner's word on one of the SEO agent's texts: approve, refuse, or take back. */
+export async function decideSeoAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const id = z.string().uuid().parse(formData.get("id"));
+  const decision = z.enum(["approve", "reject", "revert"]).parse(formData.get("decision"));
+  const ok = await decideSeoOverride(db, id, decision);
+  if (ok) {
+    await log(a, `seo.${decision}`, id, {});
+    // The page's cached title is dropped, so the change shows at the next request.
+    revalidatePath("/[locale]/kategorija/[sub]", "page");
+    revalidatePath("/[locale]/kategorija/[sub]/[budget]", "page");
+  }
+  back("/admin/reklama/seo", ok ? { ok: "done" } : { err: "decision" });
 }
 
 /** Reklāma → TV: a campaign measured by Trilio's own tracker and short link. */

@@ -273,6 +273,8 @@ test("creatives: drafts in the brand, approved ones are uploaded; memo and SEO",
 
   await page.getByRole("link", { name: "SEO" }).click();
   await expect(page.locator("[data-seo-query]").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "SEO aģenta izmaiņas" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Palaist SEO aģentu tagad" })).toBeVisible();
   await expectNoAxeViolations(page);
 
   // Kanāli: Google and Meta side by side; until one budget serves both, nothing is split.
