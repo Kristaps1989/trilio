@@ -10,8 +10,19 @@ describe("company details", () => {
       vatNo: "",
       address: "",
       email: "info@trilio.lv",
+      iban: "",
+      bank: "",
+      swift: "",
     });
     expect(companyFromEnv({ COMPANY_EMAIL: "hello@trilio.lv" }).email).toBe("hello@trilio.lv");
+    // The account for bank transfers, however it was typed.
+    expect(
+      companyFromEnv({
+        COMPANY_IBAN: " lv80 bank 0000 4351 9500 1 ",
+        COMPANY_BANK: " Banka ",
+        COMPANY_SWIFT: "banklv22",
+      }),
+    ).toMatchObject({ iban: "LV80BANK0000435195001", bank: "Banka", swift: "BANKLV22" });
   });
 
   it("fills placeholders and marks missing values", () => {

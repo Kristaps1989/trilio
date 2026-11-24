@@ -1186,7 +1186,7 @@
         {
           "h": "Disputes",
           "p": [
-            "If there is a problem, first write to {email}, and we'll answer within one working day. A private person can also turn to the Consumer Rights Protection Centre (www.ptac.gov.lv) or the EU dispute resolution platform. Latvian law applies to the contract."
+            "If there is a problem, first write to {email}, and we'll answer within one working day. A private person can also turn to the Consumer Rights Protection Centre (www.ptac.gov.lv) and the Consumer Dispute Resolution Commission. Latvian law applies to the contract."
           ]
         }
       ]
@@ -1343,7 +1343,14 @@
     "requestReason": "We're sending this proposal because on {date} you asked trilio.lv for a lower price for this product. If you didn't, please ignore this e-mail: we won't write again.",
     "follow": "Follow the price",
     "followLine": "Would you like us to follow this product's price too and write when it drops in the shops? Confirm the address: {url}",
-    "followAsk": "Would you like us to follow this product's price too and write when it drops in the shops?"
+    "followAsk": "Would you like us to follow this product's price too and write when it drops in the shops?",
+    "prepaySubject": "Prepayment invoice {invoice} · order {number}",
+    "prepayBody": "Thank you for your order! Prepayment invoice {invoice} for {product}: {amount}. Pay by {date}.",
+    "prepayOnline": "Pay online by card or bank link: {url}",
+    "prepayTransfer": "By bank transfer: recipient {company}, account {iban}{bank}, amount {amount}, payment reference “Priekšapmaksas rēķins {invoice}”.",
+    "prepayAfter": "When the payment arrives, we will send the invoice with the guarantee information and deliver the product free of charge.",
+    "prepayView": "Prepayment invoice: {url}",
+    "paidInvoice": "Invoice {invoice}: {url}"
   },
   "answerEmail": {
     "tagline": "We compare prices in partner shops",
@@ -1548,7 +1555,11 @@
     "withdrawTitle": "Withdraw from the purchase",
     "withdrawBody": "You can withdraw without a reason. The return within Latvia is free: we'll contact you about a courier within one working day. We'll refund the money within 14 days at the latest.",
     "withdraw": "Withdraw from the purchase",
-    "timeline": "History"
+    "timeline": "History",
+    "prepayment": "Prepayment invoice {number}",
+    "prepaymentSent": "We sent the prepayment invoice to your e-mail. You can pay online or by bank transfer.",
+    "prepaymentSentTransfer": "We sent the prepayment invoice to your e-mail. Pay it by bank transfer.",
+    "payFailed": "The payment could not be started. Try again or pay by bank transfer."
   },
   "feedback": {
     "kicker": "Trilio",
@@ -1594,7 +1605,64 @@
     "noVat": "VAT not applicable (the seller is not VAT-registered).",
     "paid": "Paid by card or bank link.",
     "refunded": "Amount refunded to the buyer.",
-    "deliveryLine": "Delivery in Latvia"
+    "deliveryLine": "Delivery in Latvia",
+    "prepaymentTitle": "Prepayment invoice",
+    "due": "Pay by: {date}",
+    "basis": "Basis: prepayment invoice {number}",
+    "creditBasis": "Basis: invoice {number}",
+    "paidOn": "Paid on {date}, {method}.",
+    "methodOnline": "online (payment card or bank link)",
+    "methodTransfer": "by bank transfer",
+    "howToPay": "How to pay",
+    "payOnline": "Online by card or bank link. The payment is confirmed at once.",
+    "payOnlineButton": "Pay {amount}",
+    "payTransfer": "By bank transfer",
+    "recipient": "Recipient",
+    "iban": "Account (IBAN)",
+    "bank": "Bank",
+    "swift": "SWIFT",
+    "amount": "Amount",
+    "purpose": "Payment reference",
+    "purposeValue": "Priekšapmaksas rēķins {number}",
+    "transferNote": "A transfer between banks can take up to one working day. When the money arrives, we will send the invoice and start the delivery.",
+    "prepaymentNote": "This is a prepayment invoice, not a tax invoice. After payment you will receive the invoice with the guarantee information. We deliver after the payment has arrived.",
+    "prepaymentPaid": "This prepayment invoice has been paid.",
+    "prepaymentExpired": "The payment deadline has passed. If you still need the product, write to {email}.",
+    "electronic": "The invoice was prepared electronically and is valid without a signature.",
+    "netPrice": "Excl. VAT",
+    "sumVat": "Incl. VAT"
+  },
+  "guarantee": {
+    "title": "Guarantee and your rights",
+    "titleCompany": "Guarantee terms",
+    "intro": "Product: {product}. Order {order}, invoice {invoice}. Seller: {seller}. Keep this document: together with the invoice it is your proof of purchase.",
+    "legalH": "Your legal rights (2 years)",
+    "legal1": "If the product does not conform to the contract, you may make a claim to the seller within 2 years of the delivery day (Consumer Rights Protection Law of Latvia, Article 13). Do so within 2 months of the day you noticed the fault.",
+    "legal2": "If a fault appears in the first year after delivery, it is presumed to have been there on the delivery day; the seller has to prove otherwise.",
+    "legal3": "First we repair the product or replace it with the same one, free of charge. If that is impossible or is not done in reasonable time, you may ask for a price reduction or cancel the contract and get your money back. You do not pay for transport, labour or materials.",
+    "refurbished": "The product is refurbished, condition: {grade}. Signs of use named in the condition description are not a lack of conformity.",
+    "commercialH": "Additional guarantee ({months} months)",
+    "commercial1": "This product has a guarantee of {months} months from the delivery day. It covers manufacturing and material defects that appear when the product is used as its manual says. Guarantee claims are received and handled by the seller: {seller}.",
+    "commercial2": "The guarantee does not cover damage from a fall, liquid, wrong connection or use against the manual, or natural wear (for example filters, seals, bulbs).",
+    "commercial3": "This guarantee does not affect your legal consumer rights described above.",
+    "claimH": "How to make a claim",
+    "claim1": "Write to {email}: give the order number {order}, describe the problem and add a photo or video if you can.",
+    "claim2": "We answer within 15 working days at the latest. If the product has to travel for inspection or repair, we arrange the courier and you do not pay for it.",
+    "withdrawalH": "Right of withdrawal (14 days)",
+    "withdrawal1": "Within 14 days of the day you received the product you may withdraw from the purchase without a reason: with the “Withdraw from the purchase” button on the order page, by writing to {email}, or by sending the form below.",
+    "withdrawal2": "Return the product within 14 days of withdrawing. Returns within Latvia are free: we arrange the courier. We refund within 14 days of receiving your withdrawal, by the same payment method, but may hold the refund until the product is back.",
+    "withdrawal3": "You are liable for any loss in the product's value if you used it more than is needed to check its nature and functioning.",
+    "formH": "Withdrawal form",
+    "form1": "Fill in and send only if you wish to withdraw from the contract.",
+    "form2": "To: {seller}",
+    "form3": "I hereby give notice that I withdraw from my contract of sale of the following product: {product}",
+    "form4": "Order number: {order}. Received on: ____________",
+    "form5": "Consumer's name and address: ________________________",
+    "form6": "Date: ____________ Signature (only for a paper form): ____________",
+    "disputeH": "If we cannot agree",
+    "dispute1": "First write to us at {email}. If the solution does not satisfy you, you may turn to the Consumer Rights Protection Centre of Latvia (www.ptac.gov.lv) and the Consumer Dispute Resolution Commission.",
+    "company1": "The product has a guarantee of {months} months from the delivery day. It covers manufacturing and material defects. Send claims to {email} with the order number {order}; they are handled by the seller: {seller}.",
+    "company2": "The buyer is a company, so consumer-protection rules and the 14-day right of withdrawal do not apply to this purchase."
   },
   "timeline": {
     "none": "Nothing has happened yet.",

@@ -874,7 +874,11 @@ export const offerEvents = pgTable(
   (t) => [index("offer_events_offer_idx").on(t.offerId)],
 );
 
-export const invoiceKindEnum = pgEnum("invoice_kind", ["invoice", "credit_note"]);
+/**
+ * "prepayment": the request to pay, issued when the order is placed (its own series, not a tax
+ * document). "invoice": the final invoice, issued when the money arrives. "credit_note": a refund.
+ */
+export const invoiceKindEnum = pgEnum("invoice_kind", ["invoice", "credit_note", "prepayment"]);
 
 /**
  * Trilio's sales ledger. Seller and buyer are snapshots: invoices must be kept
@@ -885,8 +889,10 @@ export const invoices = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     kind: invoiceKindEnum("kind").notNull().default("invoice"),
-    /** "TR-2026-0001"; credit notes share the series. */
+    /** "TR-2026-0001"; credit notes share the series. Prepayment invoices: "TRP-2026-0001". */
     number: text("number").notNull().unique(),
+    /** The numbering series: "TR" (invoices and credit notes) or "TRP" (prepayment invoices). */
+    series: text("series").notNull().default("TR"),
     year: integer("year").notNull(),
     seq: integer("seq").notNull(),
     orderId: uuid("order_id")
@@ -903,8 +909,15 @@ export const invoices = pgTable(
     totalCents: integer("total_cents").notNull(),
     /** 21 when Trilio is VAT-registered at issue time; null: "PVN nav piemērojams". */
     vatRate: integer("vat_rate"),
+    /** A prepayment invoice: pay by then (the offer's last day). */
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    /** The final invoice: when the money arrived, and how ("online" or "transfer"). */
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    paymentMethod: text("payment_method"),
+    /** The final invoice: the number of the prepayment invoice it was paid by. */
+    basisNumber: text("basis_number"),
   },
-  (t) => [uniqueIndex("invoices_year_seq_idx").on(t.year, t.seq)],
+  (t) => [uniqueIndex("invoices_series_year_seq_idx").on(t.series, t.year, t.seq)],
 );
 
 export type SpecialOffer = typeof specialOffers.$inferSelect;

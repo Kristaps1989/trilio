@@ -165,6 +165,39 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     await page.getByLabel("Pasta indekss").fill("1050");
     await page.getByRole("checkbox", { name: /Piekrītu Pirkuma noteikumiem un zinu/ }).check();
     await page.getByRole("button", { name: "Apmaksāt 1 €" }).click();
+    // The buyer leaves the payment page without paying: the order waits with its prepayment invoice.
+    await page.getByRole("button", { name: "Atcelt" }).click();
+    await expect(page).toHaveURL(/\/pasutit\?atcelts=1$/);
+  });
+
+  await test.step("the prepayment invoice says what to pay, by when and how; paying it from there works", async () => {
+    await page.goto("/konts/pasutijumi");
+    await page
+      .getByRole("link", { name: new RegExp(product.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })
+      .click();
+    await expect(page.getByTestId("order-status")).toHaveText("Gaida apmaksu");
+    await expect(page.getByRole("status")).toHaveText(
+      "Priekšapmaksas rēķinu nosūtījām uz e-pastu. Vari apmaksāt tiešsaistē vai ar bankas pārskaitījumu.",
+    );
+    await expect(page.getByRole("link", { name: /^Rēķins TR-/ })).toHaveCount(0);
+    await expectNoAxeViolations(page);
+    await page.getByRole("link", { name: /^Priekšapmaksas rēķins TRP-\d{4}-\d{4}$/ }).click();
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toHaveText(/^Priekšapmaksas rēķins TRP-\d{4}-\d{4}$/);
+    const number = ((await heading.textContent()) ?? "").replace("Priekšapmaksas rēķins ", "");
+    await expect(page.getByText(/^Apmaksāt līdz: \d{2}\.\d{2}\.\d{4}/)).toBeVisible();
+    await expect(page.getByText("LV80 BANK 0000 4351 9500 1")).toBeVisible();
+    await expect(page.getByText("Testa banka")).toBeVisible();
+    await expect(
+      page.getByRole("definition").filter({ hasText: `Priekšapmaksas rēķins ${number}` }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Šis ir priekšapmaksas rēķins, nevis nodokļa rēķins.", { exact: false }),
+    ).toBeVisible();
+    await expect(page.getByText("Anna Bērziņa")).toBeVisible();
+    await expectNoAxeViolations(page);
+    await noSideScroll(page);
+    await page.getByRole("button", { name: "Apmaksāt 1 €" }).click();
     await page.getByRole("button", { name: "Maksāt (tests)" }).click();
     await expect(page).toHaveURL(/\/konts\/pasutijumi\/[0-9a-f-]{36}\?apmaksats=1/);
     await expect(page.getByText("Paldies! Maksājums saņemts.")).toBeVisible();
@@ -180,13 +213,36 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
       .textContent()) ?? ""
   ).replace("Pasūtījums ", "");
   expect(orderNumber).toMatch(/^T-[2-9A-Z]{6}$/);
-  await test.step("the invoice is Trilio's, without VAT until registered", async () => {
+  await test.step("the final invoice names the prepayment invoice and the payment, and carries the guarantee sheet", async () => {
     await page.getByRole("link", { name: /^Rēķins TR-\d{4}-\d{4}$/ }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Rēķins TR-\d{4}-\d{4}$/);
     await expect(page.getByText("PVN nav piemērojams")).toBeVisible();
     await expect(page.getByText("Anna Bērziņa")).toBeVisible();
     await expect(page.getByText("Piegāde Latvijā")).toBeVisible();
+    await expect(page.getByText(/^Pamatojums: priekšapmaksas rēķins TRP-\d{4}-\d{4}$/)).toBeVisible();
+    await expect(
+      page.getByText(/^Apmaksāts \d{2}\.\d{2}\.\d{4}.*, tiešsaistē \(maksājumu karte vai bankas saite\)\.$/),
+    ).toBeVisible();
+    const sheet = page.getByTestId("guarantee-sheet");
+    await expect(sheet.getByRole("heading", { level: 2 })).toHaveText("Garantija un tavas tiesības");
+    for (const h of [
+      "Likumā noteiktās tiesības (2 gadi)",
+      "Kā pieteikt prasījumu",
+      "Atteikuma tiesības (14 dienas)",
+      "Atteikuma veidlapa",
+      "Ja neizdodas vienoties",
+    ])
+      await expect(sheet.getByRole("heading", { level: 3, name: h })).toBeVisible();
+    await expect(sheet.getByText(`Pasūtījuma numurs: ${orderNumber}.`, { exact: false })).toBeVisible();
+    await expect(sheet.getByText("www.ptac.gov.lv", { exact: false })).toBeVisible();
     await expectNoAxeViolations(page);
+    await noSideScroll(page);
+    // The prepayment invoice stays, now marked as paid and without a way to pay it twice.
+    await page.goto(orderUrl);
+    await page.getByRole("link", { name: /^Priekšapmaksas rēķins TRP-/ }).click();
+    await expect(page.getByText("Šis priekšapmaksas rēķins ir apmaksāts.")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Apmaksāt/ })).toHaveCount(0);
+    await expect(page.getByText("LV80 BANK 0000 4351 9500 1")).toHaveCount(0);
   });
 
   await test.step("Uzdevumi: the paid order is Trilio's turn; ordered from a partner it waits for the partner", async () => {
@@ -305,13 +361,34 @@ test("offer → one-screen checkout → paid with invoice → shipped → delive
     await phone.getByLabel("Reģistrācijas numurs").fill("40003000000");
     await phone.getByRole("checkbox", { name: "Piekrītu Pirkuma noteikumiem." }).check();
     await phone.getByRole("button", { name: "Apmaksāt 2 €" }).click();
-    await phone.getByRole("button", { name: "Maksāt (tests)" }).click();
-    await expect(phone.getByText("Paldies! Maksājums saņemts.")).toBeVisible();
+    // The company pays the prepayment invoice by bank transfer: the admin marks it on the order.
+    await phone.getByRole("button", { name: "Atcelt" }).click();
+    await phone.goto("/konts/pasutijumi");
+    await phone.getByRole("link", { name: /2\s€/ }).click();
+    await expect(phone.getByTestId("order-status")).toHaveText("Gaida apmaksu");
+    const companyOrder = phone.url().replace(/\?.*$/, "");
+    await admin.goto(`/admin/pasutijumi/${companyOrder.split("/").pop()}`);
+    await expect(admin.getByRole("link", { name: /^Priekšapmaksas rēķins TRP-/ })).toBeVisible();
+    await admin.getByLabel("Bankas atsauce vai maksātājs").fill("SIA Bērziņi, 2026-11-24");
+    await expectNoAxeViolations(admin);
+    await admin.getByRole("button", { name: "Atzīmēt kā apmaksātu" }).click();
+    await expect(admin.getByRole("status")).toContainText("Apmaksāts");
+    await expect(admin.getByRole("button", { name: "Atzīmēt kā apmaksātu" })).toHaveCount(0);
+    await expect(admin.getByRole("link", { name: /^Rēķins TR-/ })).toBeVisible();
+    await phone.goto(companyOrder);
+    await expect(phone.getByTestId("order-status")).toHaveText(/^Sagatavojam sūtīšanai/);
     await expect(phone.getByText(/Rīga Centrs pakomāts/)).toBeVisible();
     await expect(phone.getByRole("button", { name: "Atteikties no pirkuma" })).toHaveCount(0);
     await phone.getByRole("link", { name: /^Rēķins TR-/ }).click();
     await expect(phone.getByText("SIA Bērziņi")).toBeVisible();
     await expect(phone.getByText("Reģ. Nr. 40003000000")).toBeVisible();
+    await expect(phone.getByText(/^Apmaksāts .*, ar bankas pārskaitījumu\.$/)).toBeVisible();
+    const terms = phone.getByTestId("guarantee-sheet");
+    await expect(terms.getByRole("heading", { level: 2 })).toHaveText("Garantijas noteikumi");
+    await expect(
+      terms.getByText("14 dienu atteikuma tiesības šim pirkumam nav piemērojamas", { exact: false }),
+    ).toBeVisible();
+    await expect(terms.getByText("Atteikuma veidlapa")).toHaveCount(0);
     await phone.goto(second);
     await expect(phone.getByRole("status")).toHaveText("Šis piedāvājums jau ir apmaksāts.");
     await phone.context().close();

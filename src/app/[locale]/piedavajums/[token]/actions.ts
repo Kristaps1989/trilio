@@ -7,7 +7,7 @@ import { parseOrderForm, type FieldError } from "@/domain/offers/checkout";
 import { deliveryOptions } from "@/domain/offers/offers";
 import { offerMailDeps } from "@/services/offers/deps";
 import { omnivaLockers, lockerLabel } from "@/services/offers/lockers";
-import { afterAcceptedWithoutPayments } from "@/services/offers/notify";
+import { afterAcceptedWithoutPayments, afterOrderPlaced } from "@/services/offers/notify";
 import { offerByToken, offerSignInUsed } from "@/services/offers/offers";
 import { placeOrder, startOrderPayment } from "@/services/offers/orders";
 import { appBaseUrl, paymentsProvider } from "@/services/payments";
@@ -67,6 +67,8 @@ export async function placeOrderAction(_prev: CheckoutState, formData: FormData)
   }
   const order = placed.order;
   const provider = paymentsProvider();
+  // A new order: the prepayment invoice goes to the buyer's e-mail with the ways to pay it.
+  if (placed.created) await afterOrderPlaced(db, order.id, offerMailDeps(), provider !== null);
   if (!provider) {
     // Payments are not live yet (owner, 24 Oct 2026: Paysera only): the acceptance is recorded and Trilio writes.
     await afterAcceptedWithoutPayments(db, order.id, offerMailDeps());

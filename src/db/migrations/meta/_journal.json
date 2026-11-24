@@ -260,6 +260,13 @@
       "when": 1794831212418,
       "tag": "0036_alternative_offers",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795507664956,
+      "tag": "0037_prepayment_invoices",
+      "breakpoints": true
     }
   ]
 }

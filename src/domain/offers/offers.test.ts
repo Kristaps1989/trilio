@@ -201,3 +201,36 @@ describe("carriers and numbers", () => {
     expect(orderNumber(() => new Uint8Array([0, 1, 2, 31, 32, 255]))).toBe("T-234Z2Z");
   });
 });
+
+describe("prepayment invoices and the guarantee sheet", () => {
+  it("numbers prepayment invoices in their own series and prints an IBAN in fours", async () => {
+    const { invoiceNumber, formatIban, PREPAYMENT_SERIES } = await import("./offers");
+    expect(invoiceNumber(2026, 12, PREPAYMENT_SERIES)).toBe("TRP-2026-0012");
+    expect(formatIban("lv80bank0000435195001".toUpperCase())).toBe("LV80 BANK 0000 4351 9500 1");
+    expect(formatIban("LV80 BANK 0000 4351 9500 1")).toBe("LV80 BANK 0000 4351 9500 1");
+  });
+  it("a private buyer has the legal two years; a longer guarantee is on top; a business has the offer's", async () => {
+    const { guaranteeTerms } = await import("./offers");
+    expect(guaranteeTerms("person", 12)).toEqual({
+      legalMonths: 24,
+      commercialMonths: null,
+      withdrawal: true,
+    });
+    expect(guaranteeTerms("person", 24)).toEqual({
+      legalMonths: 24,
+      commercialMonths: null,
+      withdrawal: true,
+    });
+    expect(guaranteeTerms("person", 60)).toEqual({ legalMonths: 24, commercialMonths: 60, withdrawal: true });
+    expect(guaranteeTerms("company", 12)).toEqual({
+      legalMonths: null,
+      commercialMonths: 12,
+      withdrawal: false,
+    });
+    expect(guaranteeTerms("company", 0)).toEqual({
+      legalMonths: null,
+      commercialMonths: null,
+      withdrawal: false,
+    });
+  });
+});
