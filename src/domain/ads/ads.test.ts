@@ -3,8 +3,16 @@ import { landingChannel } from "@/domain/growth/channels";
 import { describe, expect, it } from "vitest";
 import seed from "../../../data/keywords.lv.json";
 import { catalog } from "@/domain/questions/catalog";
-import { costPerConversion, pacedBudget, splitBudget, weightedConversions } from "./budget";
-import { checkProposal, MAX_CHANGES_PER_DAY, type AccountState } from "./guardrails";
+import {
+  costPerConversion,
+  cpcCeilingFor,
+  maxShift,
+  pacedBudget,
+  splitBudget,
+  starvedCap,
+  weightedConversions,
+} from "./budget";
+import { appliesItself, checkProposal, MAX_CHANGES_PER_DAY, type AccountState } from "./guardrails";
 import { lintAd, lintAdText } from "./honesty";
 import {
   buildCampaignPlan,
@@ -278,5 +286,124 @@ describe("guardrails", () => {
     const p = { action: "pause_keyword", keywordId: "k1" };
     expect(checkProposal(p, { ...state, paused: true }).ok).toBe(false);
     expect(checkProposal(p, { ...state, appliedToday: MAX_CHANGES_PER_DAY }).ok).toBe(false);
+  });
+});
+
+describe("a small daily budget (owner, 24 Nov 2026: 5 € a day)", () => {
+  it("moves half a campaign at once up to 10 € a day, a fifth above", () => {
+    expect(maxShift(500)).toBe(0.5);
+    expect(maxShift(1000)).toBe(0.5);
+    expect(maxShift(1500)).toBe(0.2);
+    expect(maxShift(undefined)).toBe(0.2);
+  });
+
+  it("lets one click cost a fifth of the day at most, between the starting cap and 2 €", () => {
+    expect(cpcCeilingFor(500)).toBe(100);
+    expect(cpcCeilingFor(100)).toBe(30);
+    expect(cpcCeilingFor(1500)).toBe(200);
+    expect(cpcCeilingFor(5000)).toBe(200);
+  });
+
+  it("raises the cap of a campaign that is hardly shown, half as much again, up to the ceiling", () => {
+    expect(starvedCap({ impressions7d: 5, capCents: 30 }, 500)).toBe(45);
+    expect(starvedCap({ impressions7d: 5, capCents: 45 }, 500)).toBe(68);
+    expect(starvedCap({ impressions7d: 5, capCents: 68 }, 500)).toBe(100);
+    expect(starvedCap({ impressions7d: 5, capCents: 100 }, 500)).toBeNull();
+    expect(starvedCap({ impressions7d: 20, capCents: 30 }, 500)).toBeNull();
+    expect(starvedCap({ impressions7d: 2848, capCents: 30 }, 500)).toBeNull();
+  });
+
+  const state: AccountState = {
+    paused: false,
+    dailyBudgetCents: 500,
+    campaigns: new Map([
+      ["kitchen", { budgetCents: 200, status: "enabled", leads28: 0 }],
+      ["fridge", { budgetCents: 200, status: "enabled", leads28: 2 }],
+      ["laundry", { budgetCents: 100, status: "paused", leads28: 0 }],
+      ["brand", { budgetCents: 100, status: "enabled", leads28: 0, protected: true }],
+    ]),
+    adGroups: new Map([["g1", { campaignId: "fridge", cpcCapCents: 68 }]]),
+    keywords: new Map(),
+    convertingTerms: [],
+    appliedToday: 0,
+  };
+  const check = (p: unknown, s: AccountState = state) => checkProposal(p, s);
+
+  it("moves up to half of a campaign's budget, never under 1 €", () => {
+    expect(
+      check({ action: "move_budget", fromCampaignId: "kitchen", toCampaignId: "fridge", cents: 100 }).ok,
+    ).toBe(true);
+    expect(
+      check({ action: "move_budget", fromCampaignId: "kitchen", toCampaignId: "fridge", cents: 101 }),
+    ).toMatchObject({ ok: false, reason: "moves more than 50 % of a campaign budget" });
+    expect(
+      check(
+        { action: "move_budget", fromCampaignId: "kitchen", toCampaignId: "fridge", cents: 100 },
+        { ...state, dailyBudgetCents: 1500 },
+      ),
+    ).toMatchObject({ ok: false, reason: "moves more than 20 % of a campaign budget" });
+  });
+
+  it("raises a click-price cap only up to a fifth of the daily budget", () => {
+    expect(check({ action: "set_cpc", adGroupId: "g1", cpcCapCents: 100 }).ok).toBe(true);
+    expect(check({ action: "set_cpc", adGroupId: "g1", cpcCapCents: 101 })).toMatchObject({
+      ok: false,
+      reason: "one click would cost more than a fifth of the daily budget",
+    });
+    // Lowering is always allowed within the half-step rule.
+    expect(check({ action: "set_cpc", adGroupId: "g1", cpcCapCents: 40 }).ok).toBe(true);
+  });
+
+  it("switches off a campaign without e-mails, but not the last one, one with e-mails, or Trilio's name", () => {
+    expect(check({ action: "pause_campaign", campaignId: "kitchen" }).ok).toBe(true);
+    expect(check({ action: "pause_campaign", campaignId: "fridge" })).toMatchObject({
+      ok: false,
+      reason: "campaign brought e-mails in the last 28 days",
+    });
+    expect(check({ action: "pause_campaign", campaignId: "brand" })).toMatchObject({
+      ok: false,
+      reason: "Trilio's own name stays on",
+    });
+    expect(check({ action: "pause_campaign", campaignId: "laundry" })).toMatchObject({
+      ok: false,
+      reason: "campaign is not running",
+    });
+    expect(check({ action: "pause_campaign", campaignId: "nope" })).toMatchObject({ ok: false });
+    const one: AccountState = {
+      ...state,
+      campaigns: new Map([
+        ["kitchen", { budgetCents: 400, status: "enabled", leads28: 0 }],
+        ["brand", { budgetCents: 100, status: "enabled", protected: true }],
+      ]),
+    };
+    expect(check({ action: "pause_campaign", campaignId: "kitchen" }, one)).toMatchObject({
+      ok: false,
+      reason: "would leave no campaign running",
+    });
+  });
+
+  it("switches a paused campaign on while every running one can still have 1 €", () => {
+    expect(check({ action: "enable_campaign", campaignId: "laundry" }).ok).toBe(true);
+    expect(check({ action: "enable_campaign", campaignId: "kitchen" })).toMatchObject({
+      ok: false,
+      reason: "campaign is not paused",
+    });
+    expect(
+      check({ action: "enable_campaign", campaignId: "laundry" }, { ...state, dailyBudgetCents: 300 }),
+    ).toMatchObject({
+      ok: false,
+      reason: "the daily budget cannot give every running campaign 1 €",
+    });
+    expect(check({ action: "enable_campaign", campaignId: "nope" })).toMatchObject({ ok: false });
+  });
+
+  it("applies everything itself only in manage mode, the listed actions in auto, nothing when paused", () => {
+    const base = { paused: false, autoActions: ["add_negative", "pause_keyword"] };
+    expect(appliesItself({ ...base, mode: "manage" }, "pause_campaign")).toBe(true);
+    expect(appliesItself({ ...base, mode: "manage", paused: true }, "pause_campaign")).toBe(false);
+    expect(appliesItself({ ...base, mode: "auto" }, "add_negative")).toBe(true);
+    expect(appliesItself({ ...base, mode: "auto" }, "move_budget")).toBe(false);
+    expect(appliesItself({ ...base, mode: "approve" }, "add_negative")).toBe(false);
+    expect(appliesItself({ ...base, mode: "observe" }, "add_negative")).toBe(false);
   });
 });

@@ -13,9 +13,10 @@ import {
   type AdProposal,
 } from "@/db/schema";
 import { rigaDay } from "@/domain/analytics/visits";
-import { costPerConversion } from "@/domain/ads/budget";
+import { costPerConversion, cpcCeilingFor, SMALL_BUDGET_CENTS, starvedCap } from "@/domain/ads/budget";
 import {
   ACTIONS,
+  appliesItself,
   checkProposal,
   CPC_MAX_CENTS,
   CPC_MIN_CENTS,
@@ -24,6 +25,7 @@ import {
 } from "@/domain/ads/guardrails";
 import { DESCRIPTION_MAX, HEADLINE_MAX } from "@/domain/ads/honesty";
 import { wrapUntrusted, type StructuredCaller } from "@/services/llm/client";
+import { notifyFunnel } from "@/services/notify/events";
 import { pullSearchConsole, type SearchConsole } from "@/services/seo/search-console";
 import {
   accountState,
@@ -31,6 +33,8 @@ import {
   conversionsByDay,
   dayOffset,
   getSettings,
+  googleCampaignId,
+  leadsByCampaign,
   paceBudgets,
   performance,
   pullReports,
@@ -50,24 +54,28 @@ export const OPTIMISER_MODEL = "claude-opus-5-5";
 export const TERMS_MODEL = "claude-haiku-5-5";
 export const RUN_AFTER = { hour: 6, minute: 30 };
 
-const SYSTEM = `You manage the Google Search ads of Trilio (trilio.lv), a Latvian site that helps shoppers choose a household appliance: a few questions, then the three best options from partner shops' live inventory, ranked by deterministic code. Trilio earns a commission when a visitor buys after clicking through to a shop, and sells some products itself to people who saved them. Ads must bring visitors who click through to a shop or save a product.
+const SYSTEM = `You manage the Google Search ads of Trilio (trilio.lv), a Latvian site that helps shoppers choose a household appliance: a few questions, then the three best options from partner shops' live inventory, ranked by deterministic code. Trilio earns about 0,03 € when a visitor clicks through to a shop, and sells some products itself to people who left their e-mail. The owner's goal for the ads (24 Nov 2026) is e-mail addresses: a visitor who saves a product or asks for a lower price leaves an e-mail ("save" in the data). You are judged on the cost per e-mail left. A shop click is worth a few cents and never justifies a paid click on its own.
 
-At each review (weekly by default, daily if the owner chose so) you get the account as JSON: the owner's settings, Trilio's own conversions per campaign tag (shop clicks and saves credited to ad visits, weighted as the settings say; keyed \"source/campaign\": \"google/<id>\" is the Google campaign whose googleId is <id>, \"google/(none)\" a Google click without the campaign tag, any other source (meta, facebook, tv) another channel to leave out of Google decisions), Google's numbers for campaigns, ad groups and keywords over 7 and 28 days, search terms with Claude Haiku's relevance label, and the current ads.
+At each review (weekly by default, daily if the owner chose so) you get the account as JSON: the owner's settings, Trilio's own conversions per campaign tag (shop clicks and saves credited to ad visits, weighted as the settings say; keyed \"source/campaign\": \"google/<id>\" is the Google campaign whose googleId is <id>, \"google/(none)\" a Google click without the campaign tag, any other source (meta, facebook, tv) another channel to leave out of Google decisions), Google's numbers for campaigns, ad groups and keywords over 7 and 28 days, search terms with Claude Haiku's relevance label, and the current ads. Each campaign carries emailsFromAds28 (e-mails its visitors left), and each ad group siteFunnel28: what all visitors of that category's results page did on Trilio in 28 days (resultsVisitors, of them adVisitors from ads, tapsOnAsk, emailsSent). A category whose visitors tap and leave e-mails is worth paid clicks; one with many ad visitors and no taps is not.
 
-Propose changes that lower the cost per weighted conversion or find more converting searches. Use only these actions, with the ids given in the data:
+Propose changes that lower the cost per e-mail left or find more searches that end in one. Use only these actions, with the ids given in the data:
 - add_negative {campaignId, text, match: phrase|exact}: a search term that spends without converting and is not about buying that appliance (repairs, parts, manuals, jobs, second-hand, other products).
 - pause_keyword {keywordId} / enable_keyword {keywordId}.
 - add_keyword {adGroupId, text, match: phrase|exact}: a search term that converted and is not yet a keyword. Latvian words, digits and model codes only, at most 6 words.
-- set_cpc {adGroupId, cpcCapCents}: between ${CPC_MIN_CENTS} and ${CPC_MAX_CENTS} cents, at most half up or down from now.
-- move_budget {fromCampaignId, toCampaignId, cents}: at most 20 % of the source campaign's budget; the total never changes.
+- set_cpc {adGroupId, cpcCapCents}: between ${CPC_MIN_CENTS} and ${CPC_MAX_CENTS} cents, at most half up or down from now, and never above settings.cpcCeilingCents when raising. A campaign's ceiling follows its highest ad group. A running campaign with almost no impressions is priced out of its auctions: code raises its cap step by step on its own, so do not wait for click data there.
+- move_budget {fromCampaignId, toCampaignId, cents}: at most settings.maxBudgetMoveShare of the source campaign's budget, leaving it at least 1 €; the total never changes.
+- pause_campaign {campaignId}: a running campaign that spends and whose visitors leave no e-mails (emailsFromAds28 = 0) while another category does better. Its budget goes to the campaigns that stay on. Never the last running campaign, never one that brought e-mails, never Trilio's own name.
+- enable_campaign {campaignId}: a paused campaign whose category converts on the site (siteFunnel28) better than what runs now.
 - new_ad {adGroupId, headlines[3–15], descriptions[2–4]}: Latvian, headlines at most ${HEADLINE_MAX} characters, descriptions at most ${DESCRIPTION_MAX}.
 - flag_landing {adGroupId, note}: a landing page that gets clicks but almost no shop clicks or saves; nothing is changed, the owner reads the note.
 
-Rules that code enforces and you must follow too: at most ${MAX_CHANGES_PER_DAY} changes per review; never block a search that converted; ad text is honest: no "cheapest", "guaranteed", discounts, percentages, urgency ("tikai šodien", "pēdējā iespēja"), superlatives or numbers that the landing page does not show; no shop or brand names in ad text. You cannot change campaign status, geography, language, conversion settings or the total budget; the budget follows a rule in code.
+Rules that code enforces and you must follow too: at most ${MAX_CHANGES_PER_DAY} changes per review; never block a search that converted; ad text is honest: no "cheapest", "guaranteed", discounts, percentages, urgency ("tikai šodien", "pēdējā iespēja"), superlatives or numbers that the landing page does not show; no shop or brand names in ad text. You cannot change geography, language, conversion settings or the total budget; the budget follows a rule in code.
+
+With a small daily budget (settings.smallBudget = true) do not spread it: a campaign with 1 € a day buys two or three clicks and learns nothing. Keep at most two or three campaigns running, in the categories where visitors leave e-mails, and pause the rest.
 
 Every proposal carries every field. Fill the ones its action uses (listed above) and leave the others empty: "" for text and ids, 0 for numbers, [] for lists, "none" for match.
 
-Prefer few, well-founded changes over many small ones. With little data (fewer than about 30 clicks in an ad group over 28 days) propose nothing for it except clear negatives. Give each proposal a one-sentence reason with the numbers behind it, the expected effect, and your confidence 0–100. Then a summary of the period since the last review in two or three Latvian sentences for the owner.`;
+Prefer few, well-founded changes over many small ones. With little data (fewer than about 30 clicks in an ad group over 28 days) propose nothing for its keywords and ads except clear negatives; budget moves and switching campaigns may rest on the site funnel instead. Give each proposal a one-sentence reason with the numbers behind it, the expected effect, and your confidence 0–100. Then a summary of the period since the last review in two or three Latvian sentences for the owner.`;
 
 // Every field is required: the API compiles the schema into a grammar, and each
 // optional field roughly doubles it. With 12 optional fields the request was
@@ -269,6 +277,8 @@ export async function optimiserContext(db: Db, now = new Date()) {
     .limit(200);
   const perf = await performance(db, now);
   const ownConversions = await conversionsByDay(db, d28, yesterday);
+  const leads = await leadsByCampaign(db, d28, yesterday);
+  const funnel = new Map((await notifyFunnel(db, d28, yesterday)).map((f) => [f.subcategoryId, f]));
   return {
     today: rigaDay(now),
     settings: {
@@ -276,6 +286,10 @@ export async function optimiserContext(db: Db, now = new Date()) {
       floorEur: settings.floorCents / 100,
       targetCostPerConversionEur: settings.targetCostCents === null ? null : settings.targetCostCents / 100,
       weights: { shopClick: settings.clickWeight, save: settings.saveWeight },
+      goal: "e-mails left (saves) at the lowest cost per e-mail",
+      smallBudget: settings.dailyBudgetCents <= SMALL_BUDGET_CENTS,
+      maxBudgetMoveShare: settings.dailyBudgetCents <= SMALL_BUDGET_CENTS ? 0.5 : 0.2,
+      cpcCeilingCents: cpcCeilingFor(settings.dailyBudgetCents),
     },
     last7Days: {
       costEur: perf.cost7dCents / 100,
@@ -301,6 +315,7 @@ export async function optimiserContext(db: Db, now = new Date()) {
       name: c.name,
       status: c.status,
       budgetEur: c.budgetCents / 100,
+      emailsFromAds28: leads.get(googleCampaignId(c.googleId) ?? "") ?? 0,
       last7: c7.get(c.id) ?? null,
       last28: c28.get(c.id) ?? null,
     })),
@@ -311,6 +326,15 @@ export async function optimiserContext(db: Db, now = new Date()) {
       landing: g.landingPath,
       cpcCapCents: g.cpcCapCents,
       last28: g28.get(g.id) ?? null,
+      siteFunnel28: ((f) =>
+        f
+          ? {
+              resultsVisitors: f.resultsVisitors,
+              adVisitors: f.adVisitors,
+              tapsOnAsk: f.taps,
+              emailsSent: f.sent,
+            }
+          : null)(funnel.get(g.subcategoryId)),
       keywords: keywords
         .filter((k) => k.adGroupId === g.id)
         .map((k) => ({
@@ -346,6 +370,92 @@ export function toProposal(p: z.infer<typeof ProposalOut>): Record<string, unkno
   return Object.fromEntries(Object.entries(p).filter(([k, v]) => !meta.has(k) && !empty(v)));
 }
 
+/** How long a raised cap is left to show its effect before the next step. */
+const STARVED_WAIT_DAYS = 3;
+/** A campaign must have been in Google this long before "hardly shown" means anything. */
+const STARVED_MIN_AGE_DAYS = 4;
+
+/**
+ * The rule for campaigns that are priced out (docs/GROWTH_PLAN.md §5, owner 24 Nov 2026): a
+ * running Search campaign with fewer than 20 impressions in the last seven days gets the cap of
+ * each of its ad groups raised by half, up to a fifth of the daily budget, at most every three
+ * days. Code, not Claude: there is no click data to reason about. Each raise is a proposal like
+ * any other, so the guardrails check it, the owner's mode decides whether it is applied at
+ * once or waits for approval, and the admin shows it. Returns how many were made.
+ */
+export async function raiseStarvedCaps(db: Db, provider: AdsProvider, runId: string, now = new Date()) {
+  const settings = await getSettings(db);
+  const campaigns = await db
+    .select()
+    .from(adCampaigns)
+    .where(and(eq(adCampaigns.status, "enabled"), eq(adCampaigns.kind, "search")));
+  const since = dayOffset(now, 7);
+  const yesterday = dayOffset(now, 1);
+  const waitFrom = new Date(now.getTime() - STARVED_WAIT_DAYS * 86_400_000);
+  const oldEnough = new Date(now.getTime() - STARVED_MIN_AGE_DAYS * 86_400_000);
+  let made = 0;
+  for (const c of campaigns) {
+    if (!c.googleId || !c.syncedAt || c.syncedAt > oldEnough) continue;
+    const [shown] = await db
+      .select({ n: sql<number>`coalesce(sum(${adDailyStats.impressions}), 0)::int` })
+      .from(adDailyStats)
+      .where(
+        and(
+          eq(adDailyStats.level, "campaign"),
+          eq(adDailyStats.entityId, c.id),
+          gte(adDailyStats.day, since),
+          lte(adDailyStats.day, yesterday),
+        ),
+      );
+    const impressions7d = Number(shown?.n ?? 0);
+    const groups = await db
+      .select()
+      .from(adGroups)
+      .where(and(eq(adGroups.campaignId, c.id), sql`${adGroups.status} <> 'removed'`));
+    for (const g of groups) {
+      const next = starvedCap({ impressions7d, capCents: g.cpcCapCents }, settings.dailyBudgetCents);
+      if (next === null) continue;
+      const [recent] = await db
+        .select({ id: adProposals.id })
+        .from(adProposals)
+        .where(
+          and(
+            eq(adProposals.action, "set_cpc"),
+            sql`${adProposals.params}->>'adGroupId' = ${g.id}`,
+            sql`${adProposals.status} in ('proposed', 'applied')`,
+            gte(adProposals.createdAt, waitFrom),
+          ),
+        )
+        .limit(1);
+      if (recent) continue;
+      const raw = { action: "set_cpc", adGroupId: g.id, cpcCapCents: next };
+      const verdict = checkProposal(raw, await accountState(db, now));
+      const [row] = await db
+        .insert(adProposals)
+        .values({
+          runId,
+          action: "set_cpc",
+          params: raw,
+          reason:
+            `Kampaņa “${c.name}” 7 dienās rādīta ${impressions7d} reizes: klikšķa cenas griesti ${g.cpcCapCents} centi ir zem tā, ko šie meklējumi maksā.`.slice(
+              0,
+              600,
+            ),
+          expectedEffect: `Griesti ${next} centi; reklāma sāk piedalīties izsolēs.`,
+          confidence: 70,
+          status: verdict.ok ? "proposed" : "blocked",
+          blockReason: verdict.ok ? null : verdict.reason,
+        })
+        .returning();
+      if (!verdict.ok || !verdict.proposal) continue;
+      made++;
+      const auto = appliesItself({ ...settings, autoActions: settings.autoActions as string[] }, "set_cpc");
+      if (auto) await applyProposal(db, provider, row!, verdict.proposal, "auto");
+    }
+  }
+  return made;
+}
+
 /** One optimiser run. Returns null when it was not due. */
 export async function runDaily(db: Db, deps: OptimiserDeps) {
   const now = deps.now ?? new Date();
@@ -371,7 +481,11 @@ export async function runDaily(db: Db, deps: OptimiserDeps) {
         console.error("search console:", (err as Error).message),
       );
     const paced = settings.paused ? { cents: 0, why: "paused" } : await paceBudgets(db, deps.provider, now);
-    const budgetLine = `Budžets rītdienai: ${(paced.cents / 100).toFixed(2)} € (${paced.why}).`;
+    // Every day, by rule: a running campaign that is hardly shown gets a higher click-price cap.
+    const raised = settings.paused ? 0 : await raiseStarvedCaps(db, deps.provider, run.id, now);
+    const budgetLine = `Budžets rītdienai: ${(paced.cents / 100).toFixed(2)} € (${paced.why}).${
+      raised ? ` Klikšķa cenas griesti pacelti ${raised} reklāmu grupām, kuras gandrīz netika rādītas.` : ""
+    }`;
     if (!deps.force && !reviewDue(settings, clock.weekday)) {
       await finish({
         ok: true,
@@ -435,10 +549,7 @@ export async function runDaily(db: Db, deps: OptimiserDeps) {
         blocked++;
         continue;
       }
-      const auto =
-        settings.mode === "auto" &&
-        !settings.paused &&
-        (settings.autoActions as string[]).includes(out.action);
+      const auto = appliesItself({ ...settings, autoActions: settings.autoActions as string[] }, out.action);
       if (auto && verdict.proposal) {
         const r = await applyProposal(db, deps.provider, row!, verdict.proposal, "auto");
         if (r.ok) applied++;

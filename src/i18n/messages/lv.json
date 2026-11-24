@@ -2744,7 +2744,10 @@
         "reconciled": "Atjaunots: {fixed}. Neizdevās: {failed}. Vēl atšķiras: {left}.",
         "foreignPaused": "Kampaņa apturēta Google kontā.",
         "failed": "Google kontu neizdevās nolasīt vai mainīt. Skaties „Priekšlikumi” vēsturē, kāpēc."
-      }
+      },
+      "action_pause_campaign": "Apturēt kampaņu",
+      "action_enable_campaign": "Ieslēgt kampaņu",
+      "modeManage": "Pārvaldīt pašam — visas izmaiņas noteikumu robežās bez jautāšanas (budžeta kopsumma nemainās)"
     },
     "crm": {
       "title": "Uzdevumi",

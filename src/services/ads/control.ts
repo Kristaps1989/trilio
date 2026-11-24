@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNotNull, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { adAccountChecks, adCampaigns, adGroups } from "@/db/schema";
+import { DEFAULT_CPC_CAP_CENTS } from "@/domain/ads/budget";
 import { accountDrift, fixable, type CampaignState, type Drift, type Expected } from "@/domain/ads/drift";
 import { send } from "./account";
 import type { AdsProvider } from "./provider";
@@ -8,9 +9,6 @@ import type { AdsProvider } from "./provider";
 // Account control (docs/GROWTH_PLAN.md): Trilio's record is the plan, Google Ads
 // is what actually runs. This reads the account, stores what it found, and puts
 // Trilio's campaigns back on Trilio's settings when the owner asks.
-
-/** The click-price cap Trilio set at creation; an ad group may have been given a higher one since. */
-const DEFAULT_CPC_CAP_CENTS = 30;
 
 /** Every synced campaign as Trilio set it. */
 export async function expectedCampaigns(db: Db): Promise<Expected[]> {

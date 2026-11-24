@@ -1,11 +1,14 @@
 import { z } from "zod";
-import { MAX_DAILY_SHIFT, MIN_CAMPAIGN_CENTS } from "./budget";
+import { cpcCeilingFor, maxShift, MIN_CAMPAIGN_CENTS } from "./budget";
 import { lintAd } from "./honesty";
 
 // What the daily optimiser may change, and the limits written in code
 // (docs/GROWTH_PLAN.md §5, Phase 2). Claude proposes; nothing reaches Google
-// unless `checkProposal` passes it. Status, currency, geography, conversion
-// settings and the total budget are not in the action set at all.
+// unless `checkProposal` passes it. Currency, geography, conversion settings and
+// the total budget are not in the action set at all. A campaign may be switched
+// off or on (owner, 24 Nov 2026: the agent manages a 5 € day, which cannot feed
+// every campaign), but never the last one, never one that brought e-mails, and
+// never Trilio's own name.
 
 export const MAX_CHANGES_PER_DAY = 25;
 export const CPC_MIN_CENTS = 5;
@@ -48,6 +51,8 @@ export const ProposalSchema = z.discriminatedUnion("action", [
     descriptions: z.array(z.string()),
   }),
   z.object({ action: z.literal("flag_landing"), adGroupId: z.string(), note: z.string().max(300) }),
+  z.object({ action: z.literal("pause_campaign"), campaignId: z.string() }),
+  z.object({ action: z.literal("enable_campaign"), campaignId: z.string() }),
 ]);
 
 export type Proposal = z.infer<typeof ProposalSchema>;
@@ -62,12 +67,26 @@ export const ACTIONS: ProposalAction[] = [
   "move_budget",
   "new_ad",
   "flag_landing",
+  "pause_campaign",
+  "enable_campaign",
 ];
 
 /** What the account looks like now, by our ids. */
 export type AccountState = {
   paused: boolean;
-  campaigns: Map<string, { budgetCents: number; status: string }>;
+  campaigns: Map<
+    string,
+    {
+      budgetCents: number;
+      status: string;
+      /** E-mails left (saves) by this campaign's visitors in the last 28 days. */
+      leads28?: number;
+      /** Trilio's own name: cheap, and the agent never switches it off. */
+      protected?: boolean;
+    }
+  >;
+  /** The owner's daily total; small budgets get wider moves and a click-price ceiling. */
+  dailyBudgetCents?: number;
   adGroups: Map<string, { campaignId: string; cpcCapCents: number }>;
   keywords: Map<
     string,
@@ -129,8 +148,14 @@ export function checkProposal(raw: unknown, state: AccountState): Verdict & { pr
         if (!g) return { ok: false, reason: "unknown ad group" };
         if (p.cpcCapCents < CPC_MIN_CENTS || p.cpcCapCents > CPC_MAX_CENTS)
           return { ok: false, reason: `CPC cap outside ${CPC_MIN_CENTS}–${CPC_MAX_CENTS} cents` };
-        if (Math.abs(p.cpcCapCents - g.cpcCapCents) > Math.max(5, g.cpcCapCents * 0.5))
+        if (Math.abs(p.cpcCapCents - g.cpcCapCents) > Math.max(5, Math.ceil(g.cpcCapCents * 0.5)))
           return { ok: false, reason: "CPC cap changes by more than half" };
+        if (
+          state.dailyBudgetCents &&
+          p.cpcCapCents > g.cpcCapCents &&
+          p.cpcCapCents > cpcCeilingFor(state.dailyBudgetCents)
+        )
+          return { ok: false, reason: "one click would cost more than a fifth of the daily budget" };
         return { ok: true };
       }
       case "move_budget": {
@@ -139,8 +164,9 @@ export function checkProposal(raw: unknown, state: AccountState): Verdict & { pr
         if (!from || !to || p.fromCampaignId === p.toCampaignId)
           return { ok: false, reason: "unknown campaigns" };
         if (p.cents <= 0) return { ok: false, reason: "nothing to move" };
-        if (p.cents > Math.floor(from.budgetCents * MAX_DAILY_SHIFT))
-          return { ok: false, reason: `moves more than ${MAX_DAILY_SHIFT * 100} % of a campaign budget` };
+        const share = maxShift(state.dailyBudgetCents);
+        if (p.cents > Math.floor(from.budgetCents * share))
+          return { ok: false, reason: `moves more than ${share * 100} % of a campaign budget` };
         if (from.budgetCents - p.cents < MIN_CAMPAIGN_CENTS)
           return { ok: false, reason: "leaves a campaign below 1 €" };
         return { ok: true };
@@ -154,9 +180,42 @@ export function checkProposal(raw: unknown, state: AccountState): Verdict & { pr
       }
       case "flag_landing":
         return state.adGroups.has(p.adGroupId) ? { ok: true } : { ok: false, reason: "unknown ad group" };
+      case "pause_campaign": {
+        const c = state.campaigns.get(p.campaignId);
+        if (!c) return { ok: false, reason: "unknown campaign" };
+        if (c.status !== "enabled") return { ok: false, reason: "campaign is not running" };
+        if (c.protected) return { ok: false, reason: "Trilio's own name stays on" };
+        if ((c.leads28 ?? 0) > 0)
+          return { ok: false, reason: "campaign brought e-mails in the last 28 days" };
+        const running = [...state.campaigns.values()].filter((x) => x.status === "enabled" && !x.protected);
+        if (running.length <= 1) return { ok: false, reason: "would leave no campaign running" };
+        return { ok: true };
+      }
+      case "enable_campaign": {
+        const c = state.campaigns.get(p.campaignId);
+        if (!c) return { ok: false, reason: "unknown campaign" };
+        if (c.status !== "paused") return { ok: false, reason: "campaign is not paused" };
+        const running = [...state.campaigns.values()].filter((x) => x.status === "enabled").length;
+        if (state.dailyBudgetCents && (running + 1) * MIN_CAMPAIGN_CENTS > state.dailyBudgetCents)
+          return { ok: false, reason: "the daily budget cannot give every running campaign 1 €" };
+        return { ok: true };
+      }
     }
   })();
   return { ...verdict, proposal: p };
+}
+
+/**
+ * Whether a proposal that passed the guardrails is applied without asking: every one in
+ * "manage" mode, the listed ones (negatives and keyword pauses) in "auto", none otherwise.
+ */
+export function appliesItself(
+  settings: { mode: string; paused: boolean; autoActions: string[] },
+  action: string,
+): boolean {
+  if (settings.paused) return false;
+  if (settings.mode === "manage") return true;
+  return settings.mode === "auto" && settings.autoActions.includes(action);
 }
 
 /** Whether an approved-or-auto proposal changes the Google account (a flag only informs). */

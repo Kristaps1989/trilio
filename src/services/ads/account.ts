@@ -18,7 +18,7 @@ import {
 } from "@/db/schema";
 import seed from "../../../data/keywords.lv.json";
 import { rigaDay } from "@/domain/analytics/visits";
-import { pacedBudget, splitBudget, type Performance } from "@/domain/ads/budget";
+import { DEFAULT_CPC_CAP_CENTS, pacedBudget, splitBudget, type Performance } from "@/domain/ads/budget";
 import type { AccountState, Proposal } from "@/domain/ads/guardrails";
 import {
   buildCampaignPlan,
@@ -562,6 +562,24 @@ export async function conversionsByDay(db: Db, from: string, to: string) {
   return [...out.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
+/** "customers/1/campaigns/23" → "23": the id Google puts in utm_campaign={campaignid}. */
+export function googleCampaignId(resource: string | null | undefined): string | null {
+  return resource?.split("/").pop() || null;
+}
+
+/**
+ * E-mails left (saved products and price requests) by visitors a Google campaign brought,
+ * keyed by Google's campaign id. This is what the ads are for (owner, 24 Nov 2026).
+ */
+export async function leadsByCampaign(db: Db, from: string, to: string): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  for (const r of await conversionsByDay(db, from, to)) {
+    if (r.source !== "google" || !r.campaign) continue;
+    out.set(r.campaign, (out.get(r.campaign) ?? 0) + r.saves);
+  }
+  return out;
+}
+
 /** The account as the guardrails see it. */
 export async function accountState(db: Db, now = new Date()): Promise<AccountState> {
   const settings = await getSettings(db);
@@ -586,6 +604,7 @@ export async function accountState(db: Db, now = new Date()): Promise<AccountSta
       ),
     )
     .groupBy(adKeywords.text);
+  const leads = await leadsByCampaign(db, from, dayOffset(now, 0));
   const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
   const [applied] = await db
@@ -594,7 +613,18 @@ export async function accountState(db: Db, now = new Date()): Promise<AccountSta
     .where(and(eq(adProposals.status, "applied"), gte(adProposals.decidedAt, start)));
   return {
     paused: settings.paused,
-    campaigns: new Map(campaigns.map((c) => [c.id, { budgetCents: c.budgetCents, status: c.status }])),
+    campaigns: new Map(
+      campaigns.map((c) => [
+        c.id,
+        {
+          budgetCents: c.budgetCents,
+          status: c.status,
+          leads28: leads.get(googleCampaignId(c.googleId) ?? "") ?? 0,
+          protected: c.groupId === BRAND_GROUP,
+        },
+      ]),
+    ),
+    dailyBudgetCents: settings.dailyBudgetCents,
     adGroups: new Map(groups.map((g) => [g.id, { campaignId: g.campaignId, cpcCapCents: g.cpcCapCents }])),
     keywords: new Map(
       keywords.map((k) => [
@@ -613,6 +643,29 @@ export async function accountState(db: Db, now = new Date()): Promise<AccountSta
     ],
     appliedToday: Number(applied?.n ?? 0),
   };
+}
+
+/**
+ * Sets a Search campaign's click-price ceiling to its highest ad group cap (never under the
+ * starting cap). Search campaigns buy clicks under the campaign's ceiling; an ad group's own
+ * bid does nothing above it, so a raised cap has to reach the campaign to change anything.
+ */
+export async function syncCpcCeiling(
+  db: Db,
+  provider: AdsProvider,
+  campaignId: string,
+  proposalId?: string | null,
+): Promise<{ ok: boolean; error?: string; cents?: number }> {
+  const [c] = await db.select().from(adCampaigns).where(eq(adCampaigns.id, campaignId));
+  if (!c || c.kind !== "search") return { ok: true };
+  const [cap] = await db
+    .select({ cents: sql<number>`coalesce(max(${adGroups.cpcCapCents}), 0)::int` })
+    .from(adGroups)
+    .where(and(eq(adGroups.campaignId, campaignId), sql`${adGroups.status} <> 'removed'`));
+  const cents = Math.max(DEFAULT_CPC_CAP_CENTS, Number(cap?.cents ?? 0));
+  if (!c.googleId) return { ok: true, cents };
+  const r = await send(db, provider, { op: "set_cpc_ceiling", campaign: c.googleId, cents }, proposalId);
+  return r.ok ? { ok: true, cents } : { ok: false, error: r.error };
 }
 
 /** Carries out one checked proposal in the platform and in Trilio's tables. */
@@ -711,6 +764,30 @@ export async function applyProposal(
         if (!r.ok) return done(false, r.error);
       }
       await db.update(adGroups).set({ cpcCapCents: p.cpcCapCents }).where(eq(adGroups.id, p.adGroupId));
+      // The campaign's ceiling is what the auctions see: it follows its highest ad group.
+      if (g) {
+        const r = await syncCpcCeiling(db, provider, g.campaignId, row.id);
+        if (!r.ok) return done(false, r.error);
+      }
+      return done(true);
+    }
+    case "pause_campaign":
+    case "enable_campaign": {
+      const status = p.action === "pause_campaign" ? "paused" : "enabled";
+      const [c] = await db.select().from(adCampaigns).where(eq(adCampaigns.id, p.campaignId));
+      if (!c) return done(false, "unknown campaign");
+      if (c.googleId) {
+        const r = await send(
+          db,
+          provider,
+          { op: "set_campaign_status", campaign: c.googleId, status },
+          row.id,
+        );
+        if (!r.ok) return done(false, r.error);
+      }
+      await db.update(adCampaigns).set({ status }).where(eq(adCampaigns.id, c.id));
+      // The day's total is split again among the campaigns that run now.
+      await paceBudgets(db, provider);
       return done(true);
     }
     case "move_budget": {

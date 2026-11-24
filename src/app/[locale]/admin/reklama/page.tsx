@@ -173,7 +173,7 @@ export default async function AdsOverview({ searchParams }: Props) {
           </label>
           <fieldset className="flex flex-col gap-1 sm:col-span-2">
             <legend className="mb-1 text-[15px] font-semibold text-mist">{t("mode")}</legend>
-            {(["observe", "approve", "auto"] as const).map((m) => (
+            {(["observe", "approve", "auto", "manage"] as const).map((m) => (
               <label key={m} className="flex min-h-11 items-center gap-3 text-[15px] text-mist">
                 <input
                   type="radio"
@@ -182,7 +182,15 @@ export default async function AdsOverview({ searchParams }: Props) {
                   defaultChecked={s.mode === m}
                   className="h-5 w-5 accent-lime"
                 />
-                {t(m === "observe" ? "modeObserve" : m === "approve" ? "modeApprove" : "modeAuto")}
+                {t(
+                  m === "observe"
+                    ? "modeObserve"
+                    : m === "approve"
+                      ? "modeApprove"
+                      : m === "auto"
+                        ? "modeAuto"
+                        : "modeManage",
+                )}
               </label>
             ))}
           </fieldset>

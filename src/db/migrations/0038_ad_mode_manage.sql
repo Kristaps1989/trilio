@@ -1,0 +1,1 @@
+ALTER TYPE "public"."ad_mode" ADD VALUE 'manage';
