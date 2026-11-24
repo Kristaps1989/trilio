@@ -1631,7 +1631,9 @@
     "prepaymentNote": "Šis ir priekšapmaksas rēķins, nevis nodokļa rēķins. Pēc apmaksas saņemsi rēķinu ar garantijas informāciju. Preci piegādājam pēc apmaksas saņemšanas.",
     "prepaymentPaid": "Šis priekšapmaksas rēķins ir apmaksāts.",
     "prepaymentExpired": "Apmaksas termiņš ir beidzies. Ja prece tev joprojām vajadzīga, raksti uz {email}.",
-    "electronic": "Rēķins sagatavots elektroniski un ir derīgs bez paraksta."
+    "electronic": "Rēķins sagatavots elektroniski un ir derīgs bez paraksta.",
+    "netPrice": "Bez PVN",
+    "sumVat": "Ar PVN"
   },
   "guarantee": {
     "title": "Garantija un tavas tiesības",

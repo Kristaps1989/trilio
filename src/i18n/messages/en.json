@@ -1628,7 +1628,9 @@
     "prepaymentNote": "This is a prepayment invoice, not a tax invoice. After payment you will receive the invoice with the guarantee information. We deliver after the payment has arrived.",
     "prepaymentPaid": "This prepayment invoice has been paid.",
     "prepaymentExpired": "The payment deadline has passed. If you still need the product, write to {email}.",
-    "electronic": "The invoice was prepared electronically and is valid without a signature."
+    "electronic": "The invoice was prepared electronically and is valid without a signature.",
+    "netPrice": "Excl. VAT",
+    "sumVat": "Incl. VAT"
   },
   "guarantee": {
     "title": "Guarantee and your rights",

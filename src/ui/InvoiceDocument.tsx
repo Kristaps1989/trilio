@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 import type { Invoice } from "@/db/schema";
-import { formatIban } from "@/domain/offers/offers";
+import { formatIban, vatSplit } from "@/domain/offers/offers";
 import { formatDateShort, formatEur } from "@/i18n/format";
 import { PrintButton } from "./PrintButton";
 import type { GuaranteeSheet } from "@/services/offers/guarantee";
@@ -90,8 +90,13 @@ export async function InvoiceDocument({
               <th scope="col" className="py-2 text-right">
                 {t("qty")}
               </th>
-              <th scope="col" className="py-2 text-right">
-                {t("sum")}
+              {invoice.vatRate ? (
+                <th scope="col" className="py-2 pl-2 text-right">
+                  {t("netPrice")}
+                </th>
+              ) : null}
+              <th scope="col" className="py-2 pl-2 text-right">
+                {t(invoice.vatRate ? "sumVat" : "sum")}
               </th>
             </tr>
           </thead>
@@ -100,7 +105,12 @@ export async function InvoiceDocument({
               <tr key={i} className="border-b border-card-line">
                 <td className="py-2">{l.text === DELIVERY_LINE ? t("deliveryLine") : l.text}</td>
                 <td className="py-2 text-right">{l.quantity}</td>
-                <td className="py-2 text-right">{formatEur(l.totalCents)}</td>
+                {invoice.vatRate ? (
+                  <td className="py-2 pl-2 text-right whitespace-nowrap">
+                    {formatEur(vatSplit(l.totalCents, invoice.vatRate).netCents)}
+                  </td>
+                ) : null}
+                <td className="py-2 pl-2 text-right whitespace-nowrap">{formatEur(l.totalCents)}</td>
               </tr>
             ))}
           </tbody>
