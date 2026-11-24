@@ -7,6 +7,7 @@ import {
   marketingActions,
   metaAdDaily,
   metaAdEntities,
+  metaAgentAds,
   savedItems,
   type MetaAdEntity,
 } from "@/db/schema";
@@ -23,6 +24,8 @@ import {
 import { dayOffset, getSettings, leadsByCampaign, paceBudgets, updateSettings } from "@/services/ads/account";
 import type { AdsProvider } from "@/services/ads/provider";
 import type { MetaAdsProvider } from "./meta-ads";
+import { ensureAgentAds, type CreatorConfig } from "./meta-creator";
+import type { PostFacts } from "@/domain/social/captions";
 
 // The marketing manager's daily round (docs/GROWTH_PLAN.md, "One agent for every channel";
 // owner, 24 Nov 2026): one daily budget for Google and Meta, spent where e-mails come from.
@@ -132,7 +135,12 @@ export type ChannelRow = ChannelPerformance & {
 };
 
 /** Both paid channels over the last 28 days, as the split reads them. */
-export async function channelPerformance(db: Db, now = new Date()): Promise<Record<ChannelId, ChannelRow>> {
+export async function channelPerformance(
+  db: Db,
+  now = new Date(),
+  /** The agent can make Meta ads itself: Meta counts as a running channel before it has any. */
+  canCreate = false,
+): Promise<Record<ChannelId, ChannelRow>> {
   const settings = await getSettings(db);
   const from = dayOffset(now, 28);
   const to = dayOffset(now, 0);
@@ -152,9 +160,9 @@ export async function channelPerformance(db: Db, now = new Date()): Promise<Reco
   const metaLeadCount = (await metaLeads(db, from, to)).reduce((a, r) => a + r.leads, 0);
   const entities = await db.select().from(metaAdEntities);
   // Meta can run when a budget is switched on somewhere: a campaign or an ad set that is not paused.
-  const metaOn = entities.some(
-    (e) => e.level !== "ad" && e.dailyBudgetCents !== null && e.status === "ACTIVE",
-  );
+  const metaOn =
+    canCreate ||
+    entities.some((e) => e.level !== "ad" && e.dailyBudgetCents !== null && e.status === "ACTIVE");
   const row = (id: ChannelId, active: boolean, currentCents: number, spendCents: number, leads: number) => ({
     id,
     active,
@@ -189,6 +197,8 @@ export type MarketingRun = {
   split: Record<ChannelId, number> | null;
   budgets: number;
   paused: number;
+  /** Ads the agent made today. */
+  created: number;
 };
 
 /**
@@ -197,7 +207,14 @@ export type MarketingRun = {
  */
 export async function runMarketingDaily(
   db: Db,
-  deps: { meta: MetaAdsProvider | null; google: AdsProvider | null; now?: Date; force?: boolean },
+  deps: {
+    meta: MetaAdsProvider | null;
+    google: AdsProvider | null;
+    /** What making an ad needs (the page, the pixel, the picture); without it ads are only managed. */
+    creator?: { config: CreatorConfig; render: (facts: PostFacts) => Promise<Buffer> } | null;
+    now?: Date;
+    force?: boolean;
+  },
 ): Promise<MarketingRun | null> {
   const now = deps.now ?? new Date();
   const day = rigaDay(now);
@@ -216,10 +233,10 @@ export async function runMarketingDaily(
   const pulled = await pullMeta(db, deps.meta, now);
   if (!pulled.ok) {
     await note({ kind: "split", detail: {}, reason: "Meta kontu neizdevās nolasīt.", error: pulled.error });
-    return { ok: false, error: pulled.error, applied: false, split: null, budgets: 0, paused: 0 };
+    return { ok: false, error: pulled.error, applied: false, split: null, budgets: 0, paused: 0, created: 0 };
   }
   const act = appliesItself({ ...settings, autoActions: [] }, "marketing");
-  const perf = await channelPerformance(db, now);
+  const perf = await channelPerformance(db, now, !!deps.creator);
   const total = settings.dailyBudgetCents;
   const split = splitChannels(total, [perf.google, perf.meta]);
   const eur = (c: number) => (c / 100).toFixed(2).replace(".", ",");
@@ -235,13 +252,18 @@ export async function runMarketingDaily(
     reason: `Google ${eur(split.google)} €, Meta ${eur(split.meta)} €. 28 dienās Google: ${eur(perf.google.spendCents)} € un ${perf.google.leads} e-pasti; Meta: ${eur(perf.meta.spendCents)} € un ${perf.meta.leads} e-pasti.`,
     applied: act,
   });
-  if (!act) return { ok: true, applied: false, split, budgets: 0, paused: 0 };
+  if (!act) return { ok: true, applied: false, split, budgets: 0, paused: 0, created: 0 };
 
   if (split.meta !== settings.metaDailyCents) {
     await updateSettings(db, { metaDailyCents: split.meta });
     // Google's campaigns take their new total now, not at the next pacing.
     if (deps.google) await paceBudgets(db, deps.google, now).catch(() => undefined);
   }
+
+  // The agent's own ads: made, or retired when they no longer tell today's truth.
+  const made = deps.creator
+    ? await ensureAgentAds(db, { meta: deps.meta, ...deps.creator, now }, split.meta)
+    : { created: 0, retired: 0, failed: 0 };
 
   // Meta's share over what carries a budget there.
   const from28 = dayOffset(now, 28);
@@ -275,7 +297,7 @@ export async function runMarketingDaily(
     });
   const plan = planMetaBudgets(split.meta, holders);
   let budgets = 0;
-  let paused = 0;
+  let paused = made.retired;
   for (const h of holders) {
     const cents = plan.budgets[h.id];
     if (cents === undefined || cents === h.dailyBudgetCents) continue;
@@ -293,8 +315,14 @@ export async function runMarketingDaily(
       await db.update(metaAdEntities).set({ dailyBudgetCents: cents }).where(eq(metaAdEntities.id, h.id));
     }
   }
-  const pause = async (id: string, reason: string) => {
+  const pause = async (id: string, reason: string, noLeads = false) => {
     const r = await deps.meta!.setStatus(id, "PAUSED");
+    // One of the agent's own ads: its category rests before it gets another.
+    if (r.ok && noLeads)
+      await db
+        .update(metaAgentAds)
+        .set({ status: "paused", retiredAt: now, retiredWhy: "no_leads" })
+        .where(eq(metaAgentAds.adId, id));
     await note({
       kind: "meta_pause",
       entityId: id,
@@ -342,9 +370,9 @@ export async function runMarketingDaily(
   });
   for (const id of adsToPause(ads)) {
     const ad = ads.find((a) => a.id === id)!;
-    await pause(id, `Reklāma 14 dienās iztērēja ${eur(ad.spendCents)} € un neatnesa nevienu e-pastu.`);
+    await pause(id, `Reklāma 14 dienās iztērēja ${eur(ad.spendCents)} € un neatnesa nevienu e-pastu.`, true);
   }
-  return { ok: true, applied: true, split, budgets, paused };
+  return { ok: true, applied: true, split, budgets, paused, created: made.created };
 }
 
 /** The last steps, newest first, for the admin page. */

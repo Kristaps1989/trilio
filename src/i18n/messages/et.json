@@ -2793,7 +2793,22 @@
       "stepSuggested": "Ieteikums",
       "stepFailed": "Neizdevās",
       "metaTagsTitle": "Lai Meta reklāmas varētu vērtēt",
-      "metaTagsBody": "Katras Meta reklāmas saitei jābūt ar šiem parametriem (Ads Manager → reklāma → URL parametri). Bez tiem Trilio neredz, kura reklāma atnesa e-pastu, un nevienu reklāmu neaptur."
+      "metaTagsBody": "Katras Meta reklāmas saitei jābūt ar šiem parametriem (Ads Manager → reklāma → URL parametri). Bez tiem Trilio neredz, kura reklāma atnesa e-pastu, un nevienu reklāmu neaptur.",
+      "step_meta_create": "Jauna Meta reklāma",
+      "agentAdsTitle": "Aģenta veidotās Meta reklāmas",
+      "agentAdsIntro": "Aģents pats izveido reklāmu kategorijām, kuru apmeklētāji atstāj e-pastus: 3 varianti šodienas cenās. Kad cenas vai preces mainās, reklāma tiek apturēta un vietā nāk jauna.",
+      "agentAdsEmpty": "Aģents vēl nav izveidojis nevienu reklāmu.",
+      "agentAdsNoConfig": "Lai aģents varētu veidot reklāmas, vajag META_PAGE_ID un META_PIXEL_ID.",
+      "colAd": "Reklāma",
+      "colAdText": "Teksts",
+      "colAdSince": "Izveidota",
+      "agentAdActive": "Darbojas",
+      "agentAdPaused": "Apturēta",
+      "agentAdWhy_facts": "mainījās cenas vai preces",
+      "agentAdWhy_room": "nav vietas budžetā",
+      "agentAdWhy_no_leads": "neatnesa e-pastus",
+      "agentAdWhy_stopped": "apturēta Meta kontā",
+      "agentAdOpen": "Kur ved"
     },
     "crm": {
       "title": "Uzdevumi",

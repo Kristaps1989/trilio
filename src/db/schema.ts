@@ -1496,6 +1496,36 @@ export const marketingActions = pgTable(
   (t) => [index("marketing_actions_day_idx").on(t.day)],
 );
 
+/**
+ * The Meta ads the agent made itself (services/marketing/meta-creator.ts): what each one
+ * shows, so it can be retired the day its prices or products are no longer what the site shows.
+ */
+export const metaAgentAds = pgTable(
+  "meta_agent_ads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Meta's id of the ad. */
+    adId: text("ad_id").notNull().unique(),
+    subcategoryId: text("subcategory_id").notNull(),
+    name: text("name").notNull(),
+    /** The three picks the picture and the text name, with their prices. */
+    facts: jsonb("facts")
+      .$type<{ category: string; picks: { name: string; priceCents: number; shop: string }[] }>()
+      .notNull(),
+    message: text("message").notNull(),
+    headline: text("headline").notNull(),
+    link: text("link").notNull(),
+    imageHash: text("image_hash").notNull(),
+    /** "active" or "paused" (retired: its facts changed, or its category lost its place). */
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    retiredAt: timestamp("retired_at", { withTimezone: true }),
+    retiredWhy: text("retired_why"),
+  },
+  (t) => [index("meta_agent_ads_sub_idx").on(t.subcategoryId, t.status)],
+);
+
+export type MetaAgentAd = typeof metaAgentAds.$inferSelect;
 export type MetaAdEntity = typeof metaAdEntities.$inferSelect;
 export type MarketingAction = typeof marketingActions.$inferSelect;
 export type AdSettings = typeof adSettings.$inferSelect;

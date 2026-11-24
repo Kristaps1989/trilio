@@ -282,6 +282,8 @@ test("creatives: drafts in the brand, approved ones are uploaded; memo and SEO",
   await expect(page.locator("[data-channel=meta]")).toHaveText("Meta (Facebook, Instagram)");
   await expect(page.getByText("Viens budžets abiem kanāliem nav ieslēgts.", { exact: false })).toBeVisible();
   await expect(page.getByText("utm_content={{ad.name}}", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Aģenta veidotās Meta reklāmas" })).toBeVisible();
+  await expect(page.getByText("Aģents vēl nav izveidojis nevienu reklāmu.")).toBeVisible();
   await page.getByRole("button", { name: "Pārrēķināt tagad" }).click();
   await expect(page.locator("[data-outcome=error]")).toHaveText(
     "Nav ko pārrēķināt: viens budžets nav ieslēgts vai Meta konts nav pieslēgts.",

@@ -7,6 +7,8 @@ import { formatInt } from "@/i18n/format";
 import { dayOffset, getSettings } from "@/services/ads/account";
 import { channelPerformance, recentMarketingActions } from "@/services/marketing/manager";
 import { metaAdsFromEnv } from "@/services/marketing/meta-ads";
+import { agentAds, creatorConfigFromEnv } from "@/services/marketing/meta-creator";
+import { formatDateShort } from "@/i18n/format";
 import { Button } from "@/ui/Button";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, Section, Table } from "../../ui";
@@ -68,6 +70,8 @@ export default async function AdsChannels({ searchParams }: Props) {
         };
   };
   const steps = await recentMarketingActions(db);
+  const own = await agentAds(db);
+  const canCreate = creatorConfigFromEnv() !== null;
   const today = {
     google: googleShareCents(settings),
     meta: settings.metaManaged ? settings.metaDailyCents : 0,
@@ -152,6 +156,38 @@ export default async function AdsChannels({ searchParams }: Props) {
             {META_URL_TAGS}
           </code>
         </div>
+      </Section>
+
+      <Section title={t("agentAdsTitle")} id="agent-ads">
+        <p className="max-w-2xl text-[15px] text-stone">{t("agentAdsIntro")}</p>
+        {!canCreate ? <p className="text-[15px] text-stone">{t("agentAdsNoConfig")}</p> : null}
+        <Table
+          caption={t("agentAdsTitle")}
+          head={[t("colAd"), t("colAdText"), t("colAdSince"), t("colState")]}
+          empty={t("agentAdsEmpty")}
+          rows={own.map((a) => [
+            <span key="n" data-agent-ad={a.status} className="break-words">
+              {a.headline}
+              <a href={a.link} target="_blank" rel="noopener noreferrer" className="block text-sm underline">
+                {t("agentAdOpen")}
+              </a>
+            </span>,
+            <span key="m" className="text-sm break-words whitespace-pre-line">
+              {a.message}
+            </span>,
+            formatDateShort(a.createdAt),
+            <span key="s">
+              <Chip tone={a.status === "active" ? "lime" : "neutral"}>
+                {t(a.status === "active" ? "agentAdActive" : "agentAdPaused")}
+              </Chip>
+              {a.retiredWhy && t.has(`agentAdWhy_${a.retiredWhy}`) ? (
+                <span className="block text-sm text-stone">
+                  {t(`agentAdWhy_${a.retiredWhy}` as "agentAdWhy_facts")}
+                </span>
+              ) : null}
+            </span>,
+          ])}
+        />
       </Section>
 
       <Section title={t("stepsTitle")} id="steps">

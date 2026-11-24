@@ -282,5 +282,41 @@ ad's name**: without the tags every ad would look like it brings nothing, so non
 Not known until it runs on the real account: Meta's smallest daily budget for the account (a
 refusal is shown on the page with Meta's words), and whether the token has `ads_management`.
 
+### Part 1b (built): the agent makes Meta ads itself
+
+Owner, 24 Nov 2026: the agent is to create Meta ads too, and a new ad **goes live on its own**
+once it passes the honesty checks (the owner sees it afterwards on Reklāma → Kanāli and can
+pause it). In "Pārvaldīt pašam" mode, with `META_PAGE_ID` and `META_PIXEL_ID` set
+(`services/marketing/meta-creator.ts`, rules in `domain/marketing/meta-creative.ts`):
+
+- **One campaign** (`trilio-ai-epasti`, objective `OUTCOME_LEADS`, the day's Meta share as its
+  budget) and **one ad set** (Latvia, optimised for the site's own `Lead` event through the
+  pixel, Meta choosing audience and placements; the seller named as beneficiary and payer, as
+  the EU's Digital Services Act asks). Made once, the first day Meta has a share. Because the
+  agent can make ads, Meta counts as a running channel before it has any.
+- **One ad per category worth advertising**, one per euro of Meta's share, three at most: the
+  categories whose results-page visitors leave e-mails (then: tap the request), among those
+  that can show three picks today.
+- **What an ad is:** a square picture in the page's own "collage" design (the three products'
+  photos under Trilio's logo, their names and today's prices), and a text that names the three
+  picks with today's prices. Owner, 24 Nov 2026: product pictures and Trilio's branding. A
+  category whose picks lack a photo, or whose photo does not load, gets no ad. The
+  first picture tried, the cover of the "three steps" post, explained Trilio and showed no
+  product; the owner asked whether it would bring leads, and it was replaced the same day.
+  It leads to that category's three picks, with `utm_campaign` and `utm_content` in the address
+  itself, so every ad of the agent can be judged without anyone setting URL parameters.
+- **Honesty:** the text passes the same lint as every post (no price or number that is not in
+  the data, no urgency, no "cheapest"). Each morning an ad whose products or prices are no
+  longer what the site shows is paused and a fresh one replaces it: a running ad never quotes
+  yesterday's price. At most three new ads a day.
+- **Rest:** a category whose ad was stopped for bringing nothing (5 € in 14 days without an
+  e-mail), by the owner or by Meta's review, gets no new ad for 14 days.
+
+Every step, and every refusal with Meta's own words, is on Reklāma → Kanāli. Not known until it
+runs on the real account: whether Meta accepts this combination for the account as written
+(objective, optimisation for the pixel's Lead event, the DSA fields, the smallest budget); the
+fields follow Meta's reference as read on 24 Nov 2026, and two of them (the DSA fields being
+required, `targeting_automation.advantage_audience`) could not be confirmed there.
+
 ### Part 2 (next): SEO applied by the agent
 ### Part 3 (next): one weekly report for every channel
