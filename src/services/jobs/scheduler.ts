@@ -4,6 +4,7 @@ import { runEprelJob } from "@/services/eprel/job";
 import { renormaliseProducts } from "@/services/ingestion/renormalise";
 import { runAdsJob, runAdsReportSync } from "@/services/ads/job";
 import { runMarketingJob } from "@/services/marketing/job";
+import { runSeoJob } from "@/services/seo/job";
 import { runSocialJob } from "@/services/social/job";
 import { runAllJobs } from "./all";
 import { eventful, runHousekeeping } from "./housekeeping";
@@ -51,6 +52,12 @@ export async function tick(db: Db, log: Pick<Console, "log" | "error"> = console
       return null;
     });
     if (ads) log.log("ads optimiser:", JSON.stringify(ads));
+    // The SEO agent, on Mondays after the optimiser has pulled Search Console (docs/GROWTH_PLAN.md).
+    const seo = await runSeoJob(db).catch((err) => {
+      log.error("seo agent:", err);
+      return null;
+    });
+    if (seo) log.log("seo agent:", JSON.stringify(seo));
     // Facebook and Instagram posts: drafts a day ahead, sends at 19:00 Riga (docs/SOCIAL_PLAN.md).
     const social = await runSocialJob(db).catch((err) => {
       log.error("social posts:", err);

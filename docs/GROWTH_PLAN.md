@@ -318,5 +318,32 @@ runs on the real account: whether Meta accepts this combination for the account 
 fields follow Meta's reference as read on 24 Nov 2026, and two of them (the DSA fields being
 required, `targeting_automation.advantage_audience`) could not be confirmed there.
 
-### Part 2 (next): SEO applied by the agent
+### Part 2 (built): the SEO agent
+
+Owner, 24 Nov 2026: the agent applies SEO improvements on its own. On Mondays from 07:00 Riga
+time, after the optimiser has pulled Search Console (`services/seo/agent.ts`, rules in
+`domain/seo/agent.ts`):
+
+- **Which pages:** category pages (`/kategorija/<sub>` and its budget pages) that Google showed
+  at least 30 times in 28 days at position 3–20 and that were clicked less than an ordinary
+  result there (10 % in the top three, 6 % to position five, 2,5 % to ten, 1 % beyond). Most
+  missed clicks first, three pages a week.
+- **What changes:** the page's title and meta description, written by Claude from the searches
+  the page was really shown for, with the page's present text beside them. Nothing else on the
+  page changes, and no page is added: the set of pages is still the categories and their budget
+  steps.
+- **Checked by code before it goes out:** 60 and 155 characters, the category named in the
+  title, no capitals, no "cheapest", guarantee, discount, percentage or urgency, and no number
+  but 3, the year and the page's budget.
+- **Trial:** three weeks after a change, it is taken back when people click the page clearly
+  less often than before (under 80 % of the old rate) without the page having moved up;
+  otherwise it is kept. A page rests four weeks after any change.
+- **Mode:** in "Pārvaldīt pašam" a checked text goes live at once (`seo_overrides`, read by the
+  pages' `generateMetadata`, Latvian pages only); in any other mode it waits on Reklāma → SEO,
+  where every change shows its text, the reason, clicks and position before and after, and can
+  be approved, refused or taken back by hand.
+
+Not built: new landing pages for searches that have no page (that means new budget steps or
+categories in `categories.json`, a product decision), and texts for the English pages.
+
 ### Part 3 (next): one weekly report for every channel

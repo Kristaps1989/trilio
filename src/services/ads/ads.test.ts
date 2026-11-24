@@ -20,12 +20,23 @@ import {
   metaAdEntities,
   metaAgentAds,
   savedItems,
+  seoOverrides,
   seoQueries,
   users,
 } from "@/db/schema";
 import { mockMetaAds } from "@/services/marketing/meta-ads";
 import { channelPerformance, metaLeads, runMarketingDaily } from "@/services/marketing/manager";
 import { ensureAgentAds, type CreatorConfig } from "@/services/marketing/meta-creator";
+import {
+  decideSeoOverride,
+  judgeTrials,
+  pageSearch,
+  runSeoAgent,
+  SeoCopy,
+  seoOverrideFor,
+} from "@/services/seo/agent";
+import { runSeoJob } from "@/services/seo/job";
+import { landingTemplateMeta } from "@/services/seo/landing-meta";
 import type { PostFacts } from "@/domain/social/captions";
 import { adParams } from "@/domain/growth/attribution";
 import type { StructuredCaller } from "@/services/llm/client";
@@ -89,6 +100,7 @@ async function wipe(db: Db) {
     metaAdDaily,
     metaAgentAds,
     metaAdEntities,
+    seoOverrides,
   ])
     await db.delete(t);
   await db.delete(users).where(sql`${users.email} like 'marketing-test-%'`);
@@ -851,6 +863,149 @@ run("ads pipeline", { timeout: 60_000 }, () => {
         .update(adCampaigns)
         .set({ status: c.status, budgetCents: c.budgetCents })
         .where(sql`${adCampaigns.id} = ${c.id}`);
+  });
+
+  it("the SEO agent rewrites the title of a page that is seen and not clicked, and takes back what lost clicks", async () => {
+    const before = await db.select().from(seoQueries);
+    await db.delete(seoQueries);
+    await db.delete(seoOverrides);
+    await db.delete(adAgentRuns).where(sql`${adAgentRuns.kind} = 'seo'`);
+    const now = new Date();
+    const day = (n: number) => dayOffset(now, n);
+    // The fridge page: shown 400 times at position 8, clicked 4 times (an ordinary result gets 10).
+    // The washer page is clicked plenty; the home page is not a category page.
+    await db.insert(seoQueries).values([
+      {
+        day: day(3),
+        query: "ledusskapis ar saldētavu",
+        page: "/kategorija/fridge",
+        impressions: 300,
+        clicks: 3,
+        position: 8,
+      },
+      {
+        day: day(5),
+        query: "labākais ledusskapis",
+        page: "/kategorija/fridge",
+        impressions: 100,
+        clicks: 1,
+        position: 8,
+      },
+      {
+        day: day(3),
+        query: "veļas mašīna",
+        page: "/kategorija/washer",
+        impressions: 200,
+        clicks: 20,
+        position: 6,
+      },
+      { day: day(3), query: "trilio", page: "/", impressions: 900, clicks: 5, position: 9 },
+    ]);
+    const fridge = (await pageSearch(db, day(28))).find((p) => p.path === "/kategorija/fridge")!;
+    expect(fridge).toMatchObject({ impressions: 400, clicks: 4, position: 8 });
+    expect(fridge.queries[0]!.query).toBe("ledusskapis ar saldētavu");
+
+    const year = now.getFullYear();
+    const template = landingTemplateMeta("/kategorija/fridge", year)!;
+    expect(template.title).toBe(`Labākie ledusskapji ${year}: cenas un salīdzinājums`);
+    expect(landingTemplateMeta("/kategorija/fridge/lidz-800", year)!.title).toMatch(
+      /^Labākie ledusskapji līdz 800\s€/,
+    );
+    expect(landingTemplateMeta("/rezultati", year)).toBeNull();
+
+    const good = {
+      title: `Ledusskapji ar saldētavu ${year}: 3 piemērotākie`,
+      description:
+        "Trīs piemērotākie ledusskapji ar saldētavu partneru veikalos ar šodienas cenām. Atbildi uz dažiem jautājumiem vai pajautā zemāku cenu.",
+      why: "Atbild uz meklējumu “ledusskapis ar saldētavu”.",
+    };
+    let answer: typeof good = good;
+    const asked: string[] = [];
+    const caller: StructuredCaller = async (req) => {
+      asked.push(req.user);
+      return (req.schema as unknown) === SeoCopy
+        ? { ok: true, value: req.schema.parse(answer), usage: { inputTokens: 1, outputTokens: 1 } }
+        : { ok: false, reason: "disabled" };
+    };
+    const current = async (path: string) => landingTemplateMeta(path, year);
+
+    // Not in "manage": the text waits as a proposal and the page keeps its own title.
+    expect(await runSeoAgent(db, { caller, apply: false, current, now })).toMatchObject({
+      ok: true,
+      written: 1,
+      applied: 0,
+      refused: 0,
+    });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toContain("ledusskapis ar saldētavu");
+    expect(asked[0]).toContain("Labākie ledusskapji");
+    const [proposal] = await db.select().from(seoOverrides);
+    expect(proposal).toMatchObject({
+      path: "/kategorija/fridge",
+      status: "proposed",
+      query: "ledusskapis ar saldētavu",
+      before: { impressions: 400, clicks: 4, position: 8 },
+    });
+    expect(await seoOverrideFor(db, "/kategorija/fridge")).toBeNull();
+    // A page with a proposal waiting is not written for again.
+    expect(await runSeoAgent(db, { caller, apply: false, current, now })).toMatchObject({ written: 0 });
+    // The owner approves: it is the page's title now. Refusing a live one is not a thing; taking it back is.
+    expect(await decideSeoOverride(db, proposal!.id, "approve", now)).toBe(true);
+    expect(await decideSeoOverride(db, proposal!.id, "reject", now)).toBe(false);
+    expect(await seoOverrideFor(db, "/kategorija/fridge")).toMatchObject({ title: good.title });
+    expect(await decideSeoOverride(db, "00000000-0000-4000-8000-000000000000", "approve")).toBe(false);
+
+    // Three weeks on, people click it less than before: the change is taken back.
+    const later = new Date(now.getTime() + 22 * 86_400_000);
+    expect(await judgeTrials(db, now)).toEqual({ kept: 0, reverted: 0 });
+    await db.insert(seoQueries).values({
+      day: dayOffset(later, 2),
+      query: "ledusskapis ar saldētavu",
+      page: "/kategorija/fridge",
+      impressions: 300,
+      clicks: 1,
+      position: 8,
+    });
+    expect(await judgeTrials(db, later)).toEqual({ kept: 0, reverted: 1 });
+    expect(await seoOverrideFor(db, "/kategorija/fridge")).toBeNull();
+    expect((await db.select().from(seoOverrides))[0]).toMatchObject({
+      status: "reverted",
+      after: { impressions: 300, clicks: 1 },
+    });
+
+    // "Pārvaldīt pašam": a checked text goes live at once; a dishonest one never does.
+    await db.delete(seoOverrides);
+    await db.delete(seoQueries).where(sql`${seoQueries.day} > ${day(0)}`);
+    answer = { ...good, title: "Lētākie ledusskapji Latvijā" };
+    expect(await runSeoAgent(db, { caller, apply: true, current, now })).toMatchObject({
+      written: 1,
+      applied: 0,
+      refused: 1,
+    });
+    expect(await db.select().from(seoOverrides)).toEqual([]);
+    answer = good;
+    await updateSettings(db, { mode: "manage" });
+    expect(await runSeoJob(db, { force: true, caller, now })).toMatchObject({ written: 1, applied: 1 });
+    const live = await seoOverrideFor(db, "/kategorija/fridge");
+    expect(live).toMatchObject({ status: "active", title: good.title });
+    // The owner can take a live one back by hand, and a kept one stays the page's text.
+    expect(await decideSeoOverride(db, live!.id, "revert")).toBe(true);
+    expect(await seoOverrideFor(db, "/kategorija/fridge")).toBeNull();
+    // Held on a Tuesday before the hour, the weekly job does not run by itself.
+    expect(await runSeoJob(db, { caller, now: new Date("2026-11-24T03:00:00Z") })).toBeNull();
+    // A failing model changes nothing and says so.
+    await db.delete(seoOverrides);
+    const down: StructuredCaller = async () => ({ ok: false, reason: "error" });
+    expect(await runSeoAgent(db, { caller: down, apply: true, current, now })).toMatchObject({
+      ok: false,
+      written: 0,
+    });
+
+    await updateSettings(db, { mode: "approve" });
+    await db.delete(seoOverrides);
+    await db.delete(seoQueries);
+    for (let i = 0; i < before.length; i += 2000)
+      await db.insert(seoQueries).values(before.slice(i, i + 2000));
   });
 
   it("applies the recommendation: suggested budgets, the recommended campaigns on, the rest untouched", async () => {

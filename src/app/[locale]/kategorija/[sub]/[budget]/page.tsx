@@ -9,6 +9,8 @@ import { cachedLandingIndex } from "../../landing-index";
 import { LandingPage } from "../../LandingPage";
 import { activeLocale } from "@/i18n/active";
 import { initLocale } from "@/i18n/init";
+import { db } from "@/db";
+import { seoOverrideFor } from "@/services/seo/agent";
 
 export const revalidate = 3600;
 
@@ -47,10 +49,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   // A page with the same picks as the base page or a lower budget names that page as canonical.
   const index = await cachedLandingIndex(r.sub.id);
+  // The SEO agent's own text for this page, when it has one (Latvian pages; docs/GROWTH_PLAN.md).
+  const own =
+    activeLocale() === "lv"
+      ? await seoOverrideFor(db, `/kategorija/${r.sub.id}/${budget}`).catch(() => null)
+      : null;
   return pageMetadata(
     `/kategorija/${r.sub.id}/${budget}`,
-    title,
-    t("descriptionBudget", { category, gender, budget: formatEur(r.budgetCents) }),
+    own?.title ?? title,
+    own?.description ?? t("descriptionBudget", { category, gender, budget: formatEur(r.budgetCents) }),
     landingCanonicalPath(r.sub.id, r.budgetCents / 100, index?.decision ?? null),
   );
 }

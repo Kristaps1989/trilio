@@ -1525,6 +1525,35 @@ export const metaAgentAds = pgTable(
   (t) => [index("meta_agent_ads_sub_idx").on(t.subcategoryId, t.status)],
 );
 
+/**
+ * The SEO agent's changes (services/seo/agent.ts): a category page's title and description
+ * as Google shows them, rewritten from what people searched. One active row per page; the
+ * numbers before the change are kept so the change can be judged and taken back.
+ */
+export const seoOverrides = pgTable(
+  "seo_overrides",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** The page's Latvian address: "/kategorija/fridge" or "/kategorija/fridge/lidz-800". */
+    path: text("path").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    /** The search the text was written for (the page's most seen one). */
+    query: text("query").notNull(),
+    why: text("why").notNull().default(""),
+    /** "proposed" (waits for the owner), "active", "kept" (stood its trial), "reverted", "rejected". */
+    status: text("status").notNull().default("proposed"),
+    before: jsonb("before").$type<{ impressions: number; clicks: number; position: number }>().notNull(),
+    after: jsonb("after").$type<{ impressions: number; clicks: number; position: number }>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+    /** When the trial was judged, or the change taken back or refused. */
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (t) => [index("seo_overrides_path_idx").on(t.path, t.status)],
+);
+
+export type SeoOverride = typeof seoOverrides.$inferSelect;
 export type MetaAgentAd = typeof metaAgentAds.$inferSelect;
 export type MetaAdEntity = typeof metaAdEntities.$inferSelect;
 export type MarketingAction = typeof marketingActions.$inferSelect;
