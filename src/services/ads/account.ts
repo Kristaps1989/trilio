@@ -18,7 +18,13 @@ import {
 } from "@/db/schema";
 import seed from "../../../data/keywords.lv.json";
 import { rigaDay } from "@/domain/analytics/visits";
-import { DEFAULT_CPC_CAP_CENTS, pacedBudget, splitBudget, type Performance } from "@/domain/ads/budget";
+import {
+  DEFAULT_CPC_CAP_CENTS,
+  googleShareCents,
+  pacedBudget,
+  splitBudget,
+  type Performance,
+} from "@/domain/ads/budget";
 import type { AccountState, Proposal } from "@/domain/ads/guardrails";
 import {
   buildCampaignPlan,
@@ -624,7 +630,7 @@ export async function accountState(db: Db, now = new Date()): Promise<AccountSta
         },
       ]),
     ),
-    dailyBudgetCents: settings.dailyBudgetCents,
+    dailyBudgetCents: googleShareCents(settings),
     adGroups: new Map(groups.map((g) => [g.id, { campaignId: g.campaignId, cpcCapCents: g.cpcCapCents }])),
     keywords: new Map(
       keywords.map((k) => [
@@ -857,7 +863,13 @@ export async function paceBudgets(
   const campaigns = await db.select().from(adCampaigns).where(eq(adCampaigns.status, "enabled"));
   if (campaigns.length === 0) return { cents: 0, why: "no campaigns" };
   const current = campaigns.reduce((a, c) => a + c.budgetCents, 0);
-  const paced = pacedBudget(current, await performance(db, now), settings);
+  // Google's part of the day: the whole budget, or what Meta's share leaves.
+  const google = googleShareCents(settings);
+  const paced = pacedBudget(current, await performance(db, now), {
+    ...settings,
+    dailyBudgetCents: google,
+    floorCents: Math.min(settings.floorCents, google),
+  });
   if (paced.cents === current) return paced;
   const split = splitBudget(
     paced.cents,

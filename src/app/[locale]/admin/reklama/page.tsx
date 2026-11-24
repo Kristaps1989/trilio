@@ -171,6 +171,18 @@ export default async function AdsOverview({ searchParams }: Props) {
             {t("saveWeight")}
             <input name="saveWeight" inputMode="numeric" defaultValue={s.saveWeight} className={inputClass} />
           </label>
+          <label className="flex min-h-11 items-start gap-3 text-[15px] text-mist sm:col-span-2">
+            <input
+              type="checkbox"
+              name="metaManaged"
+              defaultChecked={s.metaManaged}
+              className="mt-1 h-5 w-5 shrink-0 accent-lime"
+            />
+            <span>
+              {t("metaManaged")}
+              <span className="block text-sm text-stone">{t("metaManagedHint")}</span>
+            </span>
+          </label>
           <fieldset className="flex flex-col gap-1 sm:col-span-2">
             <legend className="mb-1 text-[15px] font-semibold text-mist">{t("mode")}</legend>
             {(["observe", "approve", "auto", "manage"] as const).map((m) => (

@@ -274,6 +274,19 @@ test("creatives: drafts in the brand, approved ones are uploaded; memo and SEO",
   await page.getByRole("link", { name: "SEO" }).click();
   await expect(page.locator("[data-seo-query]").first()).toBeVisible();
   await expectNoAxeViolations(page);
+
+  // Kanāli: Google and Meta side by side; until one budget serves both, nothing is split.
+  await page.getByRole("link", { name: "Kanāli" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kanāli");
+  await expect(page.locator("[data-channel=google]")).toHaveText("Google meklēšana");
+  await expect(page.locator("[data-channel=meta]")).toHaveText("Meta (Facebook, Instagram)");
+  await expect(page.getByText("Viens budžets abiem kanāliem nav ieslēgts.", { exact: false })).toBeVisible();
+  await expect(page.getByText("utm_content={{ad.name}}", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Pārrēķināt tagad" }).click();
+  await expect(page.locator("[data-outcome=error]")).toHaveText(
+    "Nav ko pārrēķināt: viens budžets nav ieslēgts vai Meta konts nav pieslēgts.",
+  );
+  await expectNoAxeViolations(page);
 });
 
 test("pause everything stops the account; resume brings it back", async ({ page }) => {
