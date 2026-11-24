@@ -8,6 +8,10 @@ export type Company = {
   vatNo: string;
   address: string;
   email: string;
+  /** The account a prepayment invoice may be paid to by bank transfer; without it only the online payment is offered. */
+  iban?: string;
+  bank?: string;
+  swift?: string;
 };
 
 export function companyFromEnv(env: Record<string, string | undefined> = process.env): Company {
@@ -19,6 +23,9 @@ export function companyFromEnv(env: Record<string, string | undefined> = process
     address: v("COMPANY_ADDRESS"),
     // Contact address for customers and data requests.
     email: v("COMPANY_EMAIL") || "info@trilio.lv",
+    iban: v("COMPANY_IBAN").replace(/\s+/g, "").toUpperCase(),
+    bank: v("COMPANY_BANK"),
+    swift: v("COMPANY_SWIFT").toUpperCase(),
   };
 }
 

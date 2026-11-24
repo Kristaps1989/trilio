@@ -1179,7 +1179,7 @@
         {
           "h": "Strīdi",
           "p": [
-            "Ja rodas problēma, vispirms raksti uz {email}, un atbildēsim vienas darba dienas laikā. Privātpersona var vērsties arī Patērētāju tiesību aizsardzības centrā (www.ptac.gov.lv) vai ES strīdu risināšanas platformā. Līgumam piemērojami Latvijas likumi."
+            "Ja rodas problēma, vispirms raksti uz {email}, un atbildēsim vienas darba dienas laikā. Privātpersona var vērsties arī Patērētāju tiesību aizsardzības centrā (www.ptac.gov.lv) un Patērētāju strīdu risināšanas komisijā. Līgumam piemērojami Latvijas likumi."
           ]
         }
       ],
@@ -1345,7 +1345,14 @@
     "requestReason": "Šo piedāvājumu sūtām, jo {date} trilio.lv pieprasīji zemāku cenu šai precei. Ja to neprasīji tu, šo e-pastu ignorē: vairāk nerakstīsim.",
     "follow": "Sekot cenai",
     "followLine": "Gribi, lai sekojam arī šīs preces cenai un uzrakstām, kad tā veikalos samazināsies? Apstiprini adresi: {url}",
-    "followAsk": "Gribi, lai sekojam arī šīs preces cenai un uzrakstām, kad tā veikalos samazināsies?"
+    "followAsk": "Gribi, lai sekojam arī šīs preces cenai un uzrakstām, kad tā veikalos samazināsies?",
+    "prepaySubject": "Priekšapmaksas rēķins {invoice} · pasūtījums {number}",
+    "prepayBody": "Paldies par pasūtījumu! Priekšapmaksas rēķins {invoice} par {product}: {amount}. Apmaksāt līdz {date}.",
+    "prepayOnline": "Apmaksāt tiešsaistē ar karti vai bankas saiti: {url}",
+    "prepayTransfer": "Ar bankas pārskaitījumu: saņēmējs {company}, konts {iban}{bank}, summa {amount}, maksājuma mērķis „Priekšapmaksas rēķins {invoice}”.",
+    "prepayAfter": "Kad maksājums būs saņemts, nosūtīsim rēķinu ar garantijas informāciju un piegādāsim preci bez maksas.",
+    "prepayView": "Priekšapmaksas rēķins: {url}",
+    "paidInvoice": "Rēķins {invoice}: {url}"
   },
   "answerEmail": {
     "tagline": "Salīdzinām cenas partneru veikalos",
@@ -1550,7 +1557,11 @@
     "withdrawTitle": "Atteikties no pirkuma",
     "withdrawBody": "Vari atteikties bez iemesla. Atgriešana Latvijā ir bez maksas: vienas darba dienas laikā sazināsimies par kurjeru. Naudu atmaksāsim ne vēlāk kā 14 dienu laikā.",
     "withdraw": "Atteikties no pirkuma",
-    "timeline": "Vēsture"
+    "timeline": "Vēsture",
+    "prepayment": "Priekšapmaksas rēķins {number}",
+    "prepaymentSent": "Priekšapmaksas rēķinu nosūtījām uz e-pastu. Vari apmaksāt tiešsaistē vai ar bankas pārskaitījumu.",
+    "prepaymentSentTransfer": "Priekšapmaksas rēķinu nosūtījām uz e-pastu. Apmaksā to ar bankas pārskaitījumu.",
+    "payFailed": "Maksājumu neizdevās sākt. Mēģini vēlreiz vai apmaksā ar bankas pārskaitījumu."
   },
   "feedback": {
     "kicker": "Trilio",
@@ -1596,7 +1607,62 @@
     "noVat": "PVN nav piemērojams (pārdevējs nav reģistrēts PVN maksātājs).",
     "paid": "Apmaksāts ar maksājumu karti vai bankas saiti.",
     "refunded": "Summa atmaksāta pircējam.",
-    "deliveryLine": "Piegāde Latvijā"
+    "deliveryLine": "Piegāde Latvijā",
+    "prepaymentTitle": "Priekšapmaksas rēķins",
+    "due": "Apmaksāt līdz: {date}",
+    "basis": "Pamatojums: priekšapmaksas rēķins {number}",
+    "creditBasis": "Pamatojums: rēķins {number}",
+    "paidOn": "Apmaksāts {date}, {method}.",
+    "methodOnline": "tiešsaistē (maksājumu karte vai bankas saite)",
+    "methodTransfer": "ar bankas pārskaitījumu",
+    "howToPay": "Kā apmaksāt",
+    "payOnline": "Tiešsaistē ar karti vai bankas saiti. Maksājums tiek apstiprināts uzreiz.",
+    "payOnlineButton": "Apmaksāt {amount}",
+    "payTransfer": "Ar bankas pārskaitījumu",
+    "recipient": "Saņēmējs",
+    "iban": "Konts (IBAN)",
+    "bank": "Banka",
+    "swift": "SWIFT",
+    "amount": "Summa",
+    "purpose": "Maksājuma mērķis",
+    "purposeValue": "Priekšapmaksas rēķins {number}",
+    "transferNote": "Pārskaitījums starp bankām var ilgt līdz vienai darba dienai. Kad nauda būs saņemta, nosūtīsim rēķinu un sāksim piegādi.",
+    "prepaymentNote": "Šis ir priekšapmaksas rēķins, nevis nodokļa rēķins. Pēc apmaksas saņemsi rēķinu ar garantijas informāciju. Preci piegādājam pēc apmaksas saņemšanas.",
+    "prepaymentPaid": "Šis priekšapmaksas rēķins ir apmaksāts.",
+    "prepaymentExpired": "Apmaksas termiņš ir beidzies. Ja prece tev joprojām vajadzīga, raksti uz {email}.",
+    "electronic": "Rēķins sagatavots elektroniski un ir derīgs bez paraksta."
+  },
+  "guarantee": {
+    "title": "Garantija un tavas tiesības",
+    "titleCompany": "Garantijas noteikumi",
+    "intro": "Prece: {product}. Pasūtījums {order}, rēķins {invoice}. Pārdevējs: {seller}. Saglabā šo dokumentu: kopā ar rēķinu tas apliecina pirkumu.",
+    "legalH": "Likumā noteiktās tiesības (2 gadi)",
+    "legal1": "Ja prece neatbilst līguma noteikumiem, tev ir tiesības pieteikt prasījumu pārdevējam 2 gadu laikā no preces piegādes dienas (Patērētāju tiesību aizsardzības likuma 13. pants). Dari to 2 mēnešu laikā no dienas, kad neatbilstību pamanīji.",
+    "legal2": "Ja neatbilstība atklājas pirmajā gadā pēc piegādes, uzskatāms, ka tā bija jau piegādes dienā; pretējais jāpierāda pārdevējam.",
+    "legal3": "Vispirms preci bez maksas salabojam vai apmainām pret tādu pašu. Ja tas nav iespējams vai neizdodas saprātīgā termiņā, vari prasīt cenas samazinājumu vai atcelt līgumu un saņemt naudu atpakaļ. Par transportu, darbu un materiāliem tev nav jāmaksā.",
+    "refurbished": "Prece ir atjaunota, stāvoklis: {grade}. Stāvokļa aprakstā norādītās lietošanas pēdas nav uzskatāmas par neatbilstību.",
+    "commercialH": "Papildu garantija ({months} mēn.)",
+    "commercial1": "Šai precei ir garantija {months} mēnešus no piegādes dienas. Tā attiecas uz ražošanas un materiālu defektiem, kas atklājas, preci lietojot atbilstoši instrukcijai. Garantijas prasījumus pieņem un risina pārdevējs: {seller}.",
+    "commercial2": "Garantija neattiecas uz bojājumiem, kas radušies no kritiena, šķidruma, nepareizas pieslēgšanas vai lietošanas pretēji instrukcijai, un uz dabisku nolietojumu (piemēram, filtri, blīves, spuldzes).",
+    "commercial3": "Šī garantija neietekmē tavas likumā noteiktās patērētāja tiesības, kas aprakstītas iepriekš.",
+    "claimH": "Kā pieteikt prasījumu",
+    "claim1": "Raksti uz {email}: norādi pasūtījuma numuru {order}, apraksti problēmu un, ja iespējams, pievieno foto vai video.",
+    "claim2": "Atbildēsim ne vēlāk kā 15 darbdienu laikā. Ja prece jānogādā pārbaudei vai remontam, par kurjeru vienojamies mēs, un tev par to nav jāmaksā.",
+    "withdrawalH": "Atteikuma tiesības (14 dienas)",
+    "withdrawal1": "14 dienu laikā no preces saņemšanas dienas vari atteikties no pirkuma bez iemesla: ar pogu „Atteikties no pirkuma” pasūtījuma lapā, rakstot uz {email} vai nosūtot zemāk esošo veidlapu.",
+    "withdrawal2": "Preci atgriez 14 dienu laikā pēc atteikuma. Atgriešana Latvijā ir bez maksas: par kurjeru vienojamies mēs. Naudu atmaksājam 14 dienu laikā pēc atteikuma saņemšanas ar to pašu maksājuma veidu, bet varam to aizturēt, līdz saņemam preci atpakaļ.",
+    "withdrawal3": "Tu atbildi par preces vērtības samazināšanos, ja to lietoji vairāk, nekā vajadzīgs, lai pārliecinātos par tās īpašībām un darbību.",
+    "formH": "Atteikuma veidlapa",
+    "form1": "Aizpildi un nosūti tikai tad, ja vēlies atteikties no līguma.",
+    "form2": "Kam: {seller}",
+    "form3": "Paziņoju, ka vēlos atteikties no līguma, ko esmu noslēdzis par šādas preces iegādi: {product}",
+    "form4": "Pasūtījuma numurs: {order}. Preces saņemšanas datums: ____________",
+    "form5": "Patērētāja vārds, uzvārds un adrese: ________________________",
+    "form6": "Datums: ____________ Paraksts (tikai papīra veidlapai): ____________",
+    "disputeH": "Ja neizdodas vienoties",
+    "dispute1": "Vispirms raksti mums uz {email}. Ja risinājums tevi neapmierina, vari vērsties Patērētāju tiesību aizsardzības centrā (www.ptac.gov.lv) un Patērētāju strīdu risināšanas komisijā.",
+    "company1": "Precei ir garantija {months} mēnešus no piegādes dienas. Tā attiecas uz ražošanas un materiālu defektiem. Prasījumus raksti uz {email}, norādot pasūtījuma numuru {order}; tos risina pārdevējs: {seller}.",
+    "company2": "Pircējs ir uzņēmums, tāpēc patērētāju tiesību normas un 14 dienu atteikuma tiesības šim pirkumam nav piemērojamas."
   },
   "timeline": {
     "none": "Vēl nekas nav noticis.",
@@ -2032,8 +2098,15 @@
         "tracking": "Norādi kurjeru un sūtījuma numuru vai saiti.",
         "reference": "Norādi atmaksas atsauci.",
         "unknown": "Pasūtījums nav atrasts.",
-        "future": "Datums nevar būt nākotnē."
-      }
+        "future": "Datums nevar būt nākotnē.",
+        "transfer": "Norādi bankas atsauci un datumu, kas nav nākotnē."
+      },
+      "prepayment": "Priekšapmaksas rēķins {number}",
+      "transferTitle": "Apmaksāts ar pārskaitījumu",
+      "transferHelp": "Kad priekšapmaksas rēķina summa redzama bankas kontā, ieraksti maksājuma datumu un bankas atsauci. Pasūtījums kļūs apmaksāts, un pircējs saņems rēķinu ar garantijas informāciju.",
+      "transferDate": "Maksājuma datums",
+      "transferReference": "Bankas atsauce vai maksātājs",
+      "transferSubmit": "Atzīmēt kā apmaksātu"
     },
     "status": {
       "offer": {

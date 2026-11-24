@@ -2,7 +2,7 @@ import type { Db } from "@/db/client";
 import { deliveryBy } from "@/domain/offers/offers";
 import { formatEur } from "@/i18n/format";
 import { notifyInbox, sendOrderEmail, type MailDeps } from "./emails";
-import { orderWithOffer } from "./orders";
+import { invoicesOf, orderWithOffer } from "./orders";
 import { userLang } from "./texts";
 
 // What follows a step outside the admin: the buyer's confirmation and a note
@@ -17,9 +17,11 @@ export async function afterOrderPaid(
   const found = await orderWithOffer(db, orderId);
   if (!found) return;
   const { order, offer } = found;
+  // The confirmation carries the final invoice's number and the guarantee sheet (a durable medium).
   await sendOrderEmail("paid", order, offer, deps, {
     lang: await userLang(db, order.userId),
     deliveryBy: deliveryBy(now, offer.deliveryWorkingDays),
+    invoice: (await invoicesOf(db, orderId)).find((i) => i.kind === "invoice") ?? null,
   });
   await notifyInbox(deps, `jauns pasūtījums ${order.number}`, [
     `${offer.productName} — ${formatEur(order.amountCents, "lv")}`,
@@ -50,6 +52,28 @@ export async function afterProblemReported(db: Db, orderId: string, note: string
     note ?? "",
     `${deps.baseUrl}/admin/pasutijumi/${order.id}`,
   ]);
+}
+
+/**
+ * A new order: the buyer gets the prepayment invoice with the ways to pay it. Sent once, when
+ * the order is first placed, and only when there is a way to pay (online or a bank account).
+ */
+export async function afterOrderPlaced(
+  db: Db,
+  orderId: string,
+  deps: MailDeps,
+  payOnline: boolean,
+): Promise<boolean> {
+  const found = await orderWithOffer(db, orderId);
+  if (!found) return false;
+  const { order, offer } = found;
+  const invoice = (await invoicesOf(db, orderId)).find((i) => i.kind === "prepayment") ?? null;
+  if (!invoice || (!payOnline && !invoice.seller.iban)) return false;
+  return sendOrderEmail("ordered", order, offer, deps, {
+    lang: await userLang(db, order.userId),
+    invoice,
+    payOnline,
+  });
 }
 
 /** Accepted while payments are not live yet: the admin follows up by hand. */

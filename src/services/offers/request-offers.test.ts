@@ -2,6 +2,7 @@ import { eq, inArray, like } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "@/db/client";
 import {
+  invoices,
   notifyRequests,
   offerEvents,
   offerOrders,
@@ -119,6 +120,17 @@ run("proposals to unconfirmed requests", { timeout: 60_000 }, () => {
     const offerIds = offers.map((o) => o.id);
     if (offerIds.length) {
       await db.delete(offerEvents).where(inArray(offerEvents.offerId, offerIds));
+      const orders = await db
+        .select({ id: offerOrders.id })
+        .from(offerOrders)
+        .where(inArray(offerOrders.offerId, offerIds));
+      if (orders.length)
+        await db.delete(invoices).where(
+          inArray(
+            invoices.orderId,
+            orders.map((o) => o.id),
+          ),
+        );
       await db.delete(offerOrders).where(inArray(offerOrders.offerId, offerIds));
       await db.delete(specialOffers).where(inArray(specialOffers.id, offerIds));
     }

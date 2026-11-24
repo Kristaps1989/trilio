@@ -6,10 +6,11 @@ import { paymentsProvider } from "@/services/payments";
 import { offerMailDeps } from "@/services/offers/deps";
 import { afterOrderPaid } from "@/services/offers/notify";
 
-// Paysera posts `notification_id=…` (form-encoded) here. The body is never
-// trusted on its own: the event is fetched from the provider with MAC
-// auth, processed once (idempotent by notification id and order id), and
-// then acknowledged so Paysera stops retrying.
+// Paysera's callback for a payment (docs/PAYMENTS.md). The body is never trusted
+// on its own: the provider checks its signature (Checkout) or fetches the event
+// itself (the older API). An event is processed once, by its id and by our order
+// reference; a paid order then gets its final invoice and the buyer the
+// confirmation with the guarantee sheet.
 
 export const dynamic = "force-dynamic";
 

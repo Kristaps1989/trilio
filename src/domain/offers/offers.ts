@@ -260,8 +260,39 @@ export function trackingUrl(carrierId: string, number: string): string | null {
 
 // ---------------------------------------------------------------- numbers
 
-export function invoiceNumber(year: number, seq: number): string {
-  return `TR-${year}-${String(seq).padStart(4, "0")}`;
+export const INVOICE_SERIES = "TR";
+/** Prepayment invoices are numbered apart: they are requests to pay, not part of the sales ledger. */
+export const PREPAYMENT_SERIES = "TRP";
+
+export function invoiceNumber(year: number, seq: number, series: string = INVOICE_SERIES): string {
+  return `${series}-${year}-${String(seq).padStart(4, "0")}`;
+}
+
+/** "LV80BANK0000435195001" → "LV80 BANK 0000 4351 9500 1", as banks print it. */
+export function formatIban(iban: string): string {
+  return iban.replace(/\s+/g, "").replace(/(.{4})(?=.)/g, "$1 ");
+}
+
+/**
+ * What the guarantee sheet of a final invoice says (Consumer Rights Protection Law, Art. 13
+ * and 16): a private buyer has the legal two years from delivery, and a longer guarantee in
+ * the offer is a commercial one on top; a business has only what the offer promised.
+ */
+export function guaranteeTerms(
+  buyerKind: BuyerKind,
+  warrantyMonths: number,
+): { legalMonths: number | null; commercialMonths: number | null; withdrawal: boolean } {
+  if (buyerKind === "person")
+    return {
+      legalMonths: 24,
+      commercialMonths: warrantyMonths > 24 ? warrantyMonths : null,
+      withdrawal: true,
+    };
+  return {
+    legalMonths: null,
+    commercialMonths: warrantyMonths > 0 ? warrantyMonths : null,
+    withdrawal: false,
+  };
 }
 
 const ORDER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";

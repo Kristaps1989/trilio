@@ -14,7 +14,14 @@ import { ingestStore } from "@/services/ingestion/run";
 import { offerMailDeps } from "@/services/offers/deps";
 import { sendOrderEmail } from "@/services/offers/emails";
 import { cancelOffer, createOffers, extendOffer, sendOffer } from "@/services/offers/offers";
-import { addOrderNote, correctDeliveredAt, moveOrder, orderWithOffer } from "@/services/offers/orders";
+import { afterOrderPaid } from "@/services/offers/notify";
+import {
+  addOrderNote,
+  correctDeliveredAt,
+  markPaidByTransfer,
+  moveOrder,
+  orderWithOffer,
+} from "@/services/offers/orders";
 import { adminOrNull, type Admin } from "./guard";
 import { userLang } from "@/services/offers/texts";
 
@@ -245,6 +252,34 @@ export async function correctDeliveryAction(formData: FormData): Promise<void> {
     await log(a, "order.delivery_corrected", "order", id, { day });
   revalidatePath(`/admin/pasutijumi/${id}`);
   redirect(`/admin/pasutijumi/${id}`);
+}
+
+/**
+ * "Atzīmēt kā apmaksātu": the prepayment invoice was paid by bank transfer. The order becomes
+ * paid, the final invoice is issued and the buyer gets it with the guarantee sheet, exactly as
+ * after an online payment.
+ */
+export async function transferPaidAction(formData: FormData): Promise<void> {
+  const a = await admin();
+  const id = z.string().uuid().parse(formData.get("orderId"));
+  const day = z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .safeParse(formData.get("paidOn"));
+  const reference = String(formData.get("reference") ?? "");
+  const now = new Date();
+  // Today's payment is stamped now; an earlier day at noon, so the date reads the same in Riga.
+  const paidAt = !day.success
+    ? new Date(NaN)
+    : day.data === now.toISOString().slice(0, 10)
+      ? now
+      : new Date(`${day.data}T12:00:00Z`);
+  const result = await markPaidByTransfer(db, id, { reference, paidAt, by: a.email }, now);
+  if (!result.ok) redirect(`/admin/pasutijumi/${id}?error=transfer`);
+  await log(a, "order.paid_by_transfer", "order", id, { reference: reference.trim().slice(0, 140) });
+  await afterOrderPaid(db, id, offerMailDeps());
+  revalidatePath(`/admin/pasutijumi/${id}`);
+  redirect(`/admin/pasutijumi/${id}?done=paid`);
 }
 
 export async function userNoteAction(formData: FormData): Promise<void> {

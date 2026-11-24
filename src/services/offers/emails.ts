@@ -1,15 +1,16 @@
 import { eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { users } from "@/db/schema";
-import { carrierById, guaranteeMonths, withdrawalDeadline } from "@/domain/offers/offers";
+import { carrierById, formatIban, guaranteeMonths, withdrawalDeadline } from "@/domain/offers/offers";
 import { formatDateDative, formatEur } from "@/i18n/format";
 import type { EmailMessage, EmailSender } from "@/services/notify/email";
 import { offersPaused } from "@/services/admin/audit";
-import type { OfferOrder, SpecialOffer } from "@/db/schema";
+import type { Invoice, OfferOrder, SpecialOffer } from "@/db/schema";
 import { ensureOffersToken } from "./offers";
 import { localizedPath, type UiLocale } from "@/i18n/routing";
 import { offerProductName, signatureLine, subjectProductName } from "./compose";
 import { emailShell, paragraphsWithLinks } from "./mail-layout";
+import { guaranteeSheet, guaranteeText, sellerLine } from "./guarantee";
 import { fill, offerCopyFor } from "./texts";
 
 // The e-mails around an order: one per step the buyer cares about, and a
@@ -48,14 +49,27 @@ function branded(
 const orderUrl = (deps: Pick<MailDeps, "baseUrl">, order: OfferOrder, lang: UiLocale) =>
   `${deps.baseUrl}${localizedPath(`/konts/pasutijumi/${order.id}`, lang)}`;
 
-export type OrderMail = "paid" | "shipped" | "delivered" | "return_requested" | "refunded" | "feedback";
+export type OrderMail =
+  "ordered" | "paid" | "shipped" | "delivered" | "return_requested" | "refunded" | "feedback";
+
+export type OrderMailExtra = {
+  deliveryBy?: Date;
+  lang?: UiLocale;
+  /** "ordered": the prepayment invoice; "paid": the final invoice (its guarantee sheet goes in the message). */
+  invoice?: Invoice | null;
+  /** "ordered": whether the order can be paid online (a payment provider is set up). */
+  payOnline?: boolean;
+};
+
+const invoiceUrl = (deps: Pick<MailDeps, "baseUrl">, invoice: Invoice, lang: UiLocale) =>
+  `${deps.baseUrl}${localizedPath(`/rekins/${invoice.id}`, lang)}`;
 
 export function composeOrderEmail(
   kind: OrderMail,
   order: OfferOrder,
   offer: SpecialOffer,
   deps: Omit<MailDeps, "email">,
-  extra: { deliveryBy?: Date; lang?: UiLocale } = {},
+  extra: OrderMailExtra = {},
 ): EmailMessage {
   const message = orderText(kind, order, offer, deps, extra);
   return { ...message, html: branded(message.subject, message.text, deps, extra.lang ?? "lv") };
@@ -66,7 +80,7 @@ function orderText(
   order: OfferOrder,
   offer: SpecialOffer,
   deps: Omit<MailDeps, "email">,
-  extra: { deliveryBy?: Date; lang?: UiLocale },
+  extra: OrderMailExtra,
 ): EmailMessage {
   const lang = extra.lang ?? "lv";
   const c = offerCopyFor(lang);
@@ -75,7 +89,42 @@ function orderText(
   const base = { to: order.email, replyTo: deps.inbox };
   const sign = signatureLine(deps.signature, lang);
   switch (kind) {
-    case "paid":
+    case "ordered": {
+      // The prepayment invoice: what to pay, by when, and the two ways to pay it.
+      const inv = extra.invoice;
+      const number = inv?.number ?? order.number;
+      const amount = formatEur(order.amountCents, lang);
+      const seller = inv?.seller ?? {};
+      return {
+        ...base,
+        subject: fill(c.prepaySubject, { invoice: number, number: order.number }),
+        text: [
+          fill(c.prepayBody, {
+            invoice: number,
+            product,
+            amount,
+            date: formatDateDative(inv?.dueAt ?? offer.validUntil, lang),
+          }),
+          extra.payOnline ? fill(c.prepayOnline, { url }) : "",
+          seller.iban
+            ? fill(c.prepayTransfer, {
+                company: seller.name ?? "",
+                iban: formatIban(seller.iban),
+                bank: seller.bank ? ` (${[seller.bank, seller.swift].filter(Boolean).join(", ")})` : "",
+                amount,
+                invoice: number,
+              })
+            : "",
+          inv ? fill(c.prepayView, { url: invoiceUrl(deps, inv, lang) }) : "",
+          c.prepayAfter,
+          sign,
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+      };
+    }
+    case "paid": {
+      const inv = extra.invoice;
       return {
         ...base,
         subject: fill(c.paidSubject, { number: order.number }),
@@ -85,10 +134,32 @@ function orderText(
             product,
             date: extra.deliveryBy ? formatDateDative(extra.deliveryBy, lang) : "—",
           }),
+          inv ? fill(c.paidInvoice, { invoice: inv.number, url: invoiceUrl(deps, inv, lang) }) : "",
           fill(c.orderLink, { url }),
           sign,
-        ].join("\n\n"),
+          // The guarantee sheet, in the message itself: the buyer keeps it without signing in.
+          inv
+            ? guaranteeText(
+                guaranteeSheet(
+                  {
+                    buyerKind: order.buyerKind,
+                    warrantyMonths: offer.warrantyMonths,
+                    grade: offer.condition === "refurbished" ? (offer.grade ?? "") : null,
+                    product: offer.productName,
+                    orderNumber: order.number,
+                    invoiceNumber: inv.number,
+                    seller: sellerLine(inv.seller, lang),
+                    email: deps.inbox,
+                  },
+                  lang,
+                ),
+              )
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
       };
+    }
     case "shipped":
       return {
         ...base,
@@ -155,7 +226,7 @@ export async function sendOrderEmail(
   order: OfferOrder,
   offer: SpecialOffer,
   deps: MailDeps,
-  extra: { deliveryBy?: Date; lang?: UiLocale } = {},
+  extra: OrderMailExtra = {},
 ): Promise<boolean> {
   const sent = await deps.email.send(composeOrderEmail(kind, order, offer, deps, extra));
   return sent.ok;

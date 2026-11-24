@@ -16,7 +16,9 @@ import type { OrderForm } from "@/domain/offers/checkout";
 import {
   canAccept,
   canMove,
+  INVOICE_SERIES,
   invoiceNumber,
+  PREPAYMENT_SERIES,
   orderNumber,
   trackingUrl,
   vatRateFor,
@@ -68,11 +70,13 @@ export async function orderWithOffer(db: Db, orderId: string) {
 }
 
 export type PlaceResult =
-  { ok: true; order: OfferOrder } | { ok: false; reason: "closed" | "not_yours" | "already_paid" };
+  | { ok: true; order: OfferOrder; created: boolean; prepayment: Invoice | null }
+  | { ok: false; reason: "closed" | "not_yours" | "already_paid" };
 
 /**
  * "Apmaksāt": the buyer accepted and filled in the form. Re-submitting
- * before paying updates the same order; the price is the offer's.
+ * before paying updates the same order; the price is the offer's. The order
+ * gets its prepayment invoice at once (`created` says it is a new order).
  */
 export async function placeOrder(
   db: Db,
@@ -80,6 +84,7 @@ export async function placeOrder(
   buyer: { userId: string; email: string },
   form: OrderForm,
   now = new Date(),
+  company: Company = companyFromEnv(),
 ): Promise<PlaceResult> {
   if (offer.userId !== buyer.userId) return { ok: false, reason: "not_yours" };
   if (!canAccept(offer, now)) return { ok: false, reason: "closed" };
@@ -112,7 +117,7 @@ export async function placeOrder(
       } catch (err) {
         if (!isDuplicate(err)) throw err;
         const raced = await orderOfOffer(db, offer.id);
-        if (raced) return placeOrder(db, offer, buyer, form, now);
+        if (raced) return placeOrder(db, offer, buyer, form, now, company);
       }
     }
   }
@@ -128,7 +133,8 @@ export async function placeOrder(
     kind: existing ? "details_updated" : "accepted",
     source: "buyer",
   });
-  return { ok: true, order };
+  const prepayment = await issuePrepaymentInvoice(db, order.id, now, company);
+  return { ok: true, order, created: !existing, prepayment };
 }
 
 function paymentOrderId(order: OfferOrder): string {
@@ -191,21 +197,100 @@ export async function orderPaymentCaptured(
     .update(payments)
     .set({ status: "captured", paidAt: now, providerRequestId: event.providerRequestId })
     .where(eq(payments.id, payment.id));
-  if (order.status !== "awaiting_payment") return "ignored";
-  await db
+  const settled = await settleOrder(
+    db,
+    order,
+    {
+      method: "online",
+      at: now,
+      issuedAt: now,
+      source: "system",
+      data: { method: event.paymentMethodLabel, test: event.test ?? false },
+    },
+    company,
+  );
+  return settled ? "order_paid" : "ignored";
+}
+
+export type PaidBy = "online" | "transfer";
+
+/**
+ * The money for an order has arrived, online or by bank transfer: the order is
+ * paid, the timeline says so and the final invoice is issued. Once: an order
+ * that is no longer awaiting payment is left as it is.
+ */
+async function settleOrder(
+  db: Db,
+  order: OfferOrder,
+  paid: {
+    method: PaidBy;
+    /** When the money arrived. */
+    at: Date;
+    /** When the invoice is written: now, also for a transfer seen a day later. */
+    issuedAt: Date;
+    source: "system" | "admin";
+    data: Record<string, unknown>;
+    note?: string;
+  },
+  company: Company,
+): Promise<Invoice | null> {
+  const [updated] = await db
     .update(offerOrders)
-    .set({ status: "paid", paidAt: now, updatedAt: now })
-    .where(eq(offerOrders.id, order.id));
+    .set({ status: "paid", paidAt: paid.at, updatedAt: paid.at })
+    .where(and(eq(offerOrders.id, order.id), eq(offerOrders.status, "awaiting_payment")))
+    .returning({ id: offerOrders.id });
+  if (!updated) return null;
   await db.update(specialOffers).set({ status: "paid" }).where(eq(specialOffers.id, order.offerId));
   await db.insert(offerEvents).values({
     offerId: order.offerId,
     orderId: order.id,
     kind: "paid",
-    source: "system",
-    data: { method: event.paymentMethodLabel, test: event.test ?? false },
+    source: paid.source,
+    note: paid.note ?? null,
+    data: paid.data,
   });
-  await issueInvoice(db, order.id, now, company);
-  return "order_paid";
+  return issueInvoice(db, order.id, paid.issuedAt, company, { method: paid.method, at: paid.at });
+}
+
+export type TransferResult =
+  | { ok: true; invoice: Invoice | null }
+  | { ok: false; reason: "unknown" | "not_awaiting" | "reference" | "date" };
+
+/**
+ * The admin saw the prepayment invoice paid on the bank statement. The bank's
+ * reference is required, so the entry can be found again; the date is the day
+ * the money arrived, never in the future.
+ */
+export async function markPaidByTransfer(
+  db: Db,
+  orderId: string,
+  input: { reference: string; paidAt: Date; by: string },
+  now = new Date(),
+  company: Company = companyFromEnv(),
+): Promise<TransferResult> {
+  const order = await orderById(db, orderId);
+  if (!order) return { ok: false, reason: "unknown" };
+  if (order.status !== "awaiting_payment") return { ok: false, reason: "not_awaiting" };
+  const reference = input.reference.trim().slice(0, 140);
+  if (!reference) return { ok: false, reason: "reference" };
+  if (Number.isNaN(input.paidAt.getTime()) || input.paidAt.getTime() > now.getTime() + 60_000)
+    return { ok: false, reason: "date" };
+  const invoice = await settleOrder(
+    db,
+    order,
+    {
+      method: "transfer",
+      at: input.paidAt,
+      issuedAt: now,
+      source: "admin",
+      note: input.by,
+      data: { method: "transfer", reference },
+    },
+    company,
+  );
+  return invoice || (await orderById(db, orderId))?.status === "paid"
+    ? { ok: true, invoice }
+    : { ok: false, reason: "not_awaiting" };
 }
 
 // ---------------------------------------------------------------- invoices
@@ -228,26 +313,27 @@ function buyerOf(order: OfferOrder): Record<string, string> {
   return { kind: "person", name: order.fullName, address, email: order.email };
 }
 
-async function nextSeq(db: Db, year: number): Promise<number> {
+async function nextSeq(db: Db, year: number, series: string): Promise<number> {
   const [row] = await db
     .select({ max: sql<number | null>`max(${invoices.seq})` })
     .from(invoices)
-    .where(eq(invoices.year, year));
+    .where(and(eq(invoices.year, year), eq(invoices.series, series)));
   return Number(row?.max ?? 0) + 1;
 }
 
 async function insertNumbered(
   db: Db,
-  values: Omit<typeof invoices.$inferInsert, "number" | "year" | "seq">,
+  values: Omit<typeof invoices.$inferInsert, "number" | "year" | "seq" | "series">,
   now: Date,
+  series: string = INVOICE_SERIES,
 ): Promise<Invoice> {
   const year = now.getFullYear();
   for (let attempt = 0; attempt < 8; attempt++) {
-    const seq = await nextSeq(db, year);
+    const seq = await nextSeq(db, year, series);
     try {
       const [row] = await db
         .insert(invoices)
-        .values({ ...values, year, seq, number: invoiceNumber(year, seq), issuedAt: now })
+        .values({ ...values, series, year, seq, number: invoiceNumber(year, seq, series), issuedAt: now })
         .returning();
       return row!;
     } catch (err) {
@@ -257,46 +343,92 @@ async function insertNumbered(
   throw new Error("could not number the invoice");
 }
 
+/** An order's documents in the order they were issued: prepayment invoice, invoice, credit note. */
 export async function invoicesOf(db: Db, orderId: string): Promise<Invoice[]> {
-  return db.select().from(invoices).where(eq(invoices.orderId, orderId)).orderBy(invoices.seq);
+  return db
+    .select()
+    .from(invoices)
+    .where(eq(invoices.orderId, orderId))
+    .orderBy(invoices.issuedAt, invoices.series, invoices.seq);
 }
 
-/** The invoice for a paid order, once. VAT applies when Trilio is registered at issue time. */
-export async function issueInvoice(
+/** What an invoice of either kind says about the sale: the parties, the lines and the sums. */
+function invoiceBody(order: OfferOrder, offer: SpecialOffer, company: Company) {
+  const vatRate = vatRateFor(company.vatNo);
+  const split = vatSplit(order.amountCents, vatRate);
+  const condition = offer.condition === "refurbished" ? ` (atjaunota, ${offer.grade ?? ""})` : "";
+  return {
+    seller: {
+      name: company.name,
+      regNo: company.regNo,
+      vatNo: company.vatNo,
+      address: company.address,
+      email: company.email,
+      iban: company.iban ?? "",
+      bank: company.bank ?? "",
+      swift: company.swift ?? "",
+    },
+    buyer: buyerOf(order),
+    lines: [
+      { text: `${offer.productName}${condition}`, quantity: 1, totalCents: order.amountCents },
+      { text: DELIVERY_LINE, quantity: 1, totalCents: 0 },
+    ],
+    netCents: split.netCents,
+    vatCents: split.vatCents,
+    totalCents: split.totalCents,
+    vatRate,
+  };
+}
+
+/**
+ * The prepayment invoice of an order that awaits payment: what to pay, to whom and by when
+ * (the offer's last day). One per order with its own number; until the money arrives it
+ * follows the order (the buyer may correct the details), afterwards it never changes.
+ */
+export async function issuePrepaymentInvoice(
   db: Db,
   orderId: string,
   now = new Date(),
   company: Company = companyFromEnv(),
 ): Promise<Invoice | null> {
-  const existing = (await invoicesOf(db, orderId)).find((i) => i.kind === "invoice");
-  if (existing) return existing;
   const found = await orderWithOffer(db, orderId);
   if (!found) return null;
   const { order, offer } = found;
-  const vatRate = vatRateFor(company.vatNo);
-  const split = vatSplit(order.amountCents, vatRate);
-  const condition = offer.condition === "refurbished" ? ` (atjaunota, ${offer.grade ?? ""})` : "";
+  const existing = (await invoicesOf(db, orderId)).find((i) => i.kind === "prepayment");
+  if (order.status !== "awaiting_payment") return existing ?? null;
+  const body = { ...invoiceBody(order, offer, company), dueAt: offer.validUntil };
+  if (existing) {
+    const [row] = await db.update(invoices).set(body).where(eq(invoices.id, existing.id)).returning();
+    return row ?? existing;
+  }
+  return insertNumbered(db, { kind: "prepayment", orderId, ...body }, now, PREPAYMENT_SERIES);
+}
+
+/**
+ * The final invoice for a paid order, once. VAT applies when Trilio is registered at issue
+ * time. It names the prepayment invoice it was paid by, the day and the way of payment.
+ */
+export async function issueInvoice(
+  db: Db,
+  orderId: string,
+  now = new Date(),
+  company: Company = companyFromEnv(),
+  paid: { method: PaidBy; at: Date } = { method: "online", at: now },
+): Promise<Invoice | null> {
+  const list = await invoicesOf(db, orderId);
+  const existing = list.find((i) => i.kind === "invoice");
+  if (existing) return existing;
+  const found = await orderWithOffer(db, orderId);
+  if (!found) return null;
   return insertNumbered(
     db,
     {
       kind: "invoice",
       orderId,
-      seller: {
-        name: company.name,
-        regNo: company.regNo,
-        vatNo: company.vatNo,
-        address: company.address,
-        email: company.email,
-      },
-      buyer: buyerOf(order),
-      lines: [
-        { text: `${offer.productName}${condition}`, quantity: 1, totalCents: order.amountCents },
-        { text: DELIVERY_LINE, quantity: 1, totalCents: 0 },
-      ],
-      netCents: split.netCents,
-      vatCents: split.vatCents,
-      totalCents: split.totalCents,
-      vatRate,
+      ...invoiceBody(found.order, found.offer, company),
+      paidAt: paid.at,
+      paymentMethod: paid.method,
+      basisNumber: list.find((i) => i.kind === "prepayment")?.number ?? null,
     },
     now,
   );
@@ -322,6 +454,7 @@ export async function issueCreditNote(db: Db, orderId: string, now = new Date())
       vatCents: -original.vatCents,
       totalCents: -original.totalCents,
       vatRate: original.vatRate,
+      basisNumber: original.number,
     },
     now,
   );

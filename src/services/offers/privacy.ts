@@ -1,11 +1,13 @@
 import { and, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { offerOrders, specialOffers } from "@/db/schema";
+import { invoices, offerOrders, specialOffers } from "@/db/schema";
 
 // Account deletion (GDPR) for offers and orders: offers that never became an
 // order are deleted with their timeline. Orders that were placed stay, because
 // invoices must be kept for accounting, but the phone, delivery note and
 // locker are removed; the invoice keeps its own snapshot of name and address.
+// The prepayment invoice of an order that was never paid is not an accounting
+// document, so it is deleted with its copy of the buyer's name and address.
 
 export async function forgetBuyer(db: Db, userId: string): Promise<{ offers: number; orders: number }> {
   const deleted = await db
@@ -26,7 +28,16 @@ export async function forgetBuyer(db: Db, userId: string): Promise<{ offers: num
     .select({ id: offerOrders.id })
     .from(offerOrders)
     .where(and(eq(offerOrders.userId, userId), isNull(offerOrders.paidAt)));
-  if (unpaid.length)
+  if (unpaid.length) {
+    await db.delete(invoices).where(
+      and(
+        inArray(
+          invoices.orderId,
+          unpaid.map((o) => o.id),
+        ),
+        eq(invoices.kind, "prepayment"),
+      ),
+    );
     await db
       .update(offerOrders)
       .set({ status: "cancelled" })
@@ -39,6 +50,7 @@ export async function forgetBuyer(db: Db, userId: string): Promise<{ offers: num
           eq(offerOrders.status, "awaiting_payment"),
         ),
       );
+  }
   const orders = await db
     .update(offerOrders)
     .set({ phone: null, deliveryNote: null, lockerId: null, feedbackNote: null, updatedAt: new Date() })

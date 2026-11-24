@@ -6,6 +6,7 @@ import { currentUserId } from "@/auth";
 import { companyFromEnv } from "@/config/company";
 import { db } from "@/db";
 import {
+  canAccept,
   canWithdraw,
   carrierById,
   deliveryBy,
@@ -16,10 +17,10 @@ import { formatDateDative, formatDayLocative, formatEur } from "@/i18n/format";
 import { eventsOf } from "@/services/offers/offers";
 import { invoicesOf, orderWithOffer } from "@/services/offers/orders";
 import { paymentsEnabled } from "@/services/payments";
-import { Button, ButtonLink, buttonClass } from "@/ui/Button";
+import { Button, buttonClass } from "@/ui/Button";
 import { InfoBox, Kicker, Page, PageTitle, Panel } from "@/ui/layout";
 import { Timeline } from "@/ui/Timeline";
-import { confirmDeliveryAction, withdrawAction } from "../actions";
+import { confirmDeliveryAction, payOrderAction, withdrawAction } from "../actions";
 import { localPath } from "@/i18n/path";
 
 // The order page is the receipt (docs/ADMIN_AND_OFFERS_PLAN.md §11.5): one
@@ -34,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ apmaksats?: string; gaida?: string }>;
+  searchParams: Promise<{ apmaksats?: string; gaida?: string; kluda?: string }>;
 };
 
 export default async function MyOrder({ params, searchParams }: Props) {
@@ -64,6 +65,9 @@ export default async function MyOrder({ params, searchParams }: Props) {
   const deadline = withdrawalDeadline(order.deliveredAt);
   const inbox = companyFromEnv().email;
   const months = guaranteeMonths(order.buyerKind, offer.warrantyMonths);
+  const awaiting = order.status === "awaiting_payment";
+  const online = awaiting && paymentsEnabled() && canAccept(offer, now);
+  const byTransfer = awaiting && invoices.some((i) => i.kind === "prepayment" && i.seller.iban);
 
   return (
     <Page size="narrow" gap="gap-5">
@@ -79,7 +83,17 @@ export default async function MyOrder({ params, searchParams }: Props) {
           <span role="status">{t("thanks")}</span>
         </InfoBox>
       ) : null}
-      {order.status === "awaiting_payment" && (sp.gaida || !paymentsEnabled()) ? (
+      {awaiting && sp.kluda ? (
+        <InfoBox>
+          <span role="alert">{t("payFailed")}</span>
+        </InfoBox>
+      ) : null}
+      {awaiting && !sp.kluda && (online || byTransfer) ? (
+        <InfoBox>
+          <span role="status">{t(online ? "prepaymentSent" : "prepaymentSentTransfer")}</span>
+        </InfoBox>
+      ) : null}
+      {awaiting && !online && !byTransfer ? (
         <InfoBox>
           <span role="status">{t("paymentsSoon")}</span>
         </InfoBox>
@@ -107,10 +121,11 @@ export default async function MyOrder({ params, searchParams }: Props) {
             </Button>
           </form>
         ) : null}
-        {order.status === "awaiting_payment" && paymentsEnabled() ? (
-          <ButtonLink href={`/piedavajums/${offer.token}/pasutit`}>
-            {t("pay", { amount: formatEur(order.amountCents) })}
-          </ButtonLink>
+        {online ? (
+          <form action={payOrderAction}>
+            <input type="hidden" name="orderId" value={order.id} />
+            <Button type="submit">{t("pay", { amount: formatEur(order.amountCents) })}</Button>
+          </form>
         ) : null}
       </Panel>
 
@@ -143,9 +158,11 @@ export default async function MyOrder({ params, searchParams }: Props) {
               href={`/rekins/${inv.id}`}
               className={buttonClass({ variant: "outline", size: "sm" })}
             >
-              {inv.kind === "invoice"
-                ? t("invoice", { number: inv.number })
-                : t("creditNote", { number: inv.number })}
+              {inv.kind === "prepayment"
+                ? t("prepayment", { number: inv.number })
+                : inv.kind === "invoice"
+                  ? t("invoice", { number: inv.number })
+                  : t("creditNote", { number: inv.number })}
             </Link>
           ))}
         </div>

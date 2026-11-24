@@ -11,7 +11,13 @@ import { Button, buttonClass } from "@/ui/Button";
 import { Timeline } from "@/ui/Timeline";
 import { orderItems } from "@/services/admin/crm";
 import { NextStepBox, RecordProduct } from "../../crm";
-import { correctDeliveryAction, orderNoteAction, orderStepAction, resolveProblemAction } from "../../actions";
+import {
+  correctDeliveryAction,
+  orderNoteAction,
+  orderStepAction,
+  resolveProblemAction,
+  transferPaidAction,
+} from "../../actions";
 import { requireAdmin } from "../../guard";
 import { AdminTitle, Chip, Section, inputClass, labelClass } from "../../ui";
 
@@ -181,9 +187,11 @@ export default async function AdminOrder({ params, searchParams }: Props) {
                 href={`/rekins/${inv.id}`}
                 className={buttonClass({ variant: "outline", size: "sm" })}
               >
-                {inv.kind === "invoice"
-                  ? t("invoice", { number: inv.number })
-                  : t("creditNote", { number: inv.number })}
+                {inv.kind === "prepayment"
+                  ? t("prepayment", { number: inv.number })
+                  : inv.kind === "invoice"
+                    ? t("invoice", { number: inv.number })
+                    : t("creditNote", { number: inv.number })}
               </a>
             ))}
             {order.paidAt ? (
@@ -210,6 +218,34 @@ export default async function AdminOrder({ params, searchParams }: Props) {
         <div className="flex flex-col gap-4">
           <h2 className="font-heading text-xl font-semibold text-mist">{t("next")}</h2>
           {steps.length === 0 ? <p className="text-[15px] text-stone">{t("closed")}</p> : null}
+          {order.status === "awaiting_payment" ? (
+            <form
+              action={transferPaidAction}
+              className="flex flex-col gap-3 rounded-panel-lg border-[1.5px] border-line-25 p-4"
+            >
+              <input type="hidden" name="orderId" value={order.id} />
+              <h3 className="text-[15px] font-semibold text-mist">{t("transferTitle")}</h3>
+              <p className="text-[15px] text-stone">{t("transferHelp")}</p>
+              <label className={labelClass}>
+                {t("transferDate")}
+                <input
+                  type="date"
+                  name="paidOn"
+                  required
+                  defaultValue={new Date().toISOString().slice(0, 10)}
+                  max={new Date().toISOString().slice(0, 10)}
+                  className={inputClass}
+                />
+              </label>
+              <label className={labelClass}>
+                {t("transferReference")}
+                <input name="reference" required maxLength={140} className={inputClass} />
+              </label>
+              <Button type="submit" size="lg" block>
+                {t("transferSubmit")}
+              </Button>
+            </form>
+          ) : null}
           {steps.includes("packed") ? (
             <StepButton orderId={order.id} to="packed" label={t("step.packed")} variant="outline" />
           ) : null}

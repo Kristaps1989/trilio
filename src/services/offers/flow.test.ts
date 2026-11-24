@@ -28,6 +28,7 @@ import { runOffersJob } from "./job";
 import {
   afterAcceptedWithoutPayments,
   afterOrderPaid,
+  afterOrderPlaced,
   afterProblemReported,
   afterWithdrawal,
 } from "./notify";
@@ -55,6 +56,8 @@ import {
   invoicesOf,
   issueCreditNote,
   issueInvoice,
+  issuePrepaymentInvoice,
+  markPaidByTransfer,
   moveOrder,
   orderByFeedbackToken,
   orderById,
@@ -336,6 +339,13 @@ run("offers and orders", () => {
     });
     const placed = await placeOrder(db, offer!, { userId: buyer.id, email: buyer.email }, form);
     expect(placed.ok).toBe(true);
+    // The order gets its prepayment invoice at once: its own series, due on the offer's last day.
+    const prepayment = (placed as { prepayment: { id: string; number: string } }).prepayment;
+    expect(placed).toMatchObject({ created: true, prepayment: { kind: "prepayment", totalCents: 3900 } });
+    expect(prepayment.number).toMatch(/^TRP-\d{4}-\d{4}$/);
+    expect((placed as { prepayment: { dueAt: Date } }).prepayment.dueAt.getTime()).toBe(
+      offer!.validUntil.getTime(),
+    );
     const again = await placeOrder(
       db,
       (await offerById(db, offer!.id))!,
@@ -346,6 +356,8 @@ run("offers and orders", () => {
       },
     );
     expect(again.ok && again.order.id).toBe(placed.ok && placed.order.id);
+    // Correcting the details keeps the same prepayment invoice; no second one is numbered.
+    expect(again).toMatchObject({ created: false, prepayment: { id: prepayment.id } });
     const order = (again as { order: { id: string; number: string; amountCents: number } }).order;
     expect(order.number).toMatch(/^T-[2-9A-Z]{6}$/);
     expect(order.amountCents).toBe(3900);
@@ -375,9 +387,13 @@ run("offers and orders", () => {
     const paid = await orderWithOffer(db, order.id);
     expect(paid?.order).toMatchObject({ status: "paid", phone: "+371 29999999" });
     expect(paid?.offer.status).toBe("paid");
-    const [invoice] = await invoicesOf(db, order.id);
+    const [first, invoice] = await invoicesOf(db, order.id);
+    expect(first).toMatchObject({ id: prepayment.id, kind: "prepayment" });
+    // The final invoice names the prepayment invoice it was paid by, the day and the way.
     expect(invoice).toMatchObject({
       kind: "invoice",
+      basisNumber: prepayment.number,
+      paymentMethod: "online",
       vatRate: null,
       netCents: 3900,
       vatCents: 0,
@@ -389,7 +405,10 @@ run("offers and orders", () => {
       name: "Anna Bērziņa",
       address: "Brīvības iela 1, Rīga, LV-1050",
     });
+    expect(invoice!.paidAt).toBeInstanceOf(Date);
     expect(await issueInvoice(db, order.id)).toMatchObject({ id: invoice!.id });
+    // Once paid, the prepayment invoice never changes again.
+    expect(await issuePrepaymentInvoice(db, order.id)).toMatchObject({ id: prepayment.id });
     expect(
       await placeOrder(db, (await offerById(db, offer!.id))!, { userId: buyer.id, email: buyer.email }, form),
     ).toEqual({
@@ -444,9 +463,13 @@ run("offers and orders", () => {
       (await moveOrder(db, order.id, { to: "refunded", by: "admin", refundReference: "PAYSERA-1" })).ok,
     ).toBe(true);
     const list = await invoicesOf(db, order.id);
-    expect(list.map((i) => i.kind)).toEqual(["invoice", "credit_note"]);
-    expect(list[1]).toMatchObject({ totalCents: -3900, creditForId: list[0]!.id });
-    expect(await issueCreditNote(db, order.id)).toMatchObject({ id: list[1]!.id });
+    expect(list.map((i) => i.kind)).toEqual(["prepayment", "invoice", "credit_note"]);
+    expect(list[2]).toMatchObject({
+      totalCents: -3900,
+      creditForId: list[1]!.id,
+      basisNumber: list[1]!.number,
+    });
+    expect(await issueCreditNote(db, order.id)).toMatchObject({ id: list[2]!.id });
     const kinds = (await eventsOf(db, order.offerId)).map((e) => e.kind);
     expect(kinds).toEqual(
       expect.arrayContaining([
@@ -547,6 +570,102 @@ run("offers and orders", () => {
       address: "Rīga",
     });
     expect(await orderOfOffer(db, id)).toMatchObject({ id: order.id });
+  });
+
+  it("a prepayment invoice paid by bank transfer: the admin marks it, the invoice and the guarantee follow", async () => {
+    const seller = {
+      name: "Sky Solutions SIA",
+      regNo: "40000000002",
+      vatNo: "",
+      address: "Rīga, Testa iela 1",
+      email: "info@trilio.test",
+      iban: "LV80BANK0000435195001",
+      bank: "Testa banka",
+      swift: "BANKLV22",
+    };
+    const r = await createOffers(db, input({ priceCents: 4100, warrantyMonths: 36 }), "admin@test");
+    const id = (r as { offerIds: string[] }).offerIds[0]!;
+    await sendOffer(db, id, deps);
+    const offer = (await offerById(db, id))!;
+    const now = new Date();
+    const placed = await placeOrder(db, offer, { userId: buyer.id, email: buyer.email }, form, now, seller);
+    const order = (placed as { order: { id: string; number: string } }).order;
+    const prepayment = (placed as { prepayment: { number: string; seller: Record<string, string> } })
+      .prepayment;
+    expect(prepayment.seller).toMatchObject({ name: "Sky Solutions SIA", iban: "LV80BANK0000435195001" });
+
+    // The e-mail with the prepayment invoice: the amount, the deadline and the bank details; no online link without a provider.
+    mail.sent.length = 0;
+    expect(await afterOrderPlaced(db, order.id, deps, false)).toBe(true);
+    const ordered = mail.sent.at(-1)!;
+    expect(ordered.subject).toBe(`Priekšapmaksas rēķins ${prepayment.number} · pasūtījums ${order.number}`);
+    expect(ordered.text).toContain("LV80 BANK 0000 4351 9500 1 (Testa banka, BANKLV22)");
+    expect(ordered.text).toMatch(/41\s€/);
+    expect(ordered.text).toContain(`maksājuma mērķis „Priekšapmaksas rēķins ${prepayment.number}”`);
+    expect(ordered.text).not.toContain("Apmaksāt tiešsaistē");
+    expect(ordered.text).toContain("/rekins/");
+    await afterOrderPlaced(db, order.id, deps, true);
+    expect(mail.sent.at(-1)!.text).toContain(
+      `Apmaksāt tiešsaistē ar karti vai bankas saiti: ${BASE}/konts/pasutijumi/${order.id}`,
+    );
+    expect(await afterOrderPlaced(db, "00000000-0000-0000-0000-000000000000", deps, true)).toBe(false);
+
+    const by = { by: "admin@test" };
+    expect(
+      await markPaidByTransfer(db, "00000000-0000-0000-0000-000000000000", {
+        reference: "x",
+        paidAt: now,
+        ...by,
+      }),
+    ).toEqual({ ok: false, reason: "unknown" });
+    expect(await markPaidByTransfer(db, order.id, { reference: "  ", paidAt: now, ...by })).toEqual({
+      ok: false,
+      reason: "reference",
+    });
+    expect(
+      await markPaidByTransfer(db, order.id, {
+        reference: "REF-1",
+        paidAt: new Date(Date.now() + DAY),
+        ...by,
+      }),
+    ).toEqual({ ok: false, reason: "date" });
+    const paidAt = new Date(now.getTime() - DAY);
+    const done = await markPaidByTransfer(db, order.id, { reference: " REF-1 ", paidAt, ...by }, now, seller);
+    expect(done).toMatchObject({
+      ok: true,
+      invoice: {
+        kind: "invoice",
+        paymentMethod: "transfer",
+        basisNumber: prepayment.number,
+        totalCents: 4100,
+      },
+    });
+    const invoice = (done as { invoice: { number: string; paidAt: Date; issuedAt: Date } }).invoice;
+    // The invoice is dated today; the payment keeps the day the money arrived.
+    expect(invoice.paidAt.getTime()).toBe(paidAt.getTime());
+    expect(invoice.issuedAt.getTime()).toBe(now.getTime());
+    expect(await orderById(db, order.id)).toMatchObject({ status: "paid" });
+    expect((await offerById(db, id))?.status).toBe("paid");
+    const paidEvent = (await eventsOf(db, id)).find((e) => e.kind === "paid");
+    expect(paidEvent).toMatchObject({ source: "admin", data: { method: "transfer", reference: "REF-1" } });
+    expect(await markPaidByTransfer(db, order.id, { reference: "REF-2", paidAt: now, ...by })).toEqual({
+      ok: false,
+      reason: "not_awaiting",
+    });
+
+    // The confirmation carries the invoice and the whole guarantee sheet: the legal two years,
+    // the longer guarantee of the offer, the withdrawal form and where to turn.
+    await afterOrderPaid(db, order.id, deps);
+    const paid = mail.sent.at(-2)!;
+    expect(paid.text).toContain(`Rēķins ${invoice.number}: ${BASE}/rekins/`);
+    expect(paid.text).toContain("GARANTIJA UN TAVAS TIESĪBAS");
+    expect(paid.text).toContain("2 gadu laikā no preces piegādes dienas");
+    expect(paid.text).toContain("Papildu garantija (36 mēn.)");
+    expect(paid.text).toContain("Atteikuma veidlapa");
+    expect(paid.text).toContain(
+      "Kam: Sky Solutions SIA, Reģ. Nr. 40000000002, Rīga, Testa iela 1, info@trilio.test",
+    );
+    expect(paid.text).toContain("www.ptac.gov.lv");
   });
 
   it("the job expires, reminds once, asks for feedback and asks carriers", async () => {
@@ -652,11 +771,26 @@ run("offers and orders", () => {
   });
 
   it("account deletion forgets what the courier needed and keeps invoices", async () => {
+    // An order placed and never paid: its prepayment invoice is not an accounting document.
+    await db.update(users).set({ offersOptIn: true }).where(eq(users.id, buyer.id));
+    const made = await createOffers(db, input({ priceCents: 4300 }), "admin@test");
+    const unpaidOffer = (made as { offerIds: string[] }).offerIds[0]!;
+    await sendOffer(db, unpaidOffer, deps);
+    const unpaid = await placeOrder(
+      db,
+      (await offerById(db, unpaidOffer))!,
+      { userId: buyer.id, email: buyer.email },
+      form,
+    );
+    const unpaidOrder = (unpaid as { order: { id: string } }).order.id;
+    expect((await invoicesOf(db, unpaidOrder)).map((i) => i.kind)).toEqual(["prepayment"]);
     const before = await db
       .select({ id: specialOffers.id })
       .from(specialOffers)
       .where(eq(specialOffers.userId, buyer.id));
     const r = await forgetBuyer(db, buyer.id);
+    expect(await invoicesOf(db, unpaidOrder)).toEqual([]);
+    expect(await orderById(db, unpaidOrder)).toMatchObject({ status: "cancelled" });
     expect(r.offers).toBeGreaterThan(0);
     expect(r.orders).toBeGreaterThan(0);
     const after = await db
