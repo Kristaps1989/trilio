@@ -192,6 +192,36 @@ describe("reading", () => {
     expect(
       metaError({ error: { message: "Too many calls", code: 80004, error_subcode: 2446079 } }, 400),
     ).toBe("Too many calls [80004/2446079]");
+    // The title, the text and the field Meta blames, its data given as an object or as JSON.
+    const refusal = {
+      message: "Invalid parameter",
+      code: 100,
+      error_subcode: 3858196,
+      error_user_title: "Nevar publicēt",
+      error_user_msg: "Pārbaudi maksātāju",
+    };
+    expect(
+      metaError(
+        { error: { ...refusal, error_data: { blame_field_specs: [["dsa_payor"], "targeting"] } } },
+        400,
+      ),
+    ).toBe(
+      "Invalid parameter (Nevar publicēt: Pārbaudi maksātāju) lauks: dsa_payor, targeting [100/3858196]",
+    );
+    expect(
+      metaError(
+        {
+          error: {
+            ...refusal,
+            error_data: JSON.stringify({ blame_field_specs: [["promoted_object", "pixel_id"]] }),
+          },
+        },
+        400,
+      ),
+    ).toBe(
+      "Invalid parameter (Nevar publicēt: Pārbaudi maksātāju) lauks: promoted_object.pixel_id [100/3858196]",
+    );
+    expect(metaError({ error: { message: "x", code: 1, error_data: "{bad" } }, 400)).toBe("x [1]");
   });
 });
 

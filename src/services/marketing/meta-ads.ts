@@ -119,14 +119,31 @@ const count = (v: unknown): number => {
   return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
 };
 
-/** Meta's error as one line: its message, the text meant for the user, and its code. */
+/**
+ * Meta's error as one line: its message, the title and text meant for the user, the fields
+ * Meta blames (`error_data.blame_field_specs`, an object or a JSON string), and its code.
+ */
 export function metaError(body: unknown, status: number): string {
   const e = (body as { error?: Json } | null)?.error;
   if (!e) return `Meta HTTP ${status}`;
+  const title = text(e.error_user_title);
   const user = text(e.error_user_msg);
-  return `${text(e.message) || "Meta error"}${user ? ` (${user})` : ""} [${text(e.code)}${
-    e.error_subcode ? `/${text(e.error_subcode)}` : ""
-  }]`.slice(0, 400);
+  let data: unknown = e.error_data;
+  if (typeof data === "string") {
+    try {
+      data = JSON.parse(data);
+    } catch {
+      data = null;
+    }
+  }
+  const specs = (data as { blame_field_specs?: unknown } | null)?.blame_field_specs;
+  const blamed = Array.isArray(specs)
+    ? specs.map((f) => (Array.isArray(f) ? f.map(text).join(".") : text(f))).filter(Boolean)
+    : [];
+  const said = [title, user].filter(Boolean).join(": ");
+  return `${text(e.message) || "Meta error"}${said ? ` (${said})` : ""}${
+    blamed.length ? ` lauks: ${blamed.join(", ")}` : ""
+  } [${text(e.code)}${e.error_subcode ? `/${text(e.error_subcode)}` : ""}]`.slice(0, 600);
 }
 
 const MAX_PAGES = 20;
