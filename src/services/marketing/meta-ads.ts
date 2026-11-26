@@ -47,9 +47,18 @@ export type NewAdSet = {
   campaignId: string;
   name: string;
   pixelId: string;
-  /** Who the ad is for and who pays (the EU's Digital Services Act asks both on every ad set). */
+  /**
+   * Who the ad is for and who pays (the EU's Digital Services Act asks both on every ad set).
+   * Meta refuses names that differ from what the ad account has on record (error 100/3858196,
+   * "advertiser or payer information"), so the provider first uses the names set here
+   * (META_DSA_BENEFICIARY / META_DSA_PAYOR), then the account's defaults, then the names on an
+   * ad set the account already runs, and only then `advertiser`.
+   */
   advertiser: string;
+  dsa?: DsaNames | null;
 };
+
+export type DsaNames = { beneficiary: string; payor: string };
 /** A new single-image link ad from the page (and its Instagram account when given). */
 export type NewAd = {
   adsetId: string;
@@ -196,6 +205,43 @@ export function metaAdsProvider(cfg: MetaAdsConfig, http: typeof fetch = fetch):
   }
 
   const account = `act_${cfg.adAccountId}`;
+
+  /** One object by its address; null when Meta does not give it. */
+  async function one(path: string, params: Record<string, string>): Promise<Json | null> {
+    try {
+      const res = await http(`${base}/${path}?${new URLSearchParams(params).toString()}`, {
+        headers,
+        signal: AbortSignal.timeout(30_000),
+      });
+      const body = (await res.json().catch(() => null)) as Json | null;
+      return res.ok && body ? body : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * The advertiser and payer names the ad account already uses: its defaults, else those of
+   * an ad set it runs (Meta accepted them there). Null when neither is known.
+   */
+  async function accountDsa(): Promise<DsaNames | null> {
+    const pick = (b: unknown, p: unknown): DsaNames | null => {
+      const beneficiary = text(b).trim();
+      const payor = text(p).trim() || beneficiary;
+      return beneficiary ? { beneficiary, payor } : null;
+    };
+    const acc = await one(account, { fields: "default_dsa_beneficiary,default_dsa_payor" });
+    const fromAccount = acc && pick(acc.default_dsa_beneficiary, acc.default_dsa_payor);
+    if (fromAccount) return fromAccount;
+    const sets = await all(`${account}/adsets`, { fields: "dsa_beneficiary,dsa_payor", limit: "50" });
+    if (typeof sets === "string") return null;
+    for (const s of sets) {
+      const found = pick(s.dsa_beneficiary, s.dsa_payor);
+      if (found) return found;
+    }
+    return null;
+  }
+
   return {
     uploadImage: (jpeg) => create("adimages", { bytes: jpeg.toString("base64") }),
     createCampaign: (c) =>
@@ -208,8 +254,9 @@ export function metaAdsProvider(cfg: MetaAdsConfig, http: typeof fetch = fetch):
         daily_budget: String(Math.round(c.dailyBudgetCents)),
         bid_strategy: "LOWEST_COST_WITHOUT_CAP",
       }),
-    createAdSet: (a) =>
-      create("adsets", {
+    async createAdSet(a) {
+      const dsa = a.dsa ?? (await accountDsa()) ?? { beneficiary: a.advertiser, payor: a.advertiser };
+      const r = await create("adsets", {
         name: a.name,
         campaign_id: a.campaignId,
         status: "ACTIVE",
@@ -218,9 +265,17 @@ export function metaAdsProvider(cfg: MetaAdsConfig, http: typeof fetch = fetch):
         destination_type: "WEBSITE",
         promoted_object: { pixel_id: a.pixelId, custom_event_type: "LEAD" },
         targeting: { geo_locations: { countries: ["LV"] }, targeting_automation: { advantage_audience: 1 } },
-        dsa_beneficiary: a.advertiser,
-        dsa_payor: a.advertiser,
-      }),
+        dsa_beneficiary: dsa.beneficiary,
+        dsa_payor: dsa.payor,
+      });
+      // Which names were sent, so a refusal can be compared with the account's records.
+      return r.ok
+        ? r
+        : {
+            ok: false,
+            error: `Reklamētājs “${dsa.beneficiary}”, maksātājs “${dsa.payor}”: ${r.error}`.slice(0, 500),
+          };
+    },
     createAd: (a) =>
       create("ads", {
         name: a.name,

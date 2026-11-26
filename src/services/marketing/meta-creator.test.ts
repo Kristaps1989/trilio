@@ -27,7 +27,15 @@ describe("creatorConfigFromEnv", () => {
     ).toMatchObject({
       instagramUserId: null,
       advertiser: "Trilio",
+      dsa: null,
     });
+    expect(
+      creatorConfigFromEnv({
+        META_PAGE_ID: "100200300",
+        META_PIXEL_ID: "2161476984461393",
+        META_DSA_BENEFICIARY: " Trilio ",
+      })!.dsa,
+    ).toEqual({ beneficiary: "Trilio", payor: "Trilio" });
   });
 });
 

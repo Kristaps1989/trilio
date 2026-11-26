@@ -714,6 +714,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
       instagramUserId: "17840000000000000",
       pixelId: "2161476984461393",
       advertiser: "Sky Solutions SIA",
+      dsa: null,
       baseUrl: "https://trilio.test",
       domain: "trilio.test",
     };
