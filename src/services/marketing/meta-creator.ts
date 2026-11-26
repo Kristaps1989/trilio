@@ -20,7 +20,7 @@ import { lintPost } from "@/domain/social/lint";
 import { dayOffset, siteUrl } from "@/services/ads/account";
 import { notifyFunnel } from "@/services/notify/events";
 import { picksFacts } from "@/services/social/facts";
-import type { MetaAdsProvider } from "./meta-ads";
+import type { DsaNames, MetaAdsProvider } from "./meta-ads";
 
 // The agent's own Meta ads (docs/GROWTH_PLAN.md, "One agent for every channel"; owner,
 // 24 Nov 2026: the agent creates and publishes ads on its own, after the honesty checks).
@@ -34,6 +34,8 @@ export type CreatorConfig = {
   instagramUserId: string | null;
   pixelId: string;
   advertiser: string;
+  /** The ad set's advertiser and payer as set by hand; else read from the ad account. */
+  dsa: DsaNames | null;
   baseUrl: string;
   domain: string;
 };
@@ -51,9 +53,17 @@ export function creatorConfigFromEnv(
     pixelId,
     instagramUserId: env.META_IG_USER_ID?.trim() || null,
     advertiser: companyFromEnv(env).name || "Trilio",
+    dsa: dsaFromEnv(env),
     baseUrl,
     domain: new URL(baseUrl).hostname.replace(/^www\./, ""),
   };
+}
+
+/** META_DSA_BENEFICIARY and META_DSA_PAYOR (the payer defaults to the advertiser). */
+export function dsaFromEnv(env: Record<string, string | undefined>): DsaNames | null {
+  const beneficiary = env.META_DSA_BENEFICIARY?.trim();
+  if (!beneficiary) return null;
+  return { beneficiary, payor: env.META_DSA_PAYOR?.trim() || beneficiary };
 }
 
 export type CreatorDeps = {
@@ -230,6 +240,7 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
       name: AGENT_ADSET,
       pixelId: deps.config.pixelId,
       advertiser: deps.config.advertiser,
+      dsa: deps.config.dsa,
     });
     await note(
       "meta_create",

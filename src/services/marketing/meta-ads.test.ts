@@ -11,6 +11,7 @@ import {
 // Meta's Marketing API client: the requests it makes and how it reads the answers.
 
 const cfg = { adAccountId: "1234567890", token: "token-x", version: "v23.0" };
+type Json = Record<string, unknown>;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
@@ -276,7 +277,8 @@ describe("creating", () => {
       campaignId: "700002",
       name: "latvija",
       pixelId: "2161476984461393",
-      advertiser: "Sky Solutions SIA",
+      advertiser: "x",
+      dsa: { beneficiary: "Sky Solutions SIA", payor: "Sky Solutions SIA" },
     });
     expect(sent[2]!.url).toBe("https://graph.facebook.com/v23.0/act_1234567890/adsets");
     expect(sent[2]!.fields).toMatchObject({
@@ -330,6 +332,44 @@ describe("creating", () => {
           call_to_action: { type: "LEARN_MORE", value: { link } },
         },
       },
+    });
+  });
+
+  it("names the ad set's advertiser and payer as the account already does", async () => {
+    const run = async (account: Json, adsets: Json[] | null, refuse = false) => {
+      const sent: { url: string; fields: Record<string, string> }[] = [];
+      const http = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (init?.method !== "POST") {
+          if (url.includes("/adsets?")) return adsets ? json({ data: adsets }) : json({ error: {} }, 400);
+          return json(account);
+        }
+        sent.push({ url, fields: Object.fromEntries(new URLSearchParams(String(init.body))) });
+        return refuse
+          ? json({ error: { message: "Invalid parameter", code: 100, error_subcode: 3858196 } }, 400)
+          : json({ id: "800001" });
+      }) as typeof fetch;
+      const r = await metaAdsProvider(cfg, http).createAdSet({
+        campaignId: "700002",
+        name: "latvija",
+        pixelId: "2161476984461393",
+        advertiser: "Sky Solutions SIA",
+      });
+      return { r, fields: sent[0]!.fields };
+    };
+    // The account's own defaults first.
+    const a = await run({ default_dsa_beneficiary: "Trilio", default_dsa_payor: "Sky Solutions" }, []);
+    expect(a.fields).toMatchObject({ dsa_beneficiary: "Trilio", dsa_payor: "Sky Solutions" });
+    // Else the names on an ad set it already runs; a missing payer is the advertiser.
+    const b = await run({}, [{ id: "1" }, { dsa_beneficiary: "Kristaps S." }]);
+    expect(b.fields).toMatchObject({ dsa_beneficiary: "Kristaps S.", dsa_payor: "Kristaps S." });
+    // Else the company; a refusal says which names were sent.
+    const c = await run({}, null, true);
+    expect(c.fields).toMatchObject({ dsa_beneficiary: "Sky Solutions SIA", dsa_payor: "Sky Solutions SIA" });
+    expect(c.r).toEqual({
+      ok: false,
+      error:
+        "Reklamētājs “Sky Solutions SIA”, maksātājs “Sky Solutions SIA”: Invalid parameter [100/3858196]",
     });
   });
 
