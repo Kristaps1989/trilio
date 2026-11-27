@@ -65,13 +65,7 @@ describe("the ad pages", () => {
 
   it("the Reel is the collage, the three products in turn and what Trilio does", () => {
     const reel = reelCard(facts, "https://trilio.lv");
-    expect(reel.slides?.map((s) => s.layout)).toEqual([
-      "collage",
-      "drop",
-      "drop",
-      "drop",
-      "closing",
-    ]);
+    expect(reel.slides?.map((s) => s.layout)).toEqual(["collage", "drop", "drop", "drop", "closing"]);
     expect(closingPage(facts)).toMatchObject({ headlineAccent: "Redzi savus trīs.", icons: ["vacuum"] });
     expect(AD_FORMATS).toEqual(["collage", "collage_b", "carousel", "reel"]);
   });
