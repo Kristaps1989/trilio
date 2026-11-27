@@ -49,8 +49,8 @@ describe("the ad pages", () => {
 
   it("each product is a card of its own, with its place, name, shop and price", () => {
     expect(productPage(facts, 1)).toMatchObject({
-      layout: "drop",
-      eyebrow: "02 · putekļsūcēji",
+      layout: "pick",
+      eyebrow: "B · Putekļsūcēji",
       headline: "Bosch MoveOn Mini BGC05AAA1",
       image: "https://x/2.jpg",
     });
@@ -65,7 +65,7 @@ describe("the ad pages", () => {
 
   it("the Reel is the collage, the three products in turn and what Trilio does", () => {
     const reel = reelCard(facts, "https://trilio.lv");
-    expect(reel.slides?.map((s) => s.layout)).toEqual(["collage", "drop", "drop", "drop", "closing"]);
+    expect(reel.slides?.map((s) => s.layout)).toEqual(["collage", "pick", "pick", "pick", "closing"]);
     expect(closingPage(facts)).toMatchObject({ headlineAccent: "Redzi savus trīs.", icons: ["vacuum"] });
     expect(AD_FORMATS).toEqual(["collage", "collage_b", "carousel", "reel"]);
   });

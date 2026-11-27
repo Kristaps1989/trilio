@@ -1,4 +1,4 @@
-import { composePost, type PostCard, type PostFacts } from "@/domain/social/captions";
+import { composePost, pickSlide, type PostCard, type PostFacts } from "@/domain/social/captions";
 import { formatEur } from "@/i18n/format";
 
 // The pictures of the agent's Meta ads (owner, 27 Nov 2026: 4:5 and 9:16 versions, a second
@@ -45,22 +45,15 @@ export function collageBPage(facts: Picks, baseUrl: string): Page {
   };
 }
 
-/** One product's card: its photo, its place among the three, its name and today's price. */
+/**
+ * One product's card: the posts' own product slide (captions.ts pickSlide): its photo large, its
+ * tier and the "Labākā izvēle" pill, name, today's price and shop, key specs and what it gives
+ * against the cheapest of the three. A product without a photo gets no card.
+ */
 export function productPage(facts: Picks, i: number): Page {
   const p = facts.picks[i];
   if (!p?.imageUrl) throw new Error(`no photo of pick ${i + 1}`);
-  return {
-    // "drop": the photo large and centred under the name, the price below it.
-    layout: "drop",
-    chip: facts.category,
-    title: p.name,
-    lines: [{ main: p.name, side: eur(p.priceCents), sub: p.shop }],
-    eyebrow: `0${i + 1} · ${lower(facts.category)}`,
-    headline: p.name,
-    stat: { label: `Cena šodien · ${p.shop}`, value: eur(p.priceCents) },
-    image: p.imageUrl,
-    subcategoryId: facts.subcategoryId,
-  };
+  return pickSlide(facts.category, facts.picks, i, facts.subcategoryId);
 }
 
 /** The Reel's last page: what Trilio does, and where. */

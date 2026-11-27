@@ -775,12 +775,13 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     ]);
     const made = await db.select().from(metaAgentAds);
     expect(made.map((a) => a.status)).toEqual(Array(8).fill("active"));
-    expect(made.filter((a) => a.subcategoryId === "fridge").map((a) => a.format)).toEqual([
-      "collage",
-      "collage_b",
-      "carousel",
-      "reel",
-    ]);
+    // Rows come back in no set order while other suites write the same table.
+    expect(
+      made
+        .filter((a) => a.subcategoryId === "fridge")
+        .map((a) => a.format)
+        .sort(),
+    ).toEqual(["carousel", "collage", "collage_b", "reel"]);
     const fridgeAd = made.find((a) => a.subcategoryId === "fridge" && a.format === "collage")!;
     expect(fridgeAd.link).toBe(
       `https://trilio.test/rezultati?sub=fridge&cena=tipiska&utm_source=meta&utm_medium=paid_social&utm_campaign=trilio-ai-epasti&utm_content=fridge-a-${today}`,
