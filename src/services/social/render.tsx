@@ -422,7 +422,7 @@ function Phone({ screen, photo }: { screen: PhoneScreen; photo?: string }) {
   } else if (screen.kind === "picks") {
     body = (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {screen.picks.map((p, i) => (
+        {screen.picks.map((p) => (
           <div
             key={p.name}
             style={{
@@ -431,11 +431,11 @@ function Phone({ screen, photo }: { screen: PhoneScreen; photo?: string }) {
               gap: 6,
               padding: "18px 20px",
               borderRadius: 18,
-              border: `2px solid ${i === 1 ? LIME : "#E3E9E6"}`,
-              background: i === 1 ? "#F7FBE4" : "#FFFFFF",
+              border: `2px solid ${p.best ? LIME : "#E3E9E6"}`,
+              background: p.best ? "#F7FBE4" : "#FFFFFF",
             }}
           >
-            {i === 1 ? (
+            {p.best ? (
               <div
                 style={{
                   display: "flex",
@@ -477,7 +477,7 @@ function Phone({ screen, photo }: { screen: PhoneScreen; photo?: string }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: 170,
+              height: 210,
               borderRadius: 18,
               background: "#F2F5F2",
               padding: 12,
@@ -487,9 +487,9 @@ function Phone({ screen, photo }: { screen: PhoneScreen; photo?: string }) {
             <img
               src={photo}
               alt=""
-              width={300}
-              height={146}
-              style={{ width: 300, height: 146, objectFit: "contain" }}
+              width={396}
+              height={186}
+              style={{ width: 396, height: 186, objectFit: "contain" }}
             />
           </div>
         ) : null}
@@ -1402,6 +1402,103 @@ export async function loadCover(
   }
 }
 
+/**
+ * One product of the three (layout "pick"): its letter, tier and the "Labākā izvēle" pill, the
+ * photo large on a light panel, the name, today's price and shop, the key specs, and what it
+ * gives (+) or does worse (−) than the cheapest, or what the cheapest saves (✓).
+ */
+function Pick(c: Slide) {
+  const name = c.headline ?? c.title;
+  // The photo takes the room the words leave: less for a two-line name and for every line past two.
+  const rows = Math.min(c.rows?.length ?? 0, 4);
+  const photoHeight = Math.max(
+    280,
+    470 - (name.length > 26 ? 64 : 0) - Math.max(0, rows - 2) * 48 - (c.sub ? 0 : -40),
+  );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 22 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {c.eyebrow ? <Eyebrow text={c.eyebrow} /> : <div />}
+        {c.badge ? (
+          <div
+            style={{
+              display: "flex",
+              background: LIME,
+              color: NIGHT,
+              fontSize: 26,
+              fontWeight: 700,
+              padding: "8px 22px",
+              borderRadius: 99,
+            }}
+          >
+            {c.badge}
+          </div>
+        ) : null}
+      </div>
+      <div style={{ display: "flex", flex: 1, minHeight: 300, alignItems: "center" }}>
+        {c.photo ? (
+          <Photo
+            src={c.photo}
+            width={(c.width ?? POST_SIZE.width) - 2 * PAD}
+            height={photoHeight}
+            radius={36}
+          />
+        ) : c.subcategoryId ? (
+          <Hero subcategoryId={c.subcategoryId} size={300} />
+        ) : null}
+      </div>
+      <Headline text={name} size={name.length > 26 ? 54 : 64} />
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 30 }}>
+        {c.stat ? <Stat label={c.stat.label} value={c.stat.value} size={96} color={LIME} /> : null}
+      </div>
+      {c.sub ? (
+        <div style={{ display: "flex", fontSize: 28, lineHeight: 1.3, color: STONE }}>{c.sub}</div>
+      ) : null}
+      {c.rows?.length ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {c.rows.slice(0, 4).map((r) => (
+            <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: r.n === "−" ? "rgba(242,245,242,0.12)" : LIME,
+                  color: r.n === "−" ? MIST : NIGHT,
+                  fontSize: 26,
+                  fontWeight: 700,
+                }}
+              >
+                {r.n === "✓" ? (
+                  // Drawn: the brand fonts have no check mark.
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={NIGHT}
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                  </svg>
+                ) : (
+                  r.n
+                )}
+              </div>
+              <div style={{ display: "flex", fontSize: 30, color: MIST }}>{r.label}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 const LAYOUTS = {
   big: Big,
   collage: Collage,
@@ -1415,6 +1512,7 @@ const LAYOUTS = {
   product: Product,
   offer: Offer,
   closing: Closing,
+  pick: Pick,
 } as const;
 
 /** One slide; `index`/`total` draw the counter and the swipe cue of a carousel. */

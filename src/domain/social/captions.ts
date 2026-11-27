@@ -9,7 +9,20 @@ import { lintPost, ownerTextBlocks, type PostLintContext } from "./lint";
 // and `composePost` refuses a caption the lint does not pass.
 
 /** `imageUrl`: the product's photo from the shop's feed (an https URL on a partner host), when it has one. */
-export type PickLine = { name: string; priceCents: number; shop: string; imageUrl?: string | null };
+export type PickLine = {
+  name: string;
+  priceCents: number;
+  shop: string;
+  imageUrl?: string | null;
+  /** The ranking's tier and its one recommended pick ("Labākā izvēle"), as the results page shows them. */
+  tier?: "budget" | "mid" | "top" | null;
+  recommended?: boolean;
+  /** Its key specs in one line ("60 cm · 13 komplekti · 44 dB · C"), as on the site's card. */
+  specs?: string | null;
+  /** What it gives, and does worse, than the cheapest of the three, in the site's words. */
+  gains?: string[];
+  tradeoffs?: string[];
+};
 
 export type PostFacts =
   | {
@@ -82,7 +95,7 @@ export type CardLine = {
 /** A phone mock-up's screen: the site as it looks, drawn in the image. */
 export type PhoneScreen =
   | { kind: "questions"; questions: { title: string; options: string[] }[] }
-  | { kind: "picks"; picks: { name: string; shop: string; price: string }[] }
+  | { kind: "picks"; picks: { name: string; shop: string; price: string; best?: boolean }[] }
   | {
       kind: "card";
       name: string;
@@ -122,7 +135,9 @@ export type PostCard = {
     | "big"
     | "collage"
     | "ask"
-    | "people";
+    | "people"
+    // One product of the three: its photo large, its tier, specs, price and what it gives.
+    | "pick";
   /** The page's colours: night green (default), lime, or light. Only the themed designs use it. */
   theme?: SocialTheme;
   /** "collage": the products' photos, in order. */
@@ -135,6 +150,8 @@ export type PostCard = {
   design?: Design;
   /** Small capitals in lime above the headline. */
   eyebrow?: string;
+  /** A lime pill beside the eyebrow: "Labākā izvēle" on the ranking's recommended pick. */
+  badge?: string;
   /** The headline; `title` when absent. A second part in lime. */
   headline?: string;
   headlineAccent?: string;
@@ -336,6 +353,56 @@ export const TAGLINE = "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā
 
 const eur = (cents: number) => formatEur(cents, "lv");
 
+const TIER_NAME = { budget: "Budžeta variants", mid: "Vidējā klase", top: "Augstākā klase" } as const;
+export const BEST_LABEL = "Labākā izvēle";
+
+/** The pick the site recommends ("Labākā izvēle"); the first when the ranking marks none. */
+export function bestPick(picks: PickLine[]): PickLine {
+  return picks.find((p) => p.recommended) ?? picks[0]!;
+}
+
+/**
+ * One of the three as a slide of its own (owner, 27 Nov 2026: each product's strengths, its photo
+ * large): its letter and tier, the name, today's price and shop, the key specs, and what it gives
+ * and does worse than the cheapest of the three, in the results page's own words. The cheapest
+ * says what it saves against the recommended one. Nothing here is not in the data.
+ */
+export function pickSlide(
+  category: string,
+  picks: PickLine[],
+  i: number,
+  subcategoryId?: string,
+): Omit<PostCard, "slides"> {
+  const p = picks[i]!;
+  const cheapest = picks.reduce((a, b) => (b.priceCents < a.priceCents ? b : a));
+  const best = bestPick(picks);
+  const rows: { n: string; label: string }[] = [];
+  if (p === cheapest) {
+    rows.push({ n: "✓", label: "Zemākā cena no trim" });
+    if (best !== p && best.priceCents > p.priceCents)
+      rows.push({ n: "✓", label: `Par ${eur(best.priceCents - p.priceCents)} lētāk nekā labākā izvēle` });
+  } else {
+    for (const g of (p.gains ?? []).slice(0, 3)) rows.push({ n: "+", label: g });
+    for (const t of (p.tradeoffs ?? []).slice(0, 1)) rows.push({ n: "−", label: t });
+  }
+  const tier = p.tier ? TIER_NAME[p.tier] : null;
+  return {
+    layout: "pick",
+    chip: category,
+    title: p.name,
+    eyebrow: [["A", "B", "C"][i] ?? String(i + 1), tier ?? category].join(" · "),
+    ...(p.recommended ? { badge: BEST_LABEL } : {}),
+    headline: p.name,
+    ...(p.specs ? { sub: p.specs } : {}),
+    stat: { label: `Cena šodien · ${p.shop}`, value: eur(p.priceCents) },
+    ...(rows.length ? { rows } : {}),
+    ...(p.imageUrl ? { image: p.imageUrl } : {}),
+    lines: [{ main: p.name, side: eur(p.priceCents), sub: p.shop }],
+    alt: `${category}: ${p.name}, ${eur(p.priceCents)}, ${p.shop}.${p.specs ? ` ${p.specs}.` : ""}`,
+    ...(subcategoryId ? { subcategoryId } : {}),
+  };
+}
+
 const CATEGORY_TAGS: Record<string, string> = {
   fridge: "#ledusskapis",
   freezer: "#saldētava",
@@ -392,7 +459,8 @@ function parts(
     case "picks": {
       const head = lead ?? `Trīs ieteikumi: ${lower(f.category)}.`;
       const questions = (f.questions ?? []).slice(0, 3);
-      const first = f.picks[0]!;
+      // Step 3 shows the pick the site recommends, as step 2 marks it (not simply the cheapest).
+      const first = bestPick(f.picks);
       const pickLines = f.picks.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop }));
       const slides: PostCard["slides"] = questions.length
         ? [
@@ -440,11 +508,17 @@ function parts(
               sub: "Piemērs bez atbildēm; cenas šodien partneru veikalos.",
               phone: {
                 kind: "picks",
-                picks: f.picks.map((p) => ({ name: p.name, shop: p.shop, price: eur(p.priceCents) })),
+                picks: f.picks.map((p) => ({
+                  name: p.name,
+                  shop: p.shop,
+                  price: eur(p.priceCents),
+                  best: p === bestPick(f.picks),
+                })),
               },
               lines: pickLines,
               note: "Piemērs bez atbildēm; cenas šodien partneru veikalos",
             },
+            ...f.picks.slice(0, 3).map((_, i) => pickSlide(f.category, f.picks, i, f.subcategoryId)),
             {
               layout: "phone",
               chip: "3. solis",

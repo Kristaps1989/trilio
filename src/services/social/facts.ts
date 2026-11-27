@@ -21,6 +21,7 @@ import {
 import { currentOffer, rankInputFromState } from "@/domain/wishlist/wishlist";
 import { currentMarket } from "@/i18n/market";
 import { visitRows } from "@/services/visits/visits";
+import { pickNotes } from "./pick-notes";
 
 // The facts a post is made from (docs/SOCIAL_PLAN.md §3): live prices from
 // the partner feeds, aggregated counts from the cookieless statistics, and
@@ -83,6 +84,7 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
   }
   picks = picks.slice(0, 3);
   if (picks.length < 2) return null;
+  const notes = pickNotes(picks, sub);
   return {
     kind: "picks",
     subcategoryId,
@@ -98,11 +100,16 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
       )
       .slice(0, 3)
       .map((q) => ({ title: q.title, options: q.options.map((o) => o.label) })),
-    picks: picks.map((p) => ({
+    picks: picks.map((p, i) => ({
       name: cleanName(p.product.name, p.product.brand, p.product.modelCode),
       priceCents: p.offer.priceCents,
       shop: p.offer.storeName,
       imageUrl: imageSrc(p.product.imageUrl, IMAGE_HOSTS),
+      tier: p.tier,
+      recommended: p.recommended,
+      specs: notes[i]!.specs,
+      gains: notes[i]!.gains,
+      tradeoffs: notes[i]!.tradeoffs,
     })),
     path: flowPath(subcategoryId),
   };

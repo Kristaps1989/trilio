@@ -80,8 +80,8 @@ describe("generated Reel", () => {
         const streams = probe("stream=codec_name,width,height");
         expect(streams).toContain("h264,1080,1920");
         expect(streams).toContain("aac");
-        // Four slides of 2.8 s overlapping by 0.35 s.
-        expect(Number(probe("format=duration"))).toBeCloseTo(10.15, 0);
+        // Six slides (the most a Reel takes) of 2.8 s overlapping by 0.35 s.
+        expect(Number(probe("format=duration"))).toBeCloseTo(15.05, 0);
       } finally {
         rmSync(dir, { recursive: true, force: true });
       }

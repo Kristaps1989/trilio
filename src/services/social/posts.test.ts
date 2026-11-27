@@ -389,6 +389,15 @@ run("social posts", () => {
       .map((o) => o.priceCents);
     const p75 = priceCeilingCents(current, MAINSTREAM_PERCENTILE);
     if (p75 !== null) for (const p of picks.picks) expect(p.priceCents).toBeLessThanOrEqual(p75);
+    // Each pick carries what the results page shows: its tier, the one recommended, its specs,
+    // and, against the cheapest, what it gives and does worse (the cheapest has neither).
+    expect(picks.picks.filter((p) => p.recommended)).toHaveLength(1);
+    for (const p of picks.picks) {
+      expect(p).toHaveProperty("tier");
+      expect(Array.isArray(p.gains) && Array.isArray(p.tradeoffs)).toBe(true);
+    }
+    const cheapest = picks.picks.reduce((a, b) => (b.priceCents < a.priceCents ? b : a));
+    expect([...cheapest.gains!, ...cheapest.tradeoffs!]).toEqual([]);
     const slot = new Date(now.getTime() + 3600_000);
     const made = await createPost(db, deps, {
       facts: picks,
@@ -421,7 +430,7 @@ run("social posts", () => {
     expect(await refresh(db, deps, edited!, now)).toMatchObject({ ok: false });
   });
 
-  it("a picks carousel goes out as four images on both networks", async () => {
+  it("a picks carousel goes out as one image per slide on both networks", async () => {
     const at = rigaTime("2031-02-09", 19);
     const facts = {
       kind: "picks" as const,
@@ -446,16 +455,15 @@ run("social posts", () => {
     expect(sent?.status).toBe("published");
     const media = mockPosts().filter((m) => m.id === sent!.fbPostId || m.id === sent!.igMediaId);
     for (const m of media)
+      // Six slides: the cover, step 1, step 2, a slide for each of the two products, step 3.
       expect(m.media.split(" ")).toEqual([
         `${BASE}/api/social/${id}/image.jpg`,
-        `${BASE}/api/social/${id}/2/image.jpg`,
-        `${BASE}/api/social/${id}/3/image.jpg`,
-        `${BASE}/api/social/${id}/4/image.jpg`,
+        ...[2, 3, 4, 5, 6].map((n) => `${BASE}/api/social/${id}/${n}/image.jpg`),
       ]);
     // The page: a link carousel, each card linking its own share page (its picture uploaded by
     // hash when an ad account is set, else photos); Instagram has no links. The caption has the link too.
     const fb = media.find((m) => m.network === "facebook")!;
-    expect(fb.links).toEqual([1, 2, 3, 4].map((n) => `${BASE}/social/${id}/${n}`));
+    expect(fb.links).toEqual([1, 2, 3, 4, 5, 6].map((n) => `${BASE}/social/${id}/${n}`));
     expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
     expect(fb.caption).toContain(`${BASE}/`);
 
