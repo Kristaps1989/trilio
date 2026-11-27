@@ -1510,7 +1510,11 @@ export const metaAgentAds = pgTable(
     name: text("name").notNull(),
     /** The three picks the picture and the text name, with their prices. */
     facts: jsonb("facts")
-      .$type<{ category: string; picks: { name: string; priceCents: number; shop: string }[] }>()
+      .$type<{
+        look?: number;
+        category: string;
+        picks: { name: string; priceCents: number; shop: string }[];
+      }>()
       .notNull(),
     message: text("message").notNull(),
     headline: text("headline").notNull(),
