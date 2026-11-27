@@ -150,6 +150,16 @@ describe("anonymise", () => {
     expect(leaks("Pasūtījums T-1042", personal)).toEqual(["T-1042"]);
     expect(leaks("Zvani 371 20000000", personal)).toEqual(["+371 2000 0000"]);
     expect(leaks("Pannas un katli", personal)).toEqual([]);
+    // The local number without the country code is the same phone.
+    expect(leaks("Zvani 2000 0000", personal)).toEqual(["+371 2000 0000"]);
+    // A short run of the phone's digits found by chance is not a leak: a link's random id
+    // ("…-371a-…", "…a1234f…") or a price ("29,99 €" against "2999").
+    const phone = "+371 2999 1234";
+    expect(
+      leaks("Skaties: https://trilio.lv/x?utm_content=3f71c371-0a2b-4c3d-9e1234f5a6b7 Cena 29,99 €", [phone]),
+    ).toEqual([]);
+    expect(leaks("Zvani +371 2999 1234", [phone])).toEqual([phone]);
+    expect(leaks("Zvani 29991234", [phone])).toEqual([phone]);
   });
 
   it("an offer post made from a full record carries none of the person's data", () => {

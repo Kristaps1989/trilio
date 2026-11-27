@@ -34,7 +34,18 @@ export function adLink(baseUrl: string, subcategoryId: string, name: string): st
   return `${baseUrl.replace(/\/$/, "")}/rezultati?${q.toString()}`;
 }
 
-export type AdFacts = { category: string; picks: Pick<PickLine, "name" | "priceCents" | "shop">[] };
+/**
+ * What an ad shows. `look` is the picture's version: an ad drawn before the current one (no
+ * `look`, or a lower one) is replaced like an ad whose prices changed.
+ */
+export type AdFacts = {
+  look?: number;
+  category: string;
+  picks: Pick<PickLine, "name" | "priceCents" | "shop">[];
+};
+
+/** 2: the photo collage (27 Nov 2026); 1 (unset): the dark list without photos. */
+export const AD_LOOK = 2;
 
 /**
  * The ad's words: what the three are and what they cost today, then what Trilio does. No
@@ -55,6 +66,7 @@ export function adText(f: AdFacts): { message: string; headline: string; descrip
 
 /** An ad tells the truth while its three products and their prices are what the site shows now. */
 export function factsChanged(shown: AdFacts, now: AdFacts): boolean {
+  if ((shown.look ?? 1) !== (now.look ?? 1)) return true;
   if (shown.picks.length !== now.picks.length) return true;
   return shown.picks.some(
     (p, i) => p.name !== now.picks[i]!.name || p.priceCents !== now.picks[i]!.priceCents,

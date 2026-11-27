@@ -5,6 +5,7 @@ import {
   adLink,
   adName,
   adText,
+  AD_LOOK,
   AGENT_CAMPAIGN,
   categoriesToAdvertise,
   factsChanged,
@@ -71,6 +72,9 @@ describe("when an ad stops being true", () => {
     // Another shop at the same price changes nothing the ad says.
     const shop = { ...facts, picks: facts.picks.map((p) => ({ ...p, shop: "Veikals C" })) };
     expect(factsChanged(facts, shop)).toBe(false);
+    // An ad drawn in an older look is replaced, even when its prices still hold.
+    expect(factsChanged(facts, { ...facts, look: AD_LOOK })).toBe(true);
+    expect(factsChanged({ ...facts, look: AD_LOOK }, { ...facts, look: AD_LOOK })).toBe(false);
   });
 });
 

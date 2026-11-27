@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PostFacts } from "@/domain/social/captions";
-import { creatorConfigFromEnv, renderAdPicture } from "./meta-creator";
+import { adCard, creatorConfigFromEnv, renderAdPicture } from "./meta-creator";
 
 // What making a Meta ad needs, and the picture it carries.
 
@@ -59,6 +59,11 @@ describe("renderAdPicture", () => {
         })),
         path: "/izvelies/cool/fridge",
       };
+      // The page drawn is the photo collage with its three products, not the carousel's cover.
+      const page = adCard(facts, "https://trilio.test");
+      expect(page.layout).toBe("collage");
+      expect(page.images).toEqual(facts.kind === "picks" ? facts.picks.map((p) => p.imageUrl) : []);
+      expect(page.rows?.map((r) => r.label)).toEqual(["Modelis 0", "Modelis 1", "Modelis 2"]);
       const jpeg = await renderAdPicture(facts, "https://trilio.test");
       expect(jpeg.subarray(0, 2).toString("hex")).toBe("ffd8");
       const sharp = (await import("sharp")).default;

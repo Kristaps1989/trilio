@@ -11,11 +11,12 @@ import {
   AGENT_CAMPAIGN,
   categoriesToAdvertise,
   type CategoryFunnel,
+  AD_LOOK,
   factsChanged,
   MAX_NEW_ADS_PER_DAY,
   type AdFacts,
 } from "@/domain/marketing/meta-creative";
-import { composePost, lintContext, type PostFacts } from "@/domain/social/captions";
+import { composePost, lintContext, type PostCard, type PostFacts } from "@/domain/social/captions";
 import { lintPost } from "@/domain/social/lint";
 import { dayOffset, siteUrl } from "@/services/ads/account";
 import { notifyFunnel } from "@/services/notify/events";
@@ -91,14 +92,25 @@ export async function renderAdPicture(facts: PostFacts, baseUrl: string): Promis
   if (facts.kind !== "picks") throw new Error("not a picks ad");
   for (const p of facts.picks)
     if (!(await loadPhoto(p.imageUrl ?? undefined))) throw new Error(`no photo of ${p.name}`);
+  return renderPostJpeg(adCard(facts, baseUrl), 0, 1, "square");
+}
+
+/**
+ * The page the ad shows: the collage. A carousel keeps its restyled first page in `slides[0]`
+ * and its old cover on the card itself, so the first slide is taken, never the card (26 Nov
+ * 2026: the cover went out, a dark list without photos). Anything but the collage throws.
+ */
+export function adCard(facts: PostFacts, baseUrl: string): Omit<PostCard, "slides"> {
   const { card } = composePost(facts, { postId: "ad", baseUrl, design: "collage" });
-  // One picture: the design's own first page, without the carousel's further slides.
-  const { slides: _slides, ...single } = card;
-  void _slides;
-  return renderPostJpeg(single, 0, 1, "square");
+  const { slides, ...single } = card;
+  const page = slides?.[0] ?? single;
+  if (page.layout !== "collage" || (page.images ?? []).length < 3)
+    throw new Error("the ad's picture is not the photo collage");
+  return page;
 }
 
 const adFacts = (f: Extract<PostFacts, { kind: "picks" }>): AdFacts => ({
+  look: AD_LOOK,
   category: f.category,
   picks: f.picks.map((p) => ({ name: p.name, priceCents: p.priceCents, shop: p.shop })),
 });
@@ -196,6 +208,8 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
     const facts = current.get(ad.subcategoryId);
     if (!wanted.includes(ad.subcategoryId))
       await retire(ad, "room", "kategorijai šodien nav vietas budžetā.");
+    else if (facts && (ad.facts.look ?? 1) !== AD_LOOK)
+      await retire(ad, "facts", "attēls tiek nomainīts uz jauno noformējumu ar preču fotogrāfijām.");
     else if (!facts || factsChanged(ad.facts, adFacts(facts)))
       await retire(ad, "facts", "cenas vai preces vairs nav tās, ko rāda vietne.");
     else keep.add(ad.subcategoryId);

@@ -839,6 +839,32 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual(["vacuum", "fridge"]);
     noPhoto = false;
     await db.delete(metaAgentAds);
+    // An ad drawn in the old look (the dark list, 26 Nov 2026) is replaced by the photo collage,
+    // its category not rested: the prices still hold, only the picture was wrong.
+    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toMatchObject({ created: 2 });
+    const oldLook = (await db.select().from(metaAgentAds)).find((a) => a.subcategoryId === "vacuum")!;
+    const { look: _look, ...drawnBefore } = oldLook.facts;
+    void _look;
+    await db
+      .update(metaAgentAds)
+      .set({ facts: drawnBefore })
+      .where(sql`${metaAgentAds.id} = ${oldLook.id}`);
+    meta.calls.length = 0;
+    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
+      created: 1,
+      retired: 1,
+      failed: 0,
+    });
+    expect(meta.calls.map((c) => c.op)).toEqual(["status", "ad"]);
+    const vacuumAds = (await db.select().from(metaAgentAds)).filter((a) => a.subcategoryId === "vacuum");
+    expect(vacuumAds.map((a) => `${a.status}/${a.retiredWhy ?? ""}/${a.facts.look ?? 1}`).sort()).toEqual([
+      "active//2",
+      "paused/facts/1",
+    ]);
+    expect(
+      (await db.select().from(marketingActions)).some((a) => a.reason.includes("jauno noformējumu")),
+    ).toBe(true);
+    await db.delete(metaAgentAds);
     // No share, no ad.
     expect(await ensureAgentAds(db, { meta, ...creator }, 50)).toEqual({ created: 0, retired: 0, failed: 0 });
     // The daily round runs the same thing with Meta's share of the day, and a channel the
