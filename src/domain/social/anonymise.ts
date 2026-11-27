@@ -65,13 +65,19 @@ export function leaks(text: string, personal: (string | null | undefined)[]): st
     if (!raw) continue;
     // Names and addresses also word by word; longer free text (a note, a greeting) only as a whole.
     const words = raw.split(/[\s,]+/).filter(Boolean);
-    for (const part of [raw, ...(words.length <= 4 ? words : [])]) {
+    // A phone number also without its country code: "+371 2000 0000" as "2000 0000".
+    const digits = raw.replace(/\D/g, "");
+    const local = digits.length >= 10 ? [digits.slice(-8)] : [];
+    for (const part of [raw, ...local, ...(words.length <= 4 ? words : [])]) {
       const v = norm(part.trim());
       if (v.length < 3) continue;
       const compact = v.replace(/[^\p{L}\p{N}]/gu, "");
       const word = new RegExp(`(?<![\\p{L}\\p{N}])${escape(v)}(?![\\p{L}\\p{N}])`, "u");
-      if (word.test(hay) || (/\d{3,}/.test(compact) && flat.includes(compact))) {
-        found.push(part.trim());
+      // Run together with the text's punctuation removed, a short run of digits is found by
+      // chance (a price "29,99", a link's random id): the whole value, or 6 digits and more.
+      const whole = part === raw || compact.length >= 6;
+      if (word.test(hay) || (whole && /\d{3,}/.test(compact) && flat.includes(compact))) {
+        found.push(part === raw || local.includes(part) ? raw.trim() : part.trim());
         break;
       }
     }
