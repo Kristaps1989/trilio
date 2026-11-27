@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { imageCreative } from "@/domain/marketing/meta-creative";
 import {
   metaAdsConfigFromEnv,
   metaAdsFromEnv,
@@ -332,13 +333,17 @@ describe("creating", () => {
     await meta.createAd({
       adsetId: "700003",
       name: "fridge-20261124",
-      pageId: "100200300",
-      instagramUserId: "17840000000000000",
-      link,
-      message: "Ledusskapji: 3 piemēroti varianti šodienas cenās.",
-      headline: "Ledusskapji: 3 piemēroti varianti",
-      description: "Cenas partneru veikalos",
-      imageHash: "abc123",
+      creative: imageCreative(
+        { pageId: "100200300", instagramUserId: "17840000000000000" },
+        {
+          link,
+          message: "Ledusskapji: 3 piemēroti varianti šodienas cenās.",
+          headline: "Ledusskapji: 3 piemēroti varianti",
+          description: "Cenas partneru veikalos",
+        },
+        "abc123",
+        "fridge-20261124",
+      ),
       domain: "trilio.lv",
     });
     expect(sent[3]!.url).toBe("https://graph.facebook.com/v23.0/act_1234567890/ads");
@@ -362,6 +367,55 @@ describe("creating", () => {
           call_to_action: { type: "LEARN_MORE", value: { link } },
         },
       },
+    });
+  });
+
+  it("makes a creative of its own, uploads a video as a form and reads whether it is ready", async () => {
+    const sent: { url: string; method?: string; body: unknown }[] = [];
+    let status: unknown = { video_status: "processing" };
+    const http = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      sent.push({ url, method: init?.method, body: init?.body });
+      if (url.includes("/adcreatives")) return json({ id: "6000001" });
+      if (url.includes("/advideos")) return json({ id: "7000001" });
+      return json({ id: "7000001", status });
+    }) as typeof fetch;
+    const meta = metaAdsProvider(cfg, http);
+    expect(await meta.createCreative({ name: "x", object_story_spec: { page_id: "1" } })).toEqual({
+      ok: true,
+      id: "6000001",
+    });
+    expect(sent[0]!.url).toBe("https://graph.facebook.com/v23.0/act_1234567890/adcreatives");
+    expect(new URLSearchParams(String(sent[0]!.body)).get("object_story_spec")).toBe('{"page_id":"1"}');
+
+    expect(await meta.uploadVideo(Buffer.from("mp4-bytes"))).toEqual({ ok: true, id: "7000001" });
+    expect(sent[1]!.url).toBe("https://graph.facebook.com/v23.0/act_1234567890/advideos");
+    const form = sent[1]!.body as FormData;
+    expect(form.get("name")).toBe("trilio-reel.mp4");
+    expect(await (form.get("source") as Blob).text()).toBe("mp4-bytes");
+
+    expect(await meta.videoStatus("7000001")).toEqual({ status: "processing" });
+    expect(sent[2]!.url).toBe("https://graph.facebook.com/v23.0/7000001?fields=status");
+    status = { video_status: "ready" };
+    expect(await meta.videoStatus("7000001")).toEqual({ status: "ready" });
+    status = { video_status: "error", processing_phase: { errors: [{ message: "bad codec" }] } };
+    expect(await meta.videoStatus("7000001")).toEqual({
+      status: "error",
+      error: 'Meta: video [{"message":"bad codec"}]',
+    });
+    expect(await meta.videoStatus("x")).toEqual({ status: "error", error: "not a Meta id" });
+    const refuse = (async () =>
+      json({ error: { message: "Invalid video", code: 100 } }, 400)) as typeof fetch;
+    expect(await metaAdsProvider(cfg, refuse).uploadVideo(Buffer.from("x"))).toEqual({
+      ok: false,
+      error: "Invalid video [100]",
+    });
+    const down = (async () => {
+      throw new Error("reset");
+    }) as typeof fetch;
+    expect(await metaAdsProvider(cfg, down).uploadVideo(Buffer.from("x"))).toEqual({
+      ok: false,
+      error: "Meta: reset",
     });
   });
 
@@ -433,19 +487,15 @@ describe("creating", () => {
     if (!c.ok) throw new Error("campaign");
     const s = await meta.createAdSet({ campaignId: c.id, name: "s", pixelId: "1", advertiser: "a" });
     if (!s.ok) throw new Error("ad set");
-    const base = {
-      name: "a",
-      pageId: "1",
-      link: "l",
-      message: "m",
-      headline: "h",
-      description: "d",
-      imageHash: "i",
-      domain: "x",
-    };
+    const base = { name: "a", creative: { name: "a" }, domain: "x" };
     expect((await meta.createAd({ ...base, adsetId: s.id })).ok).toBe(true);
     expect(await meta.createAd({ ...base, adsetId: "nope" })).toEqual({ ok: false, error: "unknown ad set" });
     expect(await meta.uploadImage(Buffer.alloc(0))).toEqual({ ok: false, error: "empty image" });
+    expect(await meta.createCreative({ name: "c" })).toMatchObject({ ok: true });
+    expect(await meta.uploadVideo(Buffer.alloc(0))).toEqual({ ok: false, error: "empty video" });
+    expect(await meta.uploadVideo(Buffer.from("mp4"))).toMatchObject({ ok: true });
+    expect(await meta.videoStatus("1")).toEqual({ status: "ready" });
+    expect(meta.creatives.map((c) => c.ad)).toEqual(["a", "cr2"]);
     const listed = await meta.list();
     expect(listed.ok && listed.entities.map((e) => e.level)).toEqual(["campaign", "adset", "ad"]);
   });

@@ -294,7 +294,7 @@ pause it). In "Pārvaldīt pašam" mode, with `META_PAGE_ID` and `META_PIXEL_ID`
   pixel, Meta choosing audience and placements; the seller named as beneficiary and payer, as
   the EU's Digital Services Act asks). Made once, the first day Meta has a share. Because the
   agent can make ads, Meta counts as a running channel before it has any.
-- **One ad per category worth advertising**, one per euro of Meta's share, three at most: the
+- **Ads for each category worth advertising**, one category per euro of Meta's share (two at most since 27 Nov, see below): the
   categories whose results-page visitors leave e-mails (then: tap the request), among those
   that can show three picks today.
 - **What an ad is:** a square picture in the page's own "collage" design (the three products'
@@ -311,6 +311,28 @@ pause it). In "Pārvaldīt pašam" mode, with `META_PAGE_ID` and `META_PIXEL_ID`
   yesterday's price. At most three new ads a day.
 - **Rest:** a category whose ad was stopped for bringing nothing (5 € in 14 days without an
   e-mail), by the owner or by Meta's review, gets no new ad for 14 days.
+
+**Four formats per category (owner, 27 Nov 2026).** Each advertised category now gets four ads
+(`domain/marketing/ad-pages.ts`, creatives in `domain/marketing/meta-creative.ts`), and at most
+**two categories** are advertised at once (one per euro of Meta's share), so eight ads at most:
+
+- **Attēls A** — the light photo collage; **Attēls B** — the same photos and prices on night
+  green, opening with "Kurš der tieši tev?". Both drawn 4:5 for the feeds, 9:16 for the stories
+  and 1:1 elsewhere, sent as Meta's placement asset customization (a creative of its own). If
+  Meta refuses that for this campaign, the square picture goes everywhere and the refusal is
+  written down.
+- **Preču karusele** — one card per product (its photo large, name, shop and today's price),
+  in the tiers' order, no end card.
+- **Reel video** — 9:16: the collage, each product in turn, and what Trilio does; made with
+  ffmpeg like the page's Reels (`RAILPACK_DEPLOY_APT_PACKAGES=ffmpeg` on Railway; without it
+  there is no Reel and Kanāli says so once a week). Uploaded to the ad account and used once
+  Meta has processed it (up to two minutes; else tried again the next morning).
+
+Ad names carry the format (`fridge-a-…`, `fridge-b-…`, `fridge-karusele-…`, `fridge-reel-…`), so
+the link's `utm_content` tells which format brought an e-mail. A price change replaces all four
+ads of the category; up to eight new ads a day. Meta's docs (read 27 Nov 2026) do not list
+`OUTCOME_LEADS` among the objectives for placement customization, nor a Reels position: hence
+the fallback, and the Reel goes out as an ordinary video ad that Meta places where it fits.
 
 Every step, and every refusal with Meta's own words, is on Reklāma → Kanāli. Not known until it
 runs on the real account: whether Meta accepts this combination for the account as written

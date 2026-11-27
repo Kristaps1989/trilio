@@ -1,4 +1,4 @@
-import { desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { marketingActions, metaAdEntities, metaAgentAds } from "@/db/schema";
 import { companyFromEnv } from "@/config/company";
@@ -12,11 +12,24 @@ import {
   categoriesToAdvertise,
   type CategoryFunnel,
   AD_LOOK,
+  carouselCreative,
+  imageCreative,
+  placementCreative,
+  videoCreative,
   factsChanged,
   MAX_NEW_ADS_PER_DAY,
   type AdFacts,
 } from "@/domain/marketing/meta-creative";
-import { composePost, lintContext, type PostCard, type PostFacts } from "@/domain/social/captions";
+import {
+  AD_FORMATS,
+  type AdFormat,
+  cardText,
+  collageBPage,
+  collagePage,
+  productPage,
+  reelCard,
+} from "@/domain/marketing/ad-pages";
+import { lintContext, type PostCard, type PostFacts } from "@/domain/social/captions";
 import { lintPost } from "@/domain/social/lint";
 import { dayOffset, siteUrl } from "@/services/ads/account";
 import { notifyFunnel } from "@/services/notify/events";
@@ -70,50 +83,67 @@ export function dsaFromEnv(env: Record<string, string | undefined>): DsaNames | 
 export type CreatorDeps = {
   meta: MetaAdsProvider;
   config: CreatorConfig;
-  /** The ad's square picture as JPEG, from the category's facts. */
-  render: (facts: PostFacts) => Promise<Buffer>;
+  /** Draws the ads' pictures and the Reel (adRenderer; tests pass their own). */
+  render: AdRenderer;
   /** What each category's visitors did and what it can show today; read from the site when absent. */
   load?: {
     funnel: () => Promise<CategoryFunnel[]>;
     picks: (subcategoryId: string) => Promise<PostFacts | null>;
   };
+  /** How long to wait for Meta to process a Reel: tries × ms (default 24 × 5 s). */
+  videoWait?: { tries: number; ms: number };
   now?: Date;
 };
 
-/**
- * The ad's picture, square: the page's own "collage" design, which leads with the three
- * products' photos under Trilio's logo and names them with today's prices (owner, 24 Nov 2026:
- * product pictures and Trilio's branding; a product, not an explanation, stops a thumb in the
- * feed). An ad without its products' photos is not made: every photo must load, or this throws.
- * The picture quotes prices, which is why an ad is replaced the day a price changes.
- */
-export async function renderAdPicture(facts: PostFacts, baseUrl: string): Promise<Buffer> {
-  const { loadPhoto, renderPostJpeg } = await import("@/services/social/render");
-  if (facts.kind !== "picks") throw new Error("not a picks ad");
-  for (const p of facts.picks)
-    if (!(await loadPhoto(p.imageUrl ?? undefined))) throw new Error(`no photo of ${p.name}`);
-  return renderPostJpeg(adCard(facts, baseUrl), 0, 1, "square");
-}
+type Picks = Extract<PostFacts, { kind: "picks" }>;
+type Page = Omit<PostCard, "slides">;
+export type PictureShape = "square" | "portrait" | "story";
+
+export type AdRenderer = {
+  /** The first product whose photo cannot be had, or null when all three load. */
+  missingPhoto(facts: Picks): Promise<string | null>;
+  /** One page as JPEG: square 1:1, portrait 4:5 (feeds) or story 9:16. */
+  picture(page: Page, shape: PictureShape): Promise<Buffer>;
+  /** The Reel as MP4, 9:16; null when the server cannot make videos (no ffmpeg). */
+  reel(card: PostCard): Promise<Buffer | null>;
+};
 
 /**
- * The page the ad shows: the collage. A carousel keeps its restyled first page in `slides[0]`
- * and its old cover on the card itself, so the first slide is taken, never the card (26 Nov
- * 2026: the cover went out, a dark list without photos). Anything but the collage throws.
+ * The real renderer: the site's post designs (services/social/render.tsx) and its Reel maker
+ * (services/social/video.ts, ffmpeg). Every ad leads with the products' photos (owner, 24 Nov
+ * 2026: product pictures and Trilio's branding), so an ad is not made unless all three load.
  */
-export function adCard(facts: PostFacts, baseUrl: string): Omit<PostCard, "slides"> {
-  const { card } = composePost(facts, { postId: "ad", baseUrl, design: "collage" });
-  const { slides, ...single } = card;
-  const page = slides?.[0] ?? single;
-  if (page.layout !== "collage" || (page.images ?? []).length < 3)
-    throw new Error("the ad's picture is not the photo collage");
-  return page;
+export function adRenderer(): AdRenderer {
+  return {
+    async missingPhoto(facts) {
+      const { loadPhoto } = await import("@/services/social/render");
+      for (const p of facts.picks.slice(0, 3)) if (!(await loadPhoto(p.imageUrl ?? undefined))) return p.name;
+      return null;
+    },
+    async picture(page, shape) {
+      const { renderPostJpeg } = await import("@/services/social/render");
+      return renderPostJpeg(page, 0, 1, shape);
+    },
+    async reel(card) {
+      const { renderReel } = await import("@/services/social/video");
+      return renderReel(card);
+    },
+  };
 }
 
-const adFacts = (f: Extract<PostFacts, { kind: "picks" }>): AdFacts => ({
+const adFacts = (f: Picks): AdFacts => ({
   look: AD_LOOK,
   category: f.category,
   picks: f.picks.map((p) => ({ name: p.name, priceCents: p.priceCents, shop: p.shop })),
 });
+
+/** What each format is called on the admin page and in the log. */
+export const FORMAT_LABEL: Record<AdFormat, string> = {
+  collage: "attēls A",
+  collage_b: "attēls B",
+  carousel: "karusele",
+  reel: "Reel video",
+};
 
 export type CreatorRun = { created: number; retired: number; failed: number };
 
@@ -204,6 +234,7 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
 
   // An ad that no longer tells the truth, or whose category lost its place, stops first.
   const keep = new Set<string>();
+  const key = (sub: string, format: string) => `${sub}:${format}`;
   for (const ad of running) {
     const facts = current.get(ad.subcategoryId);
     if (!wanted.includes(ad.subcategoryId))
@@ -212,9 +243,11 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
       await retire(ad, "facts", "attēls tiek nomainīts uz jauno noformējumu ar preču fotogrāfijām.");
     else if (!facts || factsChanged(ad.facts, adFacts(facts)))
       await retire(ad, "facts", "cenas vai preces vairs nav tās, ko rāda vietne.");
-    else keep.add(ad.subcategoryId);
+    else keep.add(key(ad.subcategoryId, ad.format));
   }
-  const missing = wanted.filter((sub) => !keep.has(sub));
+  const missing = wanted.flatMap((sub) =>
+    AD_FORMATS.filter((f) => !keep.has(key(sub, f))).map((format) => ({ sub, format })),
+  );
   if (missing.length === 0) return out;
 
   const madeToday = await db
@@ -274,61 +307,105 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
     });
   }
 
-  for (const sub of missing) {
-    if (room-- <= 0) break;
+  const speaker = { pageId: deps.config.pageId, instagramUserId: deps.config.instagramUserId };
+  const failed = async (name: string, why: string) => {
+    out.failed++;
+    await note("meta_create", null, `Reklāma “${name}” netika izveidota.`, why.slice(0, 400));
+  };
+  const upload = async (jpeg: Buffer) => {
+    const r = await deps.meta.uploadImage(jpeg);
+    if (!r.ok) throw new Error(r.error);
+    return r.id;
+  };
+  const checked = new Map<string, string | null>();
+
+  for (const { sub, format } of missing) {
+    if (room <= 0) break;
     const facts = current.get(sub)!;
     const shown = adFacts(facts);
     const text = adText(shown);
-    const name = adName(sub, day);
+    const name = adName(sub, day, format);
     // The same honesty rules as every post: no price or number that is not in the data.
     const ctx = lintContext(facts);
     const issues = [...lintPost(text.message, ctx), ...lintPost(text.headline, ctx)];
     if (issues.length) {
-      out.failed++;
-      await note(
-        "meta_create",
-        null,
-        `Reklāma “${name}” netika izveidota.`,
-        `teksts: ${issues.join("; ")}`.slice(0, 400),
-      );
+      await failed(name, `teksts: ${issues.join("; ")}`);
       continue;
     }
-    const picture = await deps.render(facts).catch((err: Error) => err);
-    if (picture instanceof Error) {
-      out.failed++;
-      await note(
-        "meta_create",
-        null,
-        `Reklāma “${name}” netika izveidota.`,
-        `attēls: ${picture.message}`.slice(0, 400),
-      );
-      continue;
-    }
-    const image = await deps.meta.uploadImage(picture);
-    if (!image.ok) {
-      out.failed++;
-      await note("meta_create", null, `Reklāma “${name}” netika izveidota.`, image.error);
+    if (!checked.has(sub)) checked.set(sub, await deps.render.missingPhoto(facts).catch(() => "?"));
+    const noPhoto = checked.get(sub);
+    if (noPhoto) {
+      await failed(name, `attēls: nav fotogrāfijas precei ${noPhoto}`);
       continue;
     }
     const link = adLink(deps.config.baseUrl, sub, name);
-    const ad = await deps.meta.createAd({
-      adsetId: adset,
-      name,
-      pageId: deps.config.pageId,
-      instagramUserId: deps.config.instagramUserId,
-      link,
-      message: text.message,
-      headline: text.headline,
-      description: text.description,
-      imageHash: image.id,
-      domain: deps.config.domain,
-    });
+    const words = { link, ...text };
+    let creative: Record<string, unknown>;
+    let imageHash: string;
+    let fellBack: string | null = null;
+    try {
+      if (format === "collage" || format === "collage_b") {
+        const page =
+          format === "collage"
+            ? collagePage(facts, deps.config.baseUrl)
+            : collageBPage(facts, deps.config.baseUrl);
+        const hashes = {
+          square: await upload(await deps.render.picture(page, "square")),
+          portrait: await upload(await deps.render.picture(page, "portrait")),
+          story: await upload(await deps.render.picture(page, "story")),
+        };
+        imageHash = hashes.square;
+        // Pictures shaped per placement are a creative of their own; Meta may refuse them for
+        // this kind of campaign, and then the square picture goes everywhere.
+        const made = await deps.meta.createCreative(placementCreative(speaker, words, hashes, name));
+        if (made.ok) creative = { creative_id: made.id };
+        else {
+          fellBack = made.error;
+          creative = imageCreative(speaker, words, hashes.square, name);
+        }
+      } else if (format === "carousel") {
+        const cards = [];
+        for (let i = 0; i < 3; i++)
+          cards.push({
+            imageHash: await upload(await deps.render.picture(productPage(facts, i), "square")),
+            ...cardText(facts, i),
+          });
+        imageHash = cards[0]!.imageHash;
+        creative = carouselCreative(speaker, words, cards, name);
+      } else {
+        const mp4 = await deps.render.reel(reelCard(facts, deps.config.baseUrl));
+        if (!mp4) {
+          await noVideoOnce();
+          continue;
+        }
+        const video = await deps.meta.uploadVideo(mp4);
+        if (!video.ok) throw new Error(video.error);
+        imageHash = await upload(await deps.render.picture(collagePage(facts, deps.config.baseUrl), "story"));
+        const ready = await waitForVideo(video.id);
+        if (ready !== "ready") throw new Error(ready);
+        creative = videoCreative(speaker, words, video.id, imageHash, name);
+      }
+    } catch (err) {
+      await failed(name, (err as Error).message);
+      continue;
+    }
+    room--;
+    const ad = await deps.meta.createAd({ adsetId: adset, name, creative, domain: deps.config.domain });
     await note(
       "meta_create",
       ad.ok ? ad.id : null,
-      `Jauna reklāma “${name}”: ${shown.category}, 3 varianti šodienas cenās.`,
+      `Jauna reklāma “${name}” (${FORMAT_LABEL[format]}): ${shown.category}, 3 varianti šodienas cenās.${
+        fellBack ? " Viens kvadrātveida attēls visur: Meta neļāva attēlus pa izvietojumiem." : ""
+      }`,
       ad.ok ? undefined : ad.error,
     );
+    if (fellBack && ad.ok)
+      await note(
+        "meta_create",
+        ad.id,
+        `Attēli pa izvietojumiem reklāmai “${name}” netika pieņemti.`,
+        fellBack,
+      );
     if (!ad.ok) {
       out.failed++;
       continue;
@@ -338,11 +415,12 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
       adId: ad.id,
       subcategoryId: sub,
       name,
+      format,
       facts: shown,
       message: text.message,
       headline: text.headline,
       link,
-      imageHash: image.id,
+      imageHash,
     });
     await db
       .insert(metaAdEntities)
@@ -358,6 +436,35 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
       .onConflictDoNothing();
   }
   return out;
+
+  /** Meta takes a while to process a video; the ad is made once it is ready. */
+  async function waitForVideo(id: string): Promise<string> {
+    const wait = deps.videoWait ?? { tries: 24, ms: 5_000 };
+    for (let i = 0; i < wait.tries; i++) {
+      const st = await deps.meta.videoStatus(id);
+      if (st.status === "ready") return "ready";
+      if (st.status === "error") return st.error ?? "Meta: video error";
+      await new Promise((r) => setTimeout(r, wait.ms));
+    }
+    return "Meta vēl apstrādā video; mēģinās nākamreiz.";
+  }
+
+  /** Without ffmpeg there is no Reel: said once a week, not every morning. */
+  async function noVideoOnce() {
+    const why =
+      "Reel video netiek veidots: serverī nav ffmpeg (Railway: RAILPACK_DEPLOY_APT_PACKAGES=ffmpeg).";
+    const [seen] = await db
+      .select({ id: marketingActions.id })
+      .from(marketingActions)
+      .where(
+        and(
+          eq(marketingActions.reason, why),
+          gte(marketingActions.createdAt, new Date(now.getTime() - 7 * 86_400_000)),
+        ),
+      )
+      .limit(1);
+    if (!seen) await note("meta_create", null, why, "ffmpeg");
+  }
 }
 
 /** The agent's ads, newest first, for the admin page. */

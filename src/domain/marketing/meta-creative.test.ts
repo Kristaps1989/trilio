@@ -7,6 +7,9 @@ import {
   adText,
   AD_LOOK,
   AGENT_CAMPAIGN,
+  carouselCreative,
+  placementCreative,
+  videoCreative,
   categoriesToAdvertise,
   factsChanged,
   type AdFacts,
@@ -45,7 +48,7 @@ describe("the ad's words", () => {
 describe("the ad's link", () => {
   it("leads to the category's picks with tags Trilio reads back as this campaign and this ad", () => {
     const name = adName("fridge", "2026-11-24");
-    expect(name).toBe("fridge-20261124");
+    expect(name).toBe("fridge-a-20261124");
     const link = adLink("https://trilio.lv/", "fridge", name);
     expect(link.startsWith("https://trilio.lv/rezultati?sub=fridge&cena=tipiska&")).toBe(true);
     const read = adParams(Object.fromEntries(new URL(link).searchParams));
@@ -87,14 +90,93 @@ describe("which categories get an ad", () => {
     { subcategoryId: "juicer", resultsVisitors: 3, sent: 0, taps: 0 },
   ];
   const all = new Set(funnel.map((f) => f.subcategoryId));
-  it("takes those whose visitors leave e-mails, one per euro of Meta's share, three at most", () => {
+  it("takes those whose visitors leave e-mails, one per euro of Meta's share, two at most (each has four ads)", () => {
     expect(categoriesToAdvertise(funnel, all, 250)).toEqual(["vacuum", "fridge"]);
-    expect(categoriesToAdvertise(funnel, all, 900)).toEqual(["vacuum", "fridge", "washer"]);
+    expect(categoriesToAdvertise(funnel, all, 900)).toEqual(["vacuum", "fridge"]);
     expect(categoriesToAdvertise(funnel, all, 100)).toEqual(["vacuum"]);
     expect(categoriesToAdvertise(funnel, all, 99)).toEqual([]);
   });
   it("skips a category that cannot show its picks today", () => {
     expect(categoriesToAdvertise(funnel, new Set(["fridge", "hob"]), 300)).toEqual(["fridge", "hob"]);
     expect(categoriesToAdvertise(funnel, new Set(), 300)).toEqual([]);
+  });
+});
+
+describe("the creatives Meta is sent", () => {
+  const who = { pageId: "100200300", instagramUserId: "17840000000000000" };
+  const words = { link: "https://trilio.lv/r", message: "m", headline: "h", description: "d" };
+
+  it("names each format's ad apart, so the link says which one brought the e-mail", () => {
+    expect(adName("fridge", "2026-11-27")).toBe("fridge-a-20261127");
+    expect(adName("fridge", "2026-11-27", "collage_b")).toBe("fridge-b-20261127");
+    expect(adName("fridge", "2026-11-27", "carousel")).toBe("fridge-karusele-20261127");
+    expect(adName("fridge", "2026-11-27", "reel")).toBe("fridge-reel-20261127");
+  });
+
+  it("shapes pictures per placement: 4:5 in feeds, 9:16 in stories, square elsewhere", () => {
+    const c = placementCreative(who, words, { square: "sq", portrait: "pt", story: "st" }, "fridge-a") as {
+      object_story_spec: unknown;
+      asset_feed_spec: {
+        ad_formats: string[];
+        images: { hash: string; adlabels: { name: string }[] }[];
+        asset_customization_rules: {
+          customization_spec: Record<string, string[]>;
+          image_label: { name: string };
+        }[];
+        link_urls: { website_url: string }[];
+      };
+    };
+    expect(c.object_story_spec).toEqual({ page_id: "100200300", instagram_user_id: "17840000000000000" });
+    const spec = c.asset_feed_spec;
+    expect(spec.ad_formats).toEqual(["SINGLE_IMAGE"]);
+    const label = (hash: string) => spec.images.find((i) => i.hash === hash)!.adlabels[0]!.name;
+    const rule = (name: string) => spec.asset_customization_rules.find((r) => r.image_label.name === name)!;
+    expect(rule(label("pt")).customization_spec.instagram_positions).toContain("stream");
+    expect(rule(label("pt")).customization_spec.facebook_positions).toContain("feed");
+    expect(rule(label("st")).customization_spec.instagram_positions).toEqual(["story"]);
+    expect(rule(label("sq")).customization_spec.facebook_positions).toContain("right_hand_column");
+    expect(spec.link_urls).toEqual([{ website_url: "https://trilio.lv/r" }]);
+    // Every position is shown by one rule only.
+    const seen = spec.asset_customization_rules.flatMap((r) =>
+      Object.entries(r.customization_spec)
+        .filter(([k]) => k.endsWith("_positions"))
+        .flatMap(([k, v]) => v.map((p) => `${k}:${p}`)),
+    );
+    expect(new Set(seen).size).toBe(seen.length);
+  });
+
+  it("a carousel keeps the tiers' order and has no end card; a video has its thumbnail and button", () => {
+    const car = carouselCreative(
+      { pageId: "1" },
+      words,
+      [0, 1, 2].map((i) => ({ imageHash: `h${i}`, name: `n${i}`, description: `d${i}` })),
+      "fridge-karusele",
+    ) as { object_story_spec: { instagram_user_id?: string; link_data: Record<string, unknown> } };
+    expect(car.object_story_spec.instagram_user_id).toBeUndefined();
+    expect(car.object_story_spec.link_data).toMatchObject({
+      multi_share_optimized: false,
+      multi_share_end_card: false,
+      message: "m",
+    });
+    expect(
+      (car.object_story_spec.link_data.child_attachments as { image_hash: string }[]).map(
+        (c) => c.image_hash,
+      ),
+    ).toEqual(["h0", "h1", "h2"]);
+    expect(videoCreative(who, words, "777", "thumb", "fridge-reel")).toEqual({
+      name: "fridge-reel",
+      object_story_spec: {
+        page_id: "100200300",
+        instagram_user_id: "17840000000000000",
+        video_data: {
+          video_id: "777",
+          image_hash: "thumb",
+          message: "m",
+          title: "h",
+          link_description: "d",
+          call_to_action: { type: "LEARN_MORE", value: { link: "https://trilio.lv/r" } },
+        },
+      },
+    });
   });
 });

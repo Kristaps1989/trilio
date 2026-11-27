@@ -2,7 +2,7 @@ import type { Db } from "@/db/client";
 import { adsProvider } from "@/services/ads";
 import { runMarketingDaily } from "./manager";
 import { metaAdsFromEnv } from "./meta-ads";
-import { creatorConfigFromEnv, renderAdPicture } from "./meta-creator";
+import { adRenderer, creatorConfigFromEnv } from "./meta-creator";
 
 /** The hour (Riga) after which the day's round runs: before the Google optimiser at 06:30. */
 export const MARKETING_RUN_HOUR = 6;
@@ -25,7 +25,7 @@ export async function runMarketingJob(db: Db, opts: { force?: boolean; now?: Dat
   return runMarketingDaily(db, {
     meta: metaAdsFromEnv(),
     google: adsProvider(),
-    creator: config ? { config, render: (facts) => renderAdPicture(facts, config.baseUrl) } : null,
+    creator: config ? { config, render: adRenderer() } : null,
     now,
     force: opts.force,
   });

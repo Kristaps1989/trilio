@@ -26,7 +26,7 @@ import {
 } from "@/db/schema";
 import { mockMetaAds } from "@/services/marketing/meta-ads";
 import { channelPerformance, metaLeads, runMarketingDaily } from "@/services/marketing/manager";
-import { ensureAgentAds, type CreatorConfig } from "@/services/marketing/meta-creator";
+import { type AdRenderer, ensureAgentAds, type CreatorConfig } from "@/services/marketing/meta-creator";
 import {
   decideSeoOverride,
   judgeTrials,
@@ -737,9 +737,14 @@ run("ads pipeline", { timeout: 60_000 }, () => {
             })),
             path: `/izvelies/x/${sub}`,
           };
+    const render: AdRenderer = {
+      missingPhoto: async (f) => f.picks.find((p) => !p.imageUrl)?.name ?? null,
+      picture: async () => Buffer.from("jpeg-bytes"),
+      reel: async () => Buffer.from("mp4-bytes"),
+    };
     const creator = {
       config,
-      render: async () => Buffer.from("jpeg-bytes"),
+      render,
       load: {
         funnel: async () => [
           { subcategoryId: "hob", resultsVisitors: 37, sent: 0, taps: 0 },
@@ -752,33 +757,62 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     };
     const today = dayOffset(new Date(), 0).replace(/-/g, "");
 
-    // Day one: Meta has nothing, so the agent makes the campaign, the ad set and two ads
-    // (one per euro of Meta's 2,50 €): the categories whose visitors leave e-mails. A category
-    // that cannot show three picks gets none, however good its numbers.
+    // Day one: Meta has nothing, so the agent makes the campaign, the ad set and, for each of
+    // the two categories whose visitors leave e-mails (one per euro of Meta's 2,50 €), four ads:
+    // two pictures, a carousel and a Reel. A category that cannot show three picks gets none.
+    const formats = ["a", "b", "karusele", "reel"];
     expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
-      created: 2,
+      created: 8,
       retired: 0,
       failed: 0,
     });
-    expect(meta.calls.map((c) => c.op)).toEqual(["campaign", "adset", "ad", "ad"]);
+    expect(meta.calls.map((c) => c.op)).toEqual(["campaign", "adset", ...Array(8).fill("ad")]);
     expect(meta.calls.map((c) => c.value)).toEqual([
       "trilio-ai-epasti",
       "latvija",
-      `vacuum-${today}`,
-      `fridge-${today}`,
+      ...formats.map((f) => `vacuum-${f}-${today}`),
+      ...formats.map((f) => `fridge-${f}-${today}`),
     ]);
     const made = await db.select().from(metaAgentAds);
-    expect(made.map((a) => a.status)).toEqual(["active", "active"]);
-    const fridgeAd = made.find((a) => a.subcategoryId === "fridge")!;
+    expect(made.map((a) => a.status)).toEqual(Array(8).fill("active"));
+    expect(made.filter((a) => a.subcategoryId === "fridge").map((a) => a.format)).toEqual([
+      "collage",
+      "collage_b",
+      "carousel",
+      "reel",
+    ]);
+    const fridgeAd = made.find((a) => a.subcategoryId === "fridge" && a.format === "collage")!;
     expect(fridgeAd.link).toBe(
-      `https://trilio.test/rezultati?sub=fridge&cena=tipiska&utm_source=meta&utm_medium=paid_social&utm_campaign=trilio-ai-epasti&utm_content=fridge-${today}`,
+      `https://trilio.test/rezultati?sub=fridge&cena=tipiska&utm_source=meta&utm_medium=paid_social&utm_campaign=trilio-ai-epasti&utm_content=fridge-a-${today}`,
     );
     expect(fridgeAd.message).toMatch(/• Modelis FRIDGE0: 499\s€/);
     expect(fridgeAd.imageHash).toBe("hash10");
+    // What Meta was sent: pictures shaped per placement (a creative of their own), the three
+    // products as carousel cards, and the Reel with its thumbnail.
+    const sent = (ad: string) => meta.creatives.find((c) => c.ad === ad)!.creative;
+    expect(sent(`fridge-a-${today}`)).toEqual({ creative_id: expect.stringMatching(/^cr\d+$/) });
+    const placed = meta.creatives.find(
+      (c) => (c.creative as { name?: string }).name === `fridge-a-${today}`,
+    )!;
+    expect(Object.keys(placed.creative)).toEqual(["name", "object_story_spec", "asset_feed_spec"]);
+    const carousel = sent(`fridge-karusele-${today}`) as {
+      object_story_spec: { link_data: { child_attachments: { name: string; description: string }[] } };
+    };
+    expect(carousel.object_story_spec.link_data.child_attachments.map((c) => c.name)).toEqual([
+      "Modelis FRIDGE0",
+      "Modelis FRIDGE1",
+      "Modelis FRIDGE2",
+    ]);
+    expect(carousel.object_story_spec.link_data.child_attachments[0]!.description).toMatch(
+      /499\s€ · Veikals A/,
+    );
+    const reel = sent(`fridge-reel-${today}`) as { object_story_spec: { video_data: { video_id: string } } };
+    expect(reel.object_story_spec.video_data.video_id).toBe(String(9500000000 + "mp4-bytes".length));
     const steps = await db.select().from(marketingActions);
-    expect(steps.filter((a) => a.kind === "meta_create" && a.applied)).toHaveLength(4);
+    expect(steps.filter((a) => a.kind === "meta_create" && a.applied)).toHaveLength(10);
+    expect(steps.some((a) => a.reason.includes("(karusele)"))).toBe(true);
 
-    // Nothing changed: the same two ads stay, nothing new is made.
+    // Nothing changed: the same ads stay, nothing new is made.
     meta.calls.length = 0;
     expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
       created: 0,
@@ -787,34 +821,38 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     });
     expect(meta.calls).toEqual([]);
 
-    // A fridge got cheaper: the ad that quotes the old price is paused, a new one replaces it.
+    // A fridge got cheaper: every fridge ad quotes the old price, so all four are paused and new
+    // ones replace them (the next morning: today's eight new ads are the day's limit).
+    const tomorrow = new Date(Date.now() + 86_400_000);
     prices.fridge = 47900;
     expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
-      created: 1,
-      retired: 1,
+      created: 0,
+      retired: 4,
       failed: 0,
     });
-    expect(meta.calls.map((c) => c.op)).toEqual(["status", "ad"]);
+    expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 250)).toEqual({
+      created: 4,
+      retired: 0,
+      failed: 0,
+    });
     const fridgeAds = (await db.select().from(metaAgentAds)).filter((a) => a.subcategoryId === "fridge");
-    expect(fridgeAds.map((a) => `${a.status}/${a.retiredWhy ?? ""}`).sort()).toEqual([
-      "active/",
-      "paused/facts",
-    ]);
-    expect(fridgeAds.find((a) => a.status === "active")!.message).toMatch(/479\s€/);
+    expect(fridgeAds.filter((a) => a.status === "paused").map((a) => a.retiredWhy)).toEqual(
+      Array(4).fill("facts"),
+    );
+    expect(fridgeAds.filter((a) => a.status === "active").every((a) => /479\s€/.test(a.message))).toBe(true);
 
-    // The vacuum ad was stopped for bringing nothing: its category rests, the next one gets the place.
+    // The vacuum ads were stopped for bringing nothing: the category rests, the next one gets the place.
     await db
       .update(metaAgentAds)
       .set({ status: "paused", retiredAt: new Date(), retiredWhy: "no_leads" })
       .where(sql`${metaAgentAds.subcategoryId} = 'vacuum'`);
     meta.calls.length = 0;
-    const tomorrow = new Date(Date.now() + 86_400_000);
     expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 250)).toEqual({
-      created: 1,
+      created: 4,
       retired: 0,
       failed: 0,
     });
-    expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual(["hob"]);
+    expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual(Array(4).fill("hob"));
 
     // A refusal by Meta is written down with Meta's words, and nothing is recorded as made.
     await db.delete(metaAgentAds);
@@ -824,7 +862,7 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     };
     expect(await ensureAgentAds(db, { meta: refusing, ...creator }, 100)).toMatchObject({
       created: 0,
-      failed: 1,
+      failed: 4,
     });
     expect(await db.select().from(metaAgentAds)).toEqual([]);
     const refused = (await db.select().from(marketingActions)).find(
@@ -835,14 +873,19 @@ run("ads pipeline", { timeout: 60_000 }, () => {
     noPhoto = true;
     await db.delete(metaAgentAds);
     meta.calls.length = 0;
-    expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 300)).toMatchObject({ created: 2 });
-    expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual(["vacuum", "fridge"]);
+    expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 300)).toMatchObject({ created: 8 });
+    expect(meta.calls.map((c) => String(c.value).split("-")[0])).toEqual([
+      ...Array(4).fill("vacuum"),
+      ...Array(4).fill("fridge"),
+    ]);
     noPhoto = false;
     await db.delete(metaAgentAds);
-    // An ad drawn in the old look (the dark list, 26 Nov 2026) is replaced by the photo collage,
-    // its category not rested: the prices still hold, only the picture was wrong.
-    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toMatchObject({ created: 2 });
-    const oldLook = (await db.select().from(metaAgentAds)).find((a) => a.subcategoryId === "vacuum")!;
+    // An ad drawn in an older look (the dark list of 26 Nov 2026, the square-only collage of
+    // 27 Nov) is replaced, its category not rested: the prices still hold, only the picture changes.
+    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toMatchObject({ created: 8 });
+    const oldLook = (await db.select().from(metaAgentAds)).find(
+      (a) => a.subcategoryId === "vacuum" && a.format === "collage",
+    )!;
     const { look: _look, ...drawnBefore } = oldLook.facts;
     void _look;
     await db
@@ -850,20 +893,43 @@ run("ads pipeline", { timeout: 60_000 }, () => {
       .set({ facts: drawnBefore })
       .where(sql`${metaAgentAds.id} = ${oldLook.id}`);
     meta.calls.length = 0;
-    expect(await ensureAgentAds(db, { meta, ...creator }, 250)).toEqual({
+    expect(await ensureAgentAds(db, { meta, ...creator, now: tomorrow }, 250)).toEqual({
       created: 1,
       retired: 1,
       failed: 0,
     });
     expect(meta.calls.map((c) => c.op)).toEqual(["status", "ad"]);
-    const vacuumAds = (await db.select().from(metaAgentAds)).filter((a) => a.subcategoryId === "vacuum");
-    expect(vacuumAds.map((a) => `${a.status}/${a.retiredWhy ?? ""}/${a.facts.look ?? 1}`).sort()).toEqual([
-      "active//2",
-      "paused/facts/1",
-    ]);
     expect(
       (await db.select().from(marketingActions)).some((a) => a.reason.includes("jauno noformējumu")),
     ).toBe(true);
+    // Meta refuses pictures shaped per placement: the square picture goes everywhere and the
+    // refusal is written down. Without ffmpeg there is no Reel, and that is said once a week.
+    await db.delete(metaAgentAds);
+    const noShapes = {
+      ...meta,
+      createCreative: async () => ({
+        ok: false as const,
+        error: "Placement customization not supported [100]",
+      }),
+    };
+    const noFfmpeg = { ...creator, render: { ...render, reel: async () => null } };
+    expect(await ensureAgentAds(db, { meta: noShapes, ...noFfmpeg }, 100)).toEqual({
+      created: 3,
+      retired: 0,
+      failed: 0,
+    });
+    const square = meta.creatives.at(-3)!.creative as {
+      object_story_spec: { link_data: { image_hash: string } };
+    };
+    expect(square.object_story_spec.link_data.image_hash).toBe("hash10");
+    expect(await ensureAgentAds(db, { meta: noShapes, ...noFfmpeg }, 100)).toEqual({
+      created: 0,
+      retired: 0,
+      failed: 0,
+    });
+    const log = await db.select().from(marketingActions);
+    expect(log.filter((a) => a.error === "Placement customization not supported [100]")).toHaveLength(2);
+    expect(log.filter((a) => a.reason.startsWith("Reel video netiek veidots"))).toHaveLength(1);
     await db.delete(metaAgentAds);
     // No share, no ad.
     expect(await ensureAgentAds(db, { meta, ...creator }, 50)).toEqual({ created: 0, retired: 0, failed: 0 });
