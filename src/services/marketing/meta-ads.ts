@@ -59,18 +59,14 @@ export type NewAdSet = {
 };
 
 export type DsaNames = { beneficiary: string; payor: string };
-/** A new single-image link ad from the page (and its Instagram account when given). */
+/**
+ * A new ad in an ad set: its creative as Meta takes it (domain/marketing/meta-creative.ts builds
+ * them), either inline or `{ creative_id }` for one made with createCreative.
+ */
 export type NewAd = {
   adsetId: string;
   name: string;
-  pageId: string;
-  instagramUserId?: string | null;
-  /** Where the ad leads, with its campaign tags already in the address. */
-  link: string;
-  message: string;
-  headline: string;
-  description: string;
-  imageHash: string;
+  creative: Record<string, unknown>;
   /** "trilio.lv": the domain whose pixel counts the ad's results. */
   domain: string;
 };
@@ -89,6 +85,12 @@ export interface MetaAdsProvider {
   createCampaign(input: NewCampaign): Promise<MetaCreated>;
   createAdSet(input: NewAdSet): Promise<MetaCreated>;
   createAd(input: NewAd): Promise<MetaCreated>;
+  /** A creative of its own (placement-shaped pictures are made this way), then used by id. */
+  createCreative(creative: Record<string, unknown>): Promise<MetaCreated>;
+  /** Puts a video into the ad account's library; the id is the video's. */
+  uploadVideo(mp4: Buffer): Promise<MetaCreated>;
+  /** "ready" once Meta has processed the video; "processing", or "error" with Meta's reason. */
+  videoStatus(id: string): Promise<{ status: "ready" | "processing" | "error"; error?: string }>;
 }
 
 export type MetaAdsConfig = { adAccountId: string; token: string; version: string };
@@ -299,22 +301,39 @@ export function metaAdsProvider(cfg: MetaAdsConfig, http: typeof fetch = fetch):
         adset_id: a.adsetId,
         status: "ACTIVE",
         conversion_domain: a.domain,
-        creative: {
-          name: a.name,
-          object_story_spec: {
-            page_id: a.pageId,
-            ...(a.instagramUserId ? { instagram_user_id: a.instagramUserId } : {}),
-            link_data: {
-              link: a.link,
-              message: a.message,
-              name: a.headline,
-              description: a.description,
-              image_hash: a.imageHash,
-              call_to_action: { type: "LEARN_MORE", value: { link: a.link } },
-            },
-          },
-        },
+        creative: a.creative,
       }),
+    createCreative: (c) => create("adcreatives", c),
+    async uploadVideo(mp4) {
+      const form = new FormData();
+      form.set("name", "trilio-reel.mp4");
+      form.set("source", new Blob([new Uint8Array(mp4)], { type: "video/mp4" }), "trilio-reel.mp4");
+      try {
+        const res = await http(`${base}/${account}/advideos`, {
+          method: "POST",
+          headers,
+          body: form,
+          signal: AbortSignal.timeout(180_000),
+        });
+        const body = (await res.json().catch(() => null)) as Json | null;
+        const id = text(body?.id) || text(body?.video_id);
+        return res.ok && id ? { ok: true, id } : { ok: false, error: metaError(body, res.status) };
+      } catch (err) {
+        return { ok: false, error: `Meta: ${(err as Error).message}`.slice(0, 400) };
+      }
+    },
+    async videoStatus(id) {
+      if (!/^\d{5,30}$/.test(id)) return { status: "error", error: "not a Meta id" };
+      const body = await one(id, { fields: "status" });
+      const st = (body?.status ?? null) as { video_status?: unknown; processing_phase?: Json } | null;
+      const v = text(st?.video_status);
+      if (v === "ready") return { status: "ready" };
+      if (v === "error") {
+        const why = st?.processing_phase?.errors;
+        return { status: "error", error: `Meta: video ${JSON.stringify(why ?? v)}`.slice(0, 400) };
+      }
+      return { status: "processing" };
+    },
     async list() {
       const common = "id,name,status,effective_status";
       const [campaigns, adsets, ads] = await Promise.all([
@@ -378,7 +397,10 @@ export function metaAdsProvider(cfg: MetaAdsConfig, http: typeof fetch = fetch):
  */
 export function mockMetaAds(
   seed: { entities?: MetaEntity[]; insights?: MetaInsight[] } = {},
-): MetaAdsProvider & { calls: { op: string; id: string; value: string | number }[] } {
+): MetaAdsProvider & {
+  calls: { op: string; id: string; value: string | number }[];
+  creatives: { ad: string; creative: Record<string, unknown> }[];
+} {
   const entities: MetaEntity[] = seed.entities ?? [
     {
       id: "9100000001",
@@ -422,6 +444,7 @@ export function mockMetaAds(
     },
   ];
   const calls: { op: string; id: string; value: string | number }[] = [];
+  const creatives: { ad: string; creative: Record<string, unknown> }[] = [];
   let next = 9400000000;
   const add = (e: Omit<MetaEntity, "id">, op: string): MetaCreated => {
     const id = String(++next);
@@ -431,6 +454,7 @@ export function mockMetaAds(
   };
   return {
     calls,
+    creatives,
     async uploadImage(jpeg) {
       return jpeg.length ? { ok: true, id: `hash${jpeg.length}` } : { ok: false, error: "empty image" };
     },
@@ -465,6 +489,7 @@ export function mockMetaAds(
     async createAd(a) {
       const set = entities.find((e) => e.id === a.adsetId);
       if (!set) return { ok: false, error: "unknown ad set" };
+      creatives.push({ ad: a.name, creative: a.creative });
       return add(
         {
           level: "ad",
@@ -477,6 +502,19 @@ export function mockMetaAds(
         },
         "ad",
       );
+    },
+    async createCreative(c) {
+      const id = `cr${creatives.length + 1}`;
+      creatives.push({ ad: id, creative: c });
+      return { ok: true, id };
+    },
+    async uploadVideo(mp4) {
+      return mp4.length
+        ? { ok: true, id: String(9500000000 + mp4.length) }
+        : { ok: false, error: "empty video" };
+    },
+    async videoStatus() {
+      return { status: "ready" };
     },
     async list() {
       return { ok: true, entities: entities.map((e) => ({ ...e })) };

@@ -24,8 +24,7 @@ import {
 import { dayOffset, getSettings, leadsByCampaign, paceBudgets, updateSettings } from "@/services/ads/account";
 import type { AdsProvider } from "@/services/ads/provider";
 import type { MetaAdsProvider } from "./meta-ads";
-import { ensureAgentAds, type CreatorConfig } from "./meta-creator";
-import type { PostFacts } from "@/domain/social/captions";
+import { ensureAgentAds, type CreatorDeps } from "./meta-creator";
 
 // The marketing manager's daily round (docs/GROWTH_PLAN.md, "One agent for every channel";
 // owner, 24 Nov 2026): one daily budget for Google and Meta, spent where e-mails come from.
@@ -211,7 +210,7 @@ export async function runMarketingDaily(
     meta: MetaAdsProvider | null;
     google: AdsProvider | null;
     /** What making an ad needs (the page, the pixel, the picture); without it ads are only managed. */
-    creator?: { config: CreatorConfig; render: (facts: PostFacts) => Promise<Buffer> } | null;
+    creator?: Pick<CreatorDeps, "config" | "render" | "load"> | null;
     now?: Date;
     force?: boolean;
   },

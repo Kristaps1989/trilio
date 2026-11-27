@@ -166,8 +166,15 @@ export default async function AdsChannels({ searchParams }: Props) {
           head={[t("colAd"), t("colAdText"), t("colAdSince"), t("colState")]}
           empty={t("agentAdsEmpty")}
           rows={own.map((a) => [
-            <span key="n" data-agent-ad={a.status} className="break-words">
+            <span key="n" data-agent-ad={a.status} data-format={a.format} className="break-words">
               {a.headline}
+              <span className="block text-sm text-stone">
+                {t.has(`agentAdFormat_${a.format}`)
+                  ? t(`agentAdFormat_${a.format}` as "agentAdFormat_collage")
+                  : a.format}
+                {" · "}
+                {a.name}
+              </span>
               <a href={a.link} target="_blank" rel="noopener noreferrer" className="block text-sm underline">
                 {t("agentAdOpen")}
               </a>

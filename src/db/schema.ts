@@ -1508,6 +1508,8 @@ export const metaAgentAds = pgTable(
     adId: text("ad_id").notNull().unique(),
     subcategoryId: text("subcategory_id").notNull(),
     name: text("name").notNull(),
+    /** Which of the category's ads (domain/marketing/ad-pages.ts): collage, collage_b, carousel, reel. */
+    format: text("format").notNull().default("collage"),
     /** The three picks the picture and the text name, with their prices. */
     facts: jsonb("facts")
       .$type<{

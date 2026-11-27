@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PostFacts } from "@/domain/social/captions";
-import { adCard, creatorConfigFromEnv, renderAdPicture } from "./meta-creator";
+import { collageBPage, collagePage, productPage, reelCard } from "@/domain/marketing/ad-pages";
+import { adRenderer, creatorConfigFromEnv } from "./meta-creator";
 
 // What making a Meta ad needs, and the picture it carries.
 
@@ -39,44 +40,50 @@ describe("creatorConfigFromEnv", () => {
   });
 });
 
-describe("renderAdPicture", () => {
+describe("the ads' pictures", () => {
+  const facts: PostFacts = {
+    kind: "picks",
+    subcategoryId: "fridge",
+    category: "Ledusskapji",
+    questions: [],
+    picks: [0, 1, 2].map((i) => ({
+      name: `Modelis ${i}`,
+      priceCents: 49900 + i * 5000,
+      shop: "Veikals A",
+      imageUrl: ["/sample/fridge-builtin.png", "/sample/kettle-black.png", "/sample/kettle-steel.png"][i]!,
+    })),
+    path: "/izvelies/cool/fridge",
+  };
+  const picks = facts as Extract<PostFacts, { kind: "picks" }>;
+
   it(
-    "draws the three products' photos as a square JPEG, and refuses a pick without one",
-    { timeout: 60_000 },
+    "are drawn 1:1, 4:5 and 9:16, each product as a card, and a page without a photo is caught",
+    { timeout: 120_000 },
     async () => {
-      const facts: PostFacts = {
-        kind: "picks",
-        subcategoryId: "fridge",
-        category: "Ledusskapji",
-        questions: [],
-        picks: [0, 1, 2].map((i) => ({
-          name: `Modelis ${i}`,
-          priceCents: 49900 + i * 5000,
-          shop: "Veikals A",
-          imageUrl: ["/sample/fridge-builtin.png", "/sample/kettle-black.png", "/sample/kettle-steel.png"][
-            i
-          ]!,
-        })),
-        path: "/izvelies/cool/fridge",
-      };
-      // The page drawn is the photo collage with its three products, not the carousel's cover.
-      const page = adCard(facts, "https://trilio.test");
-      expect(page.layout).toBe("collage");
-      expect(page.images).toEqual(facts.kind === "picks" ? facts.picks.map((p) => p.imageUrl) : []);
-      expect(page.rows?.map((r) => r.label)).toEqual(["Modelis 0", "Modelis 1", "Modelis 2"]);
-      const jpeg = await renderAdPicture(facts, "https://trilio.test");
-      expect(jpeg.subarray(0, 2).toString("hex")).toBe("ffd8");
+      const r = adRenderer();
+      expect(await r.missingPhoto(picks)).toBeNull();
+      const bare = { ...picks, picks: picks.picks.map((p, i) => (i === 1 ? { ...p, imageUrl: null } : p)) };
+      expect(await r.missingPhoto(bare)).toBe("Modelis 1");
       const sharp = (await import("sharp")).default;
-      const meta = await sharp(jpeg).metadata();
-      expect([meta.width, meta.height]).toEqual([1080, 1080]);
-      const bare = { ...facts, picks: facts.picks.map((p, i) => (i === 1 ? { ...p, imageUrl: null } : p)) };
-      await expect(renderAdPicture(bare, "https://trilio.test")).rejects.toThrow("no photo of Modelis 1");
-      await expect(
-        renderAdPicture(
-          { kind: "advice", subcategoryId: "fridge" } as unknown as PostFacts,
-          "https://trilio.test",
-        ),
-      ).rejects.toThrow("not a picks ad");
+      const size = async (jpeg: Buffer) => {
+        expect(jpeg.subarray(0, 2).toString("hex")).toBe("ffd8");
+        const m = await sharp(jpeg).metadata();
+        return [m.width, m.height];
+      };
+      const a = collagePage(picks, "https://trilio.test");
+      expect(await size(await r.picture(a, "square"))).toEqual([1080, 1080]);
+      expect(await size(await r.picture(a, "portrait"))).toEqual([1080, 1350]);
+      expect(await size(await r.picture(collageBPage(picks, "https://trilio.test"), "story"))).toEqual([
+        1080, 1920,
+      ]);
+      expect(await size(await r.picture(productPage(picks, 0), "square"))).toEqual([1080, 1080]);
     },
   );
+
+  it("the Reel is an upright MP4 when the server has ffmpeg", { timeout: 180_000 }, async () => {
+    const { ffmpegPath, renderReel } = await import("@/services/social/video");
+    const mp4 = await renderReel(reelCard(picks, "https://trilio.test"), { withSound: false });
+    if (!(await ffmpegPath())) return expect(mp4).toBeNull();
+    expect(mp4!.subarray(4, 8).toString()).toBe("ftyp");
+  });
 });

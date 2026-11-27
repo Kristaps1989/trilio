@@ -1,0 +1,1 @@
+ALTER TABLE "meta_agent_ads" ADD COLUMN "format" text DEFAULT 'collage' NOT NULL;
