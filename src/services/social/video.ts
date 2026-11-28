@@ -8,7 +8,17 @@ import sounds from "../../../data/social-sounds.json";
 import type { Db } from "@/db/client";
 import { socialImages, socialPosts } from "@/db/schema";
 import type { PostCard } from "@/domain/social/captions";
-import { MAX_REEL_SLIDES, REEL_FPS, reelFilter, reelPlan } from "@/domain/social/reel";
+import {
+  MAX_REEL_SLIDES,
+  REEL_FPS,
+  reelFilter,
+  reelPlan,
+  reelTimeline,
+  timelineFilter,
+} from "@/domain/social/reel";
+import { reelScript, type ReelScript } from "@/domain/social/reel-script";
+import { rigaDayOf } from "@/domain/social/schedule";
+import { reelPhotos, renderReelPicture } from "./reel-render";
 import { renderPostJpeg, slidesOf } from "./render";
 
 // A generated Reel (docs/SOCIAL_PLAN.md §14): the post's own slides drawn upright (9:16) and
@@ -58,6 +68,8 @@ const SOUNDS = { sweep: sounds.sweep, pop: sounds.pop, click: sounds.click };
 export async function renderReel(card: PostCard, opts: { withSound?: boolean } = {}): Promise<Buffer | null> {
   const ffmpeg = await ffmpegPath();
   if (!ffmpeg) return null;
+  const script = scriptOf(card);
+  if (script) return renderScenes(ffmpeg, script, opts);
   const slides = slidesOf(card).slice(0, MAX_REEL_SLIDES);
   const plan = reelPlan(slides.length);
   const dir = await mkdtemp(path.join(tmpdir(), "trilio-reel-"));
@@ -112,6 +124,96 @@ export async function renderReel(card: PostCard, opts: { withSound?: boolean } =
       out,
     );
     await run(ffmpeg, args, { timeout: 180_000, maxBuffer: 8 * 1024 * 1024 });
+    return await readFile(out);
+  } finally {
+    await rm(dir, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
+
+/**
+ * The Reel's own scenes: the card's, else made from the picks a stored Reel post was composed
+ * from (owner, 28 Nov 2026: products, their analysis and price changes, not the carousel's slides).
+ */
+export function scriptOf(card: PostCard, now = new Date()): ReelScript | null {
+  if (card.reel) return card.reel;
+  const facts = (card as PostCard & { facts?: { kind: string; of?: { kind: string } } }).facts;
+  if (facts?.kind === "reel" && facts.of?.kind === "picks")
+    return reelScript(facts.of as Parameters<typeof reelScript>[0], rigaDayOf(now));
+  return null;
+}
+
+/** Sound effects fetched for the plan's cues, as ffmpeg inputs after `first`. */
+async function soundInputs(
+  dir: string,
+  cues: { sound: "pop" | "sweep" | "click"; at: number; volume: number }[],
+  first: number,
+  args: string[],
+): Promise<{ input: number; at: number; volume: number }[]> {
+  const audio: { input: number; at: number; volume: number }[] = [];
+  const files = new Map<string, string | null>();
+  for (const s of cues) {
+    if (!files.has(s.sound)) files.set(s.sound, await sound(dir, s.sound));
+    const file = files.get(s.sound);
+    if (!file) continue;
+    args.push("-i", file);
+    audio.push({ input: first + audio.length, at: s.at, volume: s.volume });
+  }
+  return audio;
+}
+
+const ENCODE = [
+  "-c:v",
+  "libx264",
+  "-preset",
+  "veryfast",
+  "-crf",
+  "20",
+  "-pix_fmt",
+  "yuv420p",
+  "-r",
+  String(REEL_FPS),
+  "-c:a",
+  "aac",
+  "-b:a",
+  "128k",
+  "-movflags",
+  "+faststart",
+];
+
+/** The scene Reel: each scene's pictures, pushed in slowly, built with fades and joined with slides. */
+async function renderScenes(
+  ffmpeg: string,
+  script: ReelScript,
+  opts: { withSound?: boolean },
+): Promise<Buffer> {
+  const t = reelTimeline(script.scenes);
+  const dir = await mkdtemp(path.join(tmpdir(), "trilio-reel-"));
+  try {
+    const photos = await reelPhotos(script);
+    const args: string[] = ["-loglevel", "error", "-y"];
+    for (let i = 0; i < t.clips.length; i++) {
+      const c = t.clips[i]!;
+      const file = path.join(dir, `c${i}.jpg`);
+      // One at a time: drawing is heavy.
+      await writeFile(file, await renderReelPicture(script, c.scene, c.step, photos));
+      args.push("-loop", "1", "-framerate", String(REEL_FPS), "-t", String(c.seconds), "-i", file);
+    }
+    args.push("-f", "lavfi", "-t", String(t.total), "-i", "anullsrc=r=44100:cl=stereo");
+    const audio = opts.withSound === false ? [] : await soundInputs(dir, t.sounds, t.clips.length + 1, args);
+    const out = path.join(dir, "reel.mp4");
+    args.push(
+      "-filter_complex",
+      timelineFilter(t, audio),
+      "-map",
+      "[vout]",
+      "-map",
+      "[aout]",
+      "-t",
+      String(t.total),
+      ...ENCODE,
+      out,
+    );
+    await run(ffmpeg, args, { timeout: 240_000, maxBuffer: 8 * 1024 * 1024 });
     return await readFile(out);
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => undefined);

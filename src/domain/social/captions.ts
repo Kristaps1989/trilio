@@ -2,6 +2,8 @@ import type { SocialKind } from "@/db/schema";
 import { formatEur } from "@/i18n/format";
 import { OFFER_DISCOUNT_UP_TO_PCT, maxOfferSavingCents } from "@/domain/offers/discount";
 import { lintPost, ownerTextBlocks, type PostLintContext } from "./lint";
+import type { PricePoint } from "./price-trend";
+import type { ReelScript } from "./reel-script";
 
 // The words of each post type (docs/SOCIAL_PLAN.md §3), from facts the job
 // queried a moment before. Register (§6, owner D1): no "tu" and no "jūs" in
@@ -22,6 +24,8 @@ export type PickLine = {
   /** What it gives, and does worse, than the cheapest of the three, in the site's words. */
   gains?: string[];
   tradeoffs?: string[];
+  /** The shop's price of this offer per day over the last 30 days, for a Reel's price line. */
+  history?: PricePoint[];
 };
 
 export type PostFacts =
@@ -173,6 +177,8 @@ export type PostCard = {
   image?: string;
   /** A carousel: every slide is a card of its own; `lines` above stay the facts to re-check. */
   slides?: Omit<PostCard, "slides">[];
+  /** A Reel's own scenes (reel-script.ts): drawn for video instead of playing the slides. */
+  reel?: ReelScript;
   /** The slide's own alt text (keywords: category, product, price); made from its content when absent. */
   alt?: string;
   /** Category illustrations in a row under the title. */

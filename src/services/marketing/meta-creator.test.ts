@@ -82,7 +82,7 @@ describe("the ads' pictures", () => {
 
   it("the Reel is an upright MP4 when the server has ffmpeg", { timeout: 180_000 }, async () => {
     const { ffmpegPath, renderReel } = await import("@/services/social/video");
-    const mp4 = await renderReel(reelCard(picks, "https://trilio.test"), { withSound: false });
+    const mp4 = await renderReel(reelCard(picks, "https://trilio.test", "2026-11-28"), { withSound: false });
     if (!(await ffmpegPath())) return expect(mp4).toBeNull();
     expect(mp4!.subarray(4, 8).toString()).toBe("ftyp");
   });

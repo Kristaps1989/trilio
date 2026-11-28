@@ -59,7 +59,7 @@ export type AdFacts = {
  * 3: the four formats, pictures shaped per placement (27 Nov 2026); 2: the square photo
  * collage; 1 (unset): the dark list without photos.
  */
-export const AD_LOOK = 3;
+export const AD_LOOK = 4;
 
 /**
  * The ad's words: what the three are and what they cost today, then what Trilio does. No

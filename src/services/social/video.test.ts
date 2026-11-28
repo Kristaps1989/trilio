@@ -4,7 +4,16 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { composePost, type PostFacts } from "@/domain/social/captions";
-import { ffmpegPath, generatedVideoPath, hasGeneratedVideo, renderReel, resetFfmpeg } from "./video";
+import { reelTimeline } from "@/domain/social/reel";
+import { reelScript } from "@/domain/social/reel-script";
+import {
+  ffmpegPath,
+  generatedVideoPath,
+  hasGeneratedVideo,
+  renderReel,
+  resetFfmpeg,
+  scriptOf,
+} from "./video";
 
 // A generated Reel (docs/SOCIAL_PLAN.md §14). The video itself needs ffmpeg on the machine;
 // where there is none, the service says so and makes nothing, and that is tested either way.
@@ -87,5 +96,50 @@ describe("generated Reel", () => {
       }
     },
     180_000,
+  );
+
+  it("a Reel post about picks gets the scene Reel; any other card plays its slides", () => {
+    expect(scriptOf(card)).toBeNull();
+    const stored = { ...card, facts: { kind: "reel", caption: "x", videoUrl: "v", path: "/", of: facts } };
+    expect(scriptOf(stored as typeof card)?.scenes.map((s) => s.kind)).toEqual([
+      "hook",
+      "product",
+      "product",
+      "product",
+      "compare",
+      "cta",
+    ]);
+  });
+
+  it.skipIf(!hasFfmpeg)(
+    "draws the scene Reel: three products with their price lines, as long as its timeline",
+    async () => {
+      if (facts.kind !== "picks") throw new Error();
+      const days = Array.from({ length: 12 }, (_, i) => ({
+        day: `2026-11-${String(16 + i).padStart(2, "0")}`,
+        priceCents: i < 6 ? 41900 : 39900,
+      }));
+      const script = reelScript(
+        { ...facts, picks: picks.map((p) => ({ ...p, history: days })) },
+        "2026-11-28",
+      );
+      const video = await renderReel({ ...card, reel: script }, { withSound: false });
+      const dir = mkdtempSync(path.join(tmpdir(), "trilio-reel-test-"));
+      try {
+        const file = path.join(dir, "v.mp4");
+        writeFileSync(file, video!);
+        const probe = (entries: string) =>
+          execFileSync(
+            (process.env.FFMPEG_PATH || "ffmpeg").replace(/ffmpeg$/, "ffprobe"),
+            ["-v", "error", "-show_entries", entries, "-of", "csv=p=0", file],
+            { encoding: "utf8" },
+          );
+        expect(probe("stream=codec_name,width,height")).toContain("h264,1080,1920");
+        expect(Number(probe("format=duration"))).toBeCloseTo(reelTimeline(script.scenes).total, 0);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    },
+    240_000,
   );
 });

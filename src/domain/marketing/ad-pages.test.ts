@@ -63,8 +63,16 @@ describe("the ad pages", () => {
     expect(cardText(facts, 0).description.length).toBeLessThanOrEqual(30);
   });
 
-  it("the Reel is the collage, the three products in turn and what Trilio does", () => {
-    const reel = reelCard(facts, "https://trilio.lv");
+  it("the Reel is its own scenes: the three, each product, a comparison and what Trilio does", () => {
+    const reel = reelCard(facts, "https://trilio.lv", "2026-11-28");
+    expect(reel.reel?.scenes.map((s) => s.kind)).toEqual([
+      "hook",
+      "product",
+      "product",
+      "product",
+      "compare",
+      "cta",
+    ]);
     expect(reel.slides?.map((s) => s.layout)).toEqual(["collage", "pick", "pick", "pick", "closing"]);
     expect(closingPage(facts)).toMatchObject({ headlineAccent: "Redzi savus trīs.", icons: ["vacuum"] });
     expect(AD_FORMATS).toEqual(["collage", "collage_b", "carousel", "reel"]);
