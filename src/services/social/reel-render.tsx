@@ -1,16 +1,18 @@
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
-import { BEST_LABEL } from "@/domain/social/captions";
+import type { PostCard } from "@/domain/social/captions";
+import { BEST_LABEL } from "@/domain/social/picks-words";
 import type { PriceTrend } from "@/domain/social/price-trend";
 import type { ReelPick, ReelScene, ReelScript } from "@/domain/social/reel-script";
 import { formatEur } from "@/i18n/format";
 import { brandFonts, Drawing, Wordmark } from "@/services/ads/creatives";
-import { loadPhoto, STORY_SIZE } from "./render";
+import { loadPhoto, POST_SIZE, SQUARE_CANVAS, STORY_SIZE, type Shape } from "./render";
 
-// The pictures of the scene Reel (src/domain/social/reel-script.ts), drawn for a phone held
-// upright: 1080 × 1920, the product large, few words, big numbers. The top ~250 px and the
-// bottom ~420 px stay free of words for the Reels interface (name, caption, buttons), and the
-// right edge low down is left to its like and share buttons.
+// The pictures of the scenes (src/domain/social/reel-script.ts): the product large, few words,
+// big numbers. Upright for a Reel or a Story (1080 × 1920): the top ~250 px and the bottom
+// ~420 px stay free of words for their interface, and the right edge low down is left to the
+// like and share buttons. The same scenes are drawn 4:5 for a feed post or picture ad and square
+// for a carousel card (laid out 1350 × 1350 and scaled, as render.tsx does).
 
 const NIGHT = "#0F2A2E";
 const NIGHT_DEEP = "#081A1D";
@@ -19,9 +21,19 @@ const LIME = "#D8F45A";
 const MIST = "#F2F5F2";
 const STONE = "#A9BDB9";
 const HEAD = "Space Grotesk";
-const X = 72;
-const TOP = 196;
-const W = STORY_SIZE.width - 2 * X;
+
+/** The canvas: its size, the margins and the content's width; `story` for the upright one. */
+type Geo = { width: number; height: number; top: number; x: number; w: number; story: boolean };
+export function geoOf(shape: Exclude<Shape, "link">): Geo {
+  const size =
+    shape === "story"
+      ? STORY_SIZE
+      : shape === "square"
+        ? { width: SQUARE_CANVAS, height: SQUARE_CANVAS }
+        : POST_SIZE;
+  const x = shape === "square" ? 96 : 72;
+  return { ...size, top: shape === "story" ? 196 : 68, x, w: size.width - 2 * x, story: shape === "story" };
+}
 const GLASS = "rgba(242,245,242,0.06)";
 const GLASS_EDGE = "rgba(242,245,242,0.12)";
 
@@ -30,7 +42,7 @@ const eur = (cents: number) => formatEur(cents, "lv");
 
 /* ---------- atoms ---------- */
 
-function Ground({ children, lime = false }: { children: ReactNode; lime?: boolean }) {
+function Ground({ children, g, lime = false }: { children: ReactNode; g: Geo; lime?: boolean }) {
   return (
     <div
       style={{
@@ -45,7 +57,7 @@ function Ground({ children, lime = false }: { children: ReactNode; lime?: boolea
         background: lime
           ? LIME
           : `linear-gradient(170deg, ${NIGHT_SOFT} 0%, ${NIGHT} 38%, ${NIGHT_DEEP} 100%)`,
-        padding: `${TOP}px ${X}px 0`,
+        padding: `${g.top}px ${g.x}px 0`,
       }}
     >
       {lime ? null : (
@@ -62,6 +74,24 @@ function Ground({ children, lime = false }: { children: ReactNode; lime?: boolea
         />
       )}
       {children}
+      {/* A still (a post, an ad) has no Reels interface below: the address goes there. */}
+      {g.story || lime ? null : (
+        <div
+          style={{
+            position: "absolute",
+            right: g.x,
+            bottom: 52,
+            display: "flex",
+            fontFamily: HEAD,
+            fontWeight: 700,
+            fontSize: 36,
+            letterSpacing: "-0.02em",
+            color: lime ? NIGHT : LIME,
+          }}
+        >
+          trilio.lv
+        </div>
+      )}
     </div>
   );
 }
@@ -161,7 +191,7 @@ function Tile({
           style={{ width: width - 2 * inset, height: height - 2 * inset, objectFit: "contain" }}
         />
       ) : (
-        <Drawing subcategoryId={subcategoryId} size={Math.min(width, height) * 0.6} />
+        <Drawing subcategoryId={pick.sub ?? subcategoryId} size={Math.min(width, height) * 0.6} />
       )}
     </div>
   );
@@ -185,7 +215,7 @@ function Price({ text, size, color = LIME }: { text: string; size: number; color
   );
 }
 
-function Name({ text, size, maxWidth = W }: { text: string; size: number; maxWidth?: number }) {
+function Name({ text, size, maxWidth }: { text: string; size: number; maxWidth?: number }) {
   return (
     <div
       style={{
@@ -195,7 +225,7 @@ function Name({ text, size, maxWidth = W }: { text: string; size: number; maxWid
         fontSize: size,
         lineHeight: 1.08,
         letterSpacing: "-0.02em",
-        maxWidth,
+        ...(maxWidth ? { maxWidth } : {}),
       }}
     >
       {text}
@@ -281,12 +311,14 @@ function PriceLine({ trend, width, height }: { trend: PriceTrend; width: number;
 
 function Hook({
   s,
+  g,
   at,
   of,
   photos,
   sub,
 }: {
   s: Extract<ReelScene, { kind: "hook" }>;
+  g: Geo;
   at: number;
   of: number;
   photos: Photos;
@@ -295,18 +327,18 @@ function Hook({
   const tilt = [-7, 0, 7];
   const lift = [70, 0, 70];
   return (
-    <Ground>
+    <Ground g={g}>
       <TopBar at={at} of={of} />
       <div style={{ display: "flex", flexDirection: "column", gap: 26, marginTop: 70 }}>
         <Eyebrow text={s.eyebrow} />
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <Name text={s.headline} size={100} />
+          <Name text={s.headline} size={g.story ? 100 : 88} />
           <div style={{ display: "flex", color: LIME }}>
-            <Name text={s.accent} size={100} />
+            <Name text={s.accent} size={g.story ? 100 : 88} />
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: 120 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: g.story ? 120 : 80 }}>
         {s.picks.map((p, i) => (
           <div
             key={p.letter}
@@ -320,7 +352,14 @@ function Hook({
               transform: `rotate(${tilt[i] ?? 0}deg)`,
             }}
           >
-            <Tile pick={p} photos={photos} subcategoryId={sub} width={318} height={440} radius={36} />
+            <Tile
+              pick={p}
+              photos={photos}
+              subcategoryId={sub}
+              width={g.width > 1100 ? 360 : 318}
+              height={g.story ? 440 : 400}
+              radius={36}
+            />
             <Pill text={p.price} tone={p.best ? "lime" : "glass"} />
           </div>
         ))}
@@ -331,12 +370,14 @@ function Hook({
 
 function ProductHero({
   s,
+  g,
   at,
   of,
   photos,
   sub,
 }: {
   s: Extract<ReelScene, { kind: "product" }>;
+  g: Geo;
   at: number;
   of: number;
   photos: Photos;
@@ -344,17 +385,17 @@ function ProductHero({
 }) {
   const p = s.pick;
   return (
-    <Ground>
+    <Ground g={g}>
       <TopBar at={at} of={of} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 44 }}>
         <Eyebrow text={[p.letter, p.tier].filter(Boolean).join(" · ")} />
         {p.best ? <Pill text={BEST_LABEL} tone="lime" /> : null}
       </div>
       <div style={{ display: "flex", marginTop: 30 }}>
-        <Tile pick={p} photos={photos} subcategoryId={sub} width={W} height={720} radius={52} />
+        <Tile pick={p} photos={photos} subcategoryId={sub} width={g.w} height={720} radius={52} />
       </div>
       <div style={{ display: "flex", marginTop: 40 }}>
-        <Name text={p.name} size={p.name.length > 34 ? 50 : 60} maxWidth={W - 60} />
+        <Name text={p.name} size={p.name.length > 34 ? 50 : 60} maxWidth={g.w - 60} />
       </div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 24, marginTop: 26 }}>
         <Price text={p.price} size={136} />
@@ -368,12 +409,14 @@ function ProductHero({
 
 function ProductFacts({
   s,
+  g,
   at,
   of,
   photos,
   sub,
 }: {
   s: Extract<ReelScene, { kind: "product" }>;
+  g: Geo;
   at: number;
   of: number;
   photos: Photos;
@@ -384,16 +427,23 @@ function ProductFacts({
   const good = t?.status === "below" || t?.status === "lowest";
   const notes = s.notes.slice(0, t ? 3 : 4);
   return (
-    <Ground>
+    <Ground g={g}>
       <TopBar at={at} of={of} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 44 }}>
         <Eyebrow text={[p.letter, p.tier].filter(Boolean).join(" · ")} />
         {p.best ? <Pill text={BEST_LABEL} tone="lime" /> : null}
       </div>
       <div style={{ display: "flex", gap: 36, marginTop: 30, alignItems: "center" }}>
-        <Tile pick={p} photos={photos} subcategoryId={sub} width={360} height={400} radius={40} />
+        <Tile
+          pick={p}
+          photos={photos}
+          subcategoryId={sub}
+          width={g.story ? 360 : 330}
+          height={g.story ? 400 : 360}
+          radius={40}
+        />
         <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1 }}>
-          <Name text={p.name} size={p.name.length > 40 ? 38 : 44} maxWidth={W - 396} />
+          <Name text={p.name} size={p.name.length > 40 ? 38 : 44} maxWidth={g.w - (g.story ? 396 : 366)} />
           <Price text={p.price} size={104} />
           <div style={{ display: "flex", fontSize: 30, color: STONE }}>šodien · {p.shop}</div>
         </div>
@@ -403,12 +453,12 @@ function ProductFacts({
           style={{
             display: "flex",
             flexDirection: "column",
-            marginTop: 40,
+            marginTop: g.story ? 40 : 32,
             padding: "30px 34px 26px",
             borderRadius: 40,
             background: GLASS,
             border: `2px solid ${GLASS_EDGE}`,
-            width: W - 70,
+            width: g.w - 70,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -416,7 +466,7 @@ function ProductFacts({
             <Pill text={t.label} tone={good ? "lime" : "glass"} />
           </div>
           <div style={{ display: "flex", marginTop: 22 }}>
-            <PriceLine trend={t} width={W - 70 - 68} height={250} />
+            <PriceLine trend={t} width={g.w - 70 - 68} height={g.story ? 250 : 180} />
           </div>
           <div
             style={{
@@ -435,13 +485,21 @@ function ProductFacts({
           </div>
         </div>
       ) : s.specs.length ? (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 44, width: W - 70 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 44, width: g.w - 70 }}>
           {s.specs.map((x) => (
             <Pill key={x} text={x} tone="glass" />
           ))}
         </div>
       ) : null}
-      <div style={{ display: "flex", flexDirection: "column", gap: 22, marginTop: 44, width: W - 100 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 22,
+          marginTop: g.story ? 44 : 32,
+          width: g.w - 100,
+        }}
+      >
         {notes.map((n) => (
           <div key={n.text} style={{ display: "flex", alignItems: "center", gap: 20 }}>
             <Mark mark={n.mark} />
@@ -462,12 +520,14 @@ function ProductFacts({
 
 function Compare({
   s,
+  g,
   at,
   of,
   photos,
   sub,
 }: {
   s: Extract<ReelScene, { kind: "compare" }>;
+  g: Geo;
   at: number;
   of: number;
   photos: Photos;
@@ -475,7 +535,7 @@ function Compare({
 }) {
   const max = Math.max(...s.rows.map((r) => r.priceCents));
   return (
-    <Ground>
+    <Ground g={g}>
       <TopBar at={at} of={of} />
       <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 64 }}>
         <Eyebrow text={s.eyebrow} />
@@ -493,7 +553,7 @@ function Compare({
               borderRadius: 40,
               background: r.best ? "rgba(216,244,90,0.10)" : GLASS,
               border: `2px solid ${r.best ? "rgba(216,244,90,0.55)" : GLASS_EDGE}`,
-              width: W - 40,
+              width: g.w - 40,
             }}
           >
             <Tile pick={r} photos={photos} subcategoryId={sub} width={190} height={210} radius={28} />
@@ -567,21 +627,22 @@ function Compare({
 
 function Cta({
   s,
+  g,
   at,
   of,
   photos,
-  picks,
   sub,
 }: {
   s: Extract<ReelScene, { kind: "cta" }>;
+  g: Geo;
   at: number;
   of: number;
   photos: Photos;
-  picks: ReelPick[];
   sub: string;
 }) {
+  const picks = s.picks;
   return (
-    <Ground lime>
+    <Ground g={g} lime>
       <TopBar at={at} of={of} lime />
       <div style={{ display: "flex", flexDirection: "column", gap: 28, marginTop: 90 }}>
         <Eyebrow text={s.eyebrow} color={NIGHT} />
@@ -629,47 +690,83 @@ function Cta({
   );
 }
 
-/** Every product photo the script shows, fetched once for all its pictures. */
-export async function reelPhotos(script: ReelScript): Promise<Photos> {
+const picksOf = (s: ReelScene): ReelPick[] =>
+  s.kind === "hook" || s.kind === "cta" ? s.picks : s.kind === "compare" ? s.rows : [s.pick];
+
+async function photosOf(scenes: ReelScene[]): Promise<Photos> {
   const urls = new Set<string>();
-  for (const s of script.scenes) {
-    const picks =
-      s.kind === "hook" ? s.picks : s.kind === "compare" ? s.rows : s.kind === "product" ? [s.pick] : [];
-    for (const p of picks) if (p.image) urls.add(p.image);
-  }
+  for (const s of scenes) for (const p of picksOf(s)) if (p.image) urls.add(p.image);
   const photos: Photos = new Map();
   for (const u of urls) photos.set(u, await loadPhoto(u));
   return photos;
 }
 
-/** One picture of the Reel: scene `scene` at step `step` (a product scene has two), as JPEG. */
+/** Every product photo the script shows, fetched once for all its pictures. */
+export const reelPhotos = (script: ReelScript): Promise<Photos> => photosOf(script.scenes);
+
+/** One scene at one step (a product scene has two; a still shows its second, the analysis). */
+function sceneNode(s: ReelScene, step: number, at: number, of: number, photos: Photos, sub: string, g: Geo) {
+  const props = { g, at, of, photos, sub };
+  return s.kind === "hook" ? (
+    <Hook s={s} {...props} />
+  ) : s.kind === "product" ? (
+    step === 0 ? (
+      <ProductHero s={s} {...props} />
+    ) : (
+      <ProductFacts s={s} {...props} />
+    )
+  ) : s.kind === "compare" ? (
+    <Compare s={s} {...props} />
+  ) : (
+    <Cta s={s} {...props} />
+  );
+}
+
+/** One picture of the Reel: scene `scene` at step `step`, upright, as JPEG. */
 export async function renderReelPicture(
   script: ReelScript,
   scene: number,
   step: number,
   photos: Photos,
 ): Promise<Buffer> {
-  const s = script.scenes[scene]!;
-  const of = script.scenes.length;
-  const sub = script.subcategoryId;
-  const hook = script.scenes.find((x) => x.kind === "hook");
-  const picks = hook?.kind === "hook" ? hook.picks : [];
-  const node =
-    s.kind === "hook" ? (
-      <Hook s={s} at={scene} of={of} photos={photos} sub={sub} />
-    ) : s.kind === "product" ? (
-      step === 0 ? (
-        <ProductHero s={s} at={scene} of={of} photos={photos} sub={sub} />
-      ) : (
-        <ProductFacts s={s} at={scene} of={of} photos={photos} sub={sub} />
-      )
-    ) : s.kind === "compare" ? (
-      <Compare s={s} at={scene} of={of} photos={photos} sub={sub} />
-    ) : (
-      <Cta s={s} at={scene} of={of} photos={photos} picks={picks} sub={sub} />
-    );
-  const res = new ImageResponse(node, { ...STORY_SIZE, fonts: await brandFonts() });
+  const g = geoOf("story");
+  const node = sceneNode(
+    script.scenes[scene]!,
+    step,
+    scene,
+    script.scenes.length,
+    photos,
+    script.subcategoryId,
+    g,
+  );
+  const res = new ImageResponse(node, { width: g.width, height: g.height, fonts: await brandFonts() });
   const png = Buffer.from(await res.arrayBuffer());
   const sharp = (await import("sharp")).default;
   return sharp(png).jpeg({ quality: 92, mozjpeg: true }).toBuffer();
+}
+
+/**
+ * A post's or an ad's slide of layout "scene" (render.tsx hands it here): the scene as a still,
+ * `index` of `total` in its carousel for the marks along the top.
+ */
+export async function renderSceneSlide(
+  card: Omit<PostCard, "slides">,
+  index: number,
+  total: number,
+  shape: Exclude<Shape, "link">,
+): Promise<ImageResponse> {
+  const s = card.scene!;
+  const g = geoOf(shape);
+  const photos = await photosOf([s]);
+  // A single picture has no marks; a carousel shows where in it this slide is.
+  const node = sceneNode(
+    s,
+    1,
+    total > 1 ? index : 0,
+    total > 1 ? total : 0,
+    photos,
+    card.subcategoryId ?? "",
+    g,
+  );
+  return new ImageResponse(node, { width: g.width, height: g.height, fonts: await brandFonts() });
 }

@@ -1530,7 +1530,13 @@ export async function renderPost(
         : shape === "story"
           ? STORY_SIZE
           : POST_SIZE;
-  const Layout = shape === "link" ? LinkCard : card.layout ? LAYOUTS[card.layout] : Legacy;
+  // The products' scenes (reel-script.ts) are drawn by the Reel's own code, at this shape.
+  if (card.layout === "scene" && card.scene && shape !== "link") {
+    const { renderSceneSlide } = await import("./reel-render");
+    return renderSceneSlide(card, index, total, shape);
+  }
+  const Layout =
+    shape === "link" ? LinkCard : card.layout && card.layout !== "scene" ? LAYOUTS[card.layout] : Legacy;
   const people = card.layout === "people";
   const photo = people
     ? undefined

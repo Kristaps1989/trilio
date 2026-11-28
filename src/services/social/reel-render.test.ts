@@ -2,8 +2,9 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import type { PostFacts } from "@/domain/social/captions";
 import { reelTimeline } from "@/domain/social/reel";
-import { reelScript } from "@/domain/social/reel-script";
-import { reelPhotos, renderReelPicture } from "./reel-render";
+import { reelScript, sceneCards } from "@/domain/social/reel-script";
+import { geoOf, reelPhotos, renderReelPicture } from "./reel-render";
+import { renderPostJpeg } from "./render";
 
 // Every picture of the scene Reel draws upright, without ffmpeg: each scene and step, a price
 // line in each of its states, a product without history or photo, and a photo that cannot be had.
@@ -78,4 +79,25 @@ describe("scene Reel pictures", () => {
       }
     }
   });
+
+  it(
+    "draws every scene as a still for posts and ads: 4:5, square and upright",
+    { timeout: 120_000 },
+    async () => {
+      const slides = sceneCards(reelScript(facts, "2026-11-28"));
+      const sizes = { portrait: [1080, 1350], square: [1080, 1080], story: [1080, 1920] } as const;
+      for (const [i, slide] of slides.entries())
+        for (const shape of ["portrait", "square", "story"] as const) {
+          // Not every slide in every shape: each slide once, and each shape for the product slide.
+          if (shape !== "portrait" && i !== 1) continue;
+          const m = await sharp(await renderPostJpeg(slide, i, slides.length, shape)).metadata();
+          expect([m.width, m.height]).toEqual([...sizes[shape]]);
+        }
+      // A single picture: no carousel marks; the link preview keeps its own layout.
+      const one = await sharp(await renderPostJpeg(slides[0]!, 0, 1, "link")).metadata();
+      expect([one.width, one.height]).toEqual([1200, 630]);
+      expect(geoOf("square")).toMatchObject({ width: 1350, story: false });
+      expect(geoOf("story").top).toBeGreaterThan(geoOf("portrait").top);
+    },
+  );
 });

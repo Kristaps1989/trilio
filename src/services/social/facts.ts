@@ -95,6 +95,7 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
     kind: "picks",
     subcategoryId,
     category: sub.label,
+    day: rigaDayOf(now),
     // The flow's first plain questions (no conditional ones), worded as the site asks them.
     questions: sub.questions
       .filter(
@@ -165,7 +166,7 @@ export async function priceDropFacts(
 ): Promise<PostFacts | null> {
   const since = new Date(now.getTime() - FRESH_MS);
   const result = await db.execute(sql`
-    select o.product_id as "productId", p.name, p.brand, p.model_code as "modelCode",
+    select o.id as "offerId", o.product_id as "productId", p.name, p.brand, p.model_code as "modelCode",
            p.subcategory_id as "subcategoryId", p.image_url as "imageUrl", s.display_name as shop,
            o.price_cents as "priceCents", low.low as "lowCents"
       from offers o
@@ -184,6 +185,7 @@ export async function priceDropFacts(
      order by (low.low - o.price_cents)::float / low.low desc
      limit 20`);
   const rows = result as unknown as {
+    offerId: string;
     productId: string;
     name: string;
     brand: string;
@@ -197,8 +199,11 @@ export async function priceDropFacts(
   const known = knownCategories();
   const r = rows.find((x) => !exclude.includes(x.productId) && known.has(x.subcategoryId));
   if (!r) return null;
+  const history = await offerHistory(db, [r.offerId], now).catch(() => new Map<string, PricePoint[]>());
   return {
     kind: "price_drop",
+    day: rigaDayOf(now),
+    history: history.get(r.offerId) ?? [],
     subcategoryId: r.subcategoryId,
     productId: r.productId,
     product: cleanName(r.name, r.brand, r.modelCode),
@@ -352,6 +357,7 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
         ? [
             {
               id: p.id,
+              offerId: o.id,
               name: cleanName(p.name, p.brand, p.modelCode),
               priceCents: o.priceCents,
               shop: o.storeName,
@@ -363,8 +369,14 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
     })
     .slice(0, 3);
   if (products.length < 2) return null;
+  const history = await offerHistory(
+    db,
+    products.map((p) => p.offerId),
+    now,
+  ).catch(() => new Map<string, PricePoint[]>());
   return {
     kind: "top_products",
+    day: rigaDayOf(now),
     products: products.map((p) => ({
       id: p.id,
       name: p.name,
@@ -372,6 +384,7 @@ export async function topProductsFacts(db: Db, now: Date): Promise<PostFacts | n
       shop: p.shop,
       subcategoryId: p.sub,
       imageUrl: p.imageUrl,
+      history: history.get(p.offerId) ?? [],
       path: flowPath(p.sub),
     })),
     path: flowPath(products[0]!.sub),

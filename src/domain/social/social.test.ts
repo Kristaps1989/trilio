@@ -8,7 +8,6 @@ import {
   reelCaption,
   restyle,
   slideAlt,
-  type PhoneScreen,
   type PostFacts,
 } from "./captions";
 import { pickPhoto } from "./photos";
@@ -249,44 +248,35 @@ describe("composePost", () => {
     expect(p.card.lines).toHaveLength(3);
   });
 
-  it("a picks post with the flow's questions is a carousel that shows the way, a slide per product", () => {
-    const f = {
-      ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>),
-      questions: [
-        { title: "Iebūvējama vai brīvi stāvoša?", options: ["Iebūvējama", "Brīvi stāvoša", "Galda"] },
-        { title: "Cik plata?", options: ["45 cm", "60 cm"] },
-      ],
-    };
-    const p = composePost(f, base);
+  it("a picks post is a carousel of the products told one by one, as the Reel tells them", () => {
+    const p = composePost(kinds[0]!, base);
     expect(p.issues).toEqual([]);
-    expect(p.card.slides?.map((x) => x.chip)).toEqual([
-      "Izvēle 3 soļos",
-      "1. solis",
-      "2. solis",
-      "Trauku mazgājamās mašīnas",
-      "Trauku mazgājamās mašīnas",
-      "Trauku mazgājamās mašīnas",
-      "3. solis",
+    expect(p.card.slides?.map((x) => x.scene?.kind)).toEqual([
+      "hook",
+      "product",
+      "product",
+      "product",
+      "compare",
+      "cta",
     ]);
-    expect(p.card.slides!.slice(3, 6).map((x) => x.layout)).toEqual(["pick", "pick", "pick"]);
-    expect(p.card.slides![1]!.lines.map((l) => l.chips)).toEqual([
-      ["Iebūvējama", "Brīvi stāvoša", "Galda"],
-      ["45 cm", "60 cm"],
-    ]);
-    // Honest about the example: no answers were given for these picks.
-    expect(p.card.slides![2]!.note).toContain("Piemērs bez atbildēm");
-    expect(p.card.slides![6]!.lines[0]!.buttons).toEqual(["Iegūt lētāk", "Pirkt — Veikals A"]);
-    expect(p.captionFb).toContain("Kā tas notiek, redzams bildēs");
-    // The facts to re-check before sending stay the three prices.
+    expect(p.card.slides!.every((x) => x.layout === "scene")).toBe(true);
+    // The cover (a single picture, the link preview) is the opening scene; the facts stay the prices.
+    expect(p.card).toMatchObject({ layout: "scene", scene: { kind: "hook" }, chip: "3 ieteikumi" });
     expect(p.card.lines.map((l) => l.side)).toHaveLength(3);
-    // Without questions it stays one image.
-    expect(composePost(kinds[0]!, base).card.slides).toBeUndefined();
+    expect(p.card.slides![1]!.lines).toEqual([
+      { main: "Electrolux EEA27200L", side: "379\u00a0€", sub: "Veikals A" },
+    ]);
+    expect(p.captionFb).toContain("Bildēs katrs variants tuvāk");
   });
 
-  it("each product's slide says what the site says, and the recommended pick leads step 2 and step 3", () => {
+  it("each product's slide says what the site says, with its price line when the day is known", () => {
+    const history = Array.from({ length: 10 }, (_, i) => ({
+      day: `2026-11-${String(18 + i).padStart(2, "0")}`,
+      priceCents: 39900,
+    }));
     const f = {
       ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>),
-      questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
+      day: "2026-11-28",
       picks: [
         {
           name: "Electrolux EEA27200L",
@@ -294,6 +284,7 @@ describe("composePost", () => {
           shop: "Veikals A",
           tier: "budget" as const,
           specs: "60 cm · 13 komplekti · 46 dB",
+          history,
         },
         {
           name: "Bosch SMV2ITX22E",
@@ -301,7 +292,6 @@ describe("composePost", () => {
           shop: "Veikals B",
           tier: "mid" as const,
           recommended: true,
-          specs: "60 cm · 13 komplekti · 44 dB",
           gains: ["par 2 dB klusāks", "labāka energoklase (D)"],
           tradeoffs: [],
         },
@@ -315,40 +305,26 @@ describe("composePost", () => {
         },
       ],
     };
-    const slides = composePost(f, base).card.slides!;
-    const [a, b, c] = slides.filter((x) => x.layout === "pick");
-    // The cheapest: its tier, specs, and what it saves against the recommended one.
-    expect(a).toMatchObject({
-      eyebrow: "A · Budžeta variants",
-      headline: "Electrolux EEA27200L",
-      sub: "60 cm · 13 komplekti · 46 dB",
-    });
-    expect(a!.badge).toBeUndefined();
-    expect(a!.rows?.map((r) => `${r.n} ${r.label}`)).toEqual([
+    const post = composePost(f, base);
+    expect(post.issues).toEqual([]);
+    const [a, b, c] = post.card.slides!.filter((x) => x.scene?.kind === "product").map((x) => x.scene!);
+    if (a?.kind !== "product" || b?.kind !== "product" || c?.kind !== "product") throw new Error();
+    expect(a.pick).toMatchObject({ letter: "A", tier: "Budžeta variants", best: false });
+    expect(a.trend).toMatchObject({ status: "below", label: "−20\u00a0€ zem 30 dienu zemākās" });
+    expect(a.notes.map((n) => `${n.mark} ${n.text}`)).toEqual([
       "✓ Zemākā cena no trim",
       "✓ Par 150,99\u00a0€ lētāk nekā labākā izvēle",
     ]);
-    // The recommended one carries the pill and its gains; another shows its downside too.
-    expect(b).toMatchObject({ eyebrow: "B · Vidējā klase", badge: "Labākā izvēle" });
-    expect(b!.rows?.map((r) => r.n)).toEqual(["+", "+"]);
-    expect(c!.rows?.map((r) => `${r.n} ${r.label}`)).toEqual([
+    expect(a.specs).toEqual(["60 cm", "13 komplekti", "46 dB"]);
+    expect(b.pick).toMatchObject({ tier: "Vidējā klase", best: true });
+    expect(b.trend).toBeNull();
+    expect(c.notes.map((n) => `${n.mark} ${n.text}`)).toEqual([
       "+ automātiska durvju atvēršana",
       "− par 10 min ilgāka programma",
     ]);
-    expect(b!.stat).toEqual({ label: "Cena šodien · Veikals B", value: "529,99\u00a0€" });
-    // Step 2 marks the recommended pick, not the middle one by position; step 3 shows it.
-    const phonePicks = slides.find((x) => x.chip === "2. solis")!.phone as Extract<
-      PhoneScreen,
-      { kind: "picks" }
-    >;
-    expect(phonePicks.picks.map((p) => !!p.best)).toEqual([false, true, false]);
-    const step3 = slides.find((x) => x.chip === "3. solis")!;
-    expect(step3.phone).toMatchObject({ kind: "card", name: "Bosch SMV2ITX22E", shop: "Veikals B" });
-    // With none marked recommended, the first leads and nothing is labelled best on its slide.
-    const plain = composePost({ ...f, picks: f.picks.map((p) => ({ ...p, recommended: false })) }, base).card
-      .slides!;
-    expect(plain.filter((x) => x.badge)).toEqual([]);
-    expect(plain.find((x) => x.chip === "3. solis")!.phone).toMatchObject({ name: "Electrolux EEA27200L" });
+    // With none marked recommended, nothing is labelled best.
+    const plain = composePost({ ...f, picks: f.picks.map((p) => ({ ...p, recommended: false })) }, base);
+    expect(plain.card.slides!.some((x) => x.scene?.kind === "product" && x.scene.pick.best)).toBe(false);
   });
 
   it("one emoji marks the post and one the link: never more than two, never hype", () => {
@@ -401,15 +377,19 @@ describe("composePost", () => {
     // No price for a category with no fresh offer.
     expect(top.card.slides![3]!.lines).toHaveLength(1);
     const prod = composePost(kinds[4]!, base);
-    expect(prod.card.slides?.length).toBe(3);
-    expect(prod.card.slides![1]!.lines[0]!.buttons).toEqual(["Iegūt lētāk", "Pirkt — Veikals A"]);
+    expect(prod.card.slides?.map((x) => x.scene?.kind)).toEqual(["hook", "product", "product", "cta"]);
+    expect(prod.card.slides![1]!.lines[0]).toEqual({
+      main: "Philips XC",
+      side: "199\u00a0€",
+      sub: "Veikals A",
+    });
     // Alt text per slide, from what it shows.
     expect(slideAlt(top.card.slides![1]!)).toBe(
       "Ledusskapji. Cenas partneru veikalos no, 199\u00a0€. Daži jautājumi, un trīs piemērotākie varianti",
     );
   });
 
-  it("a product's photo from the feed goes on its slide and on the phone's card; none when the feed has none", () => {
+  it("a product's photo from the feed goes on its scene; none when the feed has none", () => {
     const drop = composePost(
       {
         ...(kinds[1] as Extract<PostFacts, { kind: "price_drop" }>),
@@ -417,8 +397,16 @@ describe("composePost", () => {
       },
       base,
     );
-    expect(drop.card.image).toBe("https://cdn.example.lv/a.jpg");
-    expect(drop.card.hero).toBe("fridge");
+    expect(drop.card).toMatchObject({
+      layout: "scene",
+      image: "https://cdn.example.lv/a.jpg",
+      hero: "fridge",
+    });
+    expect(drop.card.scene).toMatchObject({
+      kind: "product",
+      pick: { image: "https://cdn.example.lv/a.jpg", tier: "Cena samazinājās" },
+      notes: [{ mark: "✓", text: "Par 50\u00a0€ zem zemākās cenas 30 dienās" }],
+    });
     expect(composePost(kinds[1]!, base).card).not.toHaveProperty("image");
     const prod = composePost(
       {
@@ -430,6 +418,8 @@ describe("composePost", () => {
             priceCents: 19900,
             shop: "Veikals A",
             imageUrl: "https://cdn.example.lv/p.jpg",
+            subcategoryId: "vacuum",
+            path: "/p/a",
           },
           { id: "b", name: "Dyson V8", priceCents: 34900, shop: "Veikals B", imageUrl: null },
         ],
@@ -437,34 +427,19 @@ describe("composePost", () => {
       },
       base,
     );
-    expect(prod.card.slides!.map((s) => s.image)).toEqual([
+    const pickOf = (x: NonNullable<typeof prod.card.slides>[number]) =>
+      x.scene?.kind === "product" ? x.scene.pick : null;
+    expect(prod.card.slides!.map((x) => pickOf(x)?.image)).toEqual([
       undefined,
       "https://cdn.example.lv/p.jpg",
+      null,
       undefined,
     ]);
-    const picks = composePost(
-      {
-        ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>),
-        picks: [
-          {
-            name: "Electrolux EEA27200L",
-            priceCents: 37900,
-            shop: "Veikals A",
-            imageUrl: "https://cdn.example.lv/e.jpg",
-          },
-          ...(kinds[0] as Extract<PostFacts, { kind: "picks" }>).picks.slice(1),
-        ],
-        questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
-      },
-      base,
-    );
-    expect(picks.card.slides![3]!.image).toBe("https://cdn.example.lv/e.jpg");
-    expect(picks.card.slides![6]!.phone).toMatchObject({
-      kind: "card",
-      image: "https://cdn.example.lv/e.jpg",
-    });
+    // Each product's slide links to its own page, and its drawing is its own category's.
+    expect(prod.card.slides![1]).toMatchObject({ link: "/p/a" });
+    expect(pickOf(prod.card.slides![1]!)?.sub).toBe("vacuum");
     // The photo URL is not a word of the post: the lint still passes.
-    expect(picks.issues).toEqual([]);
+    expect(prod.issues).toEqual([]);
   });
 
   it("refuses a lead sentence the lint does not pass", () => {
@@ -507,15 +482,18 @@ describe("designs", () => {
   const cover = (c: ReturnType<typeof composePost>["card"]) => c.slides?.[0] ?? c;
 
   it("each kind takes its designs in turn, and no two neighbours share a theme", () => {
-    expect([0, 1, 2, 3].map((n) => designOf("picks", n).design)).toEqual([
-      "collage",
+    // Products are told in scenes (owner, 28 Nov 2026): one look for picks, drops and the week's products.
+    expect([0, 1, 2].map((n) => designOf("picks", n).design)).toEqual(["classic", "classic", "classic"]);
+    expect(DESIGNS.price_drop).toEqual(["classic"]);
+    expect([0, 1, 2, 3].map((n) => designOf("advice", n).design)).toEqual([
+      "people",
       "ask",
       "classic",
-      "collage",
+      "ask",
     ]);
-    expect([0, 1, 2].map((n) => designOf("price_drop", n).design)).toEqual(["big", "classic", "big"]);
     for (const kind of Object.keys(DESIGNS) as (keyof typeof DESIGNS)[])
-      for (let n = 0; n < 6; n++) expect(designOf(kind, n).theme).not.toBe(designOf(kind, n + 1).theme);
+      if (DESIGNS[kind].length > 1)
+        for (let n = 0; n < 6; n++) expect(designOf(kind, n).theme).not.toBe(designOf(kind, n + 1).theme);
   });
 
   it("a design changes only the picture: the captions and the facts stay the same", () => {
