@@ -2,7 +2,7 @@ import type { SocialKind } from "@/db/schema";
 import { formatEur } from "@/i18n/format";
 import { lintPost, ownerTextBlocks, type PostLintContext } from "./lint";
 import type { PricePoint } from "./price-trend";
-import { BEST_LABEL, bestPick, TAGLINE, TIER_NAME } from "./picks-words";
+import { BEST_LABEL, bestPick, TAGLINE } from "./picks-words";
 import {
   dropScene,
   reelScript,
@@ -154,7 +154,7 @@ export type PostCard = {
     | "collage"
     | "ask"
     | "people"
-    // One product of the three: its photo large, its tier, specs, price and what it gives.
+    // One product of the three, as the carousels drew it from 27 to 28 Nov 2026 (stored posts).
     | "pick"
     // A scene of reel-script.ts (the products, their price lines, the comparison), as a picture.
     | "scene";
@@ -377,48 +377,6 @@ export type ComposedPost = {
 export { BEST_LABEL, bestPick, TAGLINE };
 
 const eur = (cents: number) => formatEur(cents, "lv");
-
-/**
- * One of the three as a slide of its own (owner, 27 Nov 2026: each product's strengths, its photo
- * large): its letter and tier, the name, today's price and shop, the key specs, and what it gives
- * and does worse than the cheapest of the three, in the results page's own words. The cheapest
- * says what it saves against the recommended one. Nothing here is not in the data.
- */
-export function pickSlide(
-  category: string,
-  picks: PickLine[],
-  i: number,
-  subcategoryId?: string,
-): Omit<PostCard, "slides"> {
-  const p = picks[i]!;
-  const cheapest = picks.reduce((a, b) => (b.priceCents < a.priceCents ? b : a));
-  const best = bestPick(picks);
-  const rows: { n: string; label: string }[] = [];
-  if (p === cheapest) {
-    rows.push({ n: "✓", label: "Zemākā cena no trim" });
-    if (best !== p && best.priceCents > p.priceCents)
-      rows.push({ n: "✓", label: `Par ${eur(best.priceCents - p.priceCents)} lētāk nekā labākā izvēle` });
-  } else {
-    for (const g of (p.gains ?? []).slice(0, 3)) rows.push({ n: "+", label: g });
-    for (const t of (p.tradeoffs ?? []).slice(0, 1)) rows.push({ n: "−", label: t });
-  }
-  const tier = p.tier ? TIER_NAME[p.tier] : null;
-  return {
-    layout: "pick",
-    chip: category,
-    title: p.name,
-    eyebrow: [["A", "B", "C"][i] ?? String(i + 1), tier ?? category].join(" · "),
-    ...(p.recommended ? { badge: BEST_LABEL } : {}),
-    headline: p.name,
-    ...(p.specs ? { sub: p.specs } : {}),
-    stat: { label: `Cena šodien · ${p.shop}`, value: eur(p.priceCents) },
-    ...(rows.length ? { rows } : {}),
-    ...(p.imageUrl ? { image: p.imageUrl } : {}),
-    lines: [{ main: p.name, side: eur(p.priceCents), sub: p.shop }],
-    alt: `${category}: ${p.name}, ${eur(p.priceCents)}, ${p.shop}.${p.specs ? ` ${p.specs}.` : ""}`,
-    ...(subcategoryId ? { subcategoryId } : {}),
-  };
-}
 
 const CATEGORY_TAGS: Record<string, string> = {
   fridge: "#ledusskapis",

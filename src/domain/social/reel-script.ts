@@ -60,7 +60,7 @@ export type ReelScript = { category: string; subcategoryId: string; scenes: Reel
 const eur = (cents: number) => formatEur(cents, "lv");
 const LETTERS = ["A", "B", "C"];
 
-/** The words under a product: the same lines the carousel's product slide shows (captions.ts pickSlide). */
+/** The words under a product: what the site's card says against the cheapest of the three. */
 function notesOf(p: PickLine, picks: PickLine[]): ReelNote[] {
   const cheapest = picks.reduce((a, b) => (b.priceCents < a.priceCents ? b : a));
   const best = bestPick(picks);
