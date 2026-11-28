@@ -156,6 +156,130 @@ describe("every layout draws", () => {
     const long = { ...legacy, lines: [...legacy.lines, ...legacy.lines] };
     expect((await renderPostJpeg(long)).length).toBeGreaterThan(20_000);
   }, 60_000);
+
+  it("slides stored before the scenes still draw: cover, phones, drop, product", async () => {
+    const lines = [{ main: "Electrolux EEA27200L", side: "379\u00a0€", sub: "Veikals A" }];
+    const stored = [
+      {
+        layout: "cover" as const,
+        chip: "Izvēle 3 soļos",
+        title: "Ledusskapji",
+        eyebrow: "ledusskapji",
+        headline: "Daži jautājumi.",
+        headlineAccent: "Trīs ieteikumi.",
+        sub: "Kā tas notiek.",
+        hero: "fridge",
+        rows: [
+          { n: "01", label: "Daži jautājumi" },
+          { n: "02", label: "Trīs ieteikumi", side: "379\u00a0€" },
+        ],
+        lines,
+      },
+      {
+        layout: "phone" as const,
+        chip: "1. solis",
+        title: "Daži jautājumi",
+        headline: "Daži jautājumi.",
+        phone: {
+          kind: "questions" as const,
+          questions: [{ title: "Cik plata?", options: ["45 cm", "60 cm"] }],
+        },
+        lines,
+      },
+      {
+        layout: "phone" as const,
+        chip: "2. solis",
+        title: "Trīs ieteikumi",
+        headline: "Trīs ieteikumi.",
+        phone: {
+          kind: "picks" as const,
+          picks: [
+            { name: "Electrolux EEA27200L", shop: "Veikals A", price: "379\u00a0€" },
+            { name: "Bosch SMV2ITX22E", shop: "Veikals B", price: "529\u00a0€", best: true },
+          ],
+        },
+        lines,
+      },
+      {
+        layout: "phone" as const,
+        chip: "3. solis",
+        title: "Pērc uzreiz",
+        headline: "Pērc uzreiz.",
+        headlineAccent: "Vai pajautā zemāku cenu.",
+        phone: {
+          kind: "card" as const,
+          name: "Electrolux EEA27200L",
+          shop: "Veikals A",
+          price: "379\u00a0€",
+          buttons: ["Iegūt lētāk", "Pirkt — Veikals A"],
+          note: "Zemāku cenu ne vienmēr izdodas panākt.",
+          strip: { upTo: "līdz −10 %", saving: "37,90\u00a0€" },
+          image: "/sample/fridge-builtin.png",
+        },
+        lines,
+      },
+      {
+        layout: "drop" as const,
+        chip: "Cena samazinājās",
+        eyebrow: "Cena samazinājās",
+        title: "Samsung RB34",
+        headline: "Samsung RB34",
+        hero: "fridge",
+        image: "/sample/fridge-builtin.png",
+        stat: { label: "Tagad · Veikals A", value: "499\u00a0€" },
+        stat2: { label: "Zemākā cena pēdējās 30 dienās", value: "549\u00a0€" },
+        sub: "Salīdzināts ar šī veikala zemāko cenu.",
+        lines,
+      },
+      {
+        layout: "product" as const,
+        chip: "1.",
+        eyebrow: "1. vieta šonedēļ",
+        title: "Philips XC",
+        headline: "Philips XC",
+        numeral: "01",
+        hero: "vacuum",
+        stat: { label: "Cena šodien · Veikals A", value: "199\u00a0€" },
+        buttons: ["Iegūt lētāk", "Pirkt — Veikals A"],
+        subcategoryId: "vacuum",
+        lines,
+      },
+    ];
+    for (const [i, card] of stored.entries())
+      for (const shape of ["portrait", "square"] as const)
+        expect((await renderPostJpeg(card, i, stored.length, shape)).length).toBeGreaterThan(20_000);
+  }, 120_000);
+
+  it("a product slide stored before the scenes (layout pick) still draws, with and without a photo", async () => {
+    const pick = {
+      layout: "pick" as const,
+      chip: "Ledusskapji",
+      title: "Electrolux EEA27200L ar garu nosaukumu, balts",
+      eyebrow: "A · Budžeta variants",
+      badge: "Labākā izvēle",
+      headline: "Electrolux EEA27200L ar garu nosaukumu, balts",
+      sub: "60 cm · 13 komplekti",
+      stat: { label: "Cena šodien · Veikals A", value: "379\u00a0€" },
+      rows: [
+        { n: "✓", label: "Zemākā cena no trim" },
+        { n: "+", label: "Klusāka" },
+        { n: "−", label: "Mazāka" },
+      ],
+      image: "/sample/fridge-builtin.png",
+      subcategoryId: "fridge",
+      lines: [{ main: "Electrolux EEA27200L", side: "379\u00a0€", sub: "Veikals A" }],
+    };
+    expect((await renderPostJpeg(pick, 1, 3)).length).toBeGreaterThan(20_000);
+    const plain = {
+      ...pick,
+      title: "Īss",
+      image: undefined,
+      sub: undefined,
+      badge: undefined,
+      rows: undefined,
+    };
+    expect((await renderPostJpeg(plain, 1, 3)).length).toBeGreaterThan(20_000);
+  }, 60_000);
 });
 
 // docs/SOCIAL_PLAN.md §14: the themed designs, upright for a post and tall for a Reel.

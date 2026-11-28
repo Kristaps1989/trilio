@@ -455,15 +455,15 @@ run("social posts", () => {
     expect(sent?.status).toBe("published");
     const media = mockPosts().filter((m) => m.id === sent!.fbPostId || m.id === sent!.igMediaId);
     for (const m of media)
-      // Six slides: the cover, step 1, step 2, a slide for each of the two products, step 3.
+      // Five slides: the opening, a slide for each of the two products, the comparison, the way to start.
       expect(m.media.split(" ")).toEqual([
         `${BASE}/api/social/${id}/image.jpg`,
-        ...[2, 3, 4, 5, 6].map((n) => `${BASE}/api/social/${id}/${n}/image.jpg`),
+        ...[2, 3, 4, 5].map((n) => `${BASE}/api/social/${id}/${n}/image.jpg`),
       ]);
     // The page: a link carousel, each card linking its own share page (its picture uploaded by
     // hash when an ad account is set, else photos); Instagram has no links. The caption has the link too.
     const fb = media.find((m) => m.network === "facebook")!;
-    expect(fb.links).toEqual([1, 2, 3, 4, 5, 6].map((n) => `${BASE}/social/${id}/${n}`));
+    expect(fb.links).toEqual([1, 2, 3, 4, 5].map((n) => `${BASE}/social/${id}/${n}`));
     expect(media.find((m) => m.network === "instagram")!.links).toBeUndefined();
     expect(fb.caption).toContain(`${BASE}/`);
 
@@ -579,7 +579,7 @@ run("social posts", () => {
   });
 
   // docs/SOCIAL_PLAN.md §14: designs in turn, and the Saturday Reel.
-  it("gives each new post the kind's next design, never the previous post's theme", async () => {
+  it("tells picks in scenes every time; other kinds take their designs in turn, never the last theme", async () => {
     const facts = {
       kind: "picks" as const,
       subcategoryId: "fridge",
@@ -591,8 +591,7 @@ run("social posts", () => {
       ],
       path: "/izvelies/cool/fridge",
     };
-    const looks: { design?: string; theme: string }[] = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 2; i++) {
       const r = await createPost(db, deps, {
         facts,
         slotAt: rigaTime(`2031-05-${10 + i}`, 19),
@@ -600,15 +599,25 @@ run("social posts", () => {
         mode: "approve",
       });
       if (!r.ok) throw new Error(r.reason);
-      const card = r.post.card as { design?: string; slides?: { theme?: string }[]; theme?: string };
-      looks.push({ design: card.design, theme: (card.slides?.[0] ?? card).theme ?? "night" });
+      const card = r.post.card as { design?: string; layout?: string; slides?: { layout?: string }[] };
+      expect(card.design).toBe("classic");
+      expect(card.layout).toBe("scene");
+      expect(card.slides?.every((x) => x.layout === "scene")).toBe(true);
     }
-    for (let i = 1; i < looks.length; i++) {
-      expect(looks[i]!.theme).not.toBe(looks[i - 1]!.theme);
-      expect(looks[i]!.design).not.toBe(looks[i - 1]!.design);
+    const themes: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const f = await factsFor(db, "advice", FUTURE);
+      const r = await createPost(db, deps, {
+        facts: f!.facts,
+        slotAt: rigaTime(`2031-05-${20 + i}`, 19),
+        createdBy: "social-test",
+        mode: "approve",
+      });
+      if (!r.ok) throw new Error(r.reason);
+      const card = r.post.card as { slides?: { theme?: string }[]; theme?: string };
+      themes.push((card.slides?.[0] ?? card).theme ?? "night");
     }
-    // All three of the kind's designs come up within four posts.
-    expect(new Set(looks.map((l) => l.design))).toEqual(new Set(["collage", "ask", "classic"]));
+    for (let i = 1; i < themes.length; i++) expect(themes[i]).not.toBe(themes[i - 1]);
     expect(await nextLook(db, { kind: "reel", caption: "x", videoUrl: "https://v", path: "/" })).toEqual({
       design: "classic",
       photo: null,

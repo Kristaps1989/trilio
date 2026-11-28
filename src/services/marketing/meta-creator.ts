@@ -345,10 +345,7 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
     let fellBack: string | null = null;
     try {
       if (format === "collage" || format === "collage_b") {
-        const page =
-          format === "collage"
-            ? collagePage(facts, deps.config.baseUrl)
-            : collageBPage(facts, deps.config.baseUrl);
+        const page = format === "collage" ? collagePage(facts) : collageBPage(facts);
         const hashes = {
           square: await upload(await deps.render.picture(page, "square")),
           portrait: await upload(await deps.render.picture(page, "portrait")),
@@ -373,14 +370,14 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
         imageHash = cards[0]!.imageHash;
         creative = carouselCreative(speaker, words, cards, name);
       } else {
-        const mp4 = await deps.render.reel(reelCard(facts, deps.config.baseUrl, day));
+        const mp4 = await deps.render.reel(reelCard(facts, day));
         if (!mp4) {
           await noVideoOnce();
           continue;
         }
         const video = await deps.meta.uploadVideo(mp4);
         if (!video.ok) throw new Error(video.error);
-        imageHash = await upload(await deps.render.picture(collagePage(facts, deps.config.baseUrl), "story"));
+        imageHash = await upload(await deps.render.picture(collagePage(facts), "story"));
         const ready = await waitForVideo(video.id);
         if (ready !== "ready") throw new Error(ready);
         creative = videoCreative(speaker, words, video.id, imageHash, name);

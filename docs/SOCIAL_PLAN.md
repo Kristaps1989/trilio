@@ -244,3 +244,11 @@ post is approved. "Izveidot tagad" offers it by hand.
 The server needs `ffmpeg` (`FFMPEG_PATH`, or on the PATH). On Railway: the variable
 `RAILPACK_DEPLOY_APT_PACKAGES=ffmpeg`. Without it the Saturday slot stays empty and the page says why.
 
+
+## 15. Products told in scenes (owner, 28 Nov 2026)
+
+The owner found the generated Reels cheap-looking (overlapping text, a phone mock-up that clipped prices) and asked for products, product analysis and price changes, in a more modern design; then the same logic for the picture ads, the carousel ads and the posts in general.
+
+- **Scenes** (`src/domain/social/reel-script.ts`): the three products' photos with today's prices; a scene per product (photo, price and shop, the shop's price line over 30 days, what it gives and gives up against the cheapest, key specs); the comparison ("Kuru izvēlēties?"); the call to action. Drawn by `src/services/social/reel-render.tsx` at every shape: 9:16 for Reels and Stories, 4:5 for feed posts and picture ads, square for carousel cards.
+- **Price line** (`src/domain/social/price-trend.ts`): the offer's own price per Riga day over 30 days (`offerHistory` in facts.ts). Its words follow rule 5 (Omnibus): "lower" only against the shop's own lowest price before today; a price above that low says "30 dienās bija arī X €". Fewer than 7 days: no line, the specs instead. Facts carry `day`, the day the prices are from; facts saved before it show no line.
+- **Where**: picks posts are a carousel of the scenes (no more questions/phone steps); top products: the three in scenes; a price drop: the product's scene with its line. The Reel plays the same scenes (a product scene in two steps: photo, then the analysis). Ads: variant A is the opening scene, variant B the comparison, the carousel a product scene per card, the Reel the scenes played. Advice, offer and top-categories posts keep their designs.

@@ -1,9 +1,17 @@
 import type { SocialKind } from "@/db/schema";
 import { formatEur } from "@/i18n/format";
-import { OFFER_DISCOUNT_UP_TO_PCT, maxOfferSavingCents } from "@/domain/offers/discount";
 import { lintPost, ownerTextBlocks, type PostLintContext } from "./lint";
 import type { PricePoint } from "./price-trend";
-import type { ReelScript } from "./reel-script";
+import { BEST_LABEL, bestPick, TAGLINE } from "./picks-words";
+import {
+  dropScene,
+  reelScript,
+  sceneCard,
+  sceneCards,
+  topScript,
+  type ReelScene,
+  type ReelScript,
+} from "./reel-script";
 
 // The words of each post type (docs/SOCIAL_PLAN.md §3), from facts the job
 // queried a moment before. Register (§6, owner D1): no "tu" and no "jūs" in
@@ -36,6 +44,8 @@ export type PostFacts =
       picks: PickLine[];
       /** The flow's first questions as the site asks them, for the carousel (no answers are invented). */
       questions?: { title: string; options: string[] }[];
+      /** The Riga day the prices are from (YYYY-MM-DD): the price lines end on it. */
+      day?: string;
       path: string;
     }
   | {
@@ -47,6 +57,9 @@ export type PostFacts =
       lowCents: number;
       shop: string;
       imageUrl?: string | null;
+      /** The shop's price per day over 30 days, and the day the price is from. */
+      history?: PricePoint[];
+      day?: string;
       path: string;
     }
   | { kind: "advice"; subcategoryId: string; category: string; factor: string; path: string }
@@ -72,6 +85,7 @@ export type PostFacts =
   | {
       kind: "top_products";
       products: (PickLine & { id: string; subcategoryId?: string; path?: string })[];
+      day?: string;
       path: string;
     }
   | {
@@ -140,8 +154,10 @@ export type PostCard = {
     | "collage"
     | "ask"
     | "people"
-    // One product of the three: its photo large, its tier, specs, price and what it gives.
-    | "pick";
+    // One product of the three, as the carousels drew it from 27 to 28 Nov 2026 (stored posts).
+    | "pick"
+    // A scene of reel-script.ts (the products, their price lines, the comparison), as a picture.
+    | "scene";
   /** The page's colours: night green (default), lime, or light. Only the themed designs use it. */
   theme?: SocialTheme;
   /** "collage": the products' photos, in order. */
@@ -179,6 +195,8 @@ export type PostCard = {
   slides?: Omit<PostCard, "slides">[];
   /** A Reel's own scenes (reel-script.ts): drawn for video instead of playing the slides. */
   reel?: ReelScript;
+  /** The scene a "scene" slide draws. */
+  scene?: ReelScene;
   /** The slide's own alt text (keywords: category, product, price); made from its content when absent. */
   alt?: string;
   /** Category illustrations in a row under the title. */
@@ -207,13 +225,14 @@ export type PeoplePhoto = { url: string; credit: string };
  */
 export type Design = "classic" | "big" | "collage" | "ask" | "people";
 export const DESIGNS: Record<Exclude<SocialKind, "reel">, Design[]> = {
-  picks: ["collage", "ask", "classic"],
-  price_drop: ["big", "classic"],
+  // Products are told in scenes (owner, 28 Nov 2026), drawn as the "classic" card.
+  picks: ["classic"],
+  price_drop: ["classic"],
   // Two dark designs (the photo and the classic) never follow each other: lime sits between them.
   advice: ["people", "ask", "classic", "ask"],
   offer: ["big", "classic"],
   top_categories: ["ask", "classic"],
-  top_products: ["collage", "classic"],
+  top_products: ["classic"],
 };
 const DESIGN_THEME: Record<Design, SocialTheme> = {
   classic: "night",
@@ -355,59 +374,9 @@ export type ComposedPost = {
   issues: string[];
 };
 
-export const TAGLINE = "Daži jautājumi. 3 ieteikumi. Pērc uzreiz vai pajautā zemāku cenu.";
+export { BEST_LABEL, bestPick, TAGLINE };
 
 const eur = (cents: number) => formatEur(cents, "lv");
-
-const TIER_NAME = { budget: "Budžeta variants", mid: "Vidējā klase", top: "Augstākā klase" } as const;
-export const BEST_LABEL = "Labākā izvēle";
-
-/** The pick the site recommends ("Labākā izvēle"); the first when the ranking marks none. */
-export function bestPick(picks: PickLine[]): PickLine {
-  return picks.find((p) => p.recommended) ?? picks[0]!;
-}
-
-/**
- * One of the three as a slide of its own (owner, 27 Nov 2026: each product's strengths, its photo
- * large): its letter and tier, the name, today's price and shop, the key specs, and what it gives
- * and does worse than the cheapest of the three, in the results page's own words. The cheapest
- * says what it saves against the recommended one. Nothing here is not in the data.
- */
-export function pickSlide(
-  category: string,
-  picks: PickLine[],
-  i: number,
-  subcategoryId?: string,
-): Omit<PostCard, "slides"> {
-  const p = picks[i]!;
-  const cheapest = picks.reduce((a, b) => (b.priceCents < a.priceCents ? b : a));
-  const best = bestPick(picks);
-  const rows: { n: string; label: string }[] = [];
-  if (p === cheapest) {
-    rows.push({ n: "✓", label: "Zemākā cena no trim" });
-    if (best !== p && best.priceCents > p.priceCents)
-      rows.push({ n: "✓", label: `Par ${eur(best.priceCents - p.priceCents)} lētāk nekā labākā izvēle` });
-  } else {
-    for (const g of (p.gains ?? []).slice(0, 3)) rows.push({ n: "+", label: g });
-    for (const t of (p.tradeoffs ?? []).slice(0, 1)) rows.push({ n: "−", label: t });
-  }
-  const tier = p.tier ? TIER_NAME[p.tier] : null;
-  return {
-    layout: "pick",
-    chip: category,
-    title: p.name,
-    eyebrow: [["A", "B", "C"][i] ?? String(i + 1), tier ?? category].join(" · "),
-    ...(p.recommended ? { badge: BEST_LABEL } : {}),
-    headline: p.name,
-    ...(p.specs ? { sub: p.specs } : {}),
-    stat: { label: `Cena šodien · ${p.shop}`, value: eur(p.priceCents) },
-    ...(rows.length ? { rows } : {}),
-    ...(p.imageUrl ? { image: p.imageUrl } : {}),
-    lines: [{ main: p.name, side: eur(p.priceCents), sub: p.shop }],
-    alt: `${category}: ${p.name}, ${eur(p.priceCents)}, ${p.shop}.${p.specs ? ` ${p.specs}.` : ""}`,
-    ...(subcategoryId ? { subcategoryId } : {}),
-  };
-}
 
 const CATEGORY_TAGS: Record<string, string> = {
   fridge: "#ledusskapis",
@@ -464,129 +433,27 @@ function parts(
   switch (f.kind) {
     case "picks": {
       const head = lead ?? `Trīs ieteikumi: ${lower(f.category)}.`;
-      const questions = (f.questions ?? []).slice(0, 3);
-      // Step 3 shows the pick the site recommends, as step 2 marks it (not simply the cheapest).
-      const first = bestPick(f.picks);
       const pickLines = f.picks.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop }));
-      const slides: PostCard["slides"] = questions.length
-        ? [
-            {
-              layout: "cover",
-              chip: "Izvēle 3 soļos",
-              eyebrow: lower(f.category),
-              title: f.category,
-              headline: "Daži jautājumi.",
-              headlineAccent: "Trīs ieteikumi.",
-              sub: "Kā tas notiek: trīs soļi, trīs bildes.",
-              hero: f.subcategoryId,
-              rows: [
-                { n: "01", label: "Daži jautājumi" },
-                { n: "02", label: "Trīs piemērotākie varianti" },
-                { n: "03", label: "Pērc uzreiz vai pajautā zemāku cenu" },
-              ],
-              lines: [
-                { main: "1. Daži jautājumi" },
-                { main: "2. Trīs ieteikumi" },
-                { main: "3. Pērc uzreiz vai pajautā zemāku cenu" },
-              ],
-              subcategoryId: f.subcategoryId,
-            },
-            {
-              layout: "phone",
-              chip: "1. solis",
-              eyebrow: "1. solis",
-              title: "Daži jautājumi",
-              headline: "Daži jautājumi.",
-              sub: "Tikai tie, kas izšķir izvēli.",
-              phone: {
-                kind: "questions",
-                questions: questions.map((q) => ({ title: q.title, options: q.options.slice(0, 4) })),
-              },
-              lines: questions.map((q) => ({ main: q.title, chips: q.options.slice(0, 4) })),
-              note: "Tikai tas, kas izšķir izvēli",
-            },
-            {
-              layout: "phone",
-              chip: "2. solis",
-              eyebrow: "2. solis",
-              title: "Trīs ieteikumi",
-              headline: "Trīs ieteikumi.",
-              sub: "Piemērs bez atbildēm; cenas šodien partneru veikalos.",
-              phone: {
-                kind: "picks",
-                picks: f.picks.map((p) => ({
-                  name: p.name,
-                  shop: p.shop,
-                  price: eur(p.priceCents),
-                  best: p === bestPick(f.picks),
-                })),
-              },
-              lines: pickLines,
-              note: "Piemērs bez atbildēm; cenas šodien partneru veikalos",
-            },
-            ...f.picks.slice(0, 3).map((_, i) => pickSlide(f.category, f.picks, i, f.subcategoryId)),
-            {
-              layout: "phone",
-              chip: "3. solis",
-              eyebrow: "3. solis",
-              title: "Pērc uzreiz vai pajautā zemāku cenu",
-              headline: "Pērc uzreiz.",
-              headlineAccent: "Vai pajautā zemāku cenu.",
-              sub: "Ja izplatītājs piedāvās zemāku cenu, atsūtīsim piedāvājumu. Ja ne, paziņosim, kad cena samazināsies.",
-              phone: {
-                kind: "card",
-                name: first.name,
-                shop: first.shop,
-                price: eur(first.priceCents),
-                buttons: ["Iegūt lētāk", `Pirkt — ${first.shop}`],
-                // The site's card after the tap: the discount, then the fine print.
-                ...(maxOfferSavingCents(first.priceCents) > 0
-                  ? {
-                      strip: {
-                        upTo: `līdz −${OFFER_DISCOUNT_UP_TO_PCT} %`,
-                        saving: eur(maxOfferSavingCents(first.priceCents)),
-                      },
-                    }
-                  : {}),
-                note: "Zemāku cenu ne vienmēr izdodas panākt.",
-                ...(first.imageUrl ? { image: first.imageUrl } : {}),
-              },
-              lines: [
-                {
-                  main: first.name,
-                  side: eur(first.priceCents),
-                  sub: first.shop,
-                  buttons: ["Iegūt lētāk", `Pirkt — ${first.shop}`],
-                },
-              ],
-              note: "Ja izplatītājs piedāvās zemāku cenu, atsūtīsim piedāvājumu. Ja ne, paziņosim, kad cena samazināsies.",
-            },
-          ]
-        : undefined;
+      // The products told one by one (owner, 28 Nov 2026), as the Reel tells them: the three, each
+      // with its price line and what it gives, the comparison, then what Trilio does.
+      const script = reelScript(f);
+      const slides = sceneCards(script);
       return {
         body: [
           head,
           f.picks.map((p, i) => `${ORDER[i]} ${p.name} — ${eur(p.priceCents)} (${p.shop})`).join("\n"),
-          slides
-            ? "Cenas šodien partneru veikalos. Kā tas notiek, redzams bildēs: daži jautājumi, trīs ieteikumi, tad pirkt uzreiz vai pajautāt zemāku cenu."
-            : "Cenas šodien partneru veikalos.",
+          "Cenas šodien partneru veikalos. Bildēs katrs variants tuvāk: cenas izmaiņas, ko tas dod, un salīdzinājums.",
         ],
         cta: "Var pirkt uzreiz veikalā vai spiest „Iegūt lētāk”: tad sazināsimies ar izplatītāju.",
         card: {
-          layout: "cover",
+          ...sceneCard(script, 0),
           chip: "3 ieteikumi",
-          eyebrow: "3 ieteikumi",
           title: f.category,
-          headline: f.category,
-          sub: "Cenas šodien partneru veikalos.",
-          hero: f.subcategoryId,
-          rows: f.picks.map((p, i) => ({ n: `0${i + 1}`, label: p.name, side: eur(p.priceCents) })),
           lines: pickLines,
           note: "Cenas šodien partneru veikalos",
-          subcategoryId: f.subcategoryId,
-          ...(slides ? { slides } : {}),
+          slides,
         },
-        alt: `${slides ? "Izvēle 3 soļos. " : ""}Trīs ieteikumi: ${f.category}. ${f.picks.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
+        alt: `Trīs ieteikumi: ${f.category}. ${f.picks.map((p) => `${p.name}, ${eur(p.priceCents)}`).join("; ")}.`,
         prices: f.picks.map((p) => p.priceCents),
         numbers: [],
         names: f.picks.flatMap((p) => [p.name, p.shop]),
@@ -601,7 +468,9 @@ function parts(
         ],
         cta: "Cenu vēsture un trīs alternatīvas pēc dažiem jautājumiem:",
         card: {
-          layout: "drop",
+          // The product large, its price line over 30 days and the drop (reel-script.ts dropScene).
+          layout: "scene",
+          scene: dropScene(f),
           chip: "Cena samazinājās",
           eyebrow: "Cena samazinājās",
           title: f.product,
@@ -754,43 +623,20 @@ function parts(
       };
     }
     case "top_products": {
+      // Each product told as the picks are (owner, 28 Nov 2026): the three, each with its photo
+      // large and its price line, then what Trilio does.
+      const script = topScript(f);
       const card: PostCard = {
-        layout: "cover",
+        ...sceneCard(script, 0),
         chip: "Nedēļas interesantākās",
-        eyebrow: "Šonedēļ visvairāk interesēja",
         title: "Šonedēļ visvairāk interesēja",
-        headline: "Trīs preces,",
-        headlineAccent: "ko šonedēļ skatīja visvairāk.",
-        sub: "Cenas šodien partneru veikalos.",
-        rows: f.products.map((p, i) => ({ n: `0${i + 1}`, label: p.name, side: eur(p.priceCents) })),
         lines: f.products.map((p) => ({ main: p.name, side: eur(p.priceCents), sub: p.shop })),
         note: "Cenas šodien partneru veikalos",
       };
-      const slides: PostCard["slides"] = [
-        { ...card },
-        ...f.products.map((p, i) => ({
-          layout: "product" as const,
-          ...(p.path ? { link: p.path } : {}),
-          chip: `${i + 1}.`,
-          eyebrow: `${i + 1}. vieta šonedēļ`,
-          title: p.name,
-          headline: p.name,
-          numeral: `0${i + 1}`,
-          hero: p.subcategoryId,
-          ...(p.imageUrl ? { image: p.imageUrl } : {}),
-          stat: { label: `Cena šodien · ${p.shop}`, value: eur(p.priceCents) },
-          buttons: ["Iegūt lētāk", `Pirkt — ${p.shop}`],
-          subcategoryId: p.subcategoryId,
-          lines: [
-            {
-              main: p.shop,
-              side: eur(p.priceCents),
-              buttons: ["Iegūt lētāk", `Pirkt — ${p.shop}`],
-            },
-          ],
-          note: "Cena šodien partneru veikalā",
-        })),
-      ];
+      const slides: PostCard["slides"] = sceneCards(script).map((c, i) => {
+        const p = i >= 1 && i <= f.products.length ? f.products[i - 1] : undefined;
+        return i === 0 ? { ...card } : p?.path ? { ...c, link: p.path } : c;
+      });
       return {
         body: [
           `Šonedēļ Trilio lietotājus visvairāk interesēja ${f.products[0]!.name}.`,

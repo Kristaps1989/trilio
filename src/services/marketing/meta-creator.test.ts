@@ -70,19 +70,17 @@ describe("the ads' pictures", () => {
         const m = await sharp(jpeg).metadata();
         return [m.width, m.height];
       };
-      const a = collagePage(picks, "https://trilio.test");
+      const a = collagePage(picks);
       expect(await size(await r.picture(a, "square"))).toEqual([1080, 1080]);
       expect(await size(await r.picture(a, "portrait"))).toEqual([1080, 1350]);
-      expect(await size(await r.picture(collageBPage(picks, "https://trilio.test"), "story"))).toEqual([
-        1080, 1920,
-      ]);
+      expect(await size(await r.picture(collageBPage(picks), "story"))).toEqual([1080, 1920]);
       expect(await size(await r.picture(productPage(picks, 0), "square"))).toEqual([1080, 1080]);
     },
   );
 
   it("the Reel is an upright MP4 when the server has ffmpeg", { timeout: 180_000 }, async () => {
     const { ffmpegPath, renderReel } = await import("@/services/social/video");
-    const mp4 = await renderReel(reelCard(picks, "https://trilio.test", "2026-11-28"), { withSound: false });
+    const mp4 = await renderReel(reelCard(picks, "2026-11-28"), { withSound: false });
     if (!(await ffmpegPath())) return expect(mp4).toBeNull();
     expect(mp4!.subarray(4, 8).toString()).toBe("ftyp");
   });
