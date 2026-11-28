@@ -1,4 +1,5 @@
 import { composePost, pickSlide, type PostCard, type PostFacts } from "@/domain/social/captions";
+import { reelScript } from "@/domain/social/reel-script";
 import { formatEur } from "@/i18n/format";
 
 // The pictures of the agent's Meta ads (owner, 27 Nov 2026: 4:5 and 9:16 versions, a second
@@ -73,12 +74,17 @@ export function closingPage(facts: Picks): Page {
   };
 }
 
-/** The Reel: the collage, each product in turn, and the closing page, drawn upright. */
-export function reelCard(facts: Picks, baseUrl: string): PostCard {
+/**
+ * The Reel: its own scenes (reel-script.ts: the three products, each with its price over 30
+ * days and what it gives, a comparison and the call to action). The collage and the product
+ * pages stay on the card as the pictures a video without its scenes would play.
+ */
+export function reelCard(facts: Picks, baseUrl: string, today: string): PostCard {
   const cover = collagePage(facts, baseUrl);
   return {
     ...cover,
     slides: [cover, ...facts.picks.slice(0, 3).map((_, i) => productPage(facts, i)), closingPage(facts)],
+    reel: reelScript(facts, today),
   };
 }
 

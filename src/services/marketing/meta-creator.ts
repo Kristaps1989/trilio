@@ -373,7 +373,7 @@ export async function ensureAgentAds(db: Db, deps: CreatorDeps, shareCents: numb
         imageHash = cards[0]!.imageHash;
         creative = carouselCreative(speaker, words, cards, name);
       } else {
-        const mp4 = await deps.render.reel(reelCard(facts, deps.config.baseUrl));
+        const mp4 = await deps.render.reel(reelCard(facts, deps.config.baseUrl, day));
         if (!mp4) {
           await noVideoOnce();
           continue;

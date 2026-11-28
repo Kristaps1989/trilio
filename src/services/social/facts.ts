@@ -12,6 +12,7 @@ import { bestOffer, eligibleOffers } from "@/domain/ranking/filters";
 import { MAINSTREAM_PERCENTILE, priceCeilingCents, rank, TYPICAL_PERCENTILE } from "@/domain/ranking/rank";
 import { offerStory } from "@/domain/social/anonymise";
 import { composePost, type PostFacts } from "@/domain/social/captions";
+import type { PricePoint } from "@/domain/social/price-trend";
 import {
   MIN_CATEGORY_VIEWS,
   MIN_DROP_PERCENT,
@@ -85,6 +86,11 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
   picks = picks.slice(0, 3);
   if (picks.length < 2) return null;
   const notes = pickNotes(picks, sub);
+  const history = await offerHistory(
+    db,
+    picks.map((p) => p.offer.id),
+    now,
+  ).catch(() => new Map<string, PricePoint[]>());
   return {
     kind: "picks",
     subcategoryId,
@@ -110,9 +116,44 @@ export async function picksFacts(db: Db, subcategoryId: string, now: Date): Prom
       specs: notes[i]!.specs,
       gains: notes[i]!.gains,
       tradeoffs: notes[i]!.tradeoffs,
+      history: history.get(p.offer.id) ?? [],
     })),
     path: flowPath(subcategoryId),
   };
+}
+
+/**
+ * Each offer's price per Riga day over the 30 days before `now` (the day's last price seen at
+ * that shop, in stock), oldest first: the line a Reel draws. The shop's own prices, so a
+ * "lower than" said about them follows the Omnibus rule.
+ */
+export async function offerHistory(
+  db: Db,
+  offerIds: string[],
+  now: Date,
+): Promise<Map<string, PricePoint[]>> {
+  const out = new Map<string, PricePoint[]>();
+  if (!offerIds.length) return out;
+  const result = await db.execute(sql`
+    select distinct on (ps.offer_id, day) ps.offer_id as "offerId",
+           to_char(ps.captured_at at time zone 'Europe/Riga', 'YYYY-MM-DD') as day,
+           ps.price_cents as "priceCents"
+      from price_snapshots ps
+     where ps.offer_id in (${sql.join(
+       offerIds.map((id) => sql`${id}::uuid`),
+       sql`, `,
+     )})
+       and ps.stock <> 'out'
+       and ps.captured_at >= ${now.toISOString()}::timestamptz - interval '30 days'
+       and ps.captured_at <= ${now.toISOString()}::timestamptz
+     order by ps.offer_id, day, ps.captured_at desc`);
+  for (const r of result as unknown as { offerId: string; day: string; priceCents: number }[]) {
+    const list = out.get(r.offerId) ?? [];
+    list.push({ day: r.day, priceCents: Number(r.priceCents) });
+    out.set(r.offerId, list);
+  }
+  for (const list of out.values()) list.sort((a, b) => a.day.localeCompare(b.day));
+  return out;
 }
 
 /** Type B: the deepest real drop below an offer's own 30-day low (Omnibus), not posted lately. */
